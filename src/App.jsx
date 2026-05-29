@@ -51,18 +51,21 @@ function App() {
   }, [activeFilters]);
 
   const boxSummary = useMemo(() => {
-    const allOccasions = selectedPerfumes.flatMap((p) => p.occasions);
-    const allSeasons = selectedPerfumes.flatMap((p) => p.seasons);
-    const allNotes = selectedPerfumes.flatMap((p) => p.notes);
-    const allVibes = selectedPerfumes.flatMap((p) => p.vibes);
+  const allOccasions = selectedPerfumes.flatMap((p) => p.occasions || []);
+  const allSeasons = selectedPerfumes.flatMap((p) => p.seasons || []);
+  const allNotes = selectedPerfumes
+    .flatMap((p) => getPerfumeNoteIds(p))
+    .map((noteId) => notes[noteId]?.name)
+    .filter(Boolean);
+  const allVibes = selectedPerfumes.flatMap((p) => p.vibes || []);
 
-    return {
-      occasions: [...new Set(allOccasions)],
-      seasons: [...new Set(allSeasons)],
-      notes: [...new Set(allNotes)],
-      vibes: [...new Set(allVibes)],
-    };
-  }, [selectedPerfumes]);
+  return {
+    occasions: [...new Set(allOccasions)],
+    seasons: [...new Set(allSeasons)],
+    notes: [...new Set(allNotes)],
+    vibes: [...new Set(allVibes)],
+  };
+}, [selectedPerfumes]);
 
   function handleFilterChange(category, value) {
     setActiveFilters((currentFilters) => ({
@@ -144,8 +147,8 @@ function App() {
 
                 <div className="tag-row">
                   <span>{perfume.points} pt</span>
-                  {perfume.vibes.slice(0, 2).map((vibe) => (
-                    <span key={vibe}>{vibe}</span>
+                  {(perfume.accords || []).slice(0, 3).map((accord) => (
+                  <span key={accord}>{accord}</span>
                   ))}
                 </div>
 

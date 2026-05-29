@@ -1,10 +1,11 @@
 export const perfumes = [
-  {
+{
   id: 1,
   name: "Acqua di Gio EDT",
   brand: "Giorgio Armani",
   points: 1,
   image: "",
+  accords: ["marine", "citrus", "aromatic", "fresh spicy", "woody"],
   seasons: ["spring", "summer"],
   occasions: ["daily", "office", "casual"],
   vibes: ["fresh", "clean", "classic"],
@@ -383,6 +384,69 @@ export const perfumes = [
     "seductive",
     "playful"
   ]
+},
+{
+  id: 100,
+  name: "Arancia di Capri",
+  brand: "Acqua di Parma",
+  points: 1.5,
+
+  accords: [],
+  topNotes: [],
+  middleNotes: [],
+  baseNotes: [],
+
+  seasons: [],
+  occasions: [],
+  vibes: [],
+},
+
+{
+  id: 101,
+  name: "Essenza",
+  brand: "Acqua di Parma",
+  points: 1.5,
+
+  accords: [],
+  topNotes: [],
+  middleNotes: [],
+  baseNotes: [],
+
+  seasons: [],
+  occasions: [],
+  vibes: [],
+},
+
+{
+  id: 102,
+  name: "Fico di Amalfi",
+  brand: "Acqua di Parma",
+  points: 1.5,
+
+  accords: [],
+  topNotes: [],
+  middleNotes: [],
+  baseNotes: [],
+
+  seasons: [],
+  occasions: [],
+  vibes: [],
+},
+
+{
+  id: 103,
+  name: "Mandarino di Sicilia",
+  brand: "Acqua di Parma",
+  points: 1.5,
+
+  accords: [],
+  topNotes: [],
+  middleNotes: [],
+  baseNotes: [],
+
+  seasons: [],
+  occasions: [],
+  vibes: [],
 },
 ];
 
