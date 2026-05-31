@@ -2,7 +2,8 @@ import { useMemo, useState } from "react";
 import { perfumes, filterOptions } from "./data/perfumes";
 import { notes } from "./data/notes";
 import "./App.css";
-import { getTierData } from "./utils/tierUtils"; 
+import { getTierData } from "./utils/tierUtils";
+import PerfumeCard from "./components/PerfumeCard";
 
 function getPerfumeNoteIds(perfume) {
   return [
@@ -144,55 +145,24 @@ function App() {
           </div>
 
           <div className="catalog-grid">
-            {filteredPerfumes.map((perfume) => {
-              const tierData = getTierData(perfume.id);
+  {filteredPerfumes.map((perfume) => {
+    const tierData = getTierData(perfume.id);
+    const noteNames = getPerfumeNoteIds(perfume)
+      .map((noteId) => notes[noteId]?.name)
+      .filter(Boolean);
 
-              return (
-                <article className="perfume-card" key={perfume.id}>
-                  <div className="perfume-info">
-                    <h3>{perfume.name}</h3>
-                    <p>{perfume.brand}</p>
-                    <div
-                    className="tier-badge"
-                    style={{
-                    borderColor: tierData.color,
-                    backgroundColor: tierData.background,
-                    color: tierData.color,
-                   }}
-                    >
-                    <span>{tierData.emoji}</span>
-                    {tierData.name} • {perfume.points} pt
-                    </div>
-                  </div>
-
-                  <div className="tag-row">
-                    {(perfume.accords || []).slice(0, 3).map((accord) => (
-                      <span key={accord}>{accord}</span>
-                    ))}
-                  </div>
-
-                  <div className="hover-details">
-                    <p>
-                      <strong>Notes:</strong>{" "}
-                      {getPerfumeNoteIds(perfume)
-                        .map((noteId) => notes[noteId]?.name)
-                        .join(", ")}
-                    </p>
-                    <p>
-                      <strong>Best for:</strong> {perfume.occasions.join(", ")}
-                    </p>
-                  </div>
-
-                  <button
-                    onClick={() => addPerfume(perfume)}
-                    disabled={totalSlots >= MAX_SLOTS}
-                  >
-                    Add to box
-                  </button>
-                </article>
-              );
-            })}
-          </div>
+    return (
+      <PerfumeCard
+        key={perfume.id}
+        perfume={perfume}
+        tierData={tierData}
+        noteNames={noteNames}
+        onAddToBox={addPerfume}
+        isDisabled={totalSlots >= MAX_SLOTS}
+      />
+    );
+  })}
+</div>
         </section>
 
         <aside className="builder-panel">
