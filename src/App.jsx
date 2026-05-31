@@ -239,29 +239,49 @@ function App() {
             )}
           </div>
 
-          <div className="summary-panel">
-            <h3>Box Profile</h3>
+  <h3>Box Profile</h3>
 
-            <div>
-              <span>Occasions</span>
-              <p>{boxSummary.occasions.join(", ") || "No data yet"}</p>
-            </div>
+  <div>
+    <span>Occasions</span>
+    <div className="summary-tags">
+      {boxSummary.occasions.length > 0 ? (
+        boxSummary.occasions.map((item) => <span key={item}>{item}</span>)
+      ) : (
+        <p>No data yet</p>
+      )}
+    </div>
+  </div>
 
-            <div>
-              <span>Seasons</span>
-              <p>{boxSummary.seasons.join(", ") || "No data yet"}</p>
-            </div>
+  <div>
+    <span>Seasons</span>
+    <div className="summary-tags">
+      {boxSummary.seasons.length > 0 ? (
+        boxSummary.seasons.map((item) => <span key={item}>{item}</span>)
+      ) : (
+        <p>No data yet</p>
+      )}
+    </div>
+  </div>
 
-            <div>
-              <span>Notes</span>
-              <p>{boxSummary.notes.join(", ") || "No data yet"}</p>
-            </div>
+  <div>
+    <span>Vibes</span>
+    <div className="summary-tags">
+      {boxSummary.vibes.length > 0 ? (
+        boxSummary.vibes.map((item) => <span key={item}>{item}</span>)
+      ) : (
+        <p>No data yet</p>
+      )}
+    </div>
+  </div>
 
-            <div>
-              <span>Vibes</span>
-              <p>{boxSummary.vibes.join(", ") || "No data yet"}</p>
-            </div>
-          </div>
+  <div>
+    <span>Notes</span>
+    <p>
+      {boxSummary.notes.length > 0
+        ? `${boxSummary.notes.length} unique notes covered`
+        : "No data yet"}
+    </p>
+  </div>
         </aside>
       </section>
     </main>
