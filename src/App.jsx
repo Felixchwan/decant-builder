@@ -59,12 +59,24 @@ function App() {
     .map((noteId) => notes[noteId]?.name)
     .filter(Boolean);
   const allVibes = selectedPerfumes.flatMap((p) => p.vibes || []);
+  const accordMap = selectedPerfumes.reduce((map, perfume) => {
+  (perfume.accords || []).forEach((accord) => {
+    if (!map[accord]) {
+      map[accord] = [];
+    }
+
+    map[accord].push(perfume.name);
+  });
+
+  return map;
+}, {});
 
   return {
     occasions: [...new Set(allOccasions)],
     seasons: [...new Set(allSeasons)],
     notes: [...new Set(allNotes)],
     vibes: [...new Set(allVibes)],
+    accordMap,
   };
 }, [selectedPerfumes]);
 
@@ -273,6 +285,29 @@ function App() {
       )}
     </div>
   </div>
+
+<div>
+  <span>Scent Palette</span>
+
+  <div className="summary-tags">
+    {Object.entries(boxSummary.accordMap).length > 0 ? (
+      Object.entries(boxSummary.accordMap).map(([accord, perfumeNames]) => (
+        <span className="accord-tooltip" key={accord}>
+          {accord} ×{perfumeNames.length}
+
+          <div className="tooltip-box">
+            <strong>{accord}</strong>
+            {perfumeNames.map((name) => (
+              <p key={name}>{name}</p>
+            ))}
+          </div>
+        </span>
+      ))
+    ) : (
+      <p>No data yet</p>
+    )}
+  </div>
+</div>
 
   <div>
     <span>Notes</span>
