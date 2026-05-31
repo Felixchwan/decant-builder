@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { perfumes, filterOptions } from "./data/perfumes";
 import { notes } from "./data/notes";
 import "./App.css";
+import { getTierData } from "./utils/tierUtils"; 
 
 function getPerfumeNoteIds(perfume) {
   return [
@@ -130,48 +131,54 @@ function App() {
           </div>
 
           <div className="catalog-grid">
-            {filteredPerfumes.map((perfume) => (
-              <article className="perfume-card" key={perfume.id}>
-                <div className="bottle-placeholder">
-                  {perfume.image ? (
-                    <img src={perfume.image} alt={perfume.name} />
-                  ) : (
-                    <span>{perfume.brand[0]}</span>
-                  )}
-                </div>
+            {filteredPerfumes.map((perfume) => {
+              const tierData = getTierData(perfume.id);
 
-                <div className="perfume-info">
-                  <h3>{perfume.name}</h3>
-                  <p>{perfume.brand}</p>
-                </div>
+              return (
+                <article className="perfume-card" key={perfume.id}>
+                  <div className="perfume-info">
+                    <h3>{perfume.name}</h3>
+                    <p>{perfume.brand}</p>
+                    <div
+                    className="tier-badge"
+                    style={{
+                    borderColor: tierData.color,
+                    backgroundColor: tierData.background,
+                    color: tierData.color,
+                   }}
+                    >
+                    <span>{tierData.emoji}</span>
+                    {tierData.name} • {perfume.points} pt
+                    </div>
+                  </div>
 
-                <div className="tag-row">
-                  <span>{perfume.points} pt</span>
-                  {(perfume.accords || []).slice(0, 3).map((accord) => (
-                  <span key={accord}>{accord}</span>
-                  ))}
-                </div>
+                  <div className="tag-row">
+                    {(perfume.accords || []).slice(0, 3).map((accord) => (
+                      <span key={accord}>{accord}</span>
+                    ))}
+                  </div>
 
-                <div className="hover-details">
-                  <p>
-                    <strong>Notes:</strong>{" "}
-                    {getPerfumeNoteIds(perfume)
-                      .map((noteId) => notes[noteId]?.name)
-                      .join(", ")}
-                  </p>
-                  <p>
-                    <strong>Best for:</strong> {perfume.occasions.join(", ")}
-                  </p>
-                </div>
+                  <div className="hover-details">
+                    <p>
+                      <strong>Notes:</strong>{" "}
+                      {getPerfumeNoteIds(perfume)
+                        .map((noteId) => notes[noteId]?.name)
+                        .join(", ")}
+                    </p>
+                    <p>
+                      <strong>Best for:</strong> {perfume.occasions.join(", ")}
+                    </p>
+                  </div>
 
-                <button
-                  onClick={() => addPerfume(perfume)}
-                  disabled={totalSlots >= MAX_SLOTS}
-                >
-                  Add to box
-                </button>
-              </article>
-            ))}
+                  <button
+                    onClick={() => addPerfume(perfume)}
+                    disabled={totalSlots >= MAX_SLOTS}
+                  >
+                    Add to box
+                  </button>
+                </article>
+              );
+            })}
           </div>
         </section>
 

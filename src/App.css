@@ -342,3 +342,17 @@ button {
     position: static;
   }
 }
+
+.tier-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  width: fit-content;
+  margin: 10px auto 4px;
+  padding: 6px 11px;
+  border: 1px solid;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 800;
+  box-shadow: 0 0 18px rgba(255, 255, 255, 0.04);
+}
