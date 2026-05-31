@@ -385,20 +385,44 @@ export const perfumes = [
     "playful"
   ]
 },
+
 {
   id: 100,
   name: "Arancia di Capri",
   brand: "Acqua di Parma",
   points: 1.5,
+  image: "",
 
-  accords: [],
-  topNotes: [],
-  middleNotes: [],
-  baseNotes: [],
+  seasons: ["spring", "summer"],
+  occasions: ["daily", "casual"],
 
-  seasons: [],
-  occasions: [],
-  vibes: [],
+  vibes: [
+    "bright",
+    "mediterranean",
+    "relaxed",
+    "fresh"
+  ],
+
+  topNotes: ["orange", "sicilianMandarin", "bergamot", "lemon"],
+
+middleNotes: ["petitgrain", "cardamom"],
+
+baseNotes: ["caramel", "musk"],
+
+  accords: [
+    "citrus",
+    "fresh",
+    "aromatic"
+  ],
+
+  coverage: [
+    "daily",
+    "summer",
+    "casual",
+    "fresh",
+    "clean",
+    "easy"
+  ]
 },
 
 {
@@ -407,14 +431,42 @@ export const perfumes = [
   brand: "Acqua di Parma",
   points: 1.5,
 
-  accords: [],
+  accords: [
+  "citrus",
+  "aromatic",
+  "white floral",
+  "fresh spicy",
+  "woody",
+  "green"
+],
+
   topNotes: [],
   middleNotes: [],
   baseNotes: [],
 
-  seasons: [],
-  occasions: [],
-  vibes: [],
+  generalNotes: [
+    "neroli",
+    "bergamot",
+    "grapefruit",
+    "jasmine",
+    "petitgrain",
+    "orange",
+    "musk",
+    "mandarinOrange",
+    "vetiver",
+    "rosemary",
+    "oakmoss",
+    "rose",
+    "lilyOfTheValley",
+    "sage",
+    "patchouli",
+    "cloves",
+    "amber",
+  ],
+
+  seasons: ["spring", "summer"],
+  occasions: ["daily", "office", "casual"],
+  vibes: ["clean", "elegant", "citrus", "classic"],
 },
 
 {
@@ -423,14 +475,60 @@ export const perfumes = [
   brand: "Acqua di Parma",
   points: 1.5,
 
-  accords: [],
-  topNotes: [],
-  middleNotes: [],
-  baseNotes: [],
+  accords: [
+    "citrus",
+    "fruity",
+    "green",
+    "woody",
+    "aromatic",
+  ],
 
-  seasons: [],
-  occasions: [],
-  vibes: [],
+  topNotes: [
+    "grapefruit",
+    "bergamot",
+    "citron",
+    "lemon",
+  ],
+
+  middleNotes: [
+    "figNectar",
+    "jasmine",
+    "pinkPepper",
+  ],
+
+  baseNotes: [
+    "figTree",
+    "cedar",
+    "benzoin",
+  ],
+
+  seasons: [
+    "spring",
+    "summer",
+  ],
+
+  occasions: [
+    "daily",
+    "casual",
+    "vacation",
+  ],
+
+  vibes: [
+    "fresh",
+    "bright",
+    "relaxed",
+    "mediterranean",
+    "natural",
+  ],
+
+  coverage: [
+    "daily",
+    "summer",
+    "casual",
+    "fresh",
+    "clean",
+    "easy",
+  ],
 },
 
 {
@@ -439,14 +537,59 @@ export const perfumes = [
   brand: "Acqua di Parma",
   points: 1.5,
 
-  accords: [],
-  topNotes: [],
-  middleNotes: [],
-  baseNotes: [],
+  accords: [
+    "citrus",
+    "green",
+    "aromatic",
+    "fresh",
+    "sweet",
+  ],
 
-  seasons: [],
-  occasions: [],
-  vibes: [],
+  topNotes: [
+    "greenMandarin",
+    "bloodOrange",
+    "bergamot",
+    "lemon",
+  ],
+
+  middleNotes: [
+    "petitgrain",
+    "spearmint",
+  ],
+
+  baseNotes: [
+    "musk",
+    "cedar",
+    "patchouli",
+  ],
+
+  seasons: [
+    "spring",
+    "summer",
+  ],
+
+  occasions: [
+    "daily",
+    "casual",
+    "vacation",
+  ],
+
+  vibes: [
+    "fresh",
+    "bright",
+    "energetic",
+    "mediterranean",
+    "playful",
+  ],
+
+  coverage: [
+    "daily",
+    "summer",
+    "casual",
+    "fresh",
+    "clean",
+    "easy",
+  ],
 },
 ];
 

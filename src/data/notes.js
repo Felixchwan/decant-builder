@@ -194,4 +194,100 @@ amberwood: {
   image: "",
 },
 
+sicilianMandarin: {
+  name: "Sicilian Mandarin",
+  family: "citrus",
+  image: "",
+},
+
+petitgrain: {
+  name: "Petitgrain",
+  family: "green",
+  image: "",
+},
+
+caramel: {
+  name: "Caramel",
+  family: "sweet",
+  image: "",
+},
+
+grapefruit: {
+  name: "Grapefruit",
+  family: "citrus",
+  image: "",
+},
+
+vetiver: {
+  name: "Vetiver",
+  family: "woody",
+  image: "",
+},
+
+lilyOfTheValley: {
+  name: "Lily-of-the-Valley",
+  family: "floral",
+  image: "",
+},
+
+sage: {
+  name: "Sage",
+  family: "aromatic",
+  image: "",
+},
+
+cloves: {
+  name: "Cloves",
+  family: "spicy",
+  image: "",
+},
+
+citron: {
+  name: "Citron",
+  family: "citrus",
+  image: "",
+},
+
+figNectar: {
+  name: "Fig Nectar",
+  family: "fruity",
+  image: "",
+},
+
+pinkPepper: {
+  name: "Pink Pepper",
+  family: "spicy",
+  image: "",
+},
+
+figTree: {
+  name: "Fig Tree",
+  family: "green",
+  image: "",
+},
+
+benzoin: {
+  name: "Benzoin",
+  family: "resinous",
+  image: "",
+},
+
+greenMandarin: {
+  name: "Green Mandarin",
+  family: "citrus",
+  image: "",
+},
+
+bloodOrange: {
+  name: "Blood Orange",
+  family: "citrus",
+  image: "",
+},
+
+spearmint: {
+  name: "Spearmint",
+  family: "aromatic",
+  image: "",
+},
+
 };

@@ -9,6 +9,7 @@ function getPerfumeNoteIds(perfume) {
     ...(perfume.topNotes || []),
     ...(perfume.middleNotes || []),
     ...(perfume.baseNotes || []),
+    ...(perfume.generalNotes || []),
   ];
 }
 
