@@ -4,6 +4,7 @@ import { notes } from "./data/notes";
 import "./App.css";
 import { getTierData } from "./utils/tierUtils";
 import PerfumeCard from "./components/PerfumeCard";
+import FilterBar from "./components/FilterBar";
 
 function getPerfumeNoteIds(perfume) {
   return [
@@ -125,24 +126,11 @@ function App() {
             </div>
           </div>
 
-          <div className="filters">
-            {Object.entries(filterOptions).map(([category, options]) => (
-              <select
-                key={category}
-                value={activeFilters[category]}
-                onChange={(event) =>
-                  handleFilterChange(category, event.target.value)
-                }
-              >
-                <option value="">All {category}</option>
-                {options.map((option) => (
-                  <option key={option} value={option}>
-                    {option}
-                  </option>
-                ))}
-              </select>
-            ))}
-          </div>
+          <FilterBar
+          filterOptions={filterOptions}
+          activeFilters={activeFilters}
+          handleFilterChange={handleFilterChange}
+          />
 
           <div className="catalog-grid">
   {filteredPerfumes.map((perfume) => {
