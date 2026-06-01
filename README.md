@@ -1,5 +1,9 @@
 # Decant Builder
 
+## Live Demo
+
+[Open Decant Builder](https://decant-builder.vercel.app)
+
 ![Catalog Preview](./screenshots/catalog.png)
 
 Interactive fragrance discovery platform that allows users to build a custom fragrance box using a point-based upgrade system.
