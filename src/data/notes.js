@@ -341,4 +341,49 @@ cashmeran: {
   image: "",
 },
 
+madagascarVanilla: {
+  name: "Madagascar Vanilla",
+  image: "",
+},
+
+akigalawood: {
+  name: "Akigalawood",
+  image: "",
+},
+
+timur: {
+  name: "Timur",
+  image: "",
+},
+
+osmanthus: {
+  name: "Osmanthus",
+  image: "",
+},
+
+pomarose: {
+  name: "Pomarose",
+  image: "",
+},
+
+siamBenzoin: {
+  name: "Siam Benzoin",
+  image: "",
+},
+
+texasCedar: {
+  name: "Texas Cedar",
+  image: "",
+},
+
+australianSandalwood: {
+  name: "Australian Sandalwood",
+  image: "",
+},
+
+cypress: {
+  name: "Cypress",
+  image: "",
+},
+
 };

@@ -797,6 +797,256 @@ baseNotes: ["caramel", "musk"],
   ],
 },
 
+{
+  id: 301,
+  name: "Allure Homme Edition Blanche",
+  brand: "Chanel",
+  points: 2.5,
+
+  accords: [
+    "citrus",
+    "vanilla",
+    "woody",
+    "sweet",
+  ],
+
+  topNotes: [
+    "lemon",
+    "bergamot",
+  ],
+
+  middleNotes: [
+    "sandalwood",
+    "woodyNotes",
+  ],
+
+  baseNotes: [
+    "madagascarVanilla",
+    "vetiver",
+  ],
+
+  seasons: [
+    "spring",
+    "summer",
+    "fall",
+  ],
+
+  occasions: [
+    "daily",
+    "office",
+    "casual",
+    "date",
+  ],
+
+  vibes: [
+    "elegant",
+    "clean",
+    "versatile",
+    "relaxed",
+    "sophisticated",
+  ],
+},
+
+{
+  id: 302,
+  name: "Allure Homme Sport Superleggera",
+  brand: "Chanel",
+  points: 2.5,
+
+  accords: [
+    "citrus",
+    "woody",
+    "musky",
+    "fresh",
+  ],
+
+  topNotes: [
+    "mandarin",
+    "grapefruit",
+    "citrus",
+  ],
+
+  middleNotes: [
+    "woodyNotes",
+    "cedarwood",
+  ],
+
+  baseNotes: [
+    "whiteMusk",
+    "amber",
+    "patchouli",
+    "sandalwood",
+  ],
+
+  seasons: [
+    "spring",
+    "summer",
+  ],
+
+  occasions: [
+    "daily",
+    "office",
+    "casual",
+    "gym",
+  ],
+
+  vibes: [
+    "fresh",
+    "clean",
+    "energetic",
+    "elegant",
+    "versatile",
+  ],
+},
+
+{
+  id: 303,
+  name: "Bois Imperial",
+  brand: "Essential Parfums",
+  points: 2.5,
+
+  accords: [
+    "woody",
+    "aromatic",
+    "fresh spicy",
+    "amber",
+  ],
+
+  topNotes: [],
+  middleNotes: [],
+  baseNotes: [],
+
+  generalNotes: [
+    "akigalawood",
+    "woodyNotes",
+    "basil",
+    "vetiver",
+    "timur",
+    "ambroxan",
+    "patchouli",
+  ],
+
+  seasons: [
+    "spring",
+    "summer",
+    "fall",
+  ],
+
+  occasions: [
+    "daily",
+    "office",
+    "casual",
+  ],
+
+  vibes: [
+    "modern",
+    "elegant",
+    "confident",
+    "versatile",
+    "bold",
+  ],
+},
+
+{
+  id: 304,
+  name: "Divine Vanille",
+  brand: "Essential Parfums",
+  points: 2.5,
+
+  accords: [
+    "vanilla",
+    "sweet",
+    "warm spicy",
+    "amber",
+  ],
+
+  topNotes: [
+    "cinnamon",
+    "blackPepper",
+    "clarySage",
+  ],
+
+  middleNotes: [
+    "incense",
+    "osmanthus",
+    "pomarose",
+  ],
+
+  baseNotes: [
+    "madagascarVanilla",
+    "tonkaBean",
+    "siamBenzoin",
+    "patchouli",
+    "texasCedar",
+    "musk",
+  ],
+
+  seasons: [
+    "fall",
+    "winter",
+  ],
+
+  occasions: [
+    "casual",
+    "date",
+    "night",
+  ],
+
+  vibes: [
+    "cozy",
+    "warm",
+    "seductive",
+    "elegant",
+    "relaxed",
+  ],
+},
+
+{
+  id: 305,
+  name: "Orange X Santal",
+  brand: "Essential Parfums",
+  points: 2.5,
+
+  accords: [
+    "citrus",
+    "woody",
+    "aromatic",
+    "fresh",
+  ],
+
+  topNotes: [],
+  middleNotes: [],
+  baseNotes: [],
+
+  generalNotes: [
+    "bitterOrange",
+    "australianSandalwood",
+    "cypress",
+    "basil",
+    "oakmoss",
+  ],
+
+  seasons: [
+    "spring",
+    "summer",
+    "fall",
+  ],
+
+  occasions: [
+    "daily",
+    "office",
+    "casual",
+  ],
+
+  vibes: [
+    "fresh",
+    "natural",
+    "relaxed",
+    "clean",
+    "elegant",
+  ],
+},
+
 ];
 
 export const filterOptions = {
