@@ -7,6 +7,8 @@ import { getTierData } from "./utils/tierUtils";
 import PerfumeCard from "./components/PerfumeCard";
 import FilterBar from "./components/FilterBar";
 import BuilderPanel from "./components/BuilderPanel";
+import { buildBoxSummary } from "./utils/buildBoxSummary";
+import { getPerfumeNoteIds } from "./utils/noteUtils";
 import {
   MIN_BOX_SLOTS,
   MAX_BOX_SLOTS,
@@ -14,15 +16,6 @@ import {
   BASE_DECANTS,
   POINT_VALUE,
 } from "./constants/boxRules";
-
-function getPerfumeNoteIds(perfume) {
-  return [
-    ...(perfume.topNotes || []),
-    ...(perfume.middleNotes || []),
-    ...(perfume.baseNotes || []),
-    ...(perfume.generalNotes || []),
-  ];
-}
 
 function App() {
   const [selectedPerfumes, setSelectedPerfumes] = useState([]);
@@ -65,33 +58,8 @@ function App() {
     });
   }, [activeFilters]);
 
-  const boxSummary = useMemo(() => {
-  const allOccasions = selectedPerfumes.flatMap((p) => p.occasions || []);
-  const allSeasons = selectedPerfumes.flatMap((p) => p.seasons || []);
-  const allNotes = selectedPerfumes
-    .flatMap((p) => getPerfumeNoteIds(p))
-    .map((noteId) => notes[noteId]?.name)
-    .filter(Boolean);
-  const allVibes = selectedPerfumes.flatMap((p) => p.vibes || []);
-  const accordMap = selectedPerfumes.reduce((map, perfume) => {
-  (perfume.accords || []).forEach((accord) => {
-    if (!map[accord]) {
-      map[accord] = [];
-    }
-
-    map[accord].push(perfume.name);
-  });
-
-  return map;
-}, {});
-
-  return {
-    occasions: [...new Set(allOccasions)],
-    seasons: [...new Set(allSeasons)],
-    notes: [...new Set(allNotes)],
-    vibes: [...new Set(allVibes)],
-    accordMap,
-  };
+const boxSummary = useMemo(() => {
+  return buildBoxSummary(selectedPerfumes, notes);
 }, [selectedPerfumes]);
 
   function handleFilterChange(category, value) {
