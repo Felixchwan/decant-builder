@@ -290,4 +290,55 @@ spearmint: {
   image: "",
 },
 
+elemi: {
+  name: "Elemi",
+  family: "resinous",
+  image: "",
+},
+
+olibanum: {
+  name: "Olibanum",
+  image: "",
+},
+
+sichuanPepper: {
+  name: "Sichuan Pepper",
+  image: "",
+},
+
+starAnise: {
+  name: "Star Anise",
+  image: "",
+},
+
+blackCurrant: {
+  name: "Black Currant",
+  image: "",
+},
+
+chestnut: {
+  name: "Chestnut",
+  image: "",
+},
+
+guaiacWood: {
+  name: "Guaiac Wood",
+  image: "",
+},
+
+juniper: {
+  name: "Juniper",
+  image: "",
+},
+
+peruBalsam: {
+  name: "Peru Balsam",
+  image: "",
+},
+
+cashmeran: {
+  name: "Cashmeran",
+  image: "",
+},
+
 };

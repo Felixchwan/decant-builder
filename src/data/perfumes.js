@@ -591,6 +591,212 @@ baseNotes: ["caramel", "musk"],
     "easy",
   ],
 },
+
+{
+  id: 201,
+  name: "Dior Homme Sport",
+  brand: "Dior",
+  points: 2,
+
+  accords: [
+    "citrus",
+    "fresh spicy",
+    "woody",
+    "aromatic",
+  ],
+
+  topNotes: [
+    "lemon",
+    "bergamot",
+    "aldehydes",
+  ],
+
+  middleNotes: [
+    "elemi",
+    "pinkPepper",
+  ],
+
+  baseNotes: [
+    "woodyNotes",
+    "amber",
+    "olibanum",
+  ],
+
+  seasons: [
+    "spring",
+    "summer",
+    "fall",
+  ],
+
+  occasions: [
+    "daily",
+    "office",
+    "casual",
+    "date",
+    "gym",
+  ],
+
+  vibes: [
+    "fresh",
+    "clean",
+    "energetic",
+    "versatile",
+    "elegant",
+  ],
+},
+
+{
+  id: 202,
+  name: "Sauvage EDP",
+  brand: "Dior",
+  points: 2,
+
+  accords: [
+    "fresh spicy",
+    "amber",
+    "aromatic",
+    "vanilla",
+  ],
+
+  topNotes: [
+    "bergamot",
+  ],
+
+  middleNotes: [
+    "sichuanPepper",
+    "lavender",
+    "starAnise",
+    "nutmeg",
+  ],
+
+  baseNotes: [
+    "ambroxan",
+    "vanilla",
+  ],
+
+  seasons: [
+    "spring",
+    "fall",
+    "winter",
+  ],
+
+  occasions: [
+    "daily",
+    "office",
+    "date",
+    "night",
+    "club",
+  ],
+
+  vibes: [
+    "versatile",
+    "bold",
+    "confident",
+    "seductive",
+    "mass appealing",
+  ],
+},
+
+{
+  id: 203,
+  name: "Loewe 7 Cobalt",
+  brand: "Loewe",
+  points: 2,
+
+  accords: [
+    "aromatic",
+    "fresh spicy",
+    "woody",
+    "warm spicy",
+  ],
+
+  topNotes: [],
+  middleNotes: [],
+  baseNotes: [],
+
+  generalNotes: [
+    "sage",
+    "incense",
+    "blackCurrant",
+    "vetiver",
+    "pinkPepper",
+    "cloves",
+    "tonkaBean",
+  ],
+
+  seasons: [
+    "spring",
+    "fall",
+    "winter",
+  ],
+
+  occasions: [
+    "daily",
+    "office",
+    "date",
+    "night",
+  ],
+
+  vibes: [
+  "bold",
+  "elegant",
+  "modern",
+  "confident",
+  "mysterious",
+],
+},
+
+{
+  id: 204,
+  name: "Replica By The Fireplace",
+  brand: "Maison Martin Margiela",
+  points: 2,
+
+  accords: [
+    "woody",
+    "warm spicy",
+    "smoky",
+    "sweet",
+  ],
+
+  topNotes: [
+    "cloves",
+    "pinkPepper",
+    "orangeBlossom",
+  ],
+
+  middleNotes: [
+    "chestnut",
+    "guaiacWood",
+    "juniper",
+  ],
+
+  baseNotes: [
+    "vanilla",
+    "peruBalsam",
+    "cashmeran",
+  ],
+
+  seasons: [
+    "fall",
+    "winter",
+  ],
+
+  occasions: [
+    "casual",
+    "date",
+    "night",
+  ],
+
+  vibes: [
+    "cozy",
+    "warm",
+    "relaxed",
+    "playful",
+    "seductive",
+  ],
+},
+
 ];
 
 export const filterOptions = {
