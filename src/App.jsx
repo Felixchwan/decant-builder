@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
-import { perfumes, filterOptions } from "./data/perfumes";
+import { perfumes } from "./data/perfumes";
+import { buildFilterOptions } from "./utils/filterUtils";
 import { notes } from "./data/notes";
 import "./App.css";
 import { getTierData } from "./utils/tierUtils";
@@ -43,6 +44,9 @@ function App() {
   const missingSlots = Math.max(0, MIN_BOX_SLOTS - totalSlots);
   const missingPoints = Math.max(0, MIN_BOX_POINTS - totalPoints);
   const isBoxReady = missingSlots === 0 && missingPoints === 0;
+  const filterOptions = useMemo(() => {
+  return buildFilterOptions(perfumes);
+}, []);
 
   const filteredPerfumes = useMemo(() => {
     return perfumes.filter((perfume) => {

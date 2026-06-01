@@ -1,3 +1,5 @@
+import { useState } from "react";
+
 function BuilderPanel({
   totalSlots,
   maxSlots,
@@ -14,6 +16,8 @@ function BuilderPanel({
   missingPoints,
   isBoxReady,
 }) {
+    const [isNotesModalOpen, setIsNotesModalOpen] = useState(false);
+    const sortedNotes = [...boxSummary.notes].sort();
   return (
     <aside className="builder-panel">
       <div className="panel-header">
@@ -156,14 +160,53 @@ function BuilderPanel({
         </div>
 
         <div>
-          <span>Notes</span>
-          <p>
-            {boxSummary.notes.length > 0
-              ? `${boxSummary.notes.length} unique notes covered`
-              : "No data yet"}
-          </p>
-        </div>
+  <span>Notes</span>
+
+  {boxSummary.notes.length > 0 ? (
+    <>
+      <p>{boxSummary.notes.length} unique notes covered</p>
+
+      <button
+        className="details-button"
+        onClick={() => setIsNotesModalOpen(true)}
+      >
+        View Details
+      </button>
+    </>
+  ) : (
+    <p>No data yet</p>
+  )}
+</div>
       </div>
+      {isNotesModalOpen && (
+  <div
+    className="modal-overlay"
+    onClick={() => setIsNotesModalOpen(false)}
+  >
+    <div
+      className="modal-content"
+      onClick={(event) => event.stopPropagation()}
+    >
+      <div className="modal-header">
+        <h3>Scent Library</h3>
+
+        <button
+          onClick={() => setIsNotesModalOpen(false)}
+        >
+          ✕
+        </button>
+      </div>
+
+      <div className="notes-grid">
+        {sortedNotes.map((note) => (
+          <span key={note} className="note-pill">
+            {note}
+          </span>
+        ))}
+      </div>
+    </div>
+  </div>
+)}
     </aside>
   );
 }
