@@ -5,6 +5,7 @@ import "./App.css";
 import { getTierData } from "./utils/tierUtils";
 import PerfumeCard from "./components/PerfumeCard";
 import FilterBar from "./components/FilterBar";
+import BuilderPanel from "./components/BuilderPanel";
 
 function getPerfumeNoteIds(perfume) {
   return [
@@ -126,157 +127,44 @@ function App() {
             </div>
           </div>
 
-          <FilterBar
-          filterOptions={filterOptions}
-          activeFilters={activeFilters}
-          handleFilterChange={handleFilterChange}
+                    <FilterBar
+            filterOptions={filterOptions}
+            activeFilters={activeFilters}
+            handleFilterChange={handleFilterChange}
           />
 
           <div className="catalog-grid">
-  {filteredPerfumes.map((perfume) => {
-    const tierData = getTierData(perfume.id);
-    const noteNames = getPerfumeNoteIds(perfume)
-      .map((noteId) => notes[noteId]?.name)
-      .filter(Boolean);
+            {filteredPerfumes.map((perfume) => {
+              const tierData = getTierData(perfume.id);
+              const noteNames = getPerfumeNoteIds(perfume)
+                .map((noteId) => notes[noteId]?.name)
+                .filter(Boolean);
 
-    return (
-      <PerfumeCard
-        key={perfume.id}
-        perfume={perfume}
-        tierData={tierData}
-        noteNames={noteNames}
-        onAddToBox={addPerfume}
-        isDisabled={totalSlots >= MAX_SLOTS}
-      />
-    );
-  })}
-</div>
+              return (
+                <PerfumeCard
+                  key={perfume.id}
+                  perfume={perfume}
+                  tierData={tierData}
+                  noteNames={noteNames}
+                  onAddToBox={addPerfume}
+                  isDisabled={totalSlots >= MAX_SLOTS}
+                />
+              );
+            })}
+          </div>
         </section>
 
-        <aside className="builder-panel">
-          <div className="panel-header">
-            <div>
-              <h2>My Box</h2>
-              <p>
-                {totalSlots}/{MAX_SLOTS} slots used
-              </p>
-            </div>
-
-            <button className="ghost-button" onClick={clearBox}>
-              Clear
-            </button>
-          </div>
-
-          <div className="stats-grid">
-            <div className="stat-card">
-              <span>Points</span>
-              <strong>{totalPoints.toFixed(1)}</strong>
-            </div>
-
-            <div className="stat-card">
-              <span>Value</span>
-              <strong>${estimatedValue.toFixed(0)}</strong>
-            </div>
-
-            <div className="stat-card">
-              <span>Upgrade</span>
-              <strong>${upgradeValue.toFixed(0)}</strong>
-            </div>
-          </div>
-
-          <div className="slot-bar">
-            <div
-              className="slot-progress"
-              style={{ width: `${(totalSlots / MAX_SLOTS) * 100}%` }}
-            />
-          </div>
-
-          <div className="selected-list">
-            {selectedPerfumes.length === 0 ? (
-              <p className="empty-state">Start adding perfumes to your box.</p>
-            ) : (
-              selectedPerfumes.map((perfume, index) => (
-                <div className="selected-item" key={`${perfume.id}-${index}`}>
-                  <div>
-                    <strong>{perfume.name}</strong>
-                    <span>
-                      {perfume.brand} · {perfume.points} pt
-                    </span>
-                  </div>
-
-                  <button onClick={() => removePerfume(index)}>Remove</button>
-                </div>
-              ))
-            )}
-          </div>
-
-  <h3>Box Profile</h3>
-
-  <div>
-    <span>Occasions</span>
-    <div className="summary-tags">
-      {boxSummary.occasions.length > 0 ? (
-        boxSummary.occasions.map((item) => <span key={item}>{item}</span>)
-      ) : (
-        <p>No data yet</p>
-      )}
-    </div>
-  </div>
-
-  <div>
-    <span>Seasons</span>
-    <div className="summary-tags">
-      {boxSummary.seasons.length > 0 ? (
-        boxSummary.seasons.map((item) => <span key={item}>{item}</span>)
-      ) : (
-        <p>No data yet</p>
-      )}
-    </div>
-  </div>
-
-  <div>
-    <span>Vibes</span>
-    <div className="summary-tags">
-      {boxSummary.vibes.length > 0 ? (
-        boxSummary.vibes.map((item) => <span key={item}>{item}</span>)
-      ) : (
-        <p>No data yet</p>
-      )}
-    </div>
-  </div>
-
-<div>
-  <span>Scent Palette</span>
-
-  <div className="summary-tags">
-    {Object.entries(boxSummary.accordMap).length > 0 ? (
-      Object.entries(boxSummary.accordMap).map(([accord, perfumeNames]) => (
-        <span className="accord-tooltip" key={accord}>
-          {accord} ×{perfumeNames.length}
-
-          <div className="tooltip-box">
-            <strong>{accord}</strong>
-            {perfumeNames.map((name) => (
-              <p key={name}>{name}</p>
-            ))}
-          </div>
-        </span>
-      ))
-    ) : (
-      <p>No data yet</p>
-    )}
-  </div>
-</div>
-
-  <div>
-    <span>Notes</span>
-    <p>
-      {boxSummary.notes.length > 0
-        ? `${boxSummary.notes.length} unique notes covered`
-        : "No data yet"}
-    </p>
-  </div>
-        </aside>
+        <BuilderPanel
+          totalSlots={totalSlots}
+          maxSlots={MAX_SLOTS}
+          totalPoints={totalPoints}
+          estimatedValue={estimatedValue}
+          upgradeValue={upgradeValue}
+          selectedPerfumes={selectedPerfumes}
+          boxSummary={boxSummary}
+          onClearBox={clearBox}
+          onRemovePerfume={removePerfume}
+        />
       </section>
     </main>
   );
