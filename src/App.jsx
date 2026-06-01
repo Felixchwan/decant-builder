@@ -6,6 +6,13 @@ import { getTierData } from "./utils/tierUtils";
 import PerfumeCard from "./components/PerfumeCard";
 import FilterBar from "./components/FilterBar";
 import BuilderPanel from "./components/BuilderPanel";
+import {
+  MIN_BOX_SLOTS,
+  MAX_BOX_SLOTS,
+  MIN_BOX_POINTS,
+  BASE_DECANTS,
+  POINT_VALUE,
+} from "./constants/boxRules";
 
 function getPerfumeNoteIds(perfume) {
   return [
@@ -15,10 +22,6 @@ function getPerfumeNoteIds(perfume) {
     ...(perfume.generalNotes || []),
   ];
 }
-
-const MAX_SLOTS = 16;
-const BASE_DECANTS = 14;
-const POINT_VALUE = 90;
 
 function App() {
   const [selectedPerfumes, setSelectedPerfumes] = useState([]);
@@ -37,6 +40,9 @@ function App() {
   const estimatedValue = totalPoints * POINT_VALUE;
   const baseValue = BASE_DECANTS * POINT_VALUE;
   const upgradeValue = Math.max(0, estimatedValue - baseValue);
+  const missingSlots = Math.max(0, MIN_BOX_SLOTS - totalSlots);
+  const missingPoints = Math.max(0, MIN_BOX_POINTS - totalPoints);
+  const isBoxReady = missingSlots === 0 && missingPoints === 0;
 
   const filteredPerfumes = useMemo(() => {
     return perfumes.filter((perfume) => {
@@ -92,7 +98,7 @@ function App() {
   }
 
   function addPerfume(perfume) {
-    if (totalSlots >= MAX_SLOTS) return;
+    if (totalSlots >= MAX_BOX_SLOTS) return;
 
     setSelectedPerfumes((current) => [...current, perfume]);
   }
@@ -113,7 +119,7 @@ function App() {
         <p className="eyebrow">Decant Box Builder</p>
         <h1>Build your fragrance box</h1>
         <p>
-          Select up to {MAX_SLOTS} decants, explore different moods, and see the
+          Select up to {MAX_BOX_SLOTS} decants, explore different moods, and see the
           value of your box update in real time.
         </p>
       </section>
@@ -147,7 +153,7 @@ function App() {
                   tierData={tierData}
                   noteNames={noteNames}
                   onAddToBox={addPerfume}
-                  isDisabled={totalSlots >= MAX_SLOTS}
+                  isDisabled={totalSlots >= MAX_BOX_SLOTS}
                 />
               );
             })}
@@ -156,7 +162,7 @@ function App() {
 
         <BuilderPanel
           totalSlots={totalSlots}
-          maxSlots={MAX_SLOTS}
+          maxSlots={MAX_BOX_SLOTS}
           totalPoints={totalPoints}
           estimatedValue={estimatedValue}
           upgradeValue={upgradeValue}
@@ -164,6 +170,11 @@ function App() {
           boxSummary={boxSummary}
           onClearBox={clearBox}
           onRemovePerfume={removePerfume}
+          minSlots={MIN_BOX_SLOTS}
+          minPoints={MIN_BOX_POINTS}
+          missingSlots={missingSlots}
+          missingPoints={missingPoints}
+          isBoxReady={isBoxReady}
         />
       </section>
     </main>

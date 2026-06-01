@@ -8,6 +8,11 @@ function BuilderPanel({
   boxSummary,
   onClearBox,
   onRemovePerfume,
+  minSlots,
+  minPoints,
+  missingSlots,
+  missingPoints,
+  isBoxReady,
 }) {
   return (
     <aside className="builder-panel">
@@ -47,6 +52,26 @@ function BuilderPanel({
           style={{ width: `${(totalSlots / maxSlots) * 100}%` }}
         />
       </div>
+
+<div className={`box-status ${isBoxReady ? "ready" : "not-ready"}`}>
+  <strong>
+    {isBoxReady ? "Discovery Box ready" : "Discovery Box requirements"}
+  </strong>
+
+  <p>
+    {totalSlots >= minSlots
+      ? `✓ Minimum ${minSlots} fragrances`
+      : `Need ${missingSlots} more fragrance${missingSlots === 1 ? "" : "s"}`}
+  </p>
+
+  <p>
+    {totalPoints >= minPoints
+      ? `✓ Minimum ${minPoints} points`
+      : `Need ${missingPoints.toFixed(1)} more point${
+          missingPoints === 1 ? "" : "s"
+        }`}
+  </p>
+</div>
 
       <div className="selected-list">
         {selectedPerfumes.length === 0 ? (
