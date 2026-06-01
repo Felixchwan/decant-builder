@@ -29,9 +29,9 @@ export function getTierData(id) {
   if (id < 400) {
     return {
       name: "Platinum",
-      emoji: "🔷",
-      color: "#8fd3ff",
-      background: "rgba(143,211,255,0.18)",
+      emoji: "⬢",
+      color: "#f8fafc",
+      background: "rgba(248,250,252,0.22)",
     };
   }
 
@@ -39,8 +39,8 @@ export function getTierData(id) {
     return {
       name: "Diamond",
       emoji: "💎",
-      color: "#67e8f9",
-      background: "rgba(103,232,249,0.18)",
+      color: "#22d3ee",
+      background: "rgba(34,211,238,0.18)",
     };
   }
 

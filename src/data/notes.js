@@ -386,4 +386,74 @@ cypress: {
   image: "",
 },
 
+greenTea: {
+  name: "Green Tea",
+  image: "",
+},
+
+galbanum: {
+  name: "Galbanum",
+  image: "",
+},
+
+licorice: {
+  name: "Licorice",
+  image: "",
+},
+
+haitianVetiver: {
+  name: "Haitian Vetiver",
+  image: "",
+},
+
+greenApple: {
+  name: "Green Apple",
+  image: "",
+},
+
+saffron: {
+  name: "Saffron",
+  image: "",
+},
+
+davana: {
+  name: "Davana",
+  image: "",
+},
+
+opoponax: {
+  name: "Opoponax",
+  image: "",
+},
+
+ambermax: {
+  name: "Ambermax",
+  image: "",
+},
+
+apple: {
+  name: "Apple",
+  image: "",
+},
+
+amylSalicylate: {
+  name: "Amyl Salicylate",
+  image: "",
+},
+
+ink: {
+  name: "Ink",
+  image: "",
+},
+
+seaSalt: {
+  name: "Sea Salt",
+  image: "",
+},
+
+ambergris: {
+  name: "Ambergris",
+  image: "",
+},
+
 };

@@ -24,6 +24,7 @@ function App() {
     occasions: "",
     vibes: "",
   });
+  const [pendingPerfume, setPendingPerfume] = useState(null);
 
   const totalSlots = selectedPerfumes.length;
   const totalPoints = selectedPerfumes.reduce(
@@ -37,9 +38,7 @@ function App() {
   const missingSlots = Math.max(0, MIN_BOX_SLOTS - totalSlots);
   const missingPoints = Math.max(0, MIN_BOX_POINTS - totalPoints);
   const isBoxReady = missingSlots === 0 && missingPoints === 0;
-  const filterOptions = useMemo(() => {
-  return buildFilterOptions(perfumes);
-}, []);
+  const filterOptions = useMemo(() => buildFilterOptions(perfumes), []);
 
   const filteredPerfumes = useMemo(() => {
     return perfumes.filter((perfume) => {
@@ -69,11 +68,29 @@ const boxSummary = useMemo(() => {
     }));
   }
 
-  function addPerfume(perfume) {
-    if (totalSlots >= MAX_BOX_SLOTS) return;
-
-    setSelectedPerfumes((current) => [...current, perfume]);
+  const addPerfume = (perfume) => {
+  if (perfume.warningMessage) {
+    setPendingPerfume(perfume);
+    return;
   }
+
+  setSelectedPerfumes((prev) => [...prev, perfume]);
+};
+
+const confirmAddPerfume = () => {
+  if (!pendingPerfume) return;
+
+  setSelectedPerfumes((prev) => [
+    ...prev,
+    pendingPerfume,
+  ]);
+
+  setPendingPerfume(null);
+};
+
+const cancelAddPerfume = () => {
+  setPendingPerfume(null);
+};
 
   function removePerfume(indexToRemove) {
     setSelectedPerfumes((current) =>
@@ -86,6 +103,7 @@ const boxSummary = useMemo(() => {
   }
 
   return (
+    <>
     <main className="app">
       <section className="hero">
         <p className="eyebrow">Decant Box Builder</p>
@@ -150,6 +168,32 @@ const boxSummary = useMemo(() => {
         />
       </section>
     </main>
+    {pendingPerfume && (
+  <div className="modal-overlay">
+    <div className="warning-modal">
+      <h2>Rare Selection</h2>
+
+      <h3>{pendingPerfume.name}</h3>
+
+      <p>{pendingPerfume.warningMessage}</p>
+
+      <p className="warning-footer">
+      ☠ Proceed with caution.
+      </p>
+
+      <div className="modal-actions">
+        <button onClick={confirmAddPerfume}>
+          Add to Box
+        </button>
+
+        <button onClick={cancelAddPerfume}>
+          Cancel
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+    </>
   );
 }
 

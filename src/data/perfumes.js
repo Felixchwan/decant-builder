@@ -1047,6 +1047,274 @@ baseNotes: ["caramel", "musk"],
   ],
 },
 
+{
+  id: 401,
+  name: "Silver Mountain Water",
+  brand: "Creed",
+  points: 4.5,
+
+  accords: [
+    "citrus",
+    "green",
+    "musky",
+    "fresh",
+  ],
+
+  topNotes: [
+    "bergamot",
+    "mandarin",
+  ],
+
+  middleNotes: [
+    "greenTea",
+    "blackCurrant",
+  ],
+
+  baseNotes: [
+    "musk",
+    "petitgrain",
+    "sandalwood",
+    "galbanum",
+  ],
+
+  seasons: [
+    "spring",
+    "summer",
+  ],
+
+  occasions: [
+    "daily",
+    "office",
+    "casual",
+  ],
+
+  vibes: [
+    "clean",
+    "fresh",
+    "elegant",
+    "relaxed",
+    "natural",
+  ],
+},
+
+{
+  id: 402,
+  name: "Sauvage Elixir",
+  brand: "Dior",
+  points: 4.5,
+
+  accords: [
+    "warm spicy",
+    "aromatic",
+    "amber",
+    "woody",
+  ],
+
+  topNotes: [
+    "nutmeg",
+    "cinnamon",
+    "cardamom",
+    "grapefruit",
+  ],
+
+  middleNotes: [
+    "lavender",
+  ],
+
+  baseNotes: [
+    "licorice",
+    "sandalwood",
+    "amber",
+    "patchouli",
+    "haitianVetiver",
+  ],
+
+  seasons: [
+    "fall",
+    "winter",
+  ],
+
+  occasions: [
+    "date",
+    "night",
+    "club",
+  ],
+
+  vibes: [
+    "bold",
+    "confident",
+    "seductive",
+    "powerful",
+    "elegant",
+  ],
+},
+
+{
+  id: 403,
+  name: "Carlisle",
+  brand: "Parfums de Marly",
+  points: 4.5,
+
+  accords: [
+    "warm spicy",
+    "sweet",
+    "woody",
+    "amber",
+  ],
+
+  topNotes: [
+    "nutmeg",
+    "greenApple",
+    "saffron",
+  ],
+
+  middleNotes: [
+    "tonkaBean",
+    "rose",
+    "osmanthus",
+    "davana",
+  ],
+
+  baseNotes: [
+    "patchouli",
+    "vanilla",
+    "opoponax",
+  ],
+
+  seasons: [
+    "fall",
+    "winter",
+  ],
+
+  occasions: [
+    "date",
+    "night",
+    "formal",
+  ],
+
+  vibes: [
+    "luxurious",
+    "dark",
+    "confident",
+    "seductive",
+    "elegant",
+  ],
+},
+
+{
+  id: 404,
+  name: "Layton",
+  brand: "Parfums de Marly",
+  points: 4.5,
+
+  accords: [
+    "sweet",
+    "warm spicy",
+    "woody",
+    "vanilla",
+  ],
+
+  topNotes: [
+    "apple",
+    "lavender",
+    "bergamot",
+    "mandarin",
+  ],
+
+  middleNotes: [
+    "geranium",
+    "violet",
+    "jasmine",
+  ],
+
+  baseNotes: [
+    "vanilla",
+    "cardamom",
+    "sandalwood",
+    "pepper",
+    "guaiacWood",
+    "patchouli",
+    "ambermax",
+    "coumarin",
+  ],
+
+  seasons: [
+    "fall",
+    "winter",
+    "spring",
+  ],
+
+  occasions: [
+    "date",
+    "office",
+    "formal",
+    "night",
+  ],
+
+  vibes: [
+    "luxurious",
+    "versatile",
+    "confident",
+    "elegant",
+    "approachable",
+  ],
+},
+
+{
+  id: 405,
+  name: "Squid",
+  brand: "Zoologist",
+  points: 4.5,
+
+  warningMessage: `
+  Zoologist Squid explores marine darkness through notes of ink, incense, sea salt and ambergris.
+  This fragrance is considered highly unconventional and may not appeal to every wearer.
+  `,
+
+  accords: [
+    "marine",
+    "amber",
+    "salty",
+    "incense",
+  ],
+
+  topNotes: [
+    "incense",
+    "amylSalicylate",
+    "pinkPepper",
+  ],
+
+  middleNotes: [
+    "ink",
+    "seaSalt",
+    "opoponax",
+  ],
+
+  baseNotes: [
+    "ambergris",
+    "benzoin",
+    "musk",
+  ],
+
+  seasons: [
+    "fall",
+    "winter",
+  ],
+
+  occasions: [
+    "night",
+    "special",
+  ],
+
+  vibes: [
+    "mysterious",
+    "dark",
+    "artistic",
+    "bold",
+    "unique",
+  ],
+},
+
 ];
 
 export const filterOptions = {
