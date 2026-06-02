@@ -12,6 +12,7 @@ export function buildCoverageSummary(boxSummary, perfumes = []) {
   const strengths = [];
   const gaps = [];
   const suggestions = [];
+  const seasonalRecommendations = [];
 
   Object.entries(TARGET_COVERAGE).forEach(([category, targets]) => {
     targets.forEach((target) => {
@@ -54,31 +55,26 @@ export function buildCoverageSummary(boxSummary, perfumes = []) {
           target,
           label: `Add ${formatLabel(target)} Coverage`,
         });
+
+        const recommendation = perfumes.find((perfume) =>
+          perfume[category]?.includes(target)
+        );
+
+        if (recommendation) {
+          seasonalRecommendations.push({
+            season: target,
+            perfume: recommendation,
+          });
+        }
       }
     });
   });
-
-  const missingSeasons = gaps.map((gap) => gap.target);
-
-  const recommendations = perfumes
-    .filter((perfume) => {
-      const isAlreadySelected = boxSummary.selectedPerfumeIds?.includes(
-        perfume.id
-      );
-
-      return (
-        !isAlreadySelected &&
-        perfume.seasons?.some((season) => missingSeasons.includes(season))
-      );
-    })
-    .slice(0, 5);
 
   return {
     strengths,
     gaps,
     suggestions,
     seasonalRecommendations,
-    profile,
   };
 }
 
@@ -91,29 +87,6 @@ function getCoverageCount(boxSummary, category, target) {
 
   return countMapByCategory[category]?.[target] || 0;
 }
-
-const seasonalRecommendations = [];
-
-Object.entries(GAP_TARGETS).forEach(([category, targets]) => {
-  targets.forEach((target) => {
-    const count = getCoverageCount(boxSummary, category, target);
-
-    if (count === 0) {
-      const recommendation = perfumes.find(
-        (perfume) =>
-          perfume[category]?.includes(target) &&
-          !selectedPerfumes.some((selected) => selected.id === perfume.id)
-      );
-
-      if (recommendation) {
-        seasonalRecommendations.push({
-          season: target,
-          perfume: recommendation,
-        });
-      }
-    }
-  });
-});
 
 function getSeasonColor(season) {
   const seasonColors = {
