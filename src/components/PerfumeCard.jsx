@@ -9,6 +9,18 @@ function PerfumeCard({
     <article className="perfume-card">
       <div className="perfume-info">
         <h3>{perfume.name}</h3>
+        {perfume.subtitle && (
+        <p
+        className={`perfume-subtitle ${
+        perfume.subtitleGlow ? "perfume-subtitle-glow" : ""
+        }`}
+        style={{
+        color: perfume.subtitleColor || "#fbbf24",
+        }}
+        >
+        {perfume.subtitle}
+        </p>
+        )}
         <p>{perfume.brand}</p>
 
         <div

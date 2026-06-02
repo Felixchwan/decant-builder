@@ -609,3 +609,32 @@ button {
   border: 1px solid rgba(110, 231, 183, 0.35);
   color: #b7f7d3;
 }
+
+.perfume-subtitle {
+  margin-top: 4px;
+  margin-bottom: 2px;
+
+  color: #d4c46a;
+
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+.perfume-subtitle-glow {
+  text-shadow:
+    0 0 8px rgba(251, 191, 36, 0.45),
+    0 0 16px rgba(251, 191, 36, 0.20);
+}
+
+.selected-subtitle {
+  display: block;
+  margin-top: 2px;
+  margin-bottom: 2px;
+
+  color: #d4c46a;
+
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}

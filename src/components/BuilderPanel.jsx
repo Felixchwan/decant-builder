@@ -85,8 +85,17 @@ function BuilderPanel({
             <div className="selected-item" key={`${perfume.id}-${index}`}>
               <div>
                 <strong>{perfume.name}</strong>
+
+                {perfume.subtitle && (
+                <span className="selected-subtitle">
+                    {perfume.subtitle
+                    .toLowerCase()
+                    .replace(/\b\w/g, (char) => char.toUpperCase())}
+                </span>
+                )}
+
                 <span>
-                  {perfume.brand} · {perfume.points} pt
+                 {perfume.brand} · {perfume.points} pt
                 </span>
               </div>
 

@@ -456,4 +456,14 @@ ambergris: {
   image: "",
 },
 
+violetLeaf: {
+  name: "Violet Leaf",
+  image: "",
+},
+
+bourbonVanilla: {
+  name: "Bourbon Vanilla",
+  image: "",
+},
+
 };

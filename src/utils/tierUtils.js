@@ -47,7 +47,8 @@ export function getTierData(id) {
   return {
     name: "Mythic",
     emoji: "👑",
-    color: "#facc15",
-    background: "rgba(124,58,237,0.30)",
+    color: "#fbbf24",
+    background: "rgba(88,28,135,0.30)",
+    border: "rgba(251,191,36,0.45)",
   };
 }

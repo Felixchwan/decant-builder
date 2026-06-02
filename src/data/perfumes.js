@@ -40,7 +40,7 @@ export const perfumes = [
 },
 {
   id: 2,
-  name: "Light Blue EDT",
+  name: "Light Blue Pour Homme EDT",
   brand: "Dolce & Gabbana",
   points: 1,
 
@@ -240,7 +240,7 @@ export const perfumes = [
 },
 {
   id: 6,
-  name: "Versace Eros EDP",
+  name: "Eros EDP",
   brand: "Versace",
   points: 1,
 
@@ -344,7 +344,7 @@ export const perfumes = [
 },
 {
   id: 8,
-  name: "Azzaro The Most Wanted",
+  name: "The Most Wanted",
   brand: "Azzaro",
   points: 1,
 
@@ -1312,6 +1312,62 @@ baseNotes: ["caramel", "musk"],
     "artistic",
     "bold",
     "unique",
+  ],
+},
+
+{
+  id: 501,
+  name: "Tuxedo",
+  subtitle: "Sharp Patchouli",
+  subtitleColor: "#d4c46a",
+  subtitleGlow: true,
+  brand: "Yves Saint Laurent",
+  points: 6,
+
+  accords: [
+    "patchouli",
+    "amber",
+    "vanilla",
+    "fresh spicy",
+  ],
+
+  topNotes: [
+    "violetLeaf",
+    "coriander",
+    "bergamot",
+  ],
+
+  middleNotes: [
+    "rose",
+    "blackPepper",
+    "lilyOfTheValley",
+  ],
+
+  baseNotes: [
+    "patchouli",
+    "bourbonVanilla",
+    "ambergris",
+  ],
+
+  seasons: [
+    "fall",
+    "winter",
+    "spring",
+  ],
+
+  occasions: [
+    "date",
+    "night",
+    "formal",
+    "special",
+  ],
+
+  vibes: [
+    "luxurious",
+    "elegant",
+    "seductive",
+    "confident",
+    "sophisticated",
   ],
 },
 
