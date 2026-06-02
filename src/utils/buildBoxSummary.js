@@ -23,10 +23,21 @@ export function buildBoxSummary(selectedPerfumes, notes) {
   }, {});
 
   return {
-    occasions: [...new Set(allOccasions)],
-    seasons: [...new Set(allSeasons)],
-    notes: [...new Set(allNotes)],
-    vibes: [...new Set(allVibes)],
-    accordMap,
-  };
+  occasions: [...new Set(allOccasions)],
+  seasons: [...new Set(allSeasons)],
+  notes: [...new Set(allNotes)],
+  vibes: [...new Set(allVibes)],
+  accordMap,
+
+  occasionCounts: buildCountMap(allOccasions),
+  seasonCounts: buildCountMap(allSeasons),
+  vibeCounts: buildCountMap(allVibes),
+};
+
+function buildCountMap(items) {
+  return items.reduce((map, item) => {
+    map[item] = (map[item] || 0) + 1;
+    return map;
+  }, {});
+}
 }

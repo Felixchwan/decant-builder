@@ -638,3 +638,17 @@ button {
   font-weight: 800;
   letter-spacing: 0.04em;
 }
+
+.coverage-more {
+  margin-top: 6px;
+  color: #8fa99a;
+  font-size: 0.72rem;
+}
+
+.analysis-subtitle {
+  margin-top: -4px;
+  margin-bottom: 12px;
+
+  color: #8fa99a;
+  font-size: 0.72rem;
+}

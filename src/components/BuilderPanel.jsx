@@ -14,6 +14,7 @@ function BuilderPanel({
   minPoints,
   missingSlots,
   missingPoints,
+  coverageSummary,
   isBoxReady,
 }) {
     const [isNotesModalOpen, setIsNotesModalOpen] = useState(false);
@@ -104,6 +105,29 @@ function BuilderPanel({
           ))
         )}
       </div>
+
+      <div className="coverage-panel">
+    <h3>Box Analysis</h3>
+    <p className="analysis-subtitle">
+    Coverage strengths and collection gaps
+    </p>
+
+    {coverageSummary.strengths.length > 0 ? (
+    coverageSummary.strengths.slice(0, 6).map((item) => (
+        <p key={`${item.category}-${item.label}`} className="coverage-strength">
+        ✓ {item.label}
+        </p>
+    ))
+    ) : (
+    <p>No strong coverage yet</p>
+    )}
+
+    {coverageSummary.strengths.length > 6 && (
+    <p className="coverage-more">
+        +{coverageSummary.strengths.length - 6} more strengths
+    </p>
+    )}
+    </div>
 
       <div className="summary-panel">
         <h3>Box Profile</h3>

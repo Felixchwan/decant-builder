@@ -9,6 +9,7 @@ import FilterBar from "./components/FilterBar";
 import BuilderPanel from "./components/BuilderPanel";
 import { buildBoxSummary } from "./utils/buildBoxSummary";
 import { getPerfumeNoteIds } from "./utils/noteUtils";
+import { buildCoverageSummary } from "./utils/buildCoverageSummary";
 import {
   MIN_BOX_SLOTS,
   MAX_BOX_SLOTS,
@@ -60,6 +61,7 @@ function App() {
 const boxSummary = useMemo(() => {
   return buildBoxSummary(selectedPerfumes, notes);
 }, [selectedPerfumes]);
+const coverageSummary = buildCoverageSummary(boxSummary);
 
   function handleFilterChange(category, value) {
     setActiveFilters((currentFilters) => ({
@@ -164,6 +166,7 @@ const cancelAddPerfume = () => {
           minPoints={MIN_BOX_POINTS}
           missingSlots={missingSlots}
           missingPoints={missingPoints}
+          coverageSummary={coverageSummary}
           isBoxReady={isBoxReady}
         />
       </section>
