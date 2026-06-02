@@ -109,3 +109,25 @@ code {
   padding: 4px 8px;
   background: var(--code-bg);
 }
+
+.collection-gaps {
+  margin-top: 12px;
+}
+
+.collection-gaps h4 {
+  margin-bottom: 6px;
+
+  color: #facc15;
+
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.collection-gaps p {
+  margin: 4px 0;
+
+  color: #a7b8ad;
+
+  font-size: 0.78rem;
+}

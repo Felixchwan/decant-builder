@@ -652,3 +652,24 @@ button {
   color: #8fa99a;
   font-size: 0.72rem;
 }
+
+.seasonal-gaps h4 {
+  margin-bottom: 6px;
+
+  color: rgba(134, 239, 172, 0.55);
+
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.seasonal-gaps p {
+  margin: 4px 0;
+  font-size: 0.78rem;
+}
+
+.recommendations p::before {
+  content: "→ ";
+  color: rgba(134, 239, 172, 0.7);
+}

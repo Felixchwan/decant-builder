@@ -4,8 +4,13 @@ const TARGET_COVERAGE = {
   vibes: ["fresh", "clean", "versatile", "elegant", "bold", "seductive"],
 };
 
-export function buildCoverageSummary(boxSummary) {
+const GAP_TARGETS = {
+  seasons: ["spring", "summer", "fall", "winter"],
+};
+
+export function buildCoverageSummary(boxSummary, perfumes = []) {
   const strengths = [];
+  const gaps = [];
   const suggestions = [];
 
   Object.entries(TARGET_COVERAGE).forEach(([category, targets]) => {
@@ -15,6 +20,7 @@ export function buildCoverageSummary(boxSummary) {
       if (count >= 3) {
         strengths.push({
           category,
+          target,
           label: `Strong ${formatLabel(target)} Coverage`,
           count,
         });
@@ -23,23 +29,56 @@ export function buildCoverageSummary(boxSummary) {
       if (count >= 1 && count < 3) {
         strengths.push({
           category,
+          target,
           label: `${formatLabel(target)} Covered`,
           count,
         });
       }
+    });
+  });
+
+  Object.entries(GAP_TARGETS).forEach(([category, targets]) => {
+    targets.forEach((target) => {
+      const count = getCoverageCount(boxSummary, category, target);
 
       if (count === 0) {
+        gaps.push({
+          category,
+          target,
+          label: `${formatLabel(target)} fragrance recommended`,
+          seasonColor: getSeasonColor(target),
+        });
+
         suggestions.push({
           category,
+          target,
           label: `Add ${formatLabel(target)} Coverage`,
         });
       }
     });
   });
 
+  const missingSeasons = gaps.map((gap) => gap.target);
+
+  const recommendations = perfumes
+    .filter((perfume) => {
+      const isAlreadySelected = boxSummary.selectedPerfumeIds?.includes(
+        perfume.id
+      );
+
+      return (
+        !isAlreadySelected &&
+        perfume.seasons?.some((season) => missingSeasons.includes(season))
+      );
+    })
+    .slice(0, 5);
+
   return {
     strengths,
+    gaps,
     suggestions,
+    seasonalRecommendations,
+    profile,
   };
 }
 
@@ -51,6 +90,40 @@ function getCoverageCount(boxSummary, category, target) {
   };
 
   return countMapByCategory[category]?.[target] || 0;
+}
+
+const seasonalRecommendations = [];
+
+Object.entries(GAP_TARGETS).forEach(([category, targets]) => {
+  targets.forEach((target) => {
+    const count = getCoverageCount(boxSummary, category, target);
+
+    if (count === 0) {
+      const recommendation = perfumes.find(
+        (perfume) =>
+          perfume[category]?.includes(target) &&
+          !selectedPerfumes.some((selected) => selected.id === perfume.id)
+      );
+
+      if (recommendation) {
+        seasonalRecommendations.push({
+          season: target,
+          perfume: recommendation,
+        });
+      }
+    }
+  });
+});
+
+function getSeasonColor(season) {
+  const seasonColors = {
+    spring: "rgba(196,181,253,0.70)",
+    summer: "rgba(253,230,138,0.60)",
+    fall: "rgba(251,146,60,0.60)",
+    winter: "rgba(147,197,253,0.60)",
+  };
+
+  return seasonColors[season] || "rgba(216,180,254,0.70)";
 }
 
 function formatLabel(value) {

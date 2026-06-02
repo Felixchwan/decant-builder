@@ -61,7 +61,7 @@ function App() {
 const boxSummary = useMemo(() => {
   return buildBoxSummary(selectedPerfumes, notes);
 }, [selectedPerfumes]);
-const coverageSummary = buildCoverageSummary(boxSummary);
+const coverageSummary = buildCoverageSummary(boxSummary, perfumes);
 
   function handleFilterChange(category, value) {
     setActiveFilters((currentFilters) => ({

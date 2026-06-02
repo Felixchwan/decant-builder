@@ -129,6 +129,36 @@ function BuilderPanel({
     )}
     </div>
 
+    {coverageSummary.gaps.length > 0 && (
+  <div className="seasonal-gaps">
+    <h4>Seasonal Gaps</h4>
+
+    {coverageSummary.gaps.map((item) => (
+      <p
+    key={`${item.category}-${item.target}`}
+    style={{ color: item.seasonColor }}
+    >
+    {getSeasonIcon(item.target)} {item.label}
+    </p>
+    ))}
+  </div>
+    )}
+
+    {coverageSummary.seasonalRecommendations?.length > 0 && (
+    <div className="recommendations">
+    <h4>Recommended Picks</h4>
+
+    {coverageSummary.seasonalRecommendations.map((item) => (
+      <p key={`${item.season}-${item.perfume.id}`}>
+        {getSeasonIcon(item.season)}{" "}
+        {formatLabel(item.season)} Recommendation
+        <br />
+        → {item.perfume.name}
+      </p>
+        ))}
+    </div>
+    )}
+
       <div className="summary-panel">
         <h3>Box Profile</h3>
 
@@ -242,6 +272,25 @@ function BuilderPanel({
 )}
     </aside>
   );
+}
+
+function getSeasonIcon(season) {
+  const icons = {
+    spring: "🌸",
+    summer: "☀️",
+    fall: "🍂",
+    winter: "❄️",
+  };
+
+  return icons[season] || "•";
+}
+
+function formatLabel(value) {
+  return value
+    .split(/(?=[A-Z])|[-_\s]/)
+    .filter(Boolean)
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
 }
 
 export default BuilderPanel;
