@@ -29,9 +29,9 @@ export function buildScentDna(selectedPerfumes, boxSummary) {
   const uniqueNotes = boxSummary.notes.length;
 
   const versatilityScore = clampScore(
-    uniqueSeasons * 18 + uniqueOccasions * 7 + uniqueVibes * 4
+    uniqueSeasons * 12 + uniqueOccasions * 5 + uniqueVibes * 2.5
   );
-  const depthScore = clampScore(uniqueAccords * 7 + uniqueNotes * 0.9);
+  const depthScore = clampScore(uniqueAccords * 4.5 + uniqueNotes * 0.45);
   const seasonBalanceScore = getSeasonBalanceScore(seasonCoverage);
 
   return {
@@ -67,10 +67,15 @@ function getSeasonBalanceScore(seasonCoverage) {
   const counts = activeSeasons.map((item) => item.count);
   const max = Math.max(...counts);
   const min = Math.min(...counts);
-  const spreadPenalty = max === 0 ? 0 : ((max - min) / max) * 35;
-  const coverageScore = activeSeasons.length * 25;
+  const totalSeasonTags = seasonCoverage.reduce(
+    (sum, item) => sum + item.count,
+    0
+  );
+  const spreadPenalty = max === 0 ? 0 : ((max - min) / max) * 45;
+  const coverageScore = activeSeasons.length * 18;
+  const densityBonus = Math.min(20, totalSeasonTags * 1.2);
 
-  return clampScore(coverageScore - spreadPenalty);
+  return clampScore(coverageScore + densityBonus - spreadPenalty);
 }
 
 function clampScore(value) {
