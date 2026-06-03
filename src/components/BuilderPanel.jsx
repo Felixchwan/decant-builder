@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { getTierData } from "../utils/tierUtils";
+import { buildScentDna } from "../utils/buildScentDna";
 
 function BuilderPanel({
   totalSlots,
@@ -310,6 +311,7 @@ function FinalSummaryModal({
   onClose,
 }) {
   const collectionIdentity = getCollectionIdentity(boxSummary);
+  const scentDna = buildScentDna(selectedPerfumes, boxSummary);
 
   return (
     <div className="modal-overlay" onClick={onClose}>
@@ -337,6 +339,8 @@ function FinalSummaryModal({
           <SummaryStat label="Estimated Value" value={`$${estimatedValue.toFixed(0)}`} />
           <SummaryStat label="Upgrade Value" value={`$${upgradeValue.toFixed(0)}`} />
         </section>
+
+        <ScentDnaPanel scentDna={scentDna} />
 
         <section className="final-summary-section">
           <h4>Selected Fragrances</h4>
@@ -399,6 +403,66 @@ function FinalSummaryModal({
             </div>
           </div>
         </section>
+      </div>
+    </div>
+  );
+}
+
+function ScentDnaPanel({ scentDna }) {
+  return (
+    <section className="final-summary-section scent-dna-panel">
+      <h4>Scent DNA</h4>
+
+      <div className="scent-dna-scores">
+        <DnaScore label="Versatility" value={scentDna.scores.versatility} />
+        <DnaScore label="Depth" value={scentDna.scores.depth} />
+        <DnaScore label="Season Balance" value={scentDna.scores.seasonBalance} />
+      </div>
+
+      <div className="scent-dna-grid">
+        <DnaMetricGroup title="Dominant Accords" items={scentDna.topAccords} />
+        <DnaMetricGroup title="Top Vibes" items={scentDna.topVibes} />
+        <DnaMetricGroup title="Season Coverage" items={scentDna.seasonCoverage} />
+      </div>
+    </section>
+  );
+}
+
+function DnaScore({ label, value }) {
+  return (
+    <div className="scent-dna-score">
+      <span>{label}</span>
+      <strong>{value}</strong>
+    </div>
+  );
+}
+
+function DnaMetricGroup({ title, items }) {
+  return (
+    <div className="scent-dna-group">
+      <span>{title}</span>
+
+      {items.length > 0 ? (
+        items.map((item) => <DnaBar key={item.label} item={item} />)
+      ) : (
+        <p>No data yet</p>
+      )}
+    </div>
+  );
+}
+
+function DnaBar({ item }) {
+  return (
+    <div className="scent-dna-row">
+      <div className="scent-dna-row-label">
+        <strong>{formatLabel(item.label)}</strong>
+        <span>
+          {item.count} / {item.percent}%
+        </span>
+      </div>
+
+      <div className="scent-dna-bar" aria-hidden="true">
+        <span style={{ width: `${item.percent}%` }} />
       </div>
     </div>
   );

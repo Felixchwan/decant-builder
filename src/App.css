@@ -499,7 +499,9 @@ button {
 
   .final-summary-stats,
   .final-fragrance-list,
-  .final-analysis-grid {
+  .final-analysis-grid,
+  .scent-dna-scores,
+  .scent-dna-grid {
     grid-template-columns: 1fr;
   }
 
@@ -876,6 +878,108 @@ button {
   color: #d1fae5;
   font-size: 0.88rem;
   line-height: 1.35;
+}
+
+.scent-dna-panel {
+  border-top: 0;
+  margin-top: 0;
+  padding-top: 0;
+}
+
+.scent-dna-scores {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.scent-dna-score {
+  padding: 13px;
+  border-radius: 14px;
+  background:
+    linear-gradient(180deg, rgba(74, 222, 128, 0.08), rgba(2, 6, 23, 0.45));
+  border: 1px solid rgba(74, 222, 128, 0.16);
+}
+
+.scent-dna-score span,
+.scent-dna-group > span {
+  display: block;
+  color: #86efac;
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.scent-dna-score strong {
+  display: block;
+  margin-top: 4px;
+  color: #f8fafc;
+  font-size: 1.5rem;
+}
+
+.scent-dna-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.scent-dna-group {
+  min-width: 0;
+  padding: 13px;
+  border-radius: 14px;
+  background: rgba(2, 6, 23, 0.38);
+  border: 1px solid rgba(148, 163, 184, 0.11);
+}
+
+.scent-dna-group > span {
+  margin-bottom: 10px;
+}
+
+.scent-dna-group p {
+  margin: 0;
+  color: #cbd5e1;
+}
+
+.scent-dna-row {
+  display: grid;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.scent-dna-row-label {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  color: #e2e8f0;
+  font-size: 0.78rem;
+}
+
+.scent-dna-row-label strong,
+.scent-dna-row-label span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.scent-dna-row-label span {
+  flex: 0 0 auto;
+  color: #94a3b8;
+}
+
+.scent-dna-bar {
+  height: 7px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.13);
+}
+
+.scent-dna-bar span {
+  display: block;
+  height: 100%;
+  max-width: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #6ee7b7, #22c55e);
 }
 
 .modal-overlay {
