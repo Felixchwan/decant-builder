@@ -1170,7 +1170,7 @@ button {
 
 .recommendations {
   display: grid;
-  gap: 9px;
+  gap: 10px;
   margin-top: 16px;
 }
 
@@ -1184,33 +1184,71 @@ button {
 }
 
 .recommendation-card {
-  padding: 12px;
+  min-width: 0;
+  padding: 13px;
   border-radius: 14px;
   background: rgba(2, 6, 23, 0.42);
   border: 1px solid rgba(148, 163, 184, 0.13);
+  text-align: left;
 }
 
 .recommendation-card-header {
-  display: flex;
-  justify-content: space-between;
-  gap: 10px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
   align-items: flex-start;
 }
 
-.recommendation-card-header strong,
-.recommendation-card-header span {
+.recommendation-title-group {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 9px;
+  align-items: start;
+}
+
+.recommendation-rank {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  height: 22px;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.12);
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  color: #cbd5e1;
+  font-size: 0.68rem;
+  font-weight: 900;
+}
+
+.recommendation-title-group div {
+  min-width: 0;
+  text-align: left;
+}
+
+.recommendation-title-group strong,
+.recommendation-title-group span {
   display: block;
 }
 
-.recommendation-card-header strong {
+.recommendation-title-group strong {
+  display: -webkit-box;
+  overflow: hidden;
   color: #f8fafc;
-  font-size: 0.92rem;
+  font-size: 0.9rem;
+  line-height: 1.18;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
 
-.recommendation-card-header span {
-  margin-top: 3px;
+.recommendation-title-group span {
+  overflow: hidden;
+  margin-top: 5px;
   color: #94a3b8;
-  font-size: 0.78rem;
+  font-size: 0.73rem;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .recommendation-score {
@@ -1228,13 +1266,26 @@ button {
 
 .recommendation-reasons {
   display: grid;
-  gap: 4px;
-  margin-top: 9px;
+  gap: 5px;
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(148, 163, 184, 0.09);
 }
 
 .recommendation-reasons p {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 6px;
+  justify-content: start;
   margin: 0;
   color: #cbd5e1;
   font-size: 0.78rem;
   line-height: 1.32;
+  text-align: left;
+}
+
+.recommendation-reasons p::before {
+  content: "\2713";
+  color: #86efac;
+  font-weight: 900;
 }

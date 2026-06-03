@@ -163,10 +163,11 @@ function BuilderPanel({
     <div className="recommendations">
     <h4>Recommended Picks</h4>
 
-    {recommendations.map((recommendation) => (
+    {recommendations.map((recommendation, index) => (
       <RecommendationCard
         key={recommendation.perfume.id}
         recommendation={recommendation}
+        rank={index + 1}
       />
         ))}
     </div>
@@ -408,15 +409,21 @@ function FinalSummaryModal({
   );
 }
 
-function RecommendationCard({ recommendation }) {
+function RecommendationCard({ recommendation, rank }) {
   const { perfume, score, reasons } = recommendation;
 
   return (
     <article className="recommendation-card">
       <div className="recommendation-card-header">
-        <div>
-          <strong>{perfume.name}</strong>
-          <span>{perfume.brand}</span>
+        <div className="recommendation-title-group">
+          <span className="recommendation-rank">#{rank}</span>
+
+          <div>
+            <strong>{perfume.name}</strong>
+            <span>
+              {perfume.brand} · {perfume.points} pt
+            </span>
+          </div>
         </div>
 
         <span className="recommendation-score">{score}</span>
@@ -425,7 +432,7 @@ function RecommendationCard({ recommendation }) {
       {reasons.length > 0 && (
         <div className="recommendation-reasons">
           {reasons.map((reason) => (
-            <p key={reason}>âœ“ {reason}</p>
+            <p key={reason}>{reason}</p>
           ))}
         </div>
       )}
