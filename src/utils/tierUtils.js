@@ -3,8 +3,8 @@ export function getTierData(id) {
     return {
       name: "Bronze",
       emoji: "🟤",
-      color: "#cd7f32",
-      background: "rgba(205,127,50,0.18)",
+      color: "#b87333",
+      background: "rgba(184,115,51,0.12)",
     };
   }
 
@@ -12,8 +12,8 @@ export function getTierData(id) {
     return {
       name: "Silver",
       emoji: "⚪",
-      color: "#c0c0c0",
-      background: "rgba(192,192,192,0.22)",
+      color: "#cbd5e1",
+      background: "rgba(203,213,225,0.12)",
     };
   }
 
@@ -22,7 +22,7 @@ export function getTierData(id) {
       name: "Gold",
       emoji: "🟡",
       color: "#d4af37",
-      background: "rgba(212,175,55,0.18)",
+      background: "rgba(212,175,55,0.12)",
     };
   }
 
@@ -30,8 +30,8 @@ export function getTierData(id) {
     return {
       name: "Platinum",
       emoji: "⬢",
-      color: "#f8fafc",
-      background: "rgba(248,250,252,0.22)",
+      color: "#bae6fd",
+      background: "rgba(186,230,253,0.12)",
     };
   }
 
@@ -39,16 +39,16 @@ export function getTierData(id) {
     return {
       name: "Diamond",
       emoji: "💎",
-      color: "#22d3ee",
-      background: "rgba(34,211,238,0.18)",
+      color: "#38bdf8",
+      background: "rgba(56,189,248,0.12)",
     };
   }
 
   return {
     name: "Mythic",
     emoji: "👑",
-    color: "#fbbf24",
-    background: "rgba(88,28,135,0.30)",
-    border: "rgba(251,191,36,0.45)",
+    color: "#a78bfa",
+    background: "rgba(124,58,237,0.16)",
+    border: "rgba(167,139,250,0.42)",
   };
 }

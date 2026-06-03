@@ -552,15 +552,6 @@ baseNotes: ["caramel", "musk"],
     "citrus",
     "fresh",
     "aromatic"
-  ],
-
-  coverage: [
-    "daily",
-    "summer",
-    "casual",
-    "fresh",
-    "clean",
-    "easy"
   ]
 },
 
@@ -659,15 +650,6 @@ baseNotes: ["caramel", "musk"],
     "mediterranean",
     "natural",
   ],
-
-  coverage: [
-    "daily",
-    "summer",
-    "casual",
-    "fresh",
-    "clean",
-    "easy",
-  ],
 },
 
 {
@@ -719,15 +701,6 @@ baseNotes: ["caramel", "musk"],
     "energetic",
     "mediterranean",
     "playful",
-  ],
-
-  coverage: [
-    "daily",
-    "summer",
-    "casual",
-    "fresh",
-    "clean",
-    "easy",
   ],
 },
 
@@ -1511,26 +1484,3 @@ baseNotes: ["caramel", "musk"],
 },
 
 ];
-
-export const filterOptions = {
-  seasons: ["spring", "summer", "fall", "winter", "all year", "night"],
-  occasions: ["daily", "office", "casual", "gym", "date", "night", "party"],
-  vibes: [
-    "fresh",
-    "clean",
-    "classic",
-    "easy",
-    "bright",
-    "versatile",
-    "masculine",
-    "safe",
-    "sweet",
-    "playful",
-    "loud",
-    "confident",
-    "warm",
-    "soft",
-    "seductive",
-    "bold",
-  ],
-};

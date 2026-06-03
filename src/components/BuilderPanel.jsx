@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { getTierData } from "../utils/tierUtils";
 
 function BuilderPanel({
   totalSlots,
@@ -57,6 +58,8 @@ function BuilderPanel({
           style={{ width: `${(totalSlots / maxSlots) * 100}%` }}
         />
       </div>
+
+      <BoxSlotTray selectedPerfumes={selectedPerfumes} maxSlots={maxSlots} />
 
 <div className={`box-status ${isBoxReady ? "ready" : "not-ready"}`}>
   <strong>
@@ -272,6 +275,84 @@ function BuilderPanel({
 )}
     </aside>
   );
+}
+
+function BoxSlotTray({ selectedPerfumes, maxSlots }) {
+  const rowCount = Math.ceil(maxSlots / 2);
+  const rows = Array.from({ length: rowCount }, (_, rowIndex) => ({
+    leftIndex: rowIndex * 2,
+    rightIndex: rowIndex * 2 + 1,
+  }));
+
+  return (
+    <div className="box-slot-tray" aria-label="Fragrance box slots">
+      <div className="box-column">
+        {rows.map(({ leftIndex }) => (
+          <BoxVialSlot
+            key={`left-slot-${leftIndex}`}
+            index={leftIndex}
+            perfume={selectedPerfumes[leftIndex]}
+          />
+        ))}
+      </div>
+
+      <div className="box-center-channel" aria-hidden="true" />
+
+      <div className="box-column">
+        {rows.map(({ rightIndex }) =>
+          rightIndex < maxSlots ? (
+            <BoxVialSlot
+              key={`right-slot-${rightIndex}`}
+              index={rightIndex}
+              perfume={selectedPerfumes[rightIndex]}
+            />
+          ) : null
+        )}
+      </div>
+    </div>
+  );
+}
+
+function BoxVialSlot({ perfume, index }) {
+  if (!perfume) {
+    return (
+      <div
+        className="box-vial empty"
+        aria-label={`Empty slot ${index + 1}`}
+      >
+        <span className="vial-cap" />
+        <span className="vial-body" />
+      </div>
+    );
+  }
+
+  const tierData = getTierData(perfume.id);
+
+  return (
+    <div
+      className="box-vial filled"
+      aria-label={`Filled slot ${index + 1}: ${perfume.name}`}
+      title={perfume.name}
+      style={{
+        "--tier-color": tierData.color,
+        "--tier-background": tierData.background,
+      }}
+    >
+      <span className="vial-cap" />
+      <span className="vial-body">
+        <strong className="vial-label">{getShortPerfumeName(perfume.name)}</strong>
+      </span>
+    </div>
+  );
+}
+
+function getShortPerfumeName(name) {
+  return name
+    .replace(/\b(Eau de Parfum|Pour Homme|for Men|EDT|EDP)\b/gi, "")
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .join(" ");
 }
 
 function getSeasonIcon(season) {
