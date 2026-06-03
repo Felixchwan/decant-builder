@@ -91,6 +91,27 @@ button {
   color: #94a3b8;
 }
 
+.catalog-controls {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 190px;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.catalog-controls input,
+.catalog-controls select {
+  min-width: 0;
+  border: 1px solid rgba(148, 163, 184, 0.24);
+  background: rgba(15, 23, 42, 0.72);
+  color: #ecfdf5;
+  border-radius: 999px;
+  padding: 10px 14px;
+}
+
+.catalog-controls input::placeholder {
+  color: #94a3b8;
+}
+
 .filters {
   display: flex;
   flex-wrap: wrap;
@@ -463,6 +484,10 @@ button {
 }
 
 @media (max-width: 520px) {
+  .catalog-controls {
+    grid-template-columns: 1fr;
+  }
+
   .box-slot-tray {
     grid-template-columns: minmax(0, 1fr) 18px minmax(0, 1fr);
     gap: 6px;

@@ -25,6 +25,8 @@ function App() {
     occasions: "",
     vibes: "",
   });
+  const [searchQuery, setSearchQuery] = useState("");
+  const [sortOption, setSortOption] = useState("bestMatch");
   const [pendingPerfume, setPendingPerfume] = useState(null);
 
   const totalSlots = selectedPerfumes.length;
@@ -41,8 +43,9 @@ function App() {
   const isBoxReady = missingSlots === 0 && missingPoints === 0;
   const filterOptions = useMemo(() => buildFilterOptions(perfumes), []);
 
-  const filteredPerfumes = useMemo(() => {
-    return perfumes.filter((perfume) => {
+  const visiblePerfumes = useMemo(() => {
+    const normalizedSearchQuery = searchQuery.trim().toLowerCase();
+    const matchingPerfumes = perfumes.filter((perfume) => {
       const matchesSeason =
         !activeFilters.seasons ||
         perfume.seasons.includes(activeFilters.seasons);
@@ -54,9 +57,15 @@ function App() {
       const matchesVibe =
         !activeFilters.vibes || perfume.vibes.includes(activeFilters.vibes);
 
-      return matchesSeason && matchesOccasion && matchesVibe;
+      const matchesSearch =
+        !normalizedSearchQuery ||
+        getSearchText(perfume, notes).includes(normalizedSearchQuery);
+
+      return matchesSeason && matchesOccasion && matchesVibe && matchesSearch;
     });
-  }, [activeFilters]);
+
+    return sortPerfumes(matchingPerfumes, sortOption, normalizedSearchQuery);
+  }, [activeFilters, searchQuery, sortOption]);
 
 const boxSummary = useMemo(() => {
   return buildBoxSummary(selectedPerfumes, notes);
@@ -121,8 +130,29 @@ const cancelAddPerfume = () => {
           <div className="panel-header">
             <div>
               <h2>Catalog</h2>
-              <p>{filteredPerfumes.length} perfumes available</p>
+              <p>{visiblePerfumes.length} perfumes available</p>
             </div>
+          </div>
+
+          <div className="catalog-controls">
+            <input
+              type="search"
+              value={searchQuery}
+              onChange={(event) => setSearchQuery(event.target.value)}
+              placeholder="Search name, brand, accord, note, vibe"
+            />
+
+            <select
+              value={sortOption}
+              onChange={(event) => setSortOption(event.target.value)}
+            >
+              <option value="bestMatch">Best match</option>
+              <option value="pointsAsc">Points ascending</option>
+              <option value="pointsDesc">Points descending</option>
+              <option value="brandAsc">Brand A-Z</option>
+              <option value="tier">Tier</option>
+              <option value="alphabetical">Alphabetical</option>
+            </select>
           </div>
 
                     <FilterBar
@@ -132,7 +162,7 @@ const cancelAddPerfume = () => {
           />
 
           <div className="catalog-grid">
-            {filteredPerfumes.map((perfume) => {
+            {visiblePerfumes.map((perfume) => {
               const tierData = getTierData(perfume.id);
               const noteNames = getPerfumeNoteIds(perfume)
                 .map((noteId) => notes[noteId]?.name)
@@ -198,6 +228,91 @@ const cancelAddPerfume = () => {
 )}
     </>
   );
+}
+
+function getSearchText(perfume, notes) {
+  const noteIds = getPerfumeNoteIds(perfume);
+  const noteNames = noteIds
+    .map((noteId) => notes[noteId]?.name)
+    .filter(Boolean);
+
+  return [
+    perfume.name,
+    perfume.brand,
+    ...(perfume.accords || []),
+    ...(perfume.vibes || []),
+    ...noteIds,
+    ...noteNames,
+  ]
+    .join(" ")
+    .toLowerCase();
+}
+
+function sortPerfumes(perfumesToSort, sortOption, searchQuery) {
+  return [...perfumesToSort].sort((a, b) => {
+    if (sortOption === "pointsAsc") {
+      return a.points - b.points || compareNames(a, b);
+    }
+
+    if (sortOption === "pointsDesc") {
+      return b.points - a.points || compareNames(a, b);
+    }
+
+    if (sortOption === "brandAsc") {
+      return (
+        a.brand.localeCompare(b.brand) ||
+        compareNames(a, b)
+      );
+    }
+
+    if (sortOption === "tier") {
+      return getTierRank(a.id) - getTierRank(b.id) || a.points - b.points || compareNames(a, b);
+    }
+
+    if (sortOption === "alphabetical") {
+      return compareNames(a, b);
+    }
+
+    if (searchQuery) {
+      return getBestMatchRank(a, searchQuery) - getBestMatchRank(b, searchQuery) || compareNames(a, b);
+    }
+
+    return 0;
+  });
+}
+
+function getBestMatchRank(perfume, searchQuery) {
+  if (perfume.name.toLowerCase().includes(searchQuery)) {
+    return 0;
+  }
+
+  if (perfume.brand.toLowerCase().includes(searchQuery)) {
+    return 1;
+  }
+
+  const accordOrVibeMatch = [
+    ...(perfume.accords || []),
+    ...(perfume.vibes || []),
+  ].some((item) => item.toLowerCase().includes(searchQuery));
+
+  if (accordOrVibeMatch) {
+    return 2;
+  }
+
+  return 3;
+}
+
+function getTierRank(id) {
+  if (id < 100) return 0;
+  if (id < 200) return 1;
+  if (id < 300) return 2;
+  if (id < 400) return 3;
+  if (id < 500) return 4;
+  return 5;
+}
+
+function compareNames(a, b) {
+  return a.name.localeCompare(b.name);
 }
 
 export default App;
