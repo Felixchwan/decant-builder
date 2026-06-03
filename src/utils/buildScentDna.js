@@ -28,10 +28,12 @@ export function buildScentDna(selectedPerfumes, boxSummary) {
   const uniqueAccords = Object.keys(accordCounts).length;
   const uniqueNotes = boxSummary.notes.length;
 
-  const versatilityScore = clampScore(
-    uniqueSeasons * 12 + uniqueOccasions * 5 + uniqueVibes * 2.5
-  );
-  const depthScore = clampScore(uniqueAccords * 4.5 + uniqueNotes * 0.45);
+  const versatilityScore = getVersatilityScore({
+    uniqueSeasons,
+    uniqueOccasions,
+    uniqueVibes,
+  });
+  const depthScore = getDepthScore({ uniqueAccords, uniqueNotes });
   const seasonBalanceScore = getSeasonBalanceScore(seasonCoverage);
 
   return {
@@ -44,6 +46,27 @@ export function buildScentDna(selectedPerfumes, boxSummary) {
     topVibes,
     seasonCoverage,
   };
+}
+
+function getVersatilityScore({ uniqueSeasons, uniqueOccasions, uniqueVibes }) {
+  const seasonCoverage = uniqueSeasons / 4;
+  const occasionCoverage = Math.min(uniqueOccasions / 10, 1);
+  const vibeCoverage = Math.min(uniqueVibes / 18, 1);
+
+  return clampScore(
+    seasonCoverage * 35 +
+      occasionCoverage * 35 +
+      Math.sqrt(vibeCoverage) * 30
+  );
+}
+
+function getDepthScore({ uniqueAccords, uniqueNotes }) {
+  const accordCoverage = Math.min(uniqueAccords / 24, 1);
+  const noteDepth = Math.min(uniqueNotes / 90, 1);
+
+  return clampScore(
+    Math.sqrt(accordCoverage) * 60 + Math.sqrt(noteDepth) * 40
+  );
 }
 
 function buildRankedMetrics(counts, totalPerfumes, limit) {
@@ -64,18 +87,25 @@ function getSeasonBalanceScore(seasonCoverage) {
     return 0;
   }
 
-  const counts = activeSeasons.map((item) => item.count);
-  const max = Math.max(...counts);
-  const min = Math.min(...counts);
   const totalSeasonTags = seasonCoverage.reduce(
     (sum, item) => sum + item.count,
     0
   );
-  const spreadPenalty = max === 0 ? 0 : ((max - min) / max) * 45;
-  const coverageScore = activeSeasons.length * 18;
-  const densityBonus = Math.min(20, totalSeasonTags * 1.2);
 
-  return clampScore(coverageScore + densityBonus - spreadPenalty);
+  if (totalSeasonTags === 0) {
+    return 0;
+  }
+
+  const idealShare = totalSeasonTags / 4;
+  const totalDistanceFromIdeal = seasonCoverage.reduce(
+    (sum, item) => sum + Math.abs(item.count - idealShare),
+    0
+  );
+  const imbalance = totalDistanceFromIdeal / totalSeasonTags;
+
+  return clampScore(
+    (activeSeasons.length / 4) * 45 + (1 - imbalance) * 55
+  );
 }
 
 function clampScore(value) {
