@@ -26,6 +26,7 @@ export function buildRecommendations({
   const selectedAccords = new Set(Object.keys(boxSummary.accordMap || {}));
   const selectedNotes = new Set(selectedPerfumes.flatMap(getPerfumeNoteIds));
   const boxContext = buildBoxContext(boxSummary);
+  const tierProfile = buildTierProfile(selectedPerfumes);
 
   const rankedRecommendations = perfumes
     .filter((perfume) => !selectedIds.has(perfume.id))
@@ -40,8 +41,12 @@ export function buildRecommendations({
       })
     )
     .filter((recommendation) => recommendation.score > 0)
+    .map((recommendation) =>
+      applyTierAffinity(recommendation, tierProfile, boxSummary)
+    )
     .sort(
       (a, b) =>
+        b.finalScore - a.finalScore ||
         b.score - a.score ||
         a.perfume.points - b.perfume.points ||
         a.perfume.name.localeCompare(b.perfume.name)
@@ -147,6 +152,7 @@ function scoreRecommendation({
   return {
     perfume,
     score,
+    baseScore: score,
     reasons: getVisibleReasons(reasonCandidates),
     reasonCandidates,
     scoreBreakdown,
@@ -205,10 +211,211 @@ function diversifyRecommendationReasons(recommendations) {
     return {
       perfume: recommendation.perfume,
       score: recommendation.score,
+      baseScore: recommendation.baseScore,
+      finalScore: recommendation.finalScore,
       reasons,
       scoreBreakdown: recommendation.scoreBreakdown,
     };
   });
+}
+
+function applyTierAffinity(recommendation, tierProfile, boxSummary) {
+  const candidateTierRank = getTierRank(recommendation.perfume.id);
+  const tierDistance = Math.abs(candidateTierRank - tierProfile.targetTierRank);
+  const tierAffinity = getTierAffinityScore(tierDistance, tierProfile);
+  const premiumException = getPremiumExceptionScore(
+    recommendation,
+    boxSummary,
+    candidateTierRank,
+    tierProfile
+  );
+  const reasonCandidates = [
+    ...recommendation.reasonCandidates,
+    ...getTierReasonCandidates({
+      recommendation,
+      boxSummary,
+      candidateTierRank,
+      targetTierRank: tierProfile.targetTierRank,
+      tierAffinity,
+      premiumException,
+    }),
+  ];
+  const finalScore = recommendation.baseScore + tierAffinity + premiumException;
+
+  return {
+    ...recommendation,
+    finalScore,
+    reasonCandidates,
+    scoreBreakdown: {
+      ...recommendation.scoreBreakdown,
+      tierAffinity,
+      premiumException,
+    },
+  };
+}
+
+function buildTierProfile(selectedPerfumes) {
+  if (selectedPerfumes.length === 0) {
+    return {
+      averageTierRank: 0,
+      dominantTierRank: 0,
+      targetTierRank: 0,
+    };
+  }
+
+  const tierRanks = selectedPerfumes.map((perfume) => getTierRank(perfume.id));
+  const averageTierRank =
+    tierRanks.reduce((sum, rank) => sum + rank, 0) / tierRanks.length;
+  const tierCounts = tierRanks.reduce((counts, rank) => {
+    counts[rank] = (counts[rank] || 0) + 1;
+    return counts;
+  }, {});
+  const dominantTierRank = Number(
+    Object.entries(tierCounts).sort(
+      ([rankA, countA], [rankB, countB]) =>
+        countB - countA || Number(rankA) - Number(rankB)
+    )[0][0]
+  );
+
+  return {
+    averageTierRank,
+    dominantTierRank,
+    targetTierRank: dominantTierRank,
+  };
+}
+
+function getTierRank(id) {
+  if (id < 100) return 0;
+  if (id < 200) return 1;
+  if (id < 300) return 2;
+  if (id < 400) return 3;
+  if (id < 500) return 4;
+  return 5;
+}
+
+function getTierAffinityScore(tierDistance, tierProfile) {
+  if (tierProfile.dominantTierRank === 0 && tierDistance >= 3) {
+    const bronzeHeavyAffinityByDistance = {
+      3: -14,
+      4: -22,
+      5: -30,
+    };
+
+    return bronzeHeavyAffinityByDistance[tierDistance] ?? -30;
+  }
+
+  const affinityByDistance = {
+    0: 10,
+    1: 6,
+    2: 0,
+    3: -8,
+    4: -14,
+    5: -22,
+  };
+
+  return affinityByDistance[tierDistance] ?? -22;
+}
+
+function getPremiumExceptionScore(
+  recommendation,
+  boxSummary,
+  candidateTierRank,
+  tierProfile
+) {
+  const targetTierRank = tierProfile.targetTierRank;
+
+  if (candidateTierRank <= targetTierRank) {
+    return 0;
+  }
+
+  let score = 0;
+
+  if (solvesMissingSeason(recommendation.perfume, boxSummary)) {
+    score += 6;
+  }
+
+  if (solvesPremiumOccasionGap(recommendation.perfume, boxSummary)) {
+    score += 4;
+  }
+
+  if (
+    recommendation.scoreBreakdown.accordDiversity >= 15 &&
+    recommendation.scoreBreakdown.noteDiversity >= 12
+  ) {
+    score += 4;
+  }
+
+  if (
+    recommendation.reasonCandidates.some(
+      (reason) => reason.label === "Improves Season Balance"
+    )
+  ) {
+    score += 4;
+  }
+
+  if (tierProfile.dominantTierRank === 0) {
+    const tierDistance = Math.abs(candidateTierRank - targetTierRank);
+
+    if (tierDistance >= 2 && recommendation.baseScore < 80) {
+      return Math.min(6, score);
+    }
+  }
+
+  return score;
+}
+
+function getTierReasonCandidates({
+  recommendation,
+  boxSummary,
+  candidateTierRank,
+  targetTierRank,
+  tierAffinity,
+  premiumException,
+}) {
+  const reasons = [];
+
+  if (candidateTierRank === targetTierRank && tierAffinity > 0) {
+    reasons.push({
+      score: 9,
+      label: "Fits your current box tier",
+    });
+  }
+
+  if (candidateTierRank > targetTierRank && premiumException >= 8) {
+    reasons.push({
+      score: 8,
+      label: "Premium pick with strong coverage impact",
+    });
+  }
+
+  if (
+    candidateTierRank > targetTierRank &&
+    (boxSummary.seasonCounts?.winter || 0) === 0 &&
+    recommendation.perfume.seasons?.includes("winter")
+  ) {
+    reasons.push({
+      score: 7,
+      label: "Worth the upgrade for Winter coverage",
+    });
+  }
+
+  return reasons;
+}
+
+function solvesMissingSeason(perfume, boxSummary) {
+  return SEASON_TARGETS.some(
+    (season) =>
+      (boxSummary.seasonCounts?.[season] || 0) === 0 &&
+      perfume.seasons?.includes(season)
+  );
+}
+
+function solvesPremiumOccasionGap(perfume, boxSummary) {
+  return ["date", "night", "formal"].some(
+    (occasion) =>
+      (boxSummary.occasionCounts?.[occasion] || 0) === 0 &&
+      perfume.occasions?.includes(occasion)
+  );
 }
 
 function helpsWeakestSeason(perfume, boxSummary) {
