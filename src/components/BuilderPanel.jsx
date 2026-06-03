@@ -19,6 +19,7 @@ function BuilderPanel({
   isBoxReady,
 }) {
     const [isNotesModalOpen, setIsNotesModalOpen] = useState(false);
+    const [isFinalSummaryOpen, setIsFinalSummaryOpen] = useState(false);
     const sortedNotes = [...boxSummary.notes].sort();
   return (
     <aside className="builder-panel">
@@ -80,6 +81,15 @@ function BuilderPanel({
         }`}
   </p>
 </div>
+
+      {isBoxReady && (
+        <button
+          className="review-box-button"
+          onClick={() => setIsFinalSummaryOpen(true)}
+        >
+          Review Box
+        </button>
+      )}
 
       <div className="selected-list">
         {selectedPerfumes.length === 0 ? (
@@ -273,8 +283,177 @@ function BuilderPanel({
     </div>
   </div>
 )}
+      {isFinalSummaryOpen && (
+        <FinalSummaryModal
+          selectedPerfumes={selectedPerfumes}
+          totalSlots={totalSlots}
+          totalPoints={totalPoints}
+          estimatedValue={estimatedValue}
+          upgradeValue={upgradeValue}
+          boxSummary={boxSummary}
+          coverageSummary={coverageSummary}
+          onClose={() => setIsFinalSummaryOpen(false)}
+        />
+      )}
     </aside>
   );
+}
+
+function FinalSummaryModal({
+  selectedPerfumes,
+  totalSlots,
+  totalPoints,
+  estimatedValue,
+  upgradeValue,
+  boxSummary,
+  coverageSummary,
+  onClose,
+}) {
+  const collectionIdentity = getCollectionIdentity(boxSummary);
+
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div
+        className="final-summary-modal"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <div className="modal-header">
+          <div>
+            <p className="summary-eyebrow">Discovery Box</p>
+            <h3>Your Completed Box</h3>
+          </div>
+
+          <button onClick={onClose}>Close</button>
+        </div>
+
+        <section className="collection-identity">
+          <span>Collection Identity</span>
+          <strong>{collectionIdentity}</strong>
+        </section>
+
+        <section className="final-summary-stats">
+          <SummaryStat label="Fragrances Selected" value={totalSlots} />
+          <SummaryStat label="Total Points" value={totalPoints.toFixed(1)} />
+          <SummaryStat label="Estimated Value" value={`$${estimatedValue.toFixed(0)}`} />
+          <SummaryStat label="Upgrade Value" value={`$${upgradeValue.toFixed(0)}`} />
+        </section>
+
+        <section className="final-summary-section">
+          <h4>Selected Fragrances</h4>
+
+          <div className="final-fragrance-list">
+            {selectedPerfumes.map((perfume, index) => (
+              <article key={`${perfume.id}-${index}`}>
+                <div>
+                  <strong>{perfume.name}</strong>
+                  {perfume.subtitle && (
+                    <span className="selected-subtitle">
+                      {perfume.subtitle
+                        .toLowerCase()
+                        .replace(/\b\w/g, (char) => char.toUpperCase())}
+                    </span>
+                  )}
+                  <span>{perfume.brand}</span>
+                </div>
+
+                <strong>{perfume.points} pt</strong>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        <section className="final-summary-section">
+          <h4>Box Profile</h4>
+
+          <ProfileGroup label="Occasions" values={boxSummary.occasions} />
+          <ProfileGroup label="Seasons" values={boxSummary.seasons} />
+          <ProfileGroup label="Vibes" values={boxSummary.vibes} />
+        </section>
+
+        <section className="final-summary-section">
+          <h4>Box Analysis</h4>
+
+          <div className="final-analysis-grid">
+            <div>
+              <span>Strengths</span>
+              {coverageSummary.strengths.length > 0 ? (
+                coverageSummary.strengths.slice(0, 8).map((item) => (
+                  <p key={`${item.category}-${item.label}`}>✓ {item.label}</p>
+                ))
+              ) : (
+                <p>Your box is ready, with more profile detail coming as you add variety.</p>
+              )}
+            </div>
+
+            <div>
+              <span>Gaps</span>
+              {coverageSummary.gaps.length > 0 ? (
+                coverageSummary.gaps.map((item) => (
+                  <p key={`${item.category}-${item.target}`}>
+                    {formatLabel(item.target)}: {item.label}
+                  </p>
+                ))
+              ) : (
+                <p>No major seasonal gaps detected. This box has a well-rounded profile.</p>
+              )}
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+  );
+}
+
+function SummaryStat({ label, value }) {
+  return (
+    <div className="final-stat-card">
+      <span>{label}</span>
+      <strong>{value}</strong>
+    </div>
+  );
+}
+
+function ProfileGroup({ label, values }) {
+  return (
+    <div className="final-profile-group">
+      <span>{label}</span>
+
+      <div className="final-summary-tags">
+        {values.length > 0 ? (
+          values.map((value) => <span key={value}>{value}</span>)
+        ) : (
+          <p>No data yet</p>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function getCollectionIdentity(boxSummary) {
+  const vibes = new Set(boxSummary.vibes);
+  const occasions = new Set(boxSummary.occasions);
+
+  if (vibes.has("fresh") && (vibes.has("clean") || occasions.has("office"))) {
+    return "Fresh Gentleman";
+  }
+
+  if (
+    occasions.has("date") ||
+    occasions.has("night") ||
+    vibes.has("seductive")
+  ) {
+    return "Evening Charmer";
+  }
+
+  if (
+    vibes.has("modern") ||
+    vibes.has("versatile") ||
+    vibes.has("elegant")
+  ) {
+    return "Modern Signature Collection";
+  }
+
+  return "Collector's Selection";
 }
 
 function BoxSlotTray({ selectedPerfumes, maxSlots }) {
