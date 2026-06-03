@@ -1170,8 +1170,13 @@ button {
 
 .recommendations {
   display: grid;
-  gap: 10px;
+  gap: 16px;
   margin-top: 16px;
+}
+
+.recommendation-lane {
+  display: grid;
+  gap: 10px;
 }
 
 .recommendations h4 {

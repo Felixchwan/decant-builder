@@ -15,21 +15,57 @@ const VIBE_TARGETS = [
 
 const MAX_VISIBLE_REASONS = 4;
 
+const DAILY_OCCASIONS = ["daily", "office", "casual"];
+
 export function buildRecommendations({
   perfumes,
   selectedPerfumes,
   boxSummary,
   scentDna,
-  limit = 5,
+  limit = 3,
 }) {
   const selectedIds = new Set(selectedPerfumes.map((perfume) => perfume.id));
+  const candidates = perfumes.filter((perfume) => !selectedIds.has(perfume.id));
+  const tierProfile = buildTierProfile(selectedPerfumes);
+  const basedOnYourPicks = buildPreferenceRecommendations({
+    candidates,
+    selectedPerfumes,
+    boxSummary,
+    tierProfile,
+    limit,
+  });
+  const basedOnYourPicksIds = new Set(
+    basedOnYourPicks.map((recommendation) => recommendation.perfume.id)
+  );
+  const toBalanceYourBox = buildBalanceRecommendations({
+    candidates: candidates.filter(
+      (perfume) => !basedOnYourPicksIds.has(perfume.id)
+    ),
+    selectedPerfumes,
+    boxSummary,
+    scentDna,
+    limit,
+  });
+
+  return {
+    basedOnYourPicks,
+    toBalanceYourBox,
+  };
+}
+
+function buildBalanceRecommendations({
+  candidates,
+  selectedPerfumes,
+  boxSummary,
+  scentDna,
+  limit,
+}) {
   const selectedAccords = new Set(Object.keys(boxSummary.accordMap || {}));
   const selectedNotes = new Set(selectedPerfumes.flatMap(getPerfumeNoteIds));
   const boxContext = buildBoxContext(boxSummary);
   const tierProfile = buildTierProfile(selectedPerfumes);
 
-  const rankedRecommendations = perfumes
-    .filter((perfume) => !selectedIds.has(perfume.id))
+  const rankedRecommendations = candidates
     .map((perfume) =>
       scoreRecommendation({
         perfume,
@@ -157,6 +193,170 @@ function scoreRecommendation({
     reasonCandidates,
     scoreBreakdown,
   };
+}
+
+function buildPreferenceRecommendations({
+  candidates,
+  selectedPerfumes,
+  boxSummary,
+  tierProfile,
+  limit,
+}) {
+  if (selectedPerfumes.length === 0) {
+    return [];
+  }
+
+  const preferenceProfile = buildPreferenceProfile(
+    selectedPerfumes,
+    boxSummary,
+    tierProfile
+  );
+
+  return candidates
+    .map((perfume) => scorePreferenceRecommendation(perfume, preferenceProfile))
+    .filter((recommendation) => recommendation.score > 0)
+    .sort(
+      (a, b) =>
+        b.score - a.score ||
+        Math.abs(a.perfume.points - preferenceProfile.averagePoints) -
+          Math.abs(b.perfume.points - preferenceProfile.averagePoints) ||
+        a.perfume.points - b.perfume.points ||
+        a.perfume.name.localeCompare(b.perfume.name)
+    )
+    .slice(0, limit);
+}
+
+function buildPreferenceProfile(selectedPerfumes, boxSummary, tierProfile) {
+  const accordCounts = Object.fromEntries(
+    Object.entries(boxSummary.accordMap || {}).map(([accord, perfumes]) => [
+      accord,
+      perfumes.length,
+    ])
+  );
+  const averagePoints =
+    selectedPerfumes.reduce((sum, perfume) => sum + perfume.points, 0) /
+    selectedPerfumes.length;
+
+  return {
+    accordCounts,
+    vibeCounts: boxSummary.vibeCounts || {},
+    occasionCounts: boxSummary.occasionCounts || {},
+    seasonCounts: boxSummary.seasonCounts || {},
+    tierProfile,
+    averagePoints,
+  };
+}
+
+function scorePreferenceRecommendation(perfume, preferenceProfile) {
+  const sharedAccords = getSharedItems(perfume.accords, preferenceProfile.accordCounts);
+  const sharedVibes = getSharedItems(perfume.vibes, preferenceProfile.vibeCounts);
+  const sharedOccasions = getSharedItems(
+    perfume.occasions,
+    preferenceProfile.occasionCounts
+  );
+  const sharedSeasons = getSharedItems(perfume.seasons, preferenceProfile.seasonCounts);
+  const candidateTierRank = getTierRank(perfume.id);
+  const tierDistance = Math.abs(
+    candidateTierRank - preferenceProfile.tierProfile.targetTierRank
+  );
+  const pointDistance = Math.abs(perfume.points - preferenceProfile.averagePoints);
+  const tierSimilarity = getTierSimilarityScore(tierDistance, pointDistance);
+  const scoreBreakdown = {
+    sharedAccords: Math.min(30, sharedAccords.length * 6),
+    sharedVibes: Math.min(24, sharedVibes.length * 6),
+    sharedOccasions: Math.min(16, sharedOccasions.length * 4),
+    sharedSeasons: Math.min(12, sharedSeasons.length * 3),
+    tierSimilarity,
+  };
+  const score = clampScore(
+    Object.values(scoreBreakdown).reduce((sum, value) => sum + value, 0)
+  );
+
+  return {
+    perfume,
+    score,
+    baseScore: score,
+    finalScore: score,
+    reasons: getPreferenceReasons({
+      perfume,
+      sharedAccords,
+      sharedVibes,
+      sharedOccasions,
+      sharedSeasons,
+      tierSimilarity,
+    }),
+    scoreBreakdown,
+  };
+}
+
+function getSharedItems(items = [], counts = {}) {
+  return items
+    .filter((item) => counts[item] > 0)
+    .sort((a, b) => counts[b] - counts[a] || a.localeCompare(b));
+}
+
+function getTierSimilarityScore(tierDistance, pointDistance) {
+  let tierScore = 0;
+
+  if (tierDistance === 0) {
+    tierScore = 6;
+  } else if (tierDistance === 1) {
+    tierScore = 4;
+  } else if (tierDistance === 2) {
+    tierScore = 2;
+  }
+
+  if (pointDistance <= 0.5) {
+    return tierScore + 2;
+  }
+
+  if (pointDistance <= 1.5) {
+    return tierScore + 1;
+  }
+
+  return tierScore;
+}
+
+function getPreferenceReasons({
+  sharedAccords,
+  sharedVibes,
+  sharedOccasions,
+  tierSimilarity,
+}) {
+  const reasons = [];
+
+  if (sharedAccords.length >= 2) {
+    reasons.push(
+      `Shares ${formatLabel(sharedAccords[0])} and ${formatLabel(
+        sharedAccords[1]
+      )} accords`
+    );
+  } else if (sharedAccords.length === 1) {
+    reasons.push(`Builds on your ${formatLabel(sharedAccords[0])}-forward selections`);
+  }
+
+  if (sharedVibes.includes("fresh") && sharedAccords.includes("aromatic")) {
+    reasons.push("Matches your fresh aromatic direction");
+  } else if (sharedVibes.includes("fresh") || sharedVibes.includes("clean")) {
+    reasons.push("Fits your fresh everyday profile");
+  }
+
+  if (
+    sharedVibes.includes("clean") &&
+    sharedOccasions.some((occasion) => DAILY_OCCASIONS.includes(occasion))
+  ) {
+    reasons.push("Similar to your clean daily picks");
+  } else if (sharedOccasions.some((occasion) => DAILY_OCCASIONS.includes(occasion))) {
+    reasons.push("Matches your everyday wear pattern");
+  }
+
+  if (tierSimilarity >= 6) {
+    reasons.push("Fits your current box tier");
+  } else if (tierSimilarity >= 4) {
+    reasons.push("Stays close to your current box tier");
+  }
+
+  return [...new Set(reasons)].slice(0, MAX_VISIBLE_REASONS);
 }
 
 function scoreCoverage({

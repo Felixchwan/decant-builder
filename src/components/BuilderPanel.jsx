@@ -27,6 +27,8 @@ function BuilderPanel({
     const selectedPerfumeIds = new Set(
       selectedPerfumes.map((perfume) => perfume.id)
     );
+    const basedOnYourPicks = recommendations?.basedOnYourPicks || [];
+    const toBalanceYourBox = recommendations?.toBalanceYourBox || [];
   return (
     <aside className="builder-panel">
       <div className="panel-header">
@@ -163,20 +165,23 @@ function BuilderPanel({
   </div>
     )}
 
-    {recommendations?.length > 0 && (
+    {(basedOnYourPicks.length > 0 || toBalanceYourBox.length > 0) && (
     <div className="recommendations">
-    <h4>Recommended Picks</h4>
+    <RecommendationLane
+      title="Based On Your Picks"
+      recommendations={basedOnYourPicks}
+      selectedPerfumeIds={selectedPerfumeIds}
+      isBoxFull={totalSlots >= maxSlots}
+      onAddPerfume={onAddPerfume}
+    />
 
-    {recommendations.map((recommendation, index) => (
-      <RecommendationCard
-        key={recommendation.perfume.id}
-        recommendation={recommendation}
-        rank={index + 1}
-        isAdded={selectedPerfumeIds.has(recommendation.perfume.id)}
-        isBoxFull={totalSlots >= maxSlots}
-        onAddPerfume={onAddPerfume}
-      />
-        ))}
+    <RecommendationLane
+      title="To Balance Your Box"
+      recommendations={toBalanceYourBox}
+      selectedPerfumeIds={selectedPerfumeIds}
+      isBoxFull={totalSlots >= maxSlots}
+      onAddPerfume={onAddPerfume}
+    />
     </div>
     )}
 
@@ -413,6 +418,35 @@ function FinalSummaryModal({
         </section>
       </div>
     </div>
+  );
+}
+
+function RecommendationLane({
+  title,
+  recommendations,
+  selectedPerfumeIds,
+  isBoxFull,
+  onAddPerfume,
+}) {
+  if (recommendations.length === 0) {
+    return null;
+  }
+
+  return (
+    <section className="recommendation-lane">
+      <h4>{title}</h4>
+
+      {recommendations.map((recommendation, index) => (
+        <RecommendationCard
+          key={recommendation.perfume.id}
+          recommendation={recommendation}
+          rank={index + 1}
+          isAdded={selectedPerfumeIds.has(recommendation.perfume.id)}
+          isBoxFull={isBoxFull}
+          onAddPerfume={onAddPerfume}
+        />
+      ))}
+    </section>
   );
 }
 
