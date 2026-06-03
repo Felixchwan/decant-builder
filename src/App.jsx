@@ -10,6 +10,8 @@ import BuilderPanel from "./components/BuilderPanel";
 import { buildBoxSummary } from "./utils/buildBoxSummary";
 import { getPerfumeNoteIds } from "./utils/noteUtils";
 import { buildCoverageSummary } from "./utils/buildCoverageSummary";
+import { buildScentDna } from "./utils/buildScentDna";
+import { buildRecommendations } from "./utils/buildRecommendations";
 import {
   MIN_BOX_SLOTS,
   MAX_BOX_SLOTS,
@@ -70,7 +72,21 @@ function App() {
 const boxSummary = useMemo(() => {
   return buildBoxSummary(selectedPerfumes, notes);
 }, [selectedPerfumes]);
-const coverageSummary = buildCoverageSummary(boxSummary, perfumes);
+const coverageSummary = useMemo(() => {
+  return buildCoverageSummary(boxSummary, perfumes);
+}, [boxSummary]);
+const scentDna = useMemo(() => {
+  return buildScentDna(selectedPerfumes, boxSummary);
+}, [selectedPerfumes, boxSummary]);
+const recommendations = useMemo(() => {
+  return buildRecommendations({
+    perfumes,
+    selectedPerfumes,
+    boxSummary,
+    coverageSummary,
+    scentDna,
+  });
+}, [selectedPerfumes, boxSummary, coverageSummary, scentDna]);
 
   function handleFilterChange(category, value) {
     setActiveFilters((currentFilters) => ({
@@ -197,6 +213,8 @@ const cancelAddPerfume = () => {
           missingSlots={missingSlots}
           missingPoints={missingPoints}
           coverageSummary={coverageSummary}
+          recommendations={recommendations}
+          scentDna={scentDna}
           isBoxReady={isBoxReady}
         />
       </section>

@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { getTierData } from "../utils/tierUtils";
-import { buildScentDna } from "../utils/buildScentDna";
 
 function BuilderPanel({
   totalSlots,
@@ -17,6 +16,8 @@ function BuilderPanel({
   missingSlots,
   missingPoints,
   coverageSummary,
+  recommendations,
+  scentDna,
   isBoxReady,
 }) {
     const [isNotesModalOpen, setIsNotesModalOpen] = useState(false);
@@ -158,17 +159,15 @@ function BuilderPanel({
   </div>
     )}
 
-    {coverageSummary.seasonalRecommendations?.length > 0 && (
+    {recommendations?.length > 0 && (
     <div className="recommendations">
     <h4>Recommended Picks</h4>
 
-    {coverageSummary.seasonalRecommendations.map((item) => (
-      <p key={`${item.season}-${item.perfume.id}`}>
-        {getSeasonIcon(item.season)}{" "}
-        {formatLabel(item.season)} Recommendation
-        <br />
-        → {item.perfume.name}
-      </p>
+    {recommendations.map((recommendation) => (
+      <RecommendationCard
+        key={recommendation.perfume.id}
+        recommendation={recommendation}
+      />
         ))}
     </div>
     )}
@@ -293,6 +292,7 @@ function BuilderPanel({
           upgradeValue={upgradeValue}
           boxSummary={boxSummary}
           coverageSummary={coverageSummary}
+          scentDna={scentDna}
           onClose={() => setIsFinalSummaryOpen(false)}
         />
       )}
@@ -308,10 +308,10 @@ function FinalSummaryModal({
   upgradeValue,
   boxSummary,
   coverageSummary,
+  scentDna,
   onClose,
 }) {
   const collectionIdentity = getCollectionIdentity(boxSummary);
-  const scentDna = buildScentDna(selectedPerfumes, boxSummary);
 
   return (
     <div className="modal-overlay" onClick={onClose}>
@@ -405,6 +405,31 @@ function FinalSummaryModal({
         </section>
       </div>
     </div>
+  );
+}
+
+function RecommendationCard({ recommendation }) {
+  const { perfume, score, reasons } = recommendation;
+
+  return (
+    <article className="recommendation-card">
+      <div className="recommendation-card-header">
+        <div>
+          <strong>{perfume.name}</strong>
+          <span>{perfume.brand}</span>
+        </div>
+
+        <span className="recommendation-score">{score}</span>
+      </div>
+
+      {reasons.length > 0 && (
+        <div className="recommendation-reasons">
+          {reasons.map((reason) => (
+            <p key={reason}>âœ“ {reason}</p>
+          ))}
+        </div>
+      )}
+    </article>
   );
 }
 
