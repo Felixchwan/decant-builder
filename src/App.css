@@ -1289,3 +1289,24 @@ button {
   color: #86efac;
   font-weight: 900;
 }
+
+.recommendation-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 10px;
+}
+
+.recommendation-actions button {
+  border: 0;
+  border-radius: 999px;
+  padding: 7px 11px;
+  background: #4ade80;
+  color: #052e16;
+  font-size: 0.72rem;
+  font-weight: 900;
+}
+
+.recommendation-actions button:disabled {
+  cursor: not-allowed;
+  opacity: 0.48;
+}

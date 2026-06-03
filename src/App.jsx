@@ -96,21 +96,30 @@ const recommendations = useMemo(() => {
   }
 
   const addPerfume = (perfume) => {
+  if (selectedPerfumes.some((selectedPerfume) => selectedPerfume.id === perfume.id)) {
+    return;
+  }
+
   if (perfume.warningMessage) {
     setPendingPerfume(perfume);
     return;
   }
 
-  setSelectedPerfumes((prev) => [...prev, perfume]);
+  setSelectedPerfumes((prev) =>
+    prev.some((selectedPerfume) => selectedPerfume.id === perfume.id)
+      ? prev
+      : [...prev, perfume]
+  );
 };
 
 const confirmAddPerfume = () => {
   if (!pendingPerfume) return;
 
-  setSelectedPerfumes((prev) => [
-    ...prev,
-    pendingPerfume,
-  ]);
+  setSelectedPerfumes((prev) =>
+    prev.some((perfume) => perfume.id === pendingPerfume.id)
+      ? prev
+      : [...prev, pendingPerfume]
+  );
 
   setPendingPerfume(null);
 };
@@ -216,6 +225,7 @@ const cancelAddPerfume = () => {
           recommendations={recommendations}
           scentDna={scentDna}
           isBoxReady={isBoxReady}
+          onAddPerfume={addPerfume}
         />
       </section>
     </main>

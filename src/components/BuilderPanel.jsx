@@ -19,10 +19,14 @@ function BuilderPanel({
   recommendations,
   scentDna,
   isBoxReady,
+  onAddPerfume,
 }) {
     const [isNotesModalOpen, setIsNotesModalOpen] = useState(false);
     const [isFinalSummaryOpen, setIsFinalSummaryOpen] = useState(false);
     const sortedNotes = [...boxSummary.notes].sort();
+    const selectedPerfumeIds = new Set(
+      selectedPerfumes.map((perfume) => perfume.id)
+    );
   return (
     <aside className="builder-panel">
       <div className="panel-header">
@@ -168,6 +172,9 @@ function BuilderPanel({
         key={recommendation.perfume.id}
         recommendation={recommendation}
         rank={index + 1}
+        isAdded={selectedPerfumeIds.has(recommendation.perfume.id)}
+        isBoxFull={totalSlots >= maxSlots}
+        onAddPerfume={onAddPerfume}
       />
         ))}
     </div>
@@ -409,8 +416,16 @@ function FinalSummaryModal({
   );
 }
 
-function RecommendationCard({ recommendation, rank }) {
+function RecommendationCard({
+  recommendation,
+  rank,
+  isAdded,
+  isBoxFull,
+  onAddPerfume,
+}) {
   const { perfume, score, reasons } = recommendation;
+  const isAddDisabled = isAdded || isBoxFull;
+  const addButtonLabel = isAdded ? "Added" : isBoxFull ? "Box full" : "Add to Box";
 
   return (
     <article className="recommendation-card">
@@ -436,6 +451,16 @@ function RecommendationCard({ recommendation, rank }) {
           ))}
         </div>
       )}
+
+      <div className="recommendation-actions">
+        <button
+          type="button"
+          onClick={() => onAddPerfume(perfume)}
+          disabled={isAddDisabled}
+        >
+          {addButtonLabel}
+        </button>
+      </div>
     </article>
   );
 }
