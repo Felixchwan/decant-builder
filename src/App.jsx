@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { perfumes } from "./data/perfumes";
 import { buildFilterOptions } from "./utils/filterUtils";
 import { notes } from "./data/notes";
@@ -30,6 +30,7 @@ function App() {
   const [searchQuery, setSearchQuery] = useState("");
   const [sortOption, setSortOption] = useState("bestMatch");
   const [pendingPerfume, setPendingPerfume] = useState(null);
+  const [detailPerfume, setDetailPerfume] = useState(null);
 
   const totalSlots = selectedPerfumes.length;
   const totalPoints = selectedPerfumes.reduce(
@@ -128,6 +129,22 @@ const cancelAddPerfume = () => {
   setPendingPerfume(null);
 };
 
+  useEffect(() => {
+    if (!detailPerfume) {
+      return undefined;
+    }
+
+    function handleKeyDown(event) {
+      if (event.key === "Escape") {
+        setDetailPerfume(null);
+      }
+    }
+
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [detailPerfume]);
+
   function removePerfume(indexToRemove) {
     setSelectedPerfumes((current) =>
       current.filter((_, index) => index !== indexToRemove)
@@ -200,6 +217,7 @@ const cancelAddPerfume = () => {
                   tierData={tierData}
                   noteNames={noteNames}
                   onAddToBox={addPerfume}
+                  onOpenDetails={setDetailPerfume}
                   isDisabled={totalSlots >= MAX_BOX_SLOTS}
                 />
               );
@@ -229,6 +247,29 @@ const cancelAddPerfume = () => {
         />
       </section>
     </main>
+    {detailPerfume && (
+      <PerfumeDetailsModal
+        perfume={detailPerfume}
+        notes={notes}
+        tierData={getTierData(detailPerfume.id)}
+        isAddDisabled={
+          totalSlots >= MAX_BOX_SLOTS ||
+          selectedPerfumes.some((perfume) => perfume.id === detailPerfume.id)
+        }
+        addButtonLabel={
+          selectedPerfumes.some((perfume) => perfume.id === detailPerfume.id)
+            ? "Added"
+            : totalSlots >= MAX_BOX_SLOTS
+              ? "Box full"
+              : "Add to Box"
+        }
+        onAddToBox={(perfume) => {
+          addPerfume(perfume);
+          setDetailPerfume(null);
+        }}
+        onClose={() => setDetailPerfume(null)}
+      />
+    )}
     {pendingPerfume && (
   <div className="modal-overlay">
     <div className="warning-modal">
@@ -255,6 +296,147 @@ const cancelAddPerfume = () => {
   </div>
 )}
     </>
+  );
+}
+
+function PerfumeDetailsModal({
+  perfume,
+  notes,
+  tierData,
+  isAddDisabled,
+  addButtonLabel,
+  onAddToBox,
+  onClose,
+}) {
+  const usesGeneralNotes = (perfume.generalNotes || []).length > 0;
+  const hasPyramidNotes =
+    (perfume.topNotes || []).length > 0 ||
+    (perfume.middleNotes || []).length > 0 ||
+    (perfume.baseNotes || []).length > 0;
+
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div
+        className="perfume-details-modal"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <div className="modal-header">
+          <div>
+            <p className="summary-eyebrow">Fragrance Details</p>
+            <h3>{perfume.name}</h3>
+            <p>{perfume.brand}</p>
+          </div>
+
+          <button onClick={onClose}>Close</button>
+        </div>
+
+        <div className="perfume-details-meta">
+          <div
+            className="tier-badge"
+            style={{
+              borderColor: tierData.color,
+              backgroundColor: tierData.background,
+              color: tierData.color,
+            }}
+          >
+            <span>{tierData.emoji}</span>
+            {tierData.name}
+          </div>
+
+          <strong>{perfume.points} pt</strong>
+        </div>
+
+        <section className="perfume-details-section">
+          <h4>Profile</h4>
+
+          <DetailTagGroup label="Seasons" values={perfume.seasons || []} />
+          <DetailTagGroup label="Occasions" values={perfume.occasions || []} />
+          <DetailTagGroup label="Vibes" values={perfume.vibes || []} />
+        </section>
+
+        <section className="perfume-details-section">
+          <h4>Accords</h4>
+          <div className="details-tag-row">
+            {(perfume.accords || []).map((accord) => (
+              <span key={accord}>{accord}</span>
+            ))}
+          </div>
+        </section>
+
+        <section className="perfume-details-section">
+          <h4>Notes</h4>
+
+          {usesGeneralNotes ? (
+            <DetailNoteGroup
+              title="General Notes"
+              noteIds={perfume.generalNotes || []}
+              notes={notes}
+            />
+          ) : hasPyramidNotes ? (
+            <>
+              <DetailNoteGroup
+                title="Top Notes"
+                noteIds={perfume.topNotes || []}
+                notes={notes}
+              />
+              <DetailNoteGroup
+                title="Middle Notes"
+                noteIds={perfume.middleNotes || []}
+                notes={notes}
+              />
+              <DetailNoteGroup
+                title="Base Notes"
+                noteIds={perfume.baseNotes || []}
+                notes={notes}
+              />
+            </>
+          ) : (
+            <p className="details-empty">No notes listed yet.</p>
+          )}
+        </section>
+
+        <div className="perfume-details-actions">
+          <button onClick={() => onAddToBox(perfume)} disabled={isAddDisabled}>
+            {addButtonLabel}
+          </button>
+          <button onClick={onClose}>Close</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function DetailTagGroup({ label, values }) {
+  return (
+    <div className="detail-profile-group">
+      <span>{label}</span>
+
+      <div className="details-tag-row">
+        {values.length > 0 ? (
+          values.map((value) => <span key={value}>{value}</span>)
+        ) : (
+          <p>No data yet</p>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function DetailNoteGroup({ title, noteIds, notes }) {
+  if (noteIds.length === 0) {
+    return null;
+  }
+
+  return (
+    <div className="detail-note-group">
+      <span>{title}</span>
+
+      <div className="details-tag-row">
+        {noteIds.map((noteId) => (
+          <span key={noteId}>{notes[noteId]?.name || formatLabel(noteId)}</span>
+        ))}
+      </div>
+    </div>
   );
 }
 
@@ -341,6 +523,14 @@ function getTierRank(id) {
 
 function compareNames(a, b) {
   return a.name.localeCompare(b.name);
+}
+
+function formatLabel(value) {
+  return value
+    .split(/(?=[A-Z])|[-_\s]/)
+    .filter(Boolean)
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
 }
 
 export default App;

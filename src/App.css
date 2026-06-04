@@ -144,12 +144,34 @@ button {
   background: linear-gradient(180deg, rgba(15, 23, 42, 0.88), rgba(6, 18, 12, 0.9));
   border: 1px solid rgba(148, 163, 184, 0.16);
   overflow: hidden;
+  cursor: pointer;
   transition: transform 180ms ease, border-color 180ms ease;
 }
 
-.perfume-card:hover {
+.perfume-card:hover,
+.perfume-card:focus-visible {
   transform: translateY(-4px);
   border-color: rgba(74, 222, 128, 0.45);
+  outline: none;
+}
+
+.perfume-card-details-trigger {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+}
+
+.perfume-card-details-trigger:focus-visible {
+  outline: 2px solid rgba(74, 222, 128, 0.45);
+  outline-offset: 4px;
 }
 
 .bottle-placeholder {
@@ -233,6 +255,16 @@ button {
   margin-top: auto;
   background: #4ade80;
   color: #052e16;
+}
+
+.perfume-card .perfume-card-details-trigger {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: inherit;
+  font-weight: inherit;
 }
 
 .perfume-card button:disabled {
@@ -475,7 +507,7 @@ button {
 
 @media (max-width: 980px) {
   .layout {
-    grid-template-columns: minmax(0, 1.6fr) 420px;
+    grid-template-columns: 1fr;
   }
 
   .builder-panel {
@@ -713,6 +745,141 @@ button {
 
   background: rgba(74, 222, 128, 0.12);
   border: 1px solid rgba(74, 222, 128, 0.25);
+}
+
+.perfume-details-modal {
+  width: min(760px, 92vw);
+  max-height: 86vh;
+  overflow-y: auto;
+  padding: 24px;
+  border-radius: 20px;
+  background:
+    radial-gradient(circle at 18% 0, rgba(74, 222, 128, 0.10), transparent 34%),
+    #08110d;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 28px 90px rgba(0, 0, 0, 0.58);
+}
+
+.perfume-details-modal .modal-header {
+  align-items: flex-start;
+  margin-bottom: 14px;
+}
+
+.perfume-details-modal .modal-header h3 {
+  margin: 4px 0 0;
+  color: #f8fafc;
+  font-size: 1.55rem;
+  line-height: 1.05;
+}
+
+.perfume-details-modal .modal-header p:not(.summary-eyebrow) {
+  margin: 5px 0 0;
+  color: #94a3b8;
+}
+
+.perfume-details-modal .modal-header button,
+.perfume-details-actions button {
+  border: 1px solid rgba(148, 163, 184, 0.24);
+  border-radius: 10px;
+  padding: 8px 11px;
+  background: rgba(15, 23, 42, 0.72);
+  color: #ecfdf5;
+  font-weight: 800;
+}
+
+.perfume-details-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 18px;
+  padding: 12px;
+  border-radius: 14px;
+  background: rgba(2, 6, 23, 0.34);
+  border: 1px solid rgba(148, 163, 184, 0.10);
+}
+
+.perfume-details-meta .tier-badge {
+  margin: 0;
+}
+
+.perfume-details-meta > strong {
+  color: #86efac;
+  white-space: nowrap;
+}
+
+.perfume-details-section {
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(148, 163, 184, 0.13);
+}
+
+.perfume-details-section h4,
+.detail-profile-group > span,
+.detail-note-group > span {
+  color: #86efac;
+  font-size: 0.74rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.perfume-details-section h4 {
+  margin: 0 0 12px;
+}
+
+.detail-profile-group,
+.detail-note-group {
+  margin-top: 12px;
+}
+
+.detail-profile-group > span,
+.detail-note-group > span {
+  display: block;
+  margin-bottom: 7px;
+  color: rgba(134, 239, 172, 0.74);
+}
+
+.details-tag-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.details-tag-row span {
+  padding: 6px 9px;
+  border-radius: 999px;
+  background: rgba(74, 222, 128, 0.09);
+  border: 1px solid rgba(74, 222, 128, 0.18);
+  color: #bbf7d0;
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.details-tag-row p,
+.details-empty {
+  margin: 0;
+  color: #cbd5e1;
+}
+
+.perfume-details-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(148, 163, 184, 0.13);
+}
+
+.perfume-details-actions button:first-child {
+  border: 0;
+  background: #4ade80;
+  color: #052e16;
+}
+
+.perfume-details-actions button:disabled {
+  cursor: not-allowed;
+  opacity: 0.48;
 }
 
 .final-summary-modal {
@@ -1314,4 +1481,20 @@ button {
 .recommendation-actions button:disabled {
   cursor: not-allowed;
   opacity: 0.48;
+}
+
+@media (max-width: 520px) {
+  .perfume-details-modal {
+    width: 94vw;
+    max-height: 86vh;
+    padding: 18px;
+  }
+
+  .perfume-details-actions {
+    flex-direction: column;
+  }
+
+  .perfume-details-actions button {
+    width: 100%;
+  }
 }

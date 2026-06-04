@@ -3,10 +3,16 @@ function PerfumeCard({
   tierData,
   noteNames,
   onAddToBox,
+  onOpenDetails,
   isDisabled,
 }) {
   return (
     <article className="perfume-card">
+      <button
+        type="button"
+        className="perfume-card-details-trigger"
+        onClick={() => onOpenDetails(perfume)}
+      >
       <div className="perfume-info">
         <h3>{perfume.name}</h3>
         {perfume.subtitle && (
@@ -51,6 +57,8 @@ function PerfumeCard({
           {(perfume.occasions || []).join(", ")}
         </p>
       </div>
+
+      </button>
 
       <button onClick={() => onAddToBox(perfume)} disabled={isDisabled}>
         Add to box
