@@ -6,6 +6,8 @@ function PerfumeCard({
   onOpenDetails,
   isDisabled,
 }) {
+  const imageFallback = "/images/perfumes/placeholders/perfume-placeholder.svg";
+
   return (
     <article className="perfume-card">
       <button
@@ -13,6 +15,17 @@ function PerfumeCard({
         className="perfume-card-details-trigger"
         onClick={() => onOpenDetails(perfume)}
       >
+      <div className="perfume-card-image">
+        <img
+          src={perfume.image || imageFallback}
+          alt={`${perfume.name} bottle`}
+          onError={(event) => {
+            event.currentTarget.onerror = null;
+            event.currentTarget.src = imageFallback;
+          }}
+        />
+      </div>
+
       <div className="perfume-info">
         <h3>{perfume.name}</h3>
         {perfume.subtitle && (

@@ -757,7 +757,7 @@ vibes: ["fresh", "bright", "warm"]
   name: "Arancia di Capri",
   brand: "Acqua di Parma",
   points: 1.5,
-  image: "",
+  image: "/images/perfumes/silver/arancia-di-capri.png",
 
   seasons: ["spring", "summer"],
   occasions: ["daily", "casual"],
@@ -787,6 +787,7 @@ baseNotes: ["caramel", "musk"],
   name: "Essenza",
   brand: "Acqua di Parma",
   points: 1.5,
+  image: "/images/perfumes/silver/essenza.png",
 
   accords: [
   "citrus",
@@ -831,6 +832,7 @@ baseNotes: ["caramel", "musk"],
   name: "Fico di Amalfi",
   brand: "Acqua di Parma",
   points: 1.5,
+  image: "/images/perfumes/silver/fico-di-amalfi.png",
 
   accords: [
     "citrus",
@@ -884,6 +886,7 @@ baseNotes: ["caramel", "musk"],
   name: "Mandarino di Sicilia",
   brand: "Acqua di Parma",
   points: 1.5,
+  image: "/images/perfumes/silver/mandarino-di-sicilia.png",
 
   accords: [
     "citrus",
@@ -936,6 +939,7 @@ baseNotes: ["caramel", "musk"],
   name: "Dior Homme Sport",
   brand: "Dior",
   points: 2,
+  image: "/images/perfumes/gold/dior-homme-sport.png",
 
   accords: [
     "citrus",
@@ -989,6 +993,7 @@ baseNotes: ["caramel", "musk"],
   name: "Sauvage EDP",
   brand: "Dior",
   points: 2,
+  image: "/images/perfumes/gold/sauvage-edp.png",
 
   accords: [
     "fresh spicy",
@@ -1041,6 +1046,7 @@ baseNotes: ["caramel", "musk"],
   name: "Loewe 7 Cobalt",
   brand: "Loewe",
   points: 2,
+  image: "/images/perfumes/gold/loewe-7-cobalt.png",
 
   accords: [
     "aromatic",
@@ -1090,6 +1096,7 @@ baseNotes: ["caramel", "musk"],
   name: "Replica By The Fireplace",
   brand: "Maison Martin Margiela",
   points: 2,
+  image: "/images/perfumes/gold/replica-by-the-fireplace.png",
 
   accords: [
     "woody",
@@ -1141,6 +1148,7 @@ baseNotes: ["caramel", "musk"],
   name: "Allure Homme Edition Blanche",
   brand: "Chanel",
   points: 2.5,
+  image: "/images/perfumes/platinum/allure-homme-edition-blanche.png",
 
   accords: [
     "citrus",
@@ -1191,6 +1199,7 @@ baseNotes: ["caramel", "musk"],
   name: "Allure Homme Sport Superleggera",
   brand: "Chanel",
   points: 2.5,
+  image: "/images/perfumes/platinum/allure-homme-sport-superleggera.png",
 
   accords: [
     "citrus",
@@ -1243,6 +1252,7 @@ baseNotes: ["caramel", "musk"],
   name: "Bois Imperial",
   brand: "Essential Parfums",
   points: 2.5,
+  image: "/images/perfumes/platinum/bois-imperial.png",
 
   accords: [
     "woody",
@@ -1291,6 +1301,7 @@ baseNotes: ["caramel", "musk"],
   name: "Divine Vanille",
   brand: "Essential Parfums",
   points: 2.5,
+  image: "/images/perfumes/platinum/divine-vanille.png",
 
   accords: [
     "vanilla",
@@ -1345,6 +1356,7 @@ baseNotes: ["caramel", "musk"],
   name: "Orange X Santal",
   brand: "Essential Parfums",
   points: 2.5,
+  image: "/images/perfumes/platinum/orange-x-santal.png",
 
   accords: [
     "citrus",
@@ -1391,6 +1403,7 @@ baseNotes: ["caramel", "musk"],
   name: "Silver Mountain Water",
   brand: "Creed",
   points: 4.5,
+  image: "/images/perfumes/diamond/silver-mountain-water.png",
 
   accords: [
     "citrus",
@@ -1441,6 +1454,7 @@ baseNotes: ["caramel", "musk"],
   name: "Sauvage Elixir",
   brand: "Dior",
   points: 4.5,
+  image: "/images/perfumes/diamond/sauvage-elixir.png",
 
   accords: [
     "warm spicy",
@@ -1493,6 +1507,7 @@ baseNotes: ["caramel", "musk"],
   name: "Carlisle",
   brand: "Parfums de Marly",
   points: 4.5,
+  image: "/images/perfumes/diamond/carlisle.png",
 
   accords: [
     "warm spicy",
@@ -1545,6 +1560,7 @@ baseNotes: ["caramel", "musk"],
   name: "Layton",
   brand: "Parfums de Marly",
   points: 4.5,
+  image: "/images/perfumes/diamond/layton.png",
 
   accords: [
     "sweet",
@@ -1604,6 +1620,7 @@ baseNotes: ["caramel", "musk"],
   name: "Squid",
   brand: "Zoologist",
   points: 4.5,
+  image: "/images/perfumes/diamond/squid.png",
 
   warningMessage: `
   Zoologist Squid explores marine darkness through notes of ink, incense, sea salt and ambergris.
@@ -1662,6 +1679,7 @@ baseNotes: ["caramel", "musk"],
   subtitleGlow: true,
   brand: "Yves Saint Laurent",
   points: 6,
+  image: "/images/perfumes/mythic/tuxedo.png",
 
   accords: [
     "patchouli",
