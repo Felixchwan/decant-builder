@@ -355,6 +355,209 @@ button {
   border-radius: inherit;
 }
 
+.discovery-bonus-panel {
+  display: grid;
+  gap: 12px;
+  margin: 0 0 16px;
+  padding: 14px;
+  border-radius: 20px;
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  background:
+    radial-gradient(circle at 12% 0, rgba(255, 255, 255, 0.08), transparent 36%),
+    linear-gradient(180deg, rgba(15, 23, 42, 0.66), rgba(6, 18, 12, 0.72));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.035);
+}
+
+.discovery-bonus-panel.unlocked {
+  border-color: rgba(250, 204, 21, 0.36);
+  background:
+    radial-gradient(circle at 16% 0, rgba(250, 204, 21, 0.16), transparent 38%),
+    linear-gradient(180deg, rgba(30, 41, 20, 0.82), rgba(10, 22, 14, 0.82));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    0 18px 42px rgba(250, 204, 21, 0.08);
+}
+
+.discovery-progress-header {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.discovery-progress-header span,
+.curator-bonus-card span,
+.curator-pick-slot span {
+  display: block;
+  color: #94a3b8;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.discovery-progress-header strong {
+  display: block;
+  margin-top: 2px;
+  color: #ecfdf5;
+  font-size: 1rem;
+}
+
+.discovery-bonus-state {
+  padding: 5px 9px;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  background: rgba(15, 23, 42, 0.58);
+  color: #cbd5e1 !important;
+}
+
+.discovery-bonus-panel.unlocked .discovery-bonus-state {
+  border-color: rgba(250, 204, 21, 0.42);
+  background: rgba(250, 204, 21, 0.13);
+  color: #fde68a !important;
+}
+
+.discovery-progress-bar {
+  height: 10px;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.16);
+  overflow: hidden;
+}
+
+.discovery-progress-bar div {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #22c55e, #84cc16);
+  transition: width 220ms ease;
+}
+
+.discovery-bonus-panel.unlocked .discovery-progress-bar div {
+  background: linear-gradient(90deg, #22c55e, #facc15);
+}
+
+.discovery-progress-copy {
+  margin: 0;
+  color: #cbd5e1;
+  font-size: 0.82rem;
+}
+
+.discovery-requirements {
+  display: grid;
+  gap: 6px;
+}
+
+.discovery-requirement {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  color: #cbd5e1;
+  font-size: 0.84rem;
+  font-weight: 800;
+}
+
+.discovery-requirement span {
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: 900;
+}
+
+.discovery-requirement.met span {
+  background: rgba(34, 197, 94, 0.16);
+  color: #86efac;
+}
+
+.discovery-requirement.met span::before {
+  content: "\2713";
+}
+
+.discovery-requirement.missing span {
+  background: rgba(248, 113, 113, 0.13);
+  color: #fecaca;
+}
+
+.discovery-requirement.missing span::before {
+  content: "\2715";
+}
+
+.curator-bonus-card {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 10px;
+  align-items: center;
+  padding: 12px;
+  border-radius: 16px;
+  border: 1px dashed rgba(148, 163, 184, 0.22);
+  background: rgba(2, 6, 23, 0.38);
+}
+
+.discovery-bonus-panel.unlocked .curator-bonus-card {
+  border-style: solid;
+  border-color: rgba(250, 204, 21, 0.32);
+  background:
+    radial-gradient(circle at 0 0, rgba(250, 204, 21, 0.14), transparent 42%),
+    rgba(2, 6, 23, 0.45);
+}
+
+.curator-bonus-icon {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
+  background: rgba(148, 163, 184, 0.12);
+  font-size: 1.15rem;
+}
+
+.discovery-bonus-panel.unlocked .curator-bonus-icon {
+  background: rgba(250, 204, 21, 0.14);
+  box-shadow: 0 0 24px rgba(250, 204, 21, 0.14);
+}
+
+.curator-bonus-card strong {
+  display: block;
+  margin-top: 2px;
+  color: #ecfdf5;
+}
+
+.curator-bonus-card p {
+  margin: 3px 0 0;
+  color: #94a3b8;
+  font-size: 0.78rem;
+  line-height: 1.35;
+}
+
+.curator-pick-slot {
+  grid-column: 1 / -1;
+  display: grid;
+  gap: 2px;
+  min-height: 58px;
+  padding: 11px;
+  border-radius: 14px;
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  background:
+    linear-gradient(135deg, rgba(148, 163, 184, 0.08), transparent 48%),
+    rgba(15, 23, 42, 0.42);
+  opacity: 0.72;
+}
+
+.curator-pick-slot.active {
+  opacity: 1;
+  border-color: rgba(250, 204, 21, 0.38);
+  background:
+    radial-gradient(circle at 15% 0, rgba(250, 204, 21, 0.18), transparent 46%),
+    linear-gradient(135deg, rgba(250, 204, 21, 0.10), rgba(34, 197, 94, 0.08)),
+    rgba(15, 23, 42, 0.58);
+}
+
+.curator-pick-slot strong {
+  color: #fef3c7;
+}
+
 .box-slot-tray {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 28px minmax(0, 1fr);
@@ -449,7 +652,7 @@ button {
 }
 
 .box-vial.empty {
-  opacity: 0.26;
+  opacity: 0.36;
   filter: none;
 }
 
@@ -465,13 +668,66 @@ button {
 }
 
 .box-vial.empty .vial-body {
-  border-color: rgba(148, 163, 184, 0.10);
+  border-color: rgba(148, 163, 184, 0.16);
   background:
-    linear-gradient(90deg, rgba(255, 255, 255, 0.04), transparent 14%),
-    rgba(0, 0, 0, 0.30);
+    linear-gradient(90deg, rgba(255, 255, 255, 0.055), transparent 14%),
+    rgba(0, 0, 0, 0.34);
   box-shadow:
     inset 0 3px 8px rgba(0, 0, 0, 0.48),
     inset 0 -1px 0 rgba(255, 255, 255, 0.025);
+}
+
+.box-vial.bonus-reserved {
+  --bonus-color: rgba(250, 204, 21, 0.58);
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.4));
+}
+
+.box-vial.bonus-reserved .vial-cap {
+  background:
+    repeating-linear-gradient(
+      90deg,
+      rgba(250, 204, 21, 0.08) 0 1px,
+      transparent 1px 4px
+    ),
+    linear-gradient(180deg, #211d10, #050505);
+  border-color: rgba(250, 204, 21, 0.18);
+}
+
+.box-vial.bonus-reserved .vial-body {
+  border-color: color-mix(in srgb, var(--bonus-color) 72%, rgba(148, 163, 184, 0.2));
+  background:
+    linear-gradient(90deg, rgba(250, 204, 21, 0.16), rgba(255, 255, 255, 0.045) 12%, transparent 18%),
+    linear-gradient(180deg, rgba(24, 22, 14, 0.96), rgba(5, 8, 7, 0.96));
+  box-shadow:
+    inset 0 0 9px rgba(250, 204, 21, 0.08),
+    0 0 10px rgba(250, 204, 21, 0.06);
+}
+
+.box-vial.bonus-locked {
+  opacity: 0.74;
+}
+
+.box-vial.bonus-unlocked {
+  --bonus-color: rgba(250, 204, 21, 0.86);
+}
+
+.bonus-slot-icon {
+  display: grid;
+  place-items: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 999px;
+  color: #fde68a;
+  font-size: 0.72rem;
+  font-weight: 900;
+}
+
+.box-vial.bonus-locked .bonus-slot-icon::before {
+  content: "\1F512";
+}
+
+.box-vial.bonus-unlocked .bonus-slot-icon::before {
+  content: "\1F381";
 }
 
 .selected-list {

@@ -15,6 +15,7 @@ import { buildRecommendations } from "./utils/buildRecommendations";
 import {
   MIN_BOX_SLOTS,
   MAX_BOX_SLOTS,
+  MAX_SELECTABLE_SLOTS,
   MIN_BOX_POINTS,
   BASE_DECANTS,
   POINT_VALUE,
@@ -116,6 +117,10 @@ const recommendations = useMemo(() => {
   }
 
   const addPerfume = (perfume) => {
+  if (selectedPerfumes.length >= MAX_SELECTABLE_SLOTS) {
+    return;
+  }
+
   if (selectedPerfumes.some((selectedPerfume) => selectedPerfume.id === perfume.id)) {
     return;
   }
@@ -136,6 +141,7 @@ const confirmAddPerfume = () => {
   if (!pendingPerfume) return;
 
   setSelectedPerfumes((prev) =>
+    prev.length >= MAX_SELECTABLE_SLOTS ||
     prev.some((perfume) => perfume.id === pendingPerfume.id)
       ? prev
       : [...prev, pendingPerfume]
@@ -198,7 +204,7 @@ const confirmAddPerfume = () => {
         <p className="eyebrow">Decant Box Builder</p>
         <h1>Build your fragrance box</h1>
         <p>
-          Select up to {MAX_BOX_SLOTS} decants, explore different moods, and see the
+          Select up to {MAX_SELECTABLE_SLOTS} decants, explore different moods, and see the
           value of your box update in real time.
         </p>
       </section>
@@ -254,7 +260,7 @@ const confirmAddPerfume = () => {
                   noteNames={noteNames}
                   onAddToBox={addPerfume}
                   onOpenDetails={setDetailPerfume}
-                  isDisabled={totalSlots >= MAX_BOX_SLOTS}
+                  isDisabled={totalSlots >= MAX_SELECTABLE_SLOTS}
                 />
               );
             })}
@@ -264,6 +270,7 @@ const confirmAddPerfume = () => {
         <BuilderPanel
           totalSlots={totalSlots}
           maxSlots={MAX_BOX_SLOTS}
+          maxSelectableSlots={MAX_SELECTABLE_SLOTS}
           totalPoints={totalPoints}
           estimatedValue={estimatedValue}
           upgradeValue={upgradeValue}
@@ -289,13 +296,13 @@ const confirmAddPerfume = () => {
         notes={notes}
         tierData={getTierData(detailPerfume.id)}
         isAddDisabled={
-          totalSlots >= MAX_BOX_SLOTS ||
+          totalSlots >= MAX_SELECTABLE_SLOTS ||
           selectedPerfumes.some((perfume) => perfume.id === detailPerfume.id)
         }
         addButtonLabel={
           selectedPerfumes.some((perfume) => perfume.id === detailPerfume.id)
             ? "Added"
-            : totalSlots >= MAX_BOX_SLOTS
+            : totalSlots >= MAX_SELECTABLE_SLOTS
               ? "Box full"
               : "Add to Box"
         }

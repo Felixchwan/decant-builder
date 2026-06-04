@@ -1,9 +1,12 @@
 import { useState } from "react";
 import { getTierData } from "../utils/tierUtils";
 
+const DISCOVERY_BONUS_TARGET_POINTS = 12;
+
 function BuilderPanel({
   totalSlots,
   maxSlots,
+  maxSelectableSlots,
   totalPoints,
   estimatedValue,
   upgradeValue,
@@ -29,13 +32,15 @@ function BuilderPanel({
     );
     const basedOnYourPicks = recommendations?.basedOnYourPicks || [];
     const toBalanceYourBox = recommendations?.toBalanceYourBox || [];
+    const isCuratorBonusUnlocked =
+      totalPoints >= DISCOVERY_BONUS_TARGET_POINTS && totalSlots >= minSlots;
   return (
     <aside className="builder-panel">
       <div className="panel-header">
         <div>
           <h2>My Box</h2>
           <p>
-            {totalSlots}/{maxSlots} slots used
+            {totalSlots}/{maxSelectableSlots} selected slots used
           </p>
         </div>
 
@@ -64,11 +69,25 @@ function BuilderPanel({
       <div className="slot-bar">
         <div
           className="slot-progress"
-          style={{ width: `${(totalSlots / maxSlots) * 100}%` }}
+          style={{
+            width: `${Math.min((totalSlots / maxSelectableSlots) * 100, 100)}%`,
+          }}
         />
       </div>
 
-      <BoxSlotTray selectedPerfumes={selectedPerfumes} maxSlots={maxSlots} />
+      <DiscoveryBonusProgress
+        totalPoints={totalPoints}
+        totalSlots={totalSlots}
+        minSlots={minSlots}
+        isUnlocked={isCuratorBonusUnlocked}
+      />
+
+      <BoxSlotTray
+        selectedPerfumes={selectedPerfumes}
+        maxSlots={maxSlots}
+        maxSelectableSlots={maxSelectableSlots}
+        isCuratorBonusUnlocked={isCuratorBonusUnlocked}
+      />
 
 <div className={`box-status ${isBoxReady ? "ready" : "not-ready"}`}>
   <strong>
@@ -171,7 +190,7 @@ function BuilderPanel({
       title="Based On Your Picks"
       recommendations={basedOnYourPicks}
       selectedPerfumeIds={selectedPerfumeIds}
-      isBoxFull={totalSlots >= maxSlots}
+      isBoxFull={totalSlots >= maxSelectableSlots}
       onAddPerfume={onAddPerfume}
     />
 
@@ -179,7 +198,7 @@ function BuilderPanel({
       title="To Balance Your Box"
       recommendations={toBalanceYourBox}
       selectedPerfumeIds={selectedPerfumeIds}
-      isBoxFull={totalSlots >= maxSlots}
+      isBoxFull={totalSlots >= maxSelectableSlots}
       onAddPerfume={onAddPerfume}
     />
     </div>
@@ -310,6 +329,96 @@ function BuilderPanel({
         />
       )}
     </aside>
+  );
+}
+
+function DiscoveryBonusProgress({ totalPoints, totalSlots, minSlots, isUnlocked }) {
+  const progressValue = Math.min(totalPoints, DISCOVERY_BONUS_TARGET_POINTS);
+  const progressPercent =
+    (progressValue / DISCOVERY_BONUS_TARGET_POINTS) * 100;
+  const pointsAway = Math.max(
+    DISCOVERY_BONUS_TARGET_POINTS - totalPoints,
+    0
+  );
+  const fragrancesAway = Math.max(minSlots - totalSlots, 0);
+  const hasRequiredPoints = totalPoints >= DISCOVERY_BONUS_TARGET_POINTS;
+  const hasRequiredFragrances = totalSlots >= minSlots;
+  const lockedMessage = !hasRequiredPoints
+    ? `${pointsAway.toFixed(1)} point${
+        pointsAway === 1 ? "" : "s"
+      } away from unlocking your Curator Bonus`
+    : `Need ${fragrancesAway} more fragrance${
+        fragrancesAway === 1 ? "" : "s"
+      } to unlock your Curator Bonus`;
+
+  return (
+    <section
+      className={`discovery-bonus-panel ${isUnlocked ? "unlocked" : "locked"}`}
+    >
+      <div className="discovery-progress-header">
+        <div>
+          <span>Discovery Box Progress</span>
+          <strong>Curator Bonus</strong>
+        </div>
+
+        <span className="discovery-bonus-state">
+          {isUnlocked ? "Unlocked" : "Locked"}
+        </span>
+      </div>
+
+      <div className="discovery-progress-bar" aria-hidden="true">
+        <div style={{ width: `${progressPercent}%` }} />
+      </div>
+
+      <div className="discovery-requirements">
+        <RequirementLine
+          isMet={hasRequiredPoints}
+          value={`${progressValue.toFixed(1)} / ${DISCOVERY_BONUS_TARGET_POINTS} Points`}
+        />
+        <RequirementLine
+          isMet={hasRequiredFragrances}
+          value={`${Math.min(totalSlots, minSlots)} / ${minSlots} Fragrances`}
+        />
+      </div>
+
+      <p className="discovery-progress-copy">
+        {isUnlocked
+          ? "Curator Bonus Unlocked"
+          : lockedMessage}
+      </p>
+
+      <div className="curator-bonus-card">
+        <div className="curator-bonus-icon" aria-hidden="true">
+          🎁
+        </div>
+
+        <div>
+          <span>Curator Bonus</span>
+          <strong>
+            {isUnlocked ? "Curator Bonus Unlocked" : "Locked"}
+          </strong>
+          <p>
+            {isUnlocked
+              ? "A curated fragrance has been added to your Discovery Box."
+              : "Complete your Discovery Box to unlock."}
+          </p>
+        </div>
+
+        <div className={`curator-pick-slot ${isUnlocked ? "active" : ""}`}>
+          <span>Curator Pick</span>
+          <strong>{isUnlocked ? "Curator Bonus" : "Bonus Slot"}</strong>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function RequirementLine({ isMet, value }) {
+  return (
+    <p className={`discovery-requirement ${isMet ? "met" : "missing"}`}>
+      <span aria-hidden="true" />
+      {value}
+    </p>
   );
 }
 
@@ -611,7 +720,12 @@ function getCollectionIdentity(boxSummary) {
   return "Collector's Selection";
 }
 
-function BoxSlotTray({ selectedPerfumes, maxSlots }) {
+function BoxSlotTray({
+  selectedPerfumes,
+  maxSlots,
+  maxSelectableSlots,
+  isCuratorBonusUnlocked,
+}) {
   const rowCount = Math.ceil(maxSlots / 2);
   const rows = Array.from({ length: rowCount }, (_, rowIndex) => ({
     leftIndex: rowIndex * 2,
@@ -622,11 +736,13 @@ function BoxSlotTray({ selectedPerfumes, maxSlots }) {
     <div className="box-slot-tray" aria-label="Fragrance box slots">
       <div className="box-column">
         {rows.map(({ leftIndex }) => (
-          <BoxVialSlot
-            key={`left-slot-${leftIndex}`}
-            index={leftIndex}
-            perfume={selectedPerfumes[leftIndex]}
-          />
+            <BoxVialSlot
+              key={`left-slot-${leftIndex}`}
+              index={leftIndex}
+              perfume={selectedPerfumes[leftIndex]}
+              isReserved={leftIndex >= maxSelectableSlots}
+              isCuratorBonusUnlocked={isCuratorBonusUnlocked}
+            />
         ))}
       </div>
 
@@ -639,6 +755,8 @@ function BoxSlotTray({ selectedPerfumes, maxSlots }) {
               key={`right-slot-${rightIndex}`}
               index={rightIndex}
               perfume={selectedPerfumes[rightIndex]}
+              isReserved={rightIndex >= maxSelectableSlots}
+              isCuratorBonusUnlocked={isCuratorBonusUnlocked}
             />
           ) : null
         )}
@@ -647,7 +765,23 @@ function BoxSlotTray({ selectedPerfumes, maxSlots }) {
   );
 }
 
-function BoxVialSlot({ perfume, index }) {
+function BoxVialSlot({ perfume, index, isReserved, isCuratorBonusUnlocked }) {
+  if (isReserved) {
+    return (
+      <div
+        className={`box-vial bonus-reserved ${
+          isCuratorBonusUnlocked ? "bonus-unlocked" : "bonus-locked"
+        }`}
+        aria-label={`Curator Bonus reserved slot ${index + 1}`}
+      >
+        <span className="vial-cap" />
+        <span className="vial-body">
+          <span className="bonus-slot-icon" aria-hidden="true" />
+        </span>
+      </div>
+    );
+  }
+
   if (!perfume) {
     return (
       <div
