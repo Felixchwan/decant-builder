@@ -765,6 +765,13 @@ button {
   margin-bottom: 14px;
 }
 
+.perfume-details-header-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
 .perfume-details-modal .modal-header h3 {
   margin: 4px 0 0;
   color: #f8fafc;
@@ -785,6 +792,11 @@ button {
   background: rgba(15, 23, 42, 0.72);
   color: #ecfdf5;
   font-weight: 800;
+}
+
+.perfume-details-modal .modal-header button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
 }
 
 .perfume-details-meta {

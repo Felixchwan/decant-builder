@@ -73,6 +73,22 @@ function App() {
     return sortPerfumes(matchingPerfumes, sortOption, normalizedSearchQuery);
   }, [activeFilters, searchQuery, sortOption]);
 
+  const detailPerfumeIndex = detailPerfume
+    ? visiblePerfumes.findIndex((perfume) => perfume.id === detailPerfume.id)
+    : -1;
+  const canNavigateDetails = visiblePerfumes.length > 1;
+  const previousDetailPerfume =
+    detailPerfumeIndex >= 0 && visiblePerfumes.length > 0
+      ? visiblePerfumes[
+          (detailPerfumeIndex - 1 + visiblePerfumes.length) %
+            visiblePerfumes.length
+        ]
+      : null;
+  const nextDetailPerfume =
+    detailPerfumeIndex >= 0 && visiblePerfumes.length > 0
+      ? visiblePerfumes[(detailPerfumeIndex + 1) % visiblePerfumes.length]
+      : null;
+
 const boxSummary = useMemo(() => {
   return buildBoxSummary(selectedPerfumes, notes);
 }, [selectedPerfumes]);
@@ -128,9 +144,15 @@ const confirmAddPerfume = () => {
   setPendingPerfume(null);
 };
 
-const cancelAddPerfume = () => {
+  const cancelAddPerfume = () => {
   setPendingPerfume(null);
 };
+
+  function navigateDetailPerfume(direction) {
+    setDetailPerfume((currentPerfume) =>
+      getAdjacentVisiblePerfume(currentPerfume, visiblePerfumes, direction)
+    );
+  }
 
   useEffect(() => {
     if (!detailPerfume) {
@@ -140,13 +162,24 @@ const cancelAddPerfume = () => {
     function handleKeyDown(event) {
       if (event.key === "Escape") {
         setDetailPerfume(null);
+        return;
+      }
+
+      if (event.key === "ArrowRight") {
+        event.preventDefault();
+        navigateDetailPerfume(1);
+      }
+
+      if (event.key === "ArrowLeft") {
+        event.preventDefault();
+        navigateDetailPerfume(-1);
       }
     }
 
     window.addEventListener("keydown", handleKeyDown);
 
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [detailPerfume]);
+  }, [detailPerfume, visiblePerfumes]);
 
   function removePerfume(indexToRemove) {
     setSelectedPerfumes((current) =>
@@ -270,6 +303,11 @@ const cancelAddPerfume = () => {
           addPerfume(perfume);
           setDetailPerfume(null);
         }}
+        onPrevious={() => navigateDetailPerfume(-1)}
+        onNext={() => navigateDetailPerfume(1)}
+        previousPerfume={previousDetailPerfume}
+        nextPerfume={nextDetailPerfume}
+        canNavigate={canNavigateDetails}
         onClose={() => setDetailPerfume(null)}
       />
     )}
@@ -309,6 +347,11 @@ function PerfumeDetailsModal({
   isAddDisabled,
   addButtonLabel,
   onAddToBox,
+  onPrevious,
+  onNext,
+  previousPerfume,
+  nextPerfume,
+  canNavigate,
   onClose,
 }) {
   const usesGeneralNotes = (perfume.generalNotes || []).length > 0;
@@ -330,7 +373,29 @@ function PerfumeDetailsModal({
             <p>{perfume.brand}</p>
           </div>
 
-          <button onClick={onClose}>Close</button>
+          <div className="perfume-details-header-actions">
+            <button
+              type="button"
+              onClick={onPrevious}
+              disabled={!canNavigate}
+              title={
+                previousPerfume
+                  ? `Previous: ${previousPerfume.name}`
+                  : "Previous perfume"
+              }
+            >
+              Previous
+            </button>
+            <button
+              type="button"
+              onClick={onNext}
+              disabled={!canNavigate}
+              title={nextPerfume ? `Next: ${nextPerfume.name}` : "Next perfume"}
+            >
+              Next
+            </button>
+            <button type="button" onClick={onClose}>Close</button>
+          </div>
         </div>
 
         <div className="perfume-details-meta">
@@ -414,6 +479,12 @@ function PerfumeDetailsModal({
         <div className="perfume-details-actions">
           <button onClick={() => onAddToBox(perfume)} disabled={isAddDisabled}>
             {addButtonLabel}
+          </button>
+          <button type="button" onClick={onPrevious} disabled={!canNavigate}>
+            Previous
+          </button>
+          <button type="button" onClick={onNext} disabled={!canNavigate}>
+            Next
           </button>
           <button onClick={onClose}>Close</button>
         </div>
@@ -505,6 +576,28 @@ function sortPerfumes(perfumesToSort, sortOption, searchQuery) {
 
     return 0;
   });
+}
+
+function getAdjacentVisiblePerfume(currentPerfume, visiblePerfumes, direction) {
+  if (!currentPerfume || visiblePerfumes.length === 0) {
+    return currentPerfume;
+  }
+
+  const currentIndex = visiblePerfumes.findIndex(
+    (perfume) => perfume.id === currentPerfume.id
+  );
+
+  if (currentIndex === -1) {
+    return direction > 0
+      ? visiblePerfumes[0]
+      : visiblePerfumes[visiblePerfumes.length - 1];
+  }
+
+  const nextIndex =
+    (currentIndex + direction + visiblePerfumes.length) %
+    visiblePerfumes.length;
+
+  return visiblePerfumes[nextIndex];
 }
 
 function getBestMatchRank(perfume, searchQuery) {
