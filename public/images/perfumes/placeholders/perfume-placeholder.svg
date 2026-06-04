@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 300" role="img" aria-labelledby="title desc">
+  <title id="title">Perfume image placeholder</title>
+  <desc id="desc">A neutral fragrance bottle placeholder for missing catalog artwork.</desc>
+  <rect width="420" height="300" rx="28" fill="#07100b"/>
+  <rect x="36" y="32" width="348" height="236" rx="24" fill="#0f172a" stroke="#2f3f3a" stroke-width="2"/>
+  <ellipse cx="210" cy="238" rx="92" ry="14" fill="#020617" opacity=".55"/>
+  <rect x="174" y="62" width="72" height="34" rx="10" fill="#111827" stroke="#64748b" stroke-width="2"/>
+  <rect x="142" y="88" width="136" height="144" rx="28" fill="#0b1411" stroke="#86efac" stroke-width="3"/>
+  <path d="M160 112h100v86H160z" fill="#ecfdf5" opacity=".9"/>
+  <path d="M156 103c22 9 87 9 108 0" fill="none" stroke="#ffffff" stroke-width="5" opacity=".2"/>
+  <text x="210" y="148" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="800" fill="#0f172a">IMAGE</text>
+  <text x="210" y="172" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="800" fill="#0f172a">PENDING</text>
+  <text x="210" y="260" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="13" font-weight="700" fill="#94a3b8">Local placeholder asset</text>
+</svg>

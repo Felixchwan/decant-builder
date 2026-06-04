@@ -20,6 +20,9 @@ import {
   POINT_VALUE,
 } from "./constants/boxRules";
 
+const PERFUME_IMAGE_FALLBACK =
+  "/images/perfumes/placeholders/perfume-placeholder.svg";
+
 function App() {
   const [selectedPerfumes, setSelectedPerfumes] = useState([]);
   const [activeFilters, setActiveFilters] = useState({
@@ -345,6 +348,19 @@ function PerfumeDetailsModal({
 
           <strong>{perfume.points} pt</strong>
         </div>
+
+        {perfume.image && (
+          <div className="perfume-details-image-panel">
+            <img
+              src={perfume.image}
+              alt={`${perfume.name} bottle`}
+              onError={(event) => {
+                event.currentTarget.onerror = null;
+                event.currentTarget.src = PERFUME_IMAGE_FALLBACK;
+              }}
+            />
+          </div>
+        )}
 
         <section className="perfume-details-section">
           <h4>Profile</h4>
