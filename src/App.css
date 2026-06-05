@@ -1526,6 +1526,14 @@ button {
   font-size: 1.35rem;
 }
 
+.collection-identity p {
+  margin: 8px 0 0;
+  max-width: 66ch;
+  color: #cbd5e1;
+  font-size: 0.88rem;
+  line-height: 1.5;
+}
+
 .final-summary-stats {
   display: grid;
   grid-template-columns: repeat(4, 1fr);

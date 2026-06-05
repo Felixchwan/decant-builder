@@ -754,7 +754,8 @@ function FinalSummaryModal({
 
         <section className="collection-identity">
           <span>Collection Identity</span>
-          <strong>{collectionIdentity}</strong>
+          <strong>{collectionIdentity.name}</strong>
+          <p>{collectionIdentity.description}</p>
         </section>
 
         <section className="final-summary-stats">
@@ -1211,30 +1212,156 @@ function ProfileGroup({ label, values }) {
 }
 
 function getCollectionIdentity(boxSummary) {
-  const vibes = new Set(boxSummary.vibes);
-  const occasions = new Set(boxSummary.occasions);
+  const vibes = new Set(boxSummary.vibes || []);
+  const occasions = new Set(boxSummary.occasions || []);
+  const seasons = new Set(boxSummary.seasons || []);
+  const occasionCounts = boxSummary.occasionCounts || {};
+  const vibeCounts = boxSummary.vibeCounts || {};
+  const accordLabels = getTopCollectionLabels(boxSummary.accordMap);
+  const scentProfile = formatIdentityList(accordLabels, "a varied scent profile");
+  const seasonProfile = getSeasonProfile(seasons);
+  const occasionProfile = getOccasionProfile(occasions, occasionCounts);
 
-  if (vibes.has("fresh") && (vibes.has("clean") || occasions.has("office"))) {
-    return "Fresh Gentleman";
+  if (isEveningRotation(vibes, occasions, accordLabels, occasionCounts, vibeCounts)) {
+    return {
+      name: "Evening Rotation",
+      description: `Focused on ${scentProfile}, with a profile suited to ${occasionProfile}.`,
+    };
+  }
+
+  if (isFreshRotation(vibes, occasions, accordLabels, occasionCounts, vibeCounts)) {
+    return {
+      name: "Fresh Rotation",
+      description: `Built around ${scentProfile}, ${seasonProfile} and ${occasionProfile}.`,
+    };
+  }
+
+  if (seasons.size >= 4 && occasions.size >= 5) {
+    return {
+      name: "Balanced Rotation",
+      description: `Designed for strong year-round coverage with ${occasionProfile} and broad appeal.`,
+    };
+  }
+
+  if (occasions.size >= 4 || vibes.has("versatile")) {
+    return {
+      name: "Versatile Rotation",
+      description: `Built for ${occasionProfile}, supported by ${scentProfile}.`,
+    };
+  }
+
+  return {
+    name: "Curated Selection",
+    description: `A focused selection shaped by ${scentProfile} and ${seasonProfile}.`,
+  };
+}
+
+function isFreshRotation(vibes, occasions, accordLabels, occasionCounts, vibeCounts) {
+  const freshScore =
+    getCount(vibeCounts, "fresh") +
+    getCount(vibeCounts, "clean") +
+    getCount(occasionCounts, "office") +
+    getCount(occasionCounts, "daily") +
+    getMatchingLabelCount(accordLabels, ["citrus", "aromatic", "fresh spicy", "green"]);
+
+  return freshScore >= 3 || (vibes.has("fresh") && occasions.has("office"));
+}
+
+function isEveningRotation(vibes, occasions, accordLabels, occasionCounts, vibeCounts) {
+  const eveningScore =
+    getCount(occasionCounts, "date") +
+    getCount(occasionCounts, "night") +
+    getCount(occasionCounts, "evening") +
+    getCount(occasionCounts, "formal") +
+    getCount(vibeCounts, "seductive") +
+    getCount(vibeCounts, "bold") +
+    getMatchingLabelCount(accordLabels, ["amber", "sweet", "warm spicy", "vanilla", "woody"]);
+
+  return eveningScore >= 4 || (occasions.has("night") && occasions.has("date"));
+}
+
+function getTopCollectionLabels(valueMap = {}) {
+  return Object.entries(valueMap)
+    .sort(([, firstItems], [, secondItems]) => secondItems.length - firstItems.length)
+    .slice(0, 3)
+    .map(([label]) => formatLabel(label).toLowerCase());
+}
+
+function getCount(countMap, key) {
+  return countMap[key] || 0;
+}
+
+function getMatchingLabelCount(labels, targets) {
+  return labels.filter((label) => targets.includes(label)).length;
+}
+
+function getSeasonProfile(seasons) {
+  if (seasons.size >= 4) {
+    return "year-round coverage";
+  }
+
+  if (seasons.has("spring") && seasons.has("summer")) {
+    return "warm-weather versatility";
+  }
+
+  if (seasons.has("fall") || seasons.has("winter")) {
+    return "cool-weather depth";
+  }
+
+  if (seasons.size > 0) {
+    return `${formatIdentityList([...seasons].map(formatLabel))} coverage`;
+  }
+
+  return "seasonal flexibility";
+}
+
+function getOccasionProfile(occasions, occasionCounts = {}) {
+  const daytimeCount =
+    getCount(occasionCounts, "daily") +
+    getCount(occasionCounts, "office") +
+    getCount(occasionCounts, "casual");
+  const eveningCount =
+    getCount(occasionCounts, "date") +
+    getCount(occasionCounts, "night") +
+    getCount(occasionCounts, "evening");
+
+  if (eveningCount > daytimeCount) {
+    return "evening wear";
+  }
+
+  if (getCount(occasionCounts, "formal") > daytimeCount) {
+    return "polished occasions";
   }
 
   if (
-    occasions.has("date") ||
-    occasions.has("night") ||
-    vibes.has("seductive")
+    occasions.has("daily") &&
+    occasions.has("office") &&
+    occasions.has("casual")
   ) {
-    return "Evening Charmer";
+    return "daily versatility";
   }
 
-  if (
-    vibes.has("modern") ||
-    vibes.has("versatile") ||
-    vibes.has("elegant")
-  ) {
-    return "Modern Signature Collection";
+  if (occasions.size > 0) {
+    return formatIdentityList([...occasions].map(formatLabel).slice(0, 3));
   }
 
-  return "Collector's Selection";
+  return "flexible wear";
+}
+
+function formatIdentityList(items, fallback = "a balanced profile") {
+  const filteredItems = items.filter(Boolean);
+
+  if (filteredItems.length === 0) {
+    return fallback;
+  }
+
+  if (filteredItems.length === 1) {
+    return filteredItems[0];
+  }
+
+  return `${filteredItems.slice(0, -1).join(", ")} and ${
+    filteredItems[filteredItems.length - 1]
+  }`;
 }
 
 function BoxSlotTray({
