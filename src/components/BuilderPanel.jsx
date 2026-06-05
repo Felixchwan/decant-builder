@@ -35,6 +35,14 @@ function BuilderPanel({
   isBoxReady,
   onAddPerfume,
 }) {
+    const [hasSeenDiscoveryIntro, setHasSeenDiscoveryIntro] = useState(() => {
+      if (typeof window === "undefined") {
+        return true;
+      }
+
+      return window.localStorage.getItem("discoveryBoxIntroSeen") === "true";
+    });
+    const [isDiscoveryIntroOpen, setIsDiscoveryIntroOpen] = useState(false);
     const [isNotesModalOpen, setIsNotesModalOpen] = useState(false);
     const [isFinalSummaryOpen, setIsFinalSummaryOpen] = useState(false);
     const [isCollectionSnapshotOpen, setIsCollectionSnapshotOpen] = useState(false);
@@ -64,6 +72,18 @@ function BuilderPanel({
     );
     const isCuratorBonusUnlocked =
       totalPoints >= DISCOVERY_BONUS_TARGET_POINTS && totalSlots >= minSlots;
+    const shouldShowDiscoveryIntro =
+      selectedPerfumes.length === 0 &&
+      (!hasSeenDiscoveryIntro || isDiscoveryIntroOpen);
+
+    const dismissDiscoveryIntro = () => {
+      if (typeof window !== "undefined") {
+        window.localStorage.setItem("discoveryBoxIntroSeen", "true");
+      }
+
+      setHasSeenDiscoveryIntro(true);
+      setIsDiscoveryIntroOpen(false);
+    };
 
     useEffect(() => {
       let animationTimeout;
@@ -91,7 +111,17 @@ function BuilderPanel({
     <aside className="builder-panel">
       <div className="panel-header">
         <div>
-          <h2>My Box</h2>
+          <div className="panel-title-row">
+            <h2>My Box</h2>
+            <button
+              className="info-button"
+              type="button"
+              onClick={() => setIsDiscoveryIntroOpen(true)}
+              aria-label="Show Discovery Box introduction"
+            >
+              i
+            </button>
+          </div>
           <p>
             {totalSlots}/{maxSelectableSlots} selected slots used
           </p>
@@ -101,6 +131,10 @@ function BuilderPanel({
           Clear
         </button>
       </div>
+
+      {shouldShowDiscoveryIntro && (
+        <DiscoveryBoxCoachmark onDismiss={dismissDiscoveryIntro} />
+      )}
 
       <div className="stats-grid">
         <div className="stat-card">
@@ -182,45 +216,7 @@ function BuilderPanel({
       )}
 
       <div className="selected-list">
-        {selectedPerfumes.length === 0 ? (
-          <div className="empty-state discovery-empty-state">
-            <div className="discovery-empty-intro">
-              <span>Discovery Box</span>
-              <h3>Build Your Discovery Box</h3>
-              <p>
-                Select fragrances from the catalog to create a personalized
-                collection, unlock Curator Bonus picks, and discover your
-                Collection Identity.
-              </p>
-            </div>
-
-            <div className="discovery-empty-steps">
-              <div>
-                <span>1</span>
-                <strong>Pick Fragrances</strong>
-                <p>Build a collection that reflects your tastes.</p>
-              </div>
-
-              <div>
-                <span>2</span>
-                <strong>Unlock Curator Bonus</strong>
-                <p>
-                  Reach the minimum requirements and receive hidden
-                  curator-selected bonus fragrances.
-                </p>
-              </div>
-
-              <div>
-                <span>3</span>
-                <strong>Reveal Your Collection DNA</strong>
-                <p>
-                  Review your accords, seasonal coverage, strengths, and
-                  collection identity.
-                </p>
-              </div>
-            </div>
-          </div>
-        ) : (
+        {selectedPerfumes.length > 0 &&
           selectedPerfumes.map((perfume, index) => (
             <div className="selected-item" key={`${perfume.id}-${index}`}>
               <div>
@@ -241,8 +237,7 @@ function BuilderPanel({
 
               <button onClick={() => onRemovePerfume(index)}>Remove</button>
             </div>
-          ))
-        )}
+          ))}
       </div>
 
       <CollectionSnapshot
@@ -447,6 +442,28 @@ function BuilderPanel({
         />
       )}
     </aside>
+  );
+}
+
+function DiscoveryBoxCoachmark({ onDismiss }) {
+  return (
+    <section className="discovery-coachmark" aria-label="Discovery Box introduction">
+      <span className="coachmark-pointer" aria-hidden="true" />
+
+      <div>
+        <span>Welcome to Discovery Box</span>
+        <p>Build your collection by selecting fragrances from the catalog.</p>
+        <p>Reach 12 points to unlock Curator Bonus selections.</p>
+        <p>
+          As your box grows, we'll analyze your coverage, strengths and
+          collection identity.
+        </p>
+      </div>
+
+      <button type="button" onClick={onDismiss}>
+        Got it
+      </button>
+    </section>
   );
 }
 

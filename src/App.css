@@ -88,9 +88,91 @@ button {
   margin: 0;
 }
 
+.panel-title-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.info-button {
+  display: inline-grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border: 1px solid rgba(250, 204, 21, 0.28);
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.72);
+  color: #fde68a;
+  font-size: 0.78rem;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.info-button:hover {
+  border-color: rgba(250, 204, 21, 0.44);
+  background: rgba(250, 204, 21, 0.10);
+}
+
 .panel-header p {
   margin: 4px 0 0;
   color: #94a3b8;
+}
+
+.discovery-coachmark {
+  position: relative;
+  display: grid;
+  gap: 12px;
+  margin: -4px 0 16px;
+  padding: 14px;
+  border-radius: 16px;
+  background:
+    radial-gradient(circle at 18% 0, rgba(250, 204, 21, 0.12), transparent 34%),
+    rgba(2, 6, 23, 0.86);
+  border: 1px solid rgba(250, 204, 21, 0.24);
+  box-shadow:
+    0 18px 42px rgba(0, 0, 0, 0.24),
+    0 0 0 1px rgba(255, 255, 255, 0.02) inset;
+}
+
+.coachmark-pointer {
+  position: absolute;
+  top: -7px;
+  left: 28px;
+  width: 14px;
+  height: 14px;
+  transform: rotate(45deg);
+  background: rgba(2, 6, 23, 0.92);
+  border-left: 1px solid rgba(250, 204, 21, 0.24);
+  border-top: 1px solid rgba(250, 204, 21, 0.24);
+}
+
+.discovery-coachmark span:not(.coachmark-pointer) {
+  display: block;
+  margin-bottom: 8px;
+  color: #fde68a;
+  font-size: 0.76rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.discovery-coachmark p {
+  margin: 5px 0 0;
+  color: #cbd5e1;
+  font-size: 0.82rem;
+  line-height: 1.42;
+}
+
+.discovery-coachmark button {
+  justify-self: center;
+  margin-top: 4px;
+  border: 0;
+  border-radius: 999px;
+  padding: 8px 13px;
+  background: #4ade80;
+  color: #052e16;
+  font-size: 0.78rem;
+  font-weight: 900;
 }
 
 .catalog-controls {
