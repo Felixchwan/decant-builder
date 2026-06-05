@@ -37,6 +37,7 @@ function BuilderPanel({
 }) {
     const [isNotesModalOpen, setIsNotesModalOpen] = useState(false);
     const [isFinalSummaryOpen, setIsFinalSummaryOpen] = useState(false);
+    const [isCollectionSnapshotOpen, setIsCollectionSnapshotOpen] = useState(false);
     const [curatorBonusPreference, setCuratorBonusPreference] = useState("complement");
     const previousCuratorBonusUnlockedRef = useRef(false);
     const [isCuratorBonusAnimating, setIsCuratorBonusAnimating] = useState(false);
@@ -71,7 +72,7 @@ function BuilderPanel({
         setIsCuratorBonusAnimating(true);
         animationTimeout = window.setTimeout(() => {
           setIsCuratorBonusAnimating(false);
-        }, 700);
+        }, 1600);
       }
 
       if (!isCuratorBonusUnlocked) {
@@ -148,8 +149,6 @@ function BuilderPanel({
         onPreferenceChange={setCuratorBonusPreference}
         hiddenCuratorPicks={hiddenCuratorPicks}
       />
-
-      <CuratorInsight insight={curatorInsight} />
 
 {/*
 <div className={`box-status ${isBoxReady ? "ready" : "not-ready"}`}>
@@ -245,6 +244,15 @@ function BuilderPanel({
           ))
         )}
       </div>
+
+      <CollectionSnapshot
+        boxSummary={boxSummary}
+        coverageSummary={coverageSummary}
+        insight={curatorInsight}
+        isExpanded={isCollectionSnapshotOpen}
+        onToggle={() => setIsCollectionSnapshotOpen((isOpen) => !isOpen)}
+        onOpenScentLibrary={() => setIsNotesModalOpen(true)}
+      />
 
       <div className="coverage-panel">
     <h3>Box Analysis</h3>
@@ -440,6 +448,201 @@ function BuilderPanel({
       )}
     </aside>
   );
+}
+
+function CollectionSnapshot({
+  boxSummary,
+  coverageSummary,
+  insight,
+  isExpanded,
+  onToggle,
+  onOpenScentLibrary,
+}) {
+  const seasonRows = buildSeasonCoverageRows(boxSummary.seasonCounts || {});
+  const hasProfileData =
+    boxSummary.occasions.length > 0 ||
+    boxSummary.seasons.length > 0 ||
+    boxSummary.vibes.length > 0 ||
+    Object.keys(boxSummary.accordMap).length > 0 ||
+    boxSummary.notes.length > 0;
+  const hasAnalysisData =
+    coverageSummary.strengths.length > 0 || coverageSummary.gaps.length > 0;
+
+  return (
+    <section className={`collection-snapshot ${isExpanded ? "is-expanded" : ""}`}>
+      <div className="collection-snapshot-header">
+        <h3>Collection Snapshot</h3>
+        <button type="button" onClick={onToggle} aria-expanded={isExpanded}>
+          {isExpanded ? "Hide Full Analysis" : "View Full Analysis"}
+        </button>
+      </div>
+
+      <div className="collection-snapshot-overview">
+        <span>Season Coverage</span>
+
+        <div className="season-coverage-bars">
+          {seasonRows.map((season) => (
+            <div className="season-coverage-row" key={season.id}>
+              <span>{season.label}</span>
+              <div className="season-coverage-track" aria-label={`${season.label} coverage`}>
+                <i style={{ width: `${season.percent}%` }} />
+              </div>
+              <strong>{season.count}</strong>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="collection-insight">
+        <span>Collection Insight</span>
+
+        <div className="collection-insight-grid">
+          <CollectionInsightList
+            title="Your collection currently excels in:"
+            items={insight.strengths}
+            emptyText="Select fragrances to generate collection insights."
+            marker="check"
+          />
+          <CollectionInsightList
+            title="Opportunities:"
+            items={insight.improvementGoals}
+            emptyText="Build your collection to reveal its opportunities."
+            marker="bullet"
+          />
+        </div>
+      </div>
+
+      <div className="collection-snapshot-details" aria-hidden={!isExpanded}>
+        <div className="summary-panel">
+          <h3>Box Profile</h3>
+
+          {hasProfileData ? (
+            <>
+              <ProfileSummaryGroup label="Occasions" values={boxSummary.occasions} />
+              <ProfileSummaryGroup label="Seasons" values={boxSummary.seasons} />
+              <ProfileSummaryGroup label="Vibes" values={boxSummary.vibes} />
+
+              {Object.entries(boxSummary.accordMap).length > 0 && (
+                <div>
+                  <span>Dominant Accords</span>
+
+                  <div className="summary-tags">
+                    {Object.entries(boxSummary.accordMap).map(
+                      ([accord, perfumeNames]) => (
+                        <span className="accord-tooltip" key={accord}>
+                          {accord} x{perfumeNames.length}
+
+                          <div className="tooltip-box">
+                            <strong>{accord}</strong>
+                            {perfumeNames.map((name) => (
+                              <p key={name}>{name}</p>
+                            ))}
+                          </div>
+                        </span>
+                      )
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {boxSummary.notes.length > 0 && (
+                <div>
+                  <span>Notes</span>
+
+                  <p>{boxSummary.notes.length} unique notes covered</p>
+
+                  <button
+                    className="details-button"
+                    type="button"
+                    onClick={onOpenScentLibrary}
+                  >
+                    View Details
+                  </button>
+                </div>
+              )}
+            </>
+          ) : (
+            <p className="collection-empty-message">
+              Build your collection to reveal its profile.
+            </p>
+          )}
+        </div>
+
+        <div className="coverage-panel">
+          <h3>Box Analysis</h3>
+          <p className="analysis-subtitle">
+            Coverage strengths and collection gaps
+          </p>
+
+          {hasAnalysisData ? (
+            <>
+              {coverageSummary.strengths.slice(0, 6).map((item) => (
+                <p key={`${item.category}-${item.label}`} className="coverage-strength">
+                  {item.label}
+                </p>
+              ))}
+
+              {coverageSummary.strengths.length > 6 && (
+                <p className="coverage-more">
+                  +{coverageSummary.strengths.length - 6} more strengths
+                </p>
+              )}
+            </>
+          ) : (
+            <p className="collection-empty-message">
+              Select fragrances to generate collection insights.
+            </p>
+          )}
+        </div>
+
+        {coverageSummary.gaps.length > 0 && (
+          <div className="seasonal-gaps">
+            <h4>Seasonal Gaps</h4>
+
+            {coverageSummary.gaps.map((item) => (
+              <p
+                key={`${item.category}-${item.target}`}
+                style={{ color: item.seasonColor }}
+              >
+                {getSeasonIcon(item.target)} {item.label}
+              </p>
+            ))}
+          </div>
+        )}
+      </div>
+    </section>
+  );
+}
+
+function ProfileSummaryGroup({ label, values }) {
+  if (values.length === 0) {
+    return null;
+  }
+
+  return (
+    <div>
+      <span>{label}</span>
+      <div className="summary-tags">
+        {values.map((item) => <span key={item}>{item}</span>)}
+      </div>
+    </div>
+  );
+}
+
+function buildSeasonCoverageRows(seasonCounts) {
+  const seasons = ["spring", "summer", "fall", "winter"];
+  const maxCount = Math.max(1, ...seasons.map((season) => seasonCounts[season] || 0));
+
+  return seasons.map((season) => {
+    const count = seasonCounts[season] || 0;
+
+    return {
+      id: season,
+      label: formatLabel(season),
+      count,
+      percent: count > 0 ? Math.max(12, Math.round((count / maxCount) * 100)) : 0,
+    };
+  });
 }
 
 function ScentLibraryModal({ notes, onClose }) {
@@ -639,6 +842,12 @@ function CuratorBonusSection({
         </span>
       </div>
 
+      {isAnimating && (
+        <div className="curator-unlock-confirmation" role="status">
+          Curator Bonus Unlocked
+        </div>
+      )}
+
       {(!isUnlocked || isAnimating) && (
         <div className="curator-lock-visual" aria-hidden="true">
           <span />
@@ -690,6 +899,13 @@ function CuratorBonusSection({
           <span>Curator Pick</span>
           <strong>Bonus Fragrance</strong>
           <p>Equivalent to 2 bonus points.</p>
+          {isUnlocked && (
+            <p>
+              {preference === "similar"
+                ? "Selected based on your fragrance preferences."
+                : "Selected to complement your collection."}
+            </p>
+          )}
         </div>
       </div>
     </section>
@@ -705,28 +921,7 @@ function RequirementLine({ isMet, value }) {
   );
 }
 
-function CuratorInsight({ insight }) {
-  return (
-    <section className="curator-insight">
-      <h4>Curator Insight</h4>
-
-      <div className="curator-insight-grid">
-        <CuratorInsightList
-          title="Your collection is currently strong in:"
-          items={insight.strengths}
-          emptyText="Add more fragrances to reveal collection strengths."
-        />
-        <CuratorInsightList
-          title="Your curator bonus will focus on:"
-          items={insight.improvementGoals}
-          emptyText="Add more fragrances to reveal curator focus areas."
-        />
-      </div>
-    </section>
-  );
-}
-
-function CuratorInsightList({ title, items, emptyText }) {
+function CollectionInsightList({ title, items, emptyText, marker }) {
   return (
     <div>
       <span>{title}</span>
@@ -734,7 +929,7 @@ function CuratorInsightList({ title, items, emptyText }) {
       {items.length > 0 ? (
         <ul>
           {items.map((item) => (
-            <li key={item}>{item}</li>
+            <li className={`insight-marker-${marker}`} key={item}>{item}</li>
           ))}
         </ul>
       ) : (
@@ -1159,24 +1354,75 @@ function RecommendationLane({
   isBoxFull,
   onAddPerfume,
 }) {
+  const [activeIndex, setActiveIndex] = useState(0);
+
+  useEffect(() => {
+    setActiveIndex((currentIndex) => {
+      if (recommendations.length === 0) {
+        return 0;
+      }
+
+      return Math.min(currentIndex, recommendations.length - 1);
+    });
+  }, [recommendations.length]);
+
   if (recommendations.length === 0) {
     return null;
   }
 
+  const activeRecommendation = recommendations[activeIndex];
+  const hasMultipleRecommendations = recommendations.length > 1;
+  const goToPrevious = () => {
+    setActiveIndex((currentIndex) =>
+      currentIndex === 0 ? recommendations.length - 1 : currentIndex - 1
+    );
+  };
+  const goToNext = () => {
+    setActiveIndex((currentIndex) =>
+      currentIndex === recommendations.length - 1 ? 0 : currentIndex + 1
+    );
+  };
+
   return (
     <section className="recommendation-lane">
-      <h4>{title}</h4>
+      <div className="recommendation-lane-header">
+        <h4>{title}</h4>
 
-      {recommendations.map((recommendation, index) => (
+        <div className="recommendation-carousel-controls" aria-label={`${title} recommendations`}>
+          <button
+            type="button"
+            onClick={goToPrevious}
+            disabled={!hasMultipleRecommendations}
+            aria-label={`Previous ${title} recommendation`}
+          >
+            &lt;
+          </button>
+
+          <span>
+            {activeIndex + 1} / {recommendations.length}
+          </span>
+
+          <button
+            type="button"
+            onClick={goToNext}
+            disabled={!hasMultipleRecommendations}
+            aria-label={`Next ${title} recommendation`}
+          >
+            &gt;
+          </button>
+        </div>
+      </div>
+
+      <div className="recommendation-carousel-card">
         <RecommendationCard
-          key={recommendation.perfume.id}
-          recommendation={recommendation}
-          rank={index + 1}
-          isAdded={selectedPerfumeIds.has(recommendation.perfume.id)}
+          key={activeRecommendation.perfume.id}
+          recommendation={activeRecommendation}
+          rank={activeIndex + 1}
+          isAdded={selectedPerfumeIds.has(activeRecommendation.perfume.id)}
           isBoxFull={isBoxFull}
           onAddPerfume={onAddPerfume}
         />
-      ))}
+      </div>
     </section>
   );
 }
@@ -1189,6 +1435,7 @@ function RecommendationCard({
   onAddPerfume,
 }) {
   const { perfume, score, reasons } = recommendation;
+  const imageFallback = "/images/perfumes/placeholders/perfume-placeholder.svg";
   const isAddDisabled = isAdded || isBoxFull;
   const addButtonLabel = isAdded ? "Added" : isBoxFull ? "Box full" : "Add to Box";
 
@@ -1197,6 +1444,17 @@ function RecommendationCard({
       <div className="recommendation-card-header">
         <div className="recommendation-title-group">
           <span className="recommendation-rank">#{rank}</span>
+
+          <div className="recommendation-image">
+            <img
+              src={perfume.image || imageFallback}
+              alt={`${perfume.name} bottle`}
+              onError={(event) => {
+                event.currentTarget.onerror = null;
+                event.currentTarget.src = imageFallback;
+              }}
+            />
+          </div>
 
           <div>
             <strong>{perfume.name}</strong>
