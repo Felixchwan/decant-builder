@@ -1353,6 +1353,7 @@ button {
 }
 
 .perfume-details-modal {
+  position: relative;
   width: min(760px, 92vw);
   max-height: 86vh;
   overflow-y: auto;
@@ -1366,15 +1367,32 @@ button {
 }
 
 .perfume-details-modal .modal-header {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
   align-items: flex-start;
+  padding-right: 46px;
   margin-bottom: 14px;
 }
 
 .perfume-details-header-actions {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: flex-end;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(96px, 128px));
+  justify-content: flex-start;
   gap: 8px;
+}
+
+.perfume-details-close {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  display: inline-grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  padding: 0 !important;
+  border-radius: 999px !important;
+  line-height: 1;
 }
 
 .perfume-details-modal .modal-header h3 {
@@ -2344,18 +2362,22 @@ button {
   }
 
   .perfume-details-modal .modal-header {
-    display: grid;
     gap: 12px;
+    padding-right: 42px;
   }
 
   .perfume-details-header-actions {
-    justify-content: stretch;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     width: 100%;
   }
 
   .perfume-details-header-actions button {
-    flex: 1 1 84px;
     min-height: 42px;
+  }
+
+  .perfume-details-close {
+    top: 14px;
+    right: 14px;
   }
 
   .final-summary-modal {

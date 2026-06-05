@@ -374,7 +374,16 @@ function PerfumeDetailsModal({
         onClick={(event) => event.stopPropagation()}
       >
         <div className="modal-header">
-          <div>
+          <button
+            type="button"
+            className="perfume-details-close"
+            onClick={onClose}
+            aria-label="Close fragrance details"
+          >
+            X
+          </button>
+
+          <div className="perfume-details-title">
             <p className="summary-eyebrow">Fragrance Details</p>
             <h3>{perfume.name}</h3>
             <p>{perfume.brand}</p>
@@ -401,7 +410,6 @@ function PerfumeDetailsModal({
             >
               Next
             </button>
-            <button type="button" onClick={onClose}>Close</button>
           </div>
         </div>
 
@@ -495,13 +503,6 @@ function PerfumeDetailsModal({
           <button onClick={() => onAddToBox(perfume)} disabled={isAddDisabled}>
             {addButtonLabel}
           </button>
-          <button type="button" onClick={onPrevious} disabled={!canNavigate}>
-            Previous
-          </button>
-          <button type="button" onClick={onNext} disabled={!canNavigate}>
-            Next
-          </button>
-          <button onClick={onClose}>Close</button>
         </div>
       </div>
     </div>
