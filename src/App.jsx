@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { perfumes } from "./data/perfumes";
 import { buildFilterOptions } from "./utils/filterUtils";
 import { notes } from "./data/notes";
@@ -361,17 +361,101 @@ function PerfumeDetailsModal({
   canNavigate,
   onClose,
 }) {
+  const touchStartRef = useRef(null);
+  const touchCurrentRef = useRef(null);
+  const swipeFeedbackTimeoutRef = useRef(null);
+  const [swipeFeedback, setSwipeFeedback] = useState("");
   const usesGeneralNotes = (perfume.generalNotes || []).length > 0;
   const hasPyramidNotes =
     (perfume.topNotes || []).length > 0 ||
     (perfume.middleNotes || []).length > 0 ||
     (perfume.baseNotes || []).length > 0;
 
+  useEffect(() => {
+    return () => {
+      if (swipeFeedbackTimeoutRef.current) {
+        window.clearTimeout(swipeFeedbackTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  function showSwipeFeedback(direction) {
+    if (swipeFeedbackTimeoutRef.current) {
+      window.clearTimeout(swipeFeedbackTimeoutRef.current);
+    }
+
+    setSwipeFeedback(direction);
+    swipeFeedbackTimeoutRef.current = window.setTimeout(() => {
+      setSwipeFeedback("");
+    }, 180);
+  }
+
+  function handleTouchStart(event) {
+    const touch = event.touches[0];
+
+    touchStartRef.current = {
+      x: touch.clientX,
+      y: touch.clientY,
+    };
+    touchCurrentRef.current = touchStartRef.current;
+  }
+
+  function handleTouchMove(event) {
+    if (!touchStartRef.current) {
+      return;
+    }
+
+    const touch = event.touches[0];
+    touchCurrentRef.current = {
+      x: touch.clientX,
+      y: touch.clientY,
+    };
+  }
+
+  function handleTouchEnd() {
+    if (!touchStartRef.current || !touchCurrentRef.current || !canNavigate) {
+      touchStartRef.current = null;
+      touchCurrentRef.current = null;
+      return;
+    }
+
+    const deltaX = touchCurrentRef.current.x - touchStartRef.current.x;
+    const deltaY = touchCurrentRef.current.y - touchStartRef.current.y;
+    const absX = Math.abs(deltaX);
+    const absY = Math.abs(deltaY);
+    const isHorizontalSwipe = absX >= 56 && absX > absY * 1.25;
+
+    touchStartRef.current = null;
+    touchCurrentRef.current = null;
+
+    if (!isHorizontalSwipe) {
+      return;
+    }
+
+    if (deltaX < 0) {
+      showSwipeFeedback("next");
+      onNext();
+      return;
+    }
+
+    showSwipeFeedback("previous");
+    onPrevious();
+  }
+
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div
-        className="perfume-details-modal"
+        className={`perfume-details-modal ${
+          swipeFeedback ? `is-swipe-${swipeFeedback}` : ""
+        }`}
         onClick={(event) => event.stopPropagation()}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+        onTouchCancel={() => {
+          touchStartRef.current = null;
+          touchCurrentRef.current = null;
+        }}
       >
         <div className="modal-header">
           <button

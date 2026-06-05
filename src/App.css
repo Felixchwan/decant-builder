@@ -1357,6 +1357,7 @@ button {
   width: min(760px, 92vw);
   max-height: 86vh;
   overflow-y: auto;
+  touch-action: pan-y;
   padding: 24px;
   border-radius: 20px;
   background:
@@ -1364,6 +1365,26 @@ button {
     #08110d;
   border: 1px solid rgba(255, 255, 255, 0.12);
   box-shadow: 0 28px 90px rgba(0, 0, 0, 0.58);
+}
+
+.perfume-details-modal::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  opacity: 0;
+  transition: opacity 180ms ease;
+}
+
+.perfume-details-modal.is-swipe-next::after {
+  opacity: 1;
+  background: linear-gradient(90deg, transparent 70%, rgba(74, 222, 128, 0.12));
+}
+
+.perfume-details-modal.is-swipe-previous::after {
+  opacity: 1;
+  background: linear-gradient(270deg, transparent 70%, rgba(74, 222, 128, 0.12));
 }
 
 .perfume-details-modal .modal-header {
