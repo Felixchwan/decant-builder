@@ -151,7 +151,43 @@ function BuilderPanel({
 
       <div className="selected-list">
         {selectedPerfumes.length === 0 ? (
-          <p className="empty-state">Start adding perfumes to your box.</p>
+          <div className="empty-state discovery-empty-state">
+            <div className="discovery-empty-intro">
+              <span>Discovery Box</span>
+              <h3>Build Your Discovery Box</h3>
+              <p>
+                Select fragrances from the catalog to create a personalized
+                collection, unlock Curator Bonus picks, and discover your
+                Collection Identity.
+              </p>
+            </div>
+
+            <div className="discovery-empty-steps">
+              <div>
+                <span>1</span>
+                <strong>Pick Fragrances</strong>
+                <p>Build a collection that reflects your tastes.</p>
+              </div>
+
+              <div>
+                <span>2</span>
+                <strong>Unlock Curator Bonus</strong>
+                <p>
+                  Reach the minimum requirements and receive hidden
+                  curator-selected bonus fragrances.
+                </p>
+              </div>
+
+              <div>
+                <span>3</span>
+                <strong>Reveal Your Collection DNA</strong>
+                <p>
+                  Review your accords, seasonal coverage, strengths, and
+                  collection identity.
+                </p>
+              </div>
+            </div>
+          </div>
         ) : (
           selectedPerfumes.map((perfume, index) => (
             <div className="selected-item" key={`${perfume.id}-${index}`}>

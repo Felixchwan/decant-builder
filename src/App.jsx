@@ -583,11 +583,6 @@ function PerfumeDetailsModal({
           )}
         </section>
 
-        <div className="perfume-details-actions">
-          <button onClick={() => onAddToBox(perfume)} disabled={isAddDisabled}>
-            {addButtonLabel}
-          </button>
-        </div>
       </div>
     </div>
   );
