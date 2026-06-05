@@ -1032,6 +1032,7 @@ button {
 
   .final-summary-stats,
   .final-readiness-grid,
+  .order-customer-form,
   .final-fragrance-list,
   .final-analysis-grid,
   .scent-dna-scores,
@@ -1574,6 +1575,117 @@ button {
   color: #cbd5e1;
   font-size: 0.8rem;
   line-height: 1.45;
+}
+
+.order-prep-section {
+  border-color: rgba(250, 204, 21, 0.18);
+  background:
+    radial-gradient(circle at 14% 0, rgba(250, 204, 21, 0.08), transparent 42%),
+    rgba(15, 23, 42, 0.38);
+}
+
+.order-customer-form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.order-customer-form label {
+  display: grid;
+  gap: 7px;
+}
+
+.order-customer-form span,
+.seller-order-summary span {
+  color: #fef3c7;
+  font-size: 0.68rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.order-customer-form input,
+.order-customer-form textarea {
+  width: 100%;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 10px;
+  padding: 10px 11px;
+  background: rgba(2, 6, 23, 0.46);
+  color: #ecfdf5;
+  font: inherit;
+  font-size: 0.85rem;
+}
+
+.order-customer-form textarea {
+  resize: vertical;
+}
+
+.order-notes-field {
+  grid-column: 1 / -1;
+}
+
+.order-prep-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.order-prep-actions button,
+.seller-order-summary button {
+  border: 0;
+  border-radius: 999px;
+  padding: 9px 13px;
+  background: #4ade80;
+  color: #052e16;
+  font-weight: 900;
+}
+
+.order-prep-actions button:disabled {
+  cursor: not-allowed;
+  opacity: 0.48;
+}
+
+.order-prep-actions p,
+.seller-order-summary p {
+  margin: 0;
+  color: #cbd5e1;
+  font-size: 0.8rem;
+  line-height: 1.45;
+}
+
+.seller-order-summary {
+  display: grid;
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.seller-order-summary > div {
+  display: grid;
+  gap: 8px;
+  padding: 13px;
+  border-radius: 14px;
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  background: rgba(2, 6, 23, 0.38);
+}
+
+.seller-order-summary pre {
+  max-height: 240px;
+  overflow: auto;
+  margin: 0;
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  background: rgba(0, 0, 0, 0.28);
+  color: #e2e8f0;
+  font-size: 0.78rem;
+  line-height: 1.45;
+  white-space: pre-wrap;
+}
+
+.seller-order-summary .copy-status {
+  color: #86efac;
+  font-weight: 800;
 }
 
 .final-stat-card {

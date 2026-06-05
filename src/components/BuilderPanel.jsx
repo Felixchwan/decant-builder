@@ -365,6 +365,7 @@ function BuilderPanel({
           isBoxReady={isBoxReady}
           isCuratorBonusUnlocked={isCuratorBonusUnlocked}
           curatorBonusPreference={curatorBonusPreference}
+          hiddenCuratorPicks={hiddenCuratorPicks}
           onClose={() => setIsFinalSummaryOpen(false)}
         />
       )}
@@ -651,11 +652,41 @@ function FinalSummaryModal({
   isBoxReady,
   isCuratorBonusUnlocked,
   curatorBonusPreference,
+  hiddenCuratorPicks,
   onClose,
 }) {
   const collectionIdentity = getCollectionIdentity(boxSummary);
   const curatorPreferenceLabel =
     CURATOR_BONUS_PREFERENCES[curatorBonusPreference]?.label;
+  const [customerInfo, setCustomerInfo] = useState({
+    name: "",
+    city: "",
+    notes: "",
+  });
+  const [preparedOrder, setPreparedOrder] = useState(null);
+  const [copyStatus, setCopyStatus] = useState("");
+  const canPrepareOrder =
+    isBoxReady && customerInfo.name.trim() && customerInfo.city.trim();
+  const customerMessage = preparedOrder
+    ? buildCustomerWhatsAppMessage({
+        order: preparedOrder,
+        totalSlots,
+        totalPoints,
+        estimatedValue,
+        isCuratorBonusUnlocked,
+        curatorPreferenceLabel,
+      })
+    : "";
+  const sellerSummary = preparedOrder
+    ? buildSellerOrderSummary({
+        order: preparedOrder,
+        selectedPerfumes,
+        totalPoints,
+        estimatedValue,
+        curatorPreferenceLabel,
+        hiddenCuratorPicks,
+      })
+    : "";
 
   useEffect(() => {
     const previousOverflow = document.body.style.overflow;
@@ -674,6 +705,34 @@ function FinalSummaryModal({
       window.removeEventListener("keydown", handleKeyDown);
     };
   }, [onClose]);
+
+  function handleCustomerInfoChange(field, value) {
+    setCustomerInfo((currentInfo) => ({
+      ...currentInfo,
+      [field]: value,
+    }));
+  }
+
+  function handlePrepareOrder() {
+    if (!canPrepareOrder) {
+      return;
+    }
+
+    setPreparedOrder({
+      ...customerInfo,
+      name: customerInfo.name.trim(),
+      city: customerInfo.city.trim(),
+      notes: customerInfo.notes.trim(),
+      orderCode: buildOrderCode(),
+      timestamp: new Date(),
+    });
+    setCopyStatus("");
+  }
+
+  async function handleCopy(label, text) {
+    const didCopy = await copyText(text);
+    setCopyStatus(didCopy ? `${label} copied` : `Could not copy ${label.toLowerCase()}`);
+  }
 
   return createPortal(
     <div className="modal-overlay final-summary-overlay" onClick={onClose}>
@@ -725,6 +784,95 @@ function FinalSummaryModal({
                 : "Unlocks when the Discovery Box is valid."}
             </p>
           </div>
+        </section>
+
+        <section className="final-summary-section order-prep-section">
+          <h4>Order Prep</h4>
+
+          <div className="order-customer-form">
+            <label>
+              <span>Name</span>
+              <input
+                type="text"
+                value={customerInfo.name}
+                onChange={(event) =>
+                  handleCustomerInfoChange("name", event.target.value)
+                }
+                placeholder="Customer name"
+              />
+            </label>
+
+            <label>
+              <span>City</span>
+              <input
+                type="text"
+                value={customerInfo.city}
+                onChange={(event) =>
+                  handleCustomerInfoChange("city", event.target.value)
+                }
+                placeholder="Delivery city"
+              />
+            </label>
+
+            <label className="order-notes-field">
+              <span>Notes / Preferences</span>
+              <textarea
+                value={customerInfo.notes}
+                onChange={(event) =>
+                  handleCustomerInfoChange("notes", event.target.value)
+                }
+                placeholder="Optional customer notes"
+                rows={3}
+              />
+            </label>
+          </div>
+
+          <div className="order-prep-actions">
+            <button
+              type="button"
+              onClick={handlePrepareOrder}
+              disabled={!canPrepareOrder}
+            >
+              Prepare Order
+            </button>
+            {!isBoxReady && (
+              <p>Complete the Discovery Box before preparing the order.</p>
+            )}
+          </div>
+
+          {preparedOrder && (
+            <div className="seller-order-summary">
+              <div>
+                <span>Customer WhatsApp Message</span>
+                <p>Curator Pick identities stay hidden from the customer.</p>
+                <pre>{customerMessage}</pre>
+                <button
+                  type="button"
+                  onClick={() =>
+                    handleCopy("Customer WhatsApp message", customerMessage)
+                  }
+                >
+                  Copy Customer WhatsApp Message
+                </button>
+              </div>
+
+              <div>
+                <span>Seller Order Summary</span>
+                <p>Operational view for fulfillment. Hidden Curator Picks are shown here only.</p>
+                <pre>{sellerSummary}</pre>
+                <button
+                  type="button"
+                  onClick={() =>
+                    handleCopy("Seller order summary", sellerSummary)
+                  }
+                >
+                  Copy Seller Order Summary
+                </button>
+              </div>
+
+              {copyStatus && <p className="copy-status">{copyStatus}</p>}
+            </div>
+          )}
         </section>
 
         <ScentDnaPanel scentDna={scentDna} />
@@ -794,6 +942,109 @@ function FinalSummaryModal({
     </div>,
     document.body
   );
+}
+
+function buildOrderCode() {
+  const timestamp = new Date();
+  const datePart = timestamp
+    .toISOString()
+    .slice(2, 10)
+    .replaceAll("-", "");
+  const timePart = String(timestamp.getTime()).slice(-4);
+
+  return `DB-${datePart}-${timePart}`;
+}
+
+function buildCustomerWhatsAppMessage({
+  order,
+  totalSlots,
+  totalPoints,
+  estimatedValue,
+  isCuratorBonusUnlocked,
+  curatorPreferenceLabel,
+}) {
+  return [
+    "Discovery Box Order",
+    `Order Code: ${order.orderCode}`,
+    `Customer: ${order.name}`,
+    `City: ${order.city}`,
+    `Selected Fragrances: ${totalSlots}`,
+    `Selected Points: ${totalPoints.toFixed(1)}`,
+    `Customer Price: $${estimatedValue.toFixed(0)}`,
+    `Curator Bonus: ${isCuratorBonusUnlocked ? "Unlocked" : "Locked"}`,
+    `Curator Bonus Style: ${curatorPreferenceLabel}`,
+    "Curator Picks remain wrapped until delivery.",
+    order.notes ? `Notes: ${order.notes}` : "",
+  ]
+    .filter(Boolean)
+    .join("\n");
+}
+
+function buildSellerOrderSummary({
+  order,
+  selectedPerfumes,
+  totalPoints,
+  estimatedValue,
+  curatorPreferenceLabel,
+  hiddenCuratorPicks,
+}) {
+  return [
+    "SELLER ORDER SUMMARY",
+    `Order Code: ${order.orderCode}`,
+    `Timestamp: ${order.timestamp.toLocaleString()}`,
+    "",
+    "CUSTOMER",
+    `Name: ${order.name}`,
+    `City: ${order.city}`,
+    `Notes / Preferences: ${order.notes || "None"}`,
+    "",
+    "SELECTED FRAGRANCES",
+    ...selectedPerfumes.map(formatOrderPerfumeLine),
+    "",
+    `Total Selected Points: ${totalPoints.toFixed(1)}`,
+    `Customer Price: $${estimatedValue.toFixed(0)}`,
+    `Estimated Collection Value: $${estimatedValue.toFixed(0)}`,
+    "",
+    "CURATOR BONUS",
+    `Style: ${curatorPreferenceLabel}`,
+    "Hidden Curator Picks:",
+    ...(hiddenCuratorPicks.length > 0
+      ? hiddenCuratorPicks.map(formatOrderPerfumeLine)
+      : ["No hidden picks available"]),
+  ].join("\n");
+}
+
+function formatOrderPerfumeLine(perfume) {
+  return `- ${perfume.name}${perfume.subtitle ? ` ${perfume.subtitle}` : ""} | ${
+    perfume.brand
+  } | ${perfume.points} pt`;
+}
+
+async function copyText(text) {
+  try {
+    if (navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(text);
+      return true;
+    }
+  } catch {
+    // Fall back to a temporary textarea for browsers without clipboard permission.
+  }
+
+  const textarea = document.createElement("textarea");
+  textarea.value = text;
+  textarea.setAttribute("readonly", "");
+  textarea.style.position = "fixed";
+  textarea.style.top = "-9999px";
+  document.body.appendChild(textarea);
+  textarea.focus();
+  textarea.select();
+  textarea.setSelectionRange(0, text.length);
+
+  try {
+    return document.execCommand("copy");
+  } finally {
+    document.body.removeChild(textarea);
+  }
 }
 
 function RecommendationLane({
