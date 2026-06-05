@@ -2229,19 +2229,53 @@ button {
 }
 
 @media (max-width: 520px) {
+  .modal-overlay,
+  .scent-library-overlay,
+  .final-summary-overlay {
+    padding: 10px;
+  }
+
   .scent-library-modal {
-    width: 94vw;
-    padding: 20px;
+    width: min(100%, 94vw);
+    max-height: 90vh;
+    padding: 18px;
   }
 
   .scent-library-modal .modal-header {
-    top: -20px;
+    top: -18px;
+    gap: 12px;
   }
 
   .perfume-details-modal {
-    width: 94vw;
-    max-height: 86vh;
+    width: min(100%, 94vw);
+    max-height: 90vh;
+    padding: 16px;
+  }
+
+  .perfume-details-modal .modal-header {
+    display: grid;
+    gap: 12px;
+  }
+
+  .perfume-details-header-actions {
+    justify-content: stretch;
+    width: 100%;
+  }
+
+  .perfume-details-header-actions button {
+    flex: 1 1 84px;
+    min-height: 42px;
+  }
+
+  .final-summary-modal {
+    width: min(100%, 94vw);
+    max-height: 90vh;
     padding: 18px;
+  }
+
+  .final-summary-modal .modal-header {
+    top: -18px;
+    gap: 12px;
   }
 
   .perfume-details-image-panel {
@@ -2259,5 +2293,23 @@ button {
 
   .perfume-details-actions button {
     width: 100%;
+  }
+
+  .curator-insight,
+  .curator-insight-grid,
+  .curator-insight-grid div,
+  .curator-insight-grid span,
+  .curator-insight-grid li,
+  .curator-insight-grid p {
+    text-align: left;
+  }
+
+  .curator-insight {
+    padding: 11px;
+  }
+
+  .curator-insight-grid li {
+    gap: 6px;
+    font-size: 0.78rem;
   }
 }
