@@ -479,6 +479,73 @@ button {
   line-height: 1.4;
 }
 
+.curator-insight {
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  border-radius: 16px;
+  border: 1px solid rgba(134, 239, 172, 0.16);
+  background:
+    radial-gradient(circle at 12% 0, rgba(74, 222, 128, 0.09), transparent 42%),
+    rgba(2, 6, 23, 0.34);
+}
+
+.curator-insight h4 {
+  margin: 0;
+  color: #bbf7d0;
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.curator-insight-grid {
+  display: grid;
+  gap: 10px;
+}
+
+.curator-insight-grid div {
+  display: grid;
+  gap: 7px;
+}
+
+.curator-insight-grid span {
+  color: #cbd5e1;
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.curator-insight-grid ul {
+  display: grid;
+  gap: 5px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.curator-insight-grid li {
+  display: grid;
+  grid-template-columns: 16px minmax(0, 1fr);
+  gap: 7px;
+  align-items: start;
+  color: #ecfdf5;
+  font-size: 0.8rem;
+  line-height: 1.35;
+}
+
+.curator-insight-grid li::before {
+  content: "\2713";
+  color: #86efac;
+  font-weight: 900;
+}
+
+.curator-insight-grid p {
+  margin: 0;
+  color: #94a3b8;
+  font-size: 0.78rem;
+  line-height: 1.4;
+}
+
 .discovery-requirements {
   display: grid;
   gap: 6px;

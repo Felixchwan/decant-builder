@@ -50,6 +50,15 @@ function BuilderPanel({
       () => buildHiddenCuratorPicks(curatorBonusLane, selectedPerfumeIds),
       [curatorBonusLane, selectedPerfumes]
     );
+    const curatorInsight = useMemo(
+      () =>
+        buildCuratorInsight({
+          coverageSummary,
+          recommendations: curatorBonusLane,
+          preference: curatorBonusPreference,
+        }),
+      [coverageSummary, curatorBonusLane, curatorBonusPreference]
+    );
     const isCuratorBonusUnlocked =
       totalPoints >= DISCOVERY_BONUS_TARGET_POINTS && totalSlots >= minSlots;
   return (
@@ -101,6 +110,7 @@ function BuilderPanel({
         preference={curatorBonusPreference}
         onPreferenceChange={setCuratorBonusPreference}
         hiddenCuratorPicks={hiddenCuratorPicks}
+        curatorInsight={curatorInsight}
       />
 
       <BoxSlotTray
@@ -436,6 +446,35 @@ function buildHiddenCuratorPicks(recommendations, selectedPerfumeIds) {
     .map((recommendation) => recommendation.perfume);
 }
 
+function buildCuratorInsight({
+  coverageSummary,
+  recommendations,
+  preference,
+}) {
+  const strengths = uniqueStrings([
+    ...(coverageSummary.strengths || []).map((item) => item.label),
+  ]).slice(0, 3);
+  const recommendationReasons = recommendations.flatMap(
+    (recommendation) => recommendation.reasons || []
+  );
+  const improvementSources =
+    preference === "complement"
+      ? [
+          ...(coverageSummary.gaps || []).map((item) => item.label),
+          ...recommendationReasons,
+        ]
+      : recommendationReasons;
+
+  return {
+    strengths,
+    improvementGoals: uniqueStrings(improvementSources).slice(0, 3),
+  };
+}
+
+function uniqueStrings(values) {
+  return [...new Set(values.filter(Boolean))];
+}
+
 function DiscoveryBonusProgress({
   totalPoints,
   totalSlots,
@@ -444,6 +483,7 @@ function DiscoveryBonusProgress({
   preference,
   onPreferenceChange,
   hiddenCuratorPicks,
+  curatorInsight,
 }) {
   const progressValue = Math.min(totalPoints, DISCOVERY_BONUS_TARGET_POINTS);
   const progressPercent =
@@ -521,6 +561,8 @@ function DiscoveryBonusProgress({
         <p>{preferenceData.description}</p>
       </div>
 
+      <CuratorInsight insight={curatorInsight} />
+
       <div className="curator-bonus-card">
         <div className="curator-bonus-icon" aria-hidden="true">
           🎁
@@ -555,6 +597,45 @@ function RequirementLine({ isMet, value }) {
       <span aria-hidden="true" />
       {value}
     </p>
+  );
+}
+
+function CuratorInsight({ insight }) {
+  return (
+    <section className="curator-insight">
+      <h4>Curator Insight</h4>
+
+      <div className="curator-insight-grid">
+        <CuratorInsightList
+          title="Your collection is currently strong in:"
+          items={insight.strengths}
+          emptyText="Add more fragrances to reveal collection strengths."
+        />
+        <CuratorInsightList
+          title="Your curator bonus will focus on:"
+          items={insight.improvementGoals}
+          emptyText="Add more fragrances to reveal curator focus areas."
+        />
+      </div>
+    </section>
+  );
+}
+
+function CuratorInsightList({ title, items, emptyText }) {
+  return (
+    <div>
+      <span>{title}</span>
+
+      {items.length > 0 ? (
+        <ul>
+          {items.map((item) => (
+            <li key={item}>{item}</li>
+          ))}
+        </ul>
+      ) : (
+        <p>{emptyText}</p>
+      )}
+    </div>
   );
 }
 
