@@ -43,7 +43,7 @@ function PerfumeCard({
         <p>{perfume.brand}</p>
 
         <div
-          className="tier-badge"
+          className="tier-badge perfume-card-tier-desktop"
           style={{
             borderColor: tierData.color,
             backgroundColor: tierData.background,
@@ -73,7 +73,31 @@ function PerfumeCard({
 
       </button>
 
-      <button onClick={() => onAddToBox(perfume)} disabled={isDisabled}>
+      <div className="perfume-card-compact-actions">
+        <div
+          className="tier-badge"
+          style={{
+            borderColor: tierData.color,
+            backgroundColor: tierData.background,
+            color: tierData.color,
+          }}
+        >
+          <span>{tierData.emoji}</span>
+          {tierData.name}
+        </div>
+
+        <span className="compact-points">{perfume.points} pt</span>
+
+        <button onClick={() => onAddToBox(perfume)} disabled={isDisabled}>
+          Add
+        </button>
+      </div>
+
+      <button
+        className="perfume-card-add-full"
+        onClick={() => onAddToBox(perfume)}
+        disabled={isDisabled}
+      >
         Add to box
       </button>
     </article>
