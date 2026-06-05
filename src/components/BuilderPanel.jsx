@@ -1,7 +1,18 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 import { getTierData } from "../utils/tierUtils";
 
 const DISCOVERY_BONUS_TARGET_POINTS = 12;
+const CURATOR_BONUS_PREFERENCES = {
+  complement: {
+    label: "Complement My Collection",
+    description: "Curator picks selected to balance your box.",
+  },
+  similar: {
+    label: "Similar To My Picks",
+    description: "Curator picks inspired by your current taste.",
+  },
+};
 
 function BuilderPanel({
   totalSlots,
@@ -26,12 +37,19 @@ function BuilderPanel({
 }) {
     const [isNotesModalOpen, setIsNotesModalOpen] = useState(false);
     const [isFinalSummaryOpen, setIsFinalSummaryOpen] = useState(false);
+    const [curatorBonusPreference, setCuratorBonusPreference] = useState("complement");
     const sortedNotes = [...boxSummary.notes].sort();
     const selectedPerfumeIds = new Set(
       selectedPerfumes.map((perfume) => perfume.id)
     );
     const basedOnYourPicks = recommendations?.basedOnYourPicks || [];
     const toBalanceYourBox = recommendations?.toBalanceYourBox || [];
+    const curatorBonusLane =
+      curatorBonusPreference === "similar" ? basedOnYourPicks : toBalanceYourBox;
+    const hiddenCuratorPicks = useMemo(
+      () => buildHiddenCuratorPicks(curatorBonusLane, selectedPerfumeIds),
+      [curatorBonusLane, selectedPerfumes]
+    );
     const isCuratorBonusUnlocked =
       totalPoints >= DISCOVERY_BONUS_TARGET_POINTS && totalSlots >= minSlots;
   return (
@@ -80,6 +98,9 @@ function BuilderPanel({
         totalSlots={totalSlots}
         minSlots={minSlots}
         isUnlocked={isCuratorBonusUnlocked}
+        preference={curatorBonusPreference}
+        onPreferenceChange={setCuratorBonusPreference}
+        hiddenCuratorPicks={hiddenCuratorPicks}
       />
 
       <BoxSlotTray
@@ -287,6 +308,12 @@ function BuilderPanel({
 </div>
       </div>
       {isNotesModalOpen && (
+        <ScentLibraryModal
+          notes={sortedNotes}
+          onClose={() => setIsNotesModalOpen(false)}
+        />
+      )}
+      {false && isNotesModalOpen && (
   <div
     className="modal-overlay"
     onClick={() => setIsNotesModalOpen(false)}
@@ -325,6 +352,9 @@ function BuilderPanel({
           boxSummary={boxSummary}
           coverageSummary={coverageSummary}
           scentDna={scentDna}
+          isBoxReady={isBoxReady}
+          isCuratorBonusUnlocked={isCuratorBonusUnlocked}
+          curatorBonusPreference={curatorBonusPreference}
           onClose={() => setIsFinalSummaryOpen(false)}
         />
       )}
@@ -332,7 +362,89 @@ function BuilderPanel({
   );
 }
 
-function DiscoveryBonusProgress({ totalPoints, totalSlots, minSlots, isUnlocked }) {
+function ScentLibraryModal({ notes, onClose }) {
+  useEffect(() => {
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    function handleKeyDown(event) {
+      if (event.key === "Escape") {
+        onClose();
+      }
+    }
+
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [onClose]);
+
+  return createPortal(
+    <div className="modal-overlay scent-library-overlay" onClick={onClose}>
+      <div
+        className="modal-content scent-library-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="scent-library-title"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <div className="modal-header">
+          <h3 id="scent-library-title">Scent Library</h3>
+
+          <button type="button" onClick={onClose} aria-label="Close Scent Library">
+            X
+          </button>
+        </div>
+
+        <div className="notes-grid">
+          {notes.map((note) => (
+            <span key={note} className="note-pill">
+              {note}
+            </span>
+          ))}
+        </div>
+      </div>
+    </div>,
+    document.body
+  );
+}
+
+function buildHiddenCuratorPicks(recommendations, selectedPerfumeIds) {
+  const availableRecommendations = recommendations.filter(
+    (recommendation) => !selectedPerfumeIds.has(recommendation.perfume.id)
+  );
+  const bronzePicks = availableRecommendations
+    .filter((recommendation) => getTierData(recommendation.perfume.id).name === "Bronze")
+    .slice(0, 2);
+
+  if (bronzePicks.length >= 2) {
+    return bronzePicks.map((recommendation) => recommendation.perfume);
+  }
+
+  const goldPick = availableRecommendations.find(
+    (recommendation) => getTierData(recommendation.perfume.id).name === "Gold"
+  );
+
+  if (goldPick) {
+    return [goldPick.perfume];
+  }
+
+  return availableRecommendations
+    .slice(0, 1)
+    .map((recommendation) => recommendation.perfume);
+}
+
+function DiscoveryBonusProgress({
+  totalPoints,
+  totalSlots,
+  minSlots,
+  isUnlocked,
+  preference,
+  onPreferenceChange,
+  hiddenCuratorPicks,
+}) {
   const progressValue = Math.min(totalPoints, DISCOVERY_BONUS_TARGET_POINTS);
   const progressPercent =
     (progressValue / DISCOVERY_BONUS_TARGET_POINTS) * 100;
@@ -343,6 +455,8 @@ function DiscoveryBonusProgress({ totalPoints, totalSlots, minSlots, isUnlocked 
   const fragrancesAway = Math.max(minSlots - totalSlots, 0);
   const hasRequiredPoints = totalPoints >= DISCOVERY_BONUS_TARGET_POINTS;
   const hasRequiredFragrances = totalSlots >= minSlots;
+  const preferenceData = CURATOR_BONUS_PREFERENCES[preference];
+  const hiddenPickCount = hiddenCuratorPicks.length;
   const lockedMessage = !hasRequiredPoints
     ? `${pointsAway.toFixed(1)} point${
         pointsAway === 1 ? "" : "s"
@@ -387,6 +501,26 @@ function DiscoveryBonusProgress({ totalPoints, totalSlots, minSlots, isUnlocked 
           : lockedMessage}
       </p>
 
+      <div className="curator-preference-control">
+        <label htmlFor="curator-bonus-preference">
+          Curator Bonus Style
+        </label>
+
+        <select
+          id="curator-bonus-preference"
+          value={preference}
+          onChange={(event) => onPreferenceChange(event.target.value)}
+        >
+          {Object.entries(CURATOR_BONUS_PREFERENCES).map(([value, option]) => (
+            <option key={value} value={value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+
+        <p>{preferenceData.description}</p>
+      </div>
+
       <div className="curator-bonus-card">
         <div className="curator-bonus-icon" aria-hidden="true">
           🎁
@@ -399,7 +533,9 @@ function DiscoveryBonusProgress({ totalPoints, totalSlots, minSlots, isUnlocked 
           </strong>
           <p>
             {isUnlocked
-              ? "A curated fragrance has been added to your Discovery Box."
+              ? `${preferenceData.label} selected. Your curator pick${
+                  hiddenPickCount === 1 ? "" : "s"
+                } will stay wrapped until reveal.`
               : "Complete your Discovery Box to unlock."}
           </p>
         </div>
@@ -431,20 +567,46 @@ function FinalSummaryModal({
   boxSummary,
   coverageSummary,
   scentDna,
+  isBoxReady,
+  isCuratorBonusUnlocked,
+  curatorBonusPreference,
   onClose,
 }) {
   const collectionIdentity = getCollectionIdentity(boxSummary);
+  const curatorPreferenceLabel =
+    CURATOR_BONUS_PREFERENCES[curatorBonusPreference]?.label;
 
-  return (
-    <div className="modal-overlay" onClick={onClose}>
+  useEffect(() => {
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    function handleKeyDown(event) {
+      if (event.key === "Escape") {
+        onClose();
+      }
+    }
+
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [onClose]);
+
+  return createPortal(
+    <div className="modal-overlay final-summary-overlay" onClick={onClose}>
       <div
         className="final-summary-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="final-summary-title"
         onClick={(event) => event.stopPropagation()}
       >
         <div className="modal-header">
           <div>
             <p className="summary-eyebrow">Discovery Box</p>
-            <h3>Your Completed Box</h3>
+            <h3 id="final-summary-title">Your Completed Box</h3>
           </div>
 
           <button onClick={onClose}>Close</button>
@@ -460,6 +622,28 @@ function FinalSummaryModal({
           <SummaryStat label="Total Points" value={totalPoints.toFixed(1)} />
           <SummaryStat label="Estimated Value" value={`$${estimatedValue.toFixed(0)}`} />
           <SummaryStat label="Upgrade Value" value={`$${upgradeValue.toFixed(0)}`} />
+        </section>
+
+        <section className="final-readiness-grid">
+          <div className={isBoxReady ? "ready" : ""}>
+            <span>Discovery Box</span>
+            <strong>{isBoxReady ? "Ready" : "In Progress"}</strong>
+            <p>
+              {isBoxReady
+                ? "Minimum fragrance and point requirements are met."
+                : "Complete the requirements before checkout prep."}
+            </p>
+          </div>
+
+          <div className={isCuratorBonusUnlocked ? "ready" : ""}>
+            <span>Curator Bonus</span>
+            <strong>{isCuratorBonusUnlocked ? "Unlocked" : "Locked"}</strong>
+            <p>
+              {isCuratorBonusUnlocked
+                ? `${curatorPreferenceLabel} selected. Picks remain wrapped until reveal.`
+                : "Unlocks when the Discovery Box is valid."}
+            </p>
+          </div>
         </section>
 
         <ScentDnaPanel scentDna={scentDna} />
@@ -526,7 +710,8 @@ function FinalSummaryModal({
           </div>
         </section>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 

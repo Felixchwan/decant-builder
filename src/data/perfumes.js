@@ -1402,7 +1402,7 @@ baseNotes: ["caramel", "musk"],
   id: 401,
   name: "Silver Mountain Water",
   brand: "Creed",
-  points: 4.5,
+  points: 4,
   image: "/images/perfumes/diamond/silver-mountain-water.png",
 
   accords: [
@@ -1453,7 +1453,7 @@ baseNotes: ["caramel", "musk"],
   id: 402,
   name: "Sauvage Elixir",
   brand: "Dior",
-  points: 4.5,
+  points: 4,
   image: "/images/perfumes/diamond/sauvage-elixir.png",
 
   accords: [
@@ -1559,7 +1559,7 @@ baseNotes: ["caramel", "musk"],
   id: 404,
   name: "Layton",
   brand: "Parfums de Marly",
-  points: 4.5,
+  points: 4,
   image: "/images/perfumes/diamond/layton.png",
 
   accords: [
@@ -1616,11 +1616,11 @@ baseNotes: ["caramel", "musk"],
 },
 
 {
-  id: 405,
+  id: 500,
   name: "Squid",
   brand: "Zoologist",
-  points: 4.5,
-  image: "/images/perfumes/diamond/squid.png",
+  points: 5,
+  image: "/images/perfumes/mythic/squid.png",
 
   warningMessage: `
   Zoologist Squid explores marine darkness through notes of ink, incense, sea salt and ambergris.
