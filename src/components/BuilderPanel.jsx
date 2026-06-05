@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { getTierData } from "../utils/tierUtils";
 
@@ -38,6 +38,8 @@ function BuilderPanel({
     const [isNotesModalOpen, setIsNotesModalOpen] = useState(false);
     const [isFinalSummaryOpen, setIsFinalSummaryOpen] = useState(false);
     const [curatorBonusPreference, setCuratorBonusPreference] = useState("complement");
+    const previousCuratorBonusUnlockedRef = useRef(false);
+    const [isCuratorBonusAnimating, setIsCuratorBonusAnimating] = useState(false);
     const sortedNotes = [...boxSummary.notes].sort();
     const selectedPerfumeIds = new Set(
       selectedPerfumes.map((perfume) => perfume.id)
@@ -61,6 +63,29 @@ function BuilderPanel({
     );
     const isCuratorBonusUnlocked =
       totalPoints >= DISCOVERY_BONUS_TARGET_POINTS && totalSlots >= minSlots;
+
+    useEffect(() => {
+      let animationTimeout;
+
+      if (isCuratorBonusUnlocked && !previousCuratorBonusUnlockedRef.current) {
+        setIsCuratorBonusAnimating(true);
+        animationTimeout = window.setTimeout(() => {
+          setIsCuratorBonusAnimating(false);
+        }, 700);
+      }
+
+      if (!isCuratorBonusUnlocked) {
+        setIsCuratorBonusAnimating(false);
+      }
+
+      previousCuratorBonusUnlockedRef.current = isCuratorBonusUnlocked;
+
+      return () => {
+        if (animationTimeout) {
+          window.clearTimeout(animationTimeout);
+        }
+      };
+    }, [isCuratorBonusUnlocked]);
   return (
     <aside className="builder-panel">
       <div className="panel-header">
@@ -107,10 +132,6 @@ function BuilderPanel({
         totalSlots={totalSlots}
         minSlots={minSlots}
         isUnlocked={isCuratorBonusUnlocked}
-        preference={curatorBonusPreference}
-        onPreferenceChange={setCuratorBonusPreference}
-        hiddenCuratorPicks={hiddenCuratorPicks}
-        curatorInsight={curatorInsight}
       />
 
       <BoxSlotTray
@@ -120,6 +141,17 @@ function BuilderPanel({
         isCuratorBonusUnlocked={isCuratorBonusUnlocked}
       />
 
+      <CuratorBonusSection
+        isUnlocked={isCuratorBonusUnlocked}
+        isAnimating={isCuratorBonusAnimating}
+        preference={curatorBonusPreference}
+        onPreferenceChange={setCuratorBonusPreference}
+        hiddenCuratorPicks={hiddenCuratorPicks}
+      />
+
+      <CuratorInsight insight={curatorInsight} />
+
+{/*
 <div className={`box-status ${isBoxReady ? "ready" : "not-ready"}`}>
   <strong>
     {isBoxReady ? "Discovery Box ready" : "Discovery Box requirements"}
@@ -139,6 +171,7 @@ function BuilderPanel({
         }`}
   </p>
 </div>
+*/}
 
       {isBoxReady && (
         <button
@@ -517,10 +550,6 @@ function DiscoveryBonusProgress({
   totalSlots,
   minSlots,
   isUnlocked,
-  preference,
-  onPreferenceChange,
-  hiddenCuratorPicks,
-  curatorInsight,
 }) {
   const progressValue = Math.min(totalPoints, DISCOVERY_BONUS_TARGET_POINTS);
   const progressPercent =
@@ -532,8 +561,6 @@ function DiscoveryBonusProgress({
   const fragrancesAway = Math.max(minSlots - totalSlots, 0);
   const hasRequiredPoints = totalPoints >= DISCOVERY_BONUS_TARGET_POINTS;
   const hasRequiredFragrances = totalSlots >= minSlots;
-  const preferenceData = CURATOR_BONUS_PREFERENCES[preference];
-  const hiddenPickCount = hiddenCuratorPicks.length;
   const lockedMessage = !hasRequiredPoints
     ? `${pointsAway.toFixed(1)} point${
         pointsAway === 1 ? "" : "s"
@@ -578,50 +605,91 @@ function DiscoveryBonusProgress({
           : lockedMessage}
       </p>
 
-      <div className="curator-preference-control">
-        <label htmlFor="curator-bonus-preference">
-          Curator Bonus Style
-        </label>
-
-        <select
-          id="curator-bonus-preference"
-          value={preference}
-          onChange={(event) => onPreferenceChange(event.target.value)}
-        >
-          {Object.entries(CURATOR_BONUS_PREFERENCES).map(([value, option]) => (
-            <option key={value} value={value}>
-              {option.label}
-            </option>
-          ))}
-        </select>
-
-        <p>{preferenceData.description}</p>
-      </div>
-
-      <CuratorInsight insight={curatorInsight} />
-
-      <div className="curator-bonus-card">
-        <div className="curator-bonus-icon" aria-hidden="true">
+        <span hidden aria-hidden="true">
           🎁
-        </div>
+        </span>
 
+    </section>
+  );
+}
+
+function CuratorBonusSection({
+  isUnlocked,
+  isAnimating,
+  preference,
+  onPreferenceChange,
+  hiddenCuratorPicks,
+}) {
+  const preferenceData = CURATOR_BONUS_PREFERENCES[preference];
+  const hiddenPickCount = hiddenCuratorPicks.length;
+
+  return (
+    <section
+      className={`discovery-bonus-panel curator-bonus-section ${
+        isUnlocked ? "unlocked" : "locked"
+      } ${isAnimating ? "is-unlocking" : ""}`}
+    >
+      <div className="curator-bonus-panel-header">
         <div>
           <span>Curator Bonus</span>
-          <strong>
-            {isUnlocked ? "Curator Bonus Unlocked" : "Locked"}
-          </strong>
+        </div>
+
+        <span className="curator-bonus-status">
+          {isUnlocked ? "Unlocked" : "Locked"}
+        </span>
+      </div>
+
+      {(!isUnlocked || isAnimating) && (
+        <div className="curator-lock-visual" aria-hidden="true">
+          <span />
+        </div>
+      )}
+
+      <div className="curator-bonus-card">
+        <div className="curator-bonus-copy">
+          {!isUnlocked && <strong>Complete your Discovery Box</strong>}
           <p>
             {isUnlocked
               ? `${preferenceData.label} selected. Your curator pick${
                   hiddenPickCount === 1 ? "" : "s"
                 } will stay wrapped until reveal.`
-              : "Complete your Discovery Box to unlock."}
+              : "Unlock Curator Bonus and choose your reward strategy."}
           </p>
         </div>
 
+        {isUnlocked ? (
+          <div className="curator-preference-control">
+            <label htmlFor="curator-bonus-preference">
+              Curator Bonus Style
+            </label>
+
+            <select
+              id="curator-bonus-preference"
+              value={preference}
+              onChange={(event) => onPreferenceChange(event.target.value)}
+            >
+              {Object.entries(CURATOR_BONUS_PREFERENCES).map(
+                ([value, option]) => (
+                  <option key={value} value={value}>
+                    {option.label}
+                  </option>
+                )
+              )}
+            </select>
+
+            <p>{preferenceData.description}</p>
+          </div>
+        ) : (
+          <div className="curator-style-locked" aria-disabled="true">
+            <span>Curator Bonus Style</span>
+            <strong>Unlock to choose curator style</strong>
+          </div>
+        )}
+
         <div className={`curator-pick-slot ${isUnlocked ? "active" : ""}`}>
           <span>Curator Pick</span>
-          <strong>{isUnlocked ? "Curator Bonus" : "Bonus Slot"}</strong>
+          <strong>Bonus Fragrance</strong>
+          <p>Equivalent to 2 bonus points.</p>
         </div>
       </div>
     </section>

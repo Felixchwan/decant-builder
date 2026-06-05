@@ -1145,10 +1145,10 @@ baseNotes: ["caramel", "musk"],
 
 {
   id: 301,
-  name: "Allure Homme Edition Blanche",
+  name: "Allure Homme Edition Blanche EDP",
   brand: "Chanel",
   points: 2.5,
-  image: "/images/perfumes/platinum/allure-homme-edition-blanche.png",
+  image: "/images/perfumes/platinum/allure-homme-edition-blanche-edp.avif",
 
   accords: [
     "citrus",
