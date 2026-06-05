@@ -419,6 +419,14 @@ function PerfumeDetailsModal({
           </div>
 
           <strong>{perfume.points} pt</strong>
+
+          <button
+            className="perfume-details-meta-add"
+            onClick={() => onAddToBox(perfume)}
+            disabled={isAddDisabled}
+          >
+            {addButtonLabel}
+          </button>
         </div>
 
         {perfume.image && (

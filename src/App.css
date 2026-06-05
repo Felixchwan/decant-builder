@@ -1390,7 +1390,8 @@ button {
 }
 
 .perfume-details-modal .modal-header button,
-.perfume-details-actions button {
+.perfume-details-actions button,
+.perfume-details-meta-add {
   border: 1px solid rgba(148, 163, 184, 0.24);
   border-radius: 10px;
   padding: 8px 11px;
@@ -1402,6 +1403,15 @@ button {
 .perfume-details-modal .modal-header button:disabled {
   cursor: not-allowed;
   opacity: 0.45;
+}
+
+.perfume-details-meta-add {
+  display: none;
+}
+
+.perfume-details-meta-add:disabled {
+  cursor: not-allowed;
+  opacity: 0.48;
 }
 
 .perfume-details-meta {
@@ -2368,8 +2378,38 @@ button {
     max-height: 260px;
   }
 
+  .perfume-details-meta {
+    display: grid;
+    grid-template-columns: minmax(0, auto) auto minmax(76px, 0.8fr);
+    gap: 8px;
+    margin-bottom: 14px;
+    padding: 10px;
+  }
+
+  .perfume-details-meta .tier-badge {
+    padding: 5px 9px;
+    min-width: 0;
+    font-size: 0.76rem;
+  }
+
+  .perfume-details-meta > strong {
+    font-size: 0.86rem;
+  }
+
+  .perfume-details-meta-add {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 42px;
+    padding: 9px 12px;
+    background: #4ade80;
+    border-color: rgba(74, 222, 128, 0.7);
+    color: #052e16;
+    justify-self: stretch;
+  }
+
   .perfume-details-actions {
-    flex-direction: column;
+    display: none;
   }
 
   .perfume-details-actions button {
