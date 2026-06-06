@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { forwardRef, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { getTierData } from "../utils/tierUtils";
 
@@ -25,6 +25,7 @@ function BuilderPanel({
   boxSummary,
   onClearBox,
   onRemovePerfume,
+  onReorderPerfumes,
   minSlots,
   minPoints,
   missingSlots,
@@ -48,6 +49,7 @@ function BuilderPanel({
     const [isCollectionSnapshotOpen, setIsCollectionSnapshotOpen] = useState(false);
     const [curatorBonusPreference, setCuratorBonusPreference] = useState("complement");
     const previousCuratorBonusUnlockedRef = useRef(false);
+    const curatorBonusModuleRef = useRef(null);
     const [isCuratorBonusAnimating, setIsCuratorBonusAnimating] = useState(false);
     const sortedNotes = [...boxSummary.notes].sort();
     const selectedPerfumeIds = new Set(
@@ -90,6 +92,12 @@ function BuilderPanel({
 
       if (isCuratorBonusUnlocked && !previousCuratorBonusUnlockedRef.current) {
         setIsCuratorBonusAnimating(true);
+        window.requestAnimationFrame(() => {
+          curatorBonusModuleRef.current?.scrollIntoView({
+            behavior: "smooth",
+            block: "center",
+          });
+        });
         animationTimeout = window.setTimeout(() => {
           setIsCuratorBonusAnimating(false);
         }, 1600);
@@ -153,6 +161,15 @@ function BuilderPanel({
         </div>
       </div>
 
+      <BoxSlotTray
+        selectedPerfumes={selectedPerfumes}
+        maxSlots={maxSlots}
+        maxSelectableSlots={maxSelectableSlots}
+        isCuratorBonusUnlocked={isCuratorBonusUnlocked}
+        onRemovePerfume={onRemovePerfume}
+        onReorderPerfumes={onReorderPerfumes}
+      />
+
       <div className="slot-bar">
         <div
           className="slot-progress"
@@ -162,21 +179,11 @@ function BuilderPanel({
         />
       </div>
 
-      <DiscoveryBonusProgress
+      <CuratorBonusModule
+        ref={curatorBonusModuleRef}
         totalPoints={totalPoints}
         totalSlots={totalSlots}
         minSlots={minSlots}
-        isUnlocked={isCuratorBonusUnlocked}
-      />
-
-      <BoxSlotTray
-        selectedPerfumes={selectedPerfumes}
-        maxSlots={maxSlots}
-        maxSelectableSlots={maxSelectableSlots}
-        isCuratorBonusUnlocked={isCuratorBonusUnlocked}
-      />
-
-      <CuratorBonusSection
         isUnlocked={isCuratorBonusUnlocked}
         isAnimating={isCuratorBonusAnimating}
         preference={curatorBonusPreference}
@@ -206,15 +213,7 @@ function BuilderPanel({
 </div>
 */}
 
-      {isBoxReady && (
-        <button
-          className="review-box-button"
-          onClick={() => setIsFinalSummaryOpen(true)}
-        >
-          Review Box
-        </button>
-      )}
-
+      {/*
       <div className="selected-list">
         {selectedPerfumes.length > 0 &&
           selectedPerfumes.map((perfume, index) => (
@@ -239,6 +238,7 @@ function BuilderPanel({
             </div>
           ))}
       </div>
+      */}
 
       <CollectionSnapshot
         boxSummary={boxSummary}
@@ -475,7 +475,9 @@ function CollectionSnapshot({
   onToggle,
   onOpenScentLibrary,
 }) {
-  const seasonRows = buildSeasonCoverageRows(boxSummary.seasonCounts || {});
+  const seasonRows = buildSeasonCoverageRows(
+    boxSummary.seasonStrengths || boxSummary.seasonCounts || {}
+  );
   const hasProfileData =
     boxSummary.occasions.length > 0 ||
     boxSummary.seasons.length > 0 ||
@@ -764,6 +766,146 @@ function buildCuratorInsight({
 function uniqueStrings(values) {
   return [...new Set(values.filter(Boolean))];
 }
+
+const CuratorBonusModule = forwardRef(function CuratorBonusModule(
+  {
+    totalPoints,
+    totalSlots,
+    minSlots,
+    isUnlocked,
+    isAnimating,
+    preference,
+    onPreferenceChange,
+    hiddenCuratorPicks,
+  },
+  ref
+) {
+  const preferenceData = CURATOR_BONUS_PREFERENCES[preference];
+  const hiddenPickCount = hiddenCuratorPicks.length;
+  const progressValue = Math.min(totalPoints, DISCOVERY_BONUS_TARGET_POINTS);
+  const progressPercent =
+    (progressValue / DISCOVERY_BONUS_TARGET_POINTS) * 100;
+  const pointsAway = Math.max(
+    DISCOVERY_BONUS_TARGET_POINTS - totalPoints,
+    0
+  );
+  const fragrancesAway = Math.max(minSlots - totalSlots, 0);
+  const hasRequiredPoints = totalPoints >= DISCOVERY_BONUS_TARGET_POINTS;
+  const hasRequiredFragrances = totalSlots >= minSlots;
+  const lockedMessage = !hasRequiredPoints
+    ? `${pointsAway.toFixed(1)} point${
+        pointsAway === 1 ? "" : "s"
+      } away from unlocking your Curator Bonus`
+    : `Need ${fragrancesAway} more fragrance${
+        fragrancesAway === 1 ? "" : "s"
+      } to unlock your Curator Bonus`;
+
+  return (
+    <section
+      ref={ref}
+      className={`discovery-bonus-panel curator-bonus-section ${
+        isUnlocked ? "unlocked" : "locked"
+      } ${isAnimating ? "is-unlocking" : ""}`}
+    >
+      <div className="discovery-progress-header">
+        <div>
+          <span>Curator Bonus</span>
+          <strong>Progress & Reward</strong>
+        </div>
+
+        <span className="discovery-bonus-state">
+          {isUnlocked ? "Unlocked" : "Locked"}
+        </span>
+      </div>
+
+      <div className="discovery-progress-bar" aria-hidden="true">
+        <div style={{ width: `${progressPercent}%` }} />
+      </div>
+
+      <div className="discovery-requirements">
+        <RequirementLine
+          isMet={hasRequiredPoints}
+          value={`${progressValue.toFixed(1)} / ${DISCOVERY_BONUS_TARGET_POINTS} Points`}
+        />
+        <RequirementLine
+          isMet={hasRequiredFragrances}
+          value={`${Math.min(totalSlots, minSlots)} / ${minSlots} Fragrances`}
+        />
+      </div>
+
+      <p className="discovery-progress-copy">
+        {isUnlocked ? "Curator Bonus Unlocked" : lockedMessage}
+      </p>
+
+      {isAnimating && (
+        <div className="curator-unlock-confirmation" role="status">
+          Curator Bonus Unlocked
+        </div>
+      )}
+
+      {(!isUnlocked || isAnimating) && (
+        <div className="curator-lock-visual" aria-hidden="true">
+          <span />
+        </div>
+      )}
+
+      <div className="curator-bonus-card">
+        <div className="curator-bonus-copy">
+          {!isUnlocked && <strong>Complete your Discovery Box</strong>}
+          <p>
+            {isUnlocked
+              ? `${preferenceData.label} selected. Your curator pick${
+                  hiddenPickCount === 1 ? "" : "s"
+                } will stay wrapped until reveal.`
+              : "Unlock Curator Bonus and choose your reward strategy."}
+          </p>
+        </div>
+
+        {isUnlocked ? (
+          <div className="curator-preference-control">
+            <label htmlFor="curator-bonus-preference">
+              Curator Bonus Style
+            </label>
+
+            <select
+              id="curator-bonus-preference"
+              value={preference}
+              onChange={(event) => onPreferenceChange(event.target.value)}
+            >
+              {Object.entries(CURATOR_BONUS_PREFERENCES).map(
+                ([value, option]) => (
+                  <option key={value} value={value}>
+                    {option.label}
+                  </option>
+                )
+              )}
+            </select>
+
+            <p>{preferenceData.description}</p>
+          </div>
+        ) : (
+          <div className="curator-style-locked" aria-disabled="true">
+            <span>Curator Bonus Style</span>
+            <strong>Unlock to choose curator style</strong>
+          </div>
+        )}
+
+        <div className={`curator-pick-slot ${isUnlocked ? "active" : ""}`}>
+          <span>Curator Pick</span>
+          <strong>Bonus Fragrance</strong>
+          <p>Equivalent to 2 bonus points.</p>
+          {isUnlocked && (
+            <p>
+              {preference === "similar"
+                ? "Selected based on your fragrance preferences."
+                : "Selected to complement your collection."}
+            </p>
+          )}
+        </div>
+      </div>
+    </section>
+  );
+});
 
 function DiscoveryBonusProgress({
   totalPoints,
@@ -1748,15 +1890,99 @@ function BoxSlotTray({
   maxSlots,
   maxSelectableSlots,
   isCuratorBonusUnlocked,
+  onRemovePerfume,
+  onReorderPerfumes,
 }) {
+  const [activeSlotIndex, setActiveSlotIndex] = useState(null);
+  const [draggingIndex, setDraggingIndex] = useState(null);
+  const [dragOverIndex, setDragOverIndex] = useState(null);
+  const longPressTimerRef = useRef(null);
+  const didLongPressRef = useRef(false);
+  const didDragRef = useRef(false);
+  const lastPointerTypeRef = useRef(null);
   const rowCount = Math.ceil(maxSlots / 2);
   const rows = Array.from({ length: rowCount }, (_, rowIndex) => ({
     leftIndex: rowIndex * 2,
     rightIndex: rowIndex * 2 + 1,
   }));
+  const clearLongPressTimer = () => {
+    if (longPressTimerRef.current) {
+      window.clearTimeout(longPressTimerRef.current);
+      longPressTimerRef.current = null;
+    }
+  };
+  const reorderSlot = (fromIndex, toIndex) => {
+    const targetIndex = Math.min(toIndex, selectedPerfumes.length - 1);
+
+    if (fromIndex !== targetIndex && targetIndex >= 0) {
+      onReorderPerfumes(fromIndex, targetIndex);
+    }
+  };
+  const handleDragStart = (event, index) => {
+    setDraggingIndex(index);
+    setActiveSlotIndex(null);
+    event.dataTransfer.effectAllowed = "move";
+    event.dataTransfer.setData("text/plain", String(index));
+  };
+  const handleDrop = (event, index) => {
+    event.preventDefault();
+    const fromIndex = Number(event.dataTransfer.getData("text/plain"));
+
+    reorderSlot(fromIndex, index);
+    setDraggingIndex(null);
+    setDragOverIndex(null);
+  };
+  const handlePointerDown = (event, index, hasPerfume) => {
+    didLongPressRef.current = false;
+    didDragRef.current = false;
+    lastPointerTypeRef.current = event.pointerType;
+
+    if (!hasPerfume) {
+      return;
+    }
+
+    if (event.pointerType === "mouse") {
+      didLongPressRef.current = true;
+      setDraggingIndex(index);
+      setActiveSlotIndex(null);
+      return;
+    }
+
+    clearLongPressTimer();
+    longPressTimerRef.current = window.setTimeout(() => {
+      didLongPressRef.current = true;
+      setDraggingIndex(index);
+      setActiveSlotIndex(null);
+    }, 360);
+  };
+  const handlePointerUp = (index) => {
+    clearLongPressTimer();
+
+    if (draggingIndex !== null) {
+      reorderSlot(draggingIndex, index);
+      setDraggingIndex(null);
+      setDragOverIndex(null);
+      return;
+    }
+
+    if (!didLongPressRef.current && selectedPerfumes[index]) {
+      setActiveSlotIndex((currentIndex) => (currentIndex === index ? null : index));
+    }
+  };
+  const handleSlotClick = (index) => {
+    if (lastPointerTypeRef.current === "mouse" && !didDragRef.current && selectedPerfumes[index]) {
+      setActiveSlotIndex((currentIndex) => (currentIndex === index ? null : index));
+    }
+  };
+  const handleRemove = (index) => {
+    onRemovePerfume(index);
+    setActiveSlotIndex(null);
+    setDraggingIndex(null);
+    setDragOverIndex(null);
+  };
 
   return (
-    <div className="box-slot-tray" aria-label="Fragrance box slots">
+    <div className="box-slot-tray interactive-box-slot-tray" aria-label="Interactive Discovery Box slots">
       <div className="box-column">
         {rows.map(({ leftIndex }) => (
             <BoxVialSlot
@@ -1765,6 +1991,25 @@ function BoxSlotTray({
               perfume={selectedPerfumes[leftIndex]}
               isReserved={leftIndex >= maxSelectableSlots}
               isCuratorBonusUnlocked={isCuratorBonusUnlocked}
+              isActive={activeSlotIndex === leftIndex}
+              isDragging={draggingIndex === leftIndex}
+              isDragTarget={dragOverIndex === leftIndex}
+              onRemove={handleRemove}
+              onDragStart={handleDragStart}
+              onDragOver={(event) => {
+                event.preventDefault();
+                setDragOverIndex(leftIndex);
+              }}
+              onDrop={handleDrop}
+              onPointerDown={handlePointerDown}
+              onPointerEnter={() => {
+                if (draggingIndex !== null) {
+                  didDragRef.current = draggingIndex !== leftIndex;
+                  setDragOverIndex(leftIndex);
+                }
+              }}
+              onPointerUp={handlePointerUp}
+              onClick={handleSlotClick}
             />
         ))}
       </div>
@@ -1780,6 +2025,25 @@ function BoxSlotTray({
               perfume={selectedPerfumes[rightIndex]}
               isReserved={rightIndex >= maxSelectableSlots}
               isCuratorBonusUnlocked={isCuratorBonusUnlocked}
+              isActive={activeSlotIndex === rightIndex}
+              isDragging={draggingIndex === rightIndex}
+              isDragTarget={dragOverIndex === rightIndex}
+              onRemove={handleRemove}
+              onDragStart={handleDragStart}
+              onDragOver={(event) => {
+                event.preventDefault();
+                setDragOverIndex(rightIndex);
+              }}
+              onDrop={handleDrop}
+              onPointerDown={handlePointerDown}
+              onPointerEnter={() => {
+                if (draggingIndex !== null) {
+                  didDragRef.current = draggingIndex !== rightIndex;
+                  setDragOverIndex(rightIndex);
+                }
+              }}
+              onPointerUp={handlePointerUp}
+              onClick={handleSlotClick}
             />
           ) : null
         )}
@@ -1788,7 +2052,23 @@ function BoxSlotTray({
   );
 }
 
-function BoxVialSlot({ perfume, index, isReserved, isCuratorBonusUnlocked }) {
+function BoxVialSlot({
+  perfume,
+  index,
+  isReserved,
+  isCuratorBonusUnlocked,
+  isActive,
+  isDragging,
+  isDragTarget,
+  onRemove,
+  onDragStart,
+  onDragOver,
+  onDrop,
+  onPointerDown,
+  onPointerEnter,
+  onPointerUp,
+  onClick,
+}) {
   if (isReserved) {
     return (
       <div
@@ -1808,11 +2088,17 @@ function BoxVialSlot({ perfume, index, isReserved, isCuratorBonusUnlocked }) {
   if (!perfume) {
     return (
       <div
-        className="box-vial empty"
+        className={`box-vial empty ${isDragTarget ? "drag-target" : ""}`}
         aria-label={`Empty slot ${index + 1}`}
+        onDragOver={onDragOver}
+        onDrop={(event) => onDrop(event, index)}
+        onPointerEnter={onPointerEnter}
+        onPointerUp={() => onPointerUp(index)}
       >
         <span className="vial-cap" />
-        <span className="vial-body" />
+        <span className="vial-body">
+          <span className="empty-slot-add" aria-hidden="true">+</span>
+        </span>
       </div>
     );
   }
@@ -1821,9 +2107,20 @@ function BoxVialSlot({ perfume, index, isReserved, isCuratorBonusUnlocked }) {
 
   return (
     <div
-      className="box-vial filled"
+      className={`box-vial filled ${isActive ? "is-active" : ""} ${
+        isDragging ? "is-dragging" : ""
+      } ${isDragTarget ? "drag-target" : ""}`}
       aria-label={`Filled slot ${index + 1}: ${perfume.name}`}
       title={perfume.name}
+      draggable
+      onDragStart={(event) => onDragStart(event, index)}
+      onDragEnd={() => onDrop({ preventDefault() {}, dataTransfer: { getData: () => index } }, index)}
+      onDragOver={onDragOver}
+      onDrop={(event) => onDrop(event, index)}
+      onPointerDown={(event) => onPointerDown(event, index, true)}
+      onPointerEnter={onPointerEnter}
+      onPointerUp={() => onPointerUp(index)}
+      onClick={() => onClick(index)}
       style={{
         "--tier-color": tierData.color,
         "--tier-background": tierData.background,
@@ -1831,8 +2128,29 @@ function BoxVialSlot({ perfume, index, isReserved, isCuratorBonusUnlocked }) {
     >
       <span className="vial-cap" />
       <span className="vial-body">
-        <strong className="vial-label">{getShortPerfumeName(perfume.name)}</strong>
+        <span className="vial-label">
+          <strong>{perfume.shortName || getShortPerfumeName(perfume.name)}</strong>
+        </span>
+        <button
+          type="button"
+          className="slot-remove-button"
+          onClick={(event) => {
+            event.stopPropagation();
+            onRemove(index);
+          }}
+          aria-label={`Remove ${perfume.name}`}
+        >
+          ×
+        </button>
       </span>
+      {isActive && (
+        <div className="slot-action-popover">
+          <button type="button" onClick={() => onRemove(index)}>
+            Remove
+          </button>
+          <span>Long press and drag to reorder</span>
+        </div>
+      )}
     </div>
   );
 }

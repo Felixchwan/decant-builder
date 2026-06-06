@@ -101,14 +101,10 @@ function scoreRecommendation({
   selectedNotes,
 }) {
   const reasonCandidates = [];
-  const seasonScore = scoreCoverage({
+  const seasonScore = scoreSeasonCoverage({
     perfume,
-    category: "seasons",
     targets: SEASON_TARGETS,
-    counts: boxSummary.seasonCounts,
-    missingWeight: 18,
-    weakWeight: 9,
-    maxScore: 30,
+    strengths: boxSummary.seasonStrengths || boxSummary.seasonCounts,
     getMissingReason: (target) => getSeasonReason(target, perfume, boxContext),
     getWeakReason: (target) => `Reinforces ${formatLabel(target)} coverage`,
     reasonCandidates,
@@ -241,7 +237,7 @@ function buildPreferenceProfile(selectedPerfumes, boxSummary, tierProfile) {
     accordCounts,
     vibeCounts: boxSummary.vibeCounts || {},
     occasionCounts: boxSummary.occasionCounts || {},
-    seasonCounts: boxSummary.seasonCounts || {},
+    seasonCounts: boxSummary.seasonStrengths || boxSummary.seasonCounts || {},
     tierProfile,
     averagePoints,
   };
@@ -387,6 +383,49 @@ function scoreCoverage({
       score += weakWeight;
       reasonCandidates.push({
         score: weakWeight,
+        label: getWeakReason(target),
+      });
+    }
+  });
+
+  return Math.min(maxScore, score);
+}
+
+function scoreSeasonCoverage({
+  perfume,
+  targets,
+  strengths,
+  getMissingReason,
+  getWeakReason,
+  reasonCandidates,
+}) {
+  const missingThreshold = 4;
+  const weakThreshold = 10;
+  const maxScore = 30;
+  let score = 0;
+
+  targets.forEach((target) => {
+    const candidateWeight = getSeasonWeight(perfume, target);
+
+    if (candidateWeight <= 0) {
+      return;
+    }
+
+    const currentStrength = strengths?.[target] || 0;
+    const weightMultiplier = candidateWeight / 10;
+
+    if (currentStrength < missingThreshold) {
+      const targetScore = 18 * weightMultiplier;
+      score += targetScore;
+      reasonCandidates.push({
+        score: targetScore,
+        label: getMissingReason(target),
+      });
+    } else if (currentStrength < weakThreshold) {
+      const targetScore = 9 * weightMultiplier;
+      score += targetScore;
+      reasonCandidates.push({
+        score: targetScore,
         label: getWeakReason(target),
       });
     }
@@ -590,8 +629,8 @@ function getTierReasonCandidates({
 
   if (
     candidateTierRank > targetTierRank &&
-    (boxSummary.seasonCounts?.winter || 0) === 0 &&
-    recommendation.perfume.seasons?.includes("winter")
+    getSeasonStrength(boxSummary, "winter") < 4 &&
+    getSeasonWeight(recommendation.perfume, "winter") >= 7
   ) {
     reasons.push({
       score: 7,
@@ -605,8 +644,8 @@ function getTierReasonCandidates({
 function solvesMissingSeason(perfume, boxSummary) {
   return SEASON_TARGETS.some(
     (season) =>
-      (boxSummary.seasonCounts?.[season] || 0) === 0 &&
-      perfume.seasons?.includes(season)
+      getSeasonStrength(boxSummary, season) < 4 &&
+      getSeasonWeight(perfume, season) >= 6
   );
 }
 
@@ -620,13 +659,25 @@ function solvesPremiumOccasionGap(perfume, boxSummary) {
 
 function helpsWeakestSeason(perfume, boxSummary) {
   const weakestSeason = SEASON_TARGETS.reduce((weakest, season) => {
-    const currentCount = boxSummary.seasonCounts?.[season] || 0;
-    const weakestCount = boxSummary.seasonCounts?.[weakest] || 0;
+    const currentCount = getSeasonStrength(boxSummary, season);
+    const weakestCount = getSeasonStrength(boxSummary, weakest);
 
     return currentCount < weakestCount ? season : weakest;
   }, SEASON_TARGETS[0]);
 
-  return perfume.seasons?.includes(weakestSeason);
+  return getSeasonWeight(perfume, weakestSeason) >= 6;
+}
+
+function getSeasonStrength(boxSummary, season) {
+  return boxSummary.seasonStrengths?.[season] || boxSummary.seasonCounts?.[season] || 0;
+}
+
+function getSeasonWeight(perfume, season) {
+  if (perfume.seasonWeights?.[season] !== undefined) {
+    return perfume.seasonWeights[season];
+  }
+
+  return perfume.seasons?.includes(season) ? 6 : 0;
 }
 
 function getVisibleReasons(reasonCandidates, usedLabels = new Map()) {

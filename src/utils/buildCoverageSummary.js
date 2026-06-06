@@ -17,8 +17,10 @@ export function buildCoverageSummary(boxSummary, perfumes = []) {
   Object.entries(TARGET_COVERAGE).forEach(([category, targets]) => {
     targets.forEach((target) => {
       const count = getCoverageCount(boxSummary, category, target);
+      const strongThreshold = category === "seasons" ? 16 : 3;
+      const coveredThreshold = category === "seasons" ? 4 : 1;
 
-      if (count >= 3) {
+      if (count >= strongThreshold) {
         strengths.push({
           category,
           target,
@@ -27,7 +29,7 @@ export function buildCoverageSummary(boxSummary, perfumes = []) {
         });
       }
 
-      if (count >= 1 && count < 3) {
+      if (count >= coveredThreshold && count < strongThreshold) {
         strengths.push({
           category,
           target,
@@ -41,8 +43,9 @@ export function buildCoverageSummary(boxSummary, perfumes = []) {
   Object.entries(GAP_TARGETS).forEach(([category, targets]) => {
     targets.forEach((target) => {
       const count = getCoverageCount(boxSummary, category, target);
+      const gapThreshold = category === "seasons" ? 4 : 1;
 
-      if (count === 0) {
+      if (count < gapThreshold) {
         gaps.push({
           category,
           target,
@@ -57,7 +60,9 @@ export function buildCoverageSummary(boxSummary, perfumes = []) {
         });
 
         const recommendation = perfumes.find((perfume) =>
-          perfume[category]?.includes(target)
+          category === "seasons"
+            ? getSeasonWeight(perfume, target) >= 6
+            : perfume[category]?.includes(target)
         );
 
         if (recommendation) {
@@ -81,7 +86,7 @@ export function buildCoverageSummary(boxSummary, perfumes = []) {
 function getCoverageCount(boxSummary, category, target) {
   const countMapByCategory = {
     occasions: boxSummary.occasionCounts,
-    seasons: boxSummary.seasonCounts,
+    seasons: boxSummary.seasonStrengths || boxSummary.seasonCounts,
     vibes: boxSummary.vibeCounts,
   };
 
@@ -105,4 +110,12 @@ function formatLabel(value) {
     .filter(Boolean)
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
     .join(" ");
+}
+
+function getSeasonWeight(perfume, season) {
+  if (perfume.seasonWeights?.[season] !== undefined) {
+    return perfume.seasonWeights[season];
+  }
+
+  return perfume.seasons?.includes(season) ? 6 : 0;
 }

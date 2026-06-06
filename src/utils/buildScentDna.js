@@ -12,13 +12,15 @@ export function buildScentDna(selectedPerfumes, boxSummary) {
 
   const topAccords = buildRankedMetrics(accordCounts, totalPerfumes, 5);
   const topVibes = buildRankedMetrics(boxSummary.vibeCounts, totalPerfumes, 5);
+  const maxSeasonStrength = totalPerfumes * 10;
   const seasonCoverage = SEASON_TARGETS.map((season) => {
-    const count = boxSummary.seasonCounts[season] || 0;
+    const count =
+      boxSummary.seasonStrengths?.[season] || boxSummary.seasonCounts[season] || 0;
 
     return {
       label: season,
       count,
-      percent: Math.round((count / totalPerfumes) * 100),
+      percent: Math.round((count / maxSeasonStrength) * 100),
     };
   });
 

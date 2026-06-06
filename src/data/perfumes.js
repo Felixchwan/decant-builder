@@ -1,7 +1,8 @@
-export const perfumes = [
+const perfumeCatalog = [
 {
   id: 1,
   name: "Acqua di Gio EDT",
+  shortName: "ADG EDT",
   brand: "Giorgio Armani",
   points: 1,
     image: "/images/perfumes/bronze/batch-01/acqua-di-gio-edt.png",
@@ -41,6 +42,7 @@ export const perfumes = [
 {
   id: 2,
   name: "Light Blue Pour Homme EDT",
+  shortName: "Light Blue",
   brand: "Dolce & Gabbana",
   points: 1,
   image: "/images/perfumes/bronze/batch-01/light-blue-pour-homme-edt.png",
@@ -84,6 +86,7 @@ export const perfumes = [
   {
   id: 3,
   name: "Versace Pour Homme",
+  shortName: "VPH",
   brand: "Versace",
   points: 1,
   image: "/images/perfumes/bronze/batch-01/versace-pour-homme.png",
@@ -137,6 +140,7 @@ export const perfumes = [
   {
   id: 4,
   name: "Montblanc Legend EDT",
+  shortName: "Legend",
   brand: "Montblanc",
   points: 1,
   image: "/images/perfumes/bronze/batch-01/montblanc-legend-edt.png",
@@ -191,6 +195,7 @@ export const perfumes = [
 {
   id: 5,
   name: "Le Male",
+  shortName: "Le Male",
   brand: "Jean Paul Gaultier",
   points: 1,
   image: "/images/perfumes/bronze/batch-01/le-male.png",
@@ -245,6 +250,7 @@ export const perfumes = [
 {
   id: 6,
   name: "Eros EDP",
+  shortName: "Eros EDP",
   brand: "Versace",
   points: 1,
   image: "/images/perfumes/bronze/batch-01/eros-edp.png",
@@ -301,6 +307,7 @@ export const perfumes = [
 {
   id: 7,
   name: "Hugo Boss The Scent EDT",
+  shortName: "The Scent",
   brand: "Hugo Boss",
   points: 1,
   image: "/images/perfumes/bronze/batch-01/hugo-boss-the-scent-edt.png",
@@ -351,6 +358,7 @@ export const perfumes = [
 {
   id: 8,
   name: "The Most Wanted",
+  shortName: "Most Wanted",
   brand: "Azzaro",
   points: 1,
   image: "/images/perfumes/bronze/batch-01/the-most-wanted.png",
@@ -395,6 +403,7 @@ export const perfumes = [
 {
 id: 9,
 name: "Fierce",
+shortName: "Fierce",
 brand: "Abercrombie & Fitch",
 points: 1,
 image: "/images/perfumes/bronze/batch-01/fierce.png",
@@ -410,6 +419,7 @@ vibes: ["fresh", "clean", "playful"]
 {
 id: 10,
 name: "L'Homme Idéal EDT",
+shortName: "Ideal EDT",
 brand: "Guerlain",
 points: 1,
 image: "/images/perfumes/bronze/batch-01/lhomme-ideal-edt.png",
@@ -425,6 +435,7 @@ vibes: ["elegant", "versatile", "unique"]
 {
 id: 11,
 name: "Scandal Pour Homme",
+shortName: "Scandal",
 brand: "Jean Paul Gaultier",
 points: 1,
 image: "/images/perfumes/bronze/batch-01/scandal-pour-homme.png",
@@ -440,6 +451,7 @@ vibes: ["bold", "playful", "warm"]
 {
 id: 12,
 name: "CH Men",
+shortName: "CH Men",
 brand: "Carolina Herrera",
 points: 1,
 image: "/images/perfumes/bronze/batch-01/ch-men.png",
@@ -455,6 +467,7 @@ vibes: ["warm", "elegant", "confident"]
 {
 id: 13,
 name: "The One for Men EDP",
+shortName: "The One EDP",
 brand: "Dolce & Gabbana",
 points: 1,
 image: "/images/perfumes/bronze/batch-01/the-one-for-men-edp.png",
@@ -470,6 +483,7 @@ vibes: ["seductive", "warm", "elegant"]
 {
 id: 14,
 name: "Halloween Man",
+shortName: "Halloween Man",
 brand: "Halloween",
 points: 1,
 image: "/images/perfumes/bronze/batch-01/halloween-man.png",
@@ -485,6 +499,7 @@ vibes: ["playful", "bold", "warm"]
 {
 id: 15,
 name: "Polo Black",
+shortName: "Polo Black",
 brand: "Ralph Lauren",
 points: 1,
 image: "/images/perfumes/bronze/batch-01/polo-black.png",
@@ -500,6 +515,7 @@ vibes: ["fresh", "relaxed", "approachable"]
 {
 id: 16,
 name: "Uomo Salvatore Ferragamo Signature",
+shortName: "Uomo Signature",
 brand: "Salvatore Ferragamo",
 points: 1,
 image: "/images/perfumes/bronze/batch-02/uomo-signature.png",
@@ -515,6 +531,7 @@ vibes: ["dark", "cozy", "warm"]
 {
 id: 17,
 name: "Gentlemen Only",
+shortName: "Gentlemen Only",
 brand: "Givenchy",
 points: 1,
 image: "/images/perfumes/bronze/batch-02/gentlemen-only.png",
@@ -530,6 +547,7 @@ vibes: ["clean", "elegant", "confident"]
 {
 id: 18,
 name: "L.12.12 Blanc Eau de Parfum",
+shortName: "L.12.12 Blanc",
 brand: "Lacoste",
 points: 1,
 image: "/images/perfumes/bronze/batch-02/lacoste-l1212-blanc-edp.png",
@@ -545,6 +563,7 @@ vibes: ["fresh", "clean", "natural"]
 {
 id: 19,
 name: "Club de Nuit Intense Man",
+shortName: "CDNIM",
 brand: "Armaf",
 points: 1,
 image: "/images/perfumes/bronze/batch-02/club-de-nuit-intense-man.png",
@@ -560,6 +579,7 @@ vibes: ["bold", "confident", "versatile"]
 {
 id: 20,
 name: "F by Ferragamo Black",
+shortName: "F Black",
 brand: "Salvatore Ferragamo",
 points: 1,
 image: "/images/perfumes/bronze/batch-02/f-by-ferragamo-black.png",
@@ -575,6 +595,7 @@ vibes: ["warm", "confident", "versatile"]
 {
 id: 32,
 name: "Guess Man Gold",
+shortName: "Guess Gold",
 brand: "Guess",
 points: 1,
 image: "/images/perfumes/bronze/batch-02/guess-man-gold.png",
@@ -590,6 +611,7 @@ vibes: ["warm", "classic", "confident"]
 {
 id: 21,
 name: "Halloween Man Mystery",
+shortName: "Mystery",
 brand: "Halloween",
 points: 1,
 image: "/images/perfumes/bronze/batch-02/halloween-man-mystery.png",
@@ -605,6 +627,7 @@ vibes: ["mysterious", "bold", "warm"]
 {
 id: 22,
 name: "Legend Blue",
+shortName: "Legend Blue",
 brand: "Montblanc",
 points: 1,
 image: "/images/perfumes/bronze/batch-02/legend-blue.png",
@@ -620,6 +643,7 @@ vibes: ["fresh", "clean", "modern"]
 {
 id: 23,
 name: "Legend EDP",
+shortName: "Legend EDP",
 brand: "Montblanc",
 points: 1,
 image: "/images/perfumes/bronze/batch-02/legend-edp.png",
@@ -635,6 +659,7 @@ vibes: ["clean", "elegant", "confident"]
 {
 id: 24,
 name: "Legend Red",
+shortName: "Legend Red",
 brand: "Montblanc",
 points: 1,
 image: "/images/perfumes/bronze/batch-02/legend-red.png",
@@ -650,6 +675,7 @@ vibes: ["energetic", "bold", "fresh"]
 {
 id: 25,
 name: "Montblanc Explorer",
+shortName: "Explorer",
 brand: "Montblanc",
 points: 1,
 image: "/images/perfumes/bronze/batch-02/montblanc-explorer.png",
@@ -665,6 +691,7 @@ vibes: ["versatile", "confident", "modern"]
 {
 id: 26,
 name: "Polo Red EDT",
+shortName: "Polo Red",
 brand: "Ralph Lauren",
 points: 1,
 image: "/images/perfumes/bronze/batch-02/polo-red-edt.png",
@@ -680,6 +707,7 @@ vibes: ["energetic", "bold", "playful"]
 {
 id: 27,
 name: "Touch for Men",
+shortName: "Touch",
 brand: "Burberry",
 points: 1,
 image: "/images/perfumes/bronze/batch-02/touch-for-men.png",
@@ -695,6 +723,7 @@ vibes: ["clean", "soft", "versatile"]
 {
 id: 28,
 name: "Tous Man",
+shortName: "Tous Man",
 brand: "Tous",
 points: 1,
 image: "/images/perfumes/bronze/batch-02/tous-man.png",
@@ -710,6 +739,7 @@ vibes: ["fresh", "bright", "easy"]
 {
 id: 29,
 name: "Versace Eros Flame",
+shortName: "Eros Flame",
 brand: "Versace",
 points: 1,
 image: "/images/perfumes/bronze/batch-02/versace-eros-flame.png",
@@ -725,6 +755,7 @@ vibes: ["bold", "warm", "confident"]
 {
 id: 30,
 name: "Vibrant Leather Bogoss",
+shortName: "Vibrant Leather",
 brand: "Zara",
 points: 1,
 image: "/images/perfumes/bronze/batch-02/vibrant-leather-bogoss.png",
@@ -740,6 +771,7 @@ vibes: ["fresh", "modern", "easy"]
 {
 id: 31,
 name: "Viking Cairo",
+shortName: "Viking Cairo",
 brand: "Bharara",
 points: 1,
 image: "/images/perfumes/bronze/batch-02/viking-cairo.png",
@@ -755,6 +787,7 @@ vibes: ["fresh", "bright", "warm"]
 {
   id: 100,
   name: "Arancia di Capri",
+  shortName: "Arancia",
   brand: "Acqua di Parma",
   points: 1.5,
   image: "/images/perfumes/silver/arancia-di-capri.png",
@@ -785,6 +818,7 @@ baseNotes: ["caramel", "musk"],
 {
   id: 101,
   name: "Essenza",
+  shortName: "Essenza",
   brand: "Acqua di Parma",
   points: 1.5,
   image: "/images/perfumes/silver/essenza.png",
@@ -830,6 +864,7 @@ baseNotes: ["caramel", "musk"],
 {
   id: 102,
   name: "Fico di Amalfi",
+  shortName: "Fico Amalfi",
   brand: "Acqua di Parma",
   points: 1.5,
   image: "/images/perfumes/silver/fico-di-amalfi.png",
@@ -884,6 +919,7 @@ baseNotes: ["caramel", "musk"],
 {
   id: 103,
   name: "Mandarino di Sicilia",
+  shortName: "Mandarino",
   brand: "Acqua di Parma",
   points: 1.5,
   image: "/images/perfumes/silver/mandarino-di-sicilia.png",
@@ -937,6 +973,7 @@ baseNotes: ["caramel", "musk"],
 {
   id: 201,
   name: "Dior Homme Sport",
+  shortName: "Homme Sport",
   brand: "Dior",
   points: 2,
   image: "/images/perfumes/gold/dior-homme-sport.png",
@@ -991,6 +1028,7 @@ baseNotes: ["caramel", "musk"],
 {
   id: 202,
   name: "Sauvage EDP",
+  shortName: "Sauvage EDP",
   brand: "Dior",
   points: 2,
   image: "/images/perfumes/gold/sauvage-edp.png",
@@ -1044,6 +1082,7 @@ baseNotes: ["caramel", "musk"],
 {
   id: 203,
   name: "Loewe 7 Cobalt",
+  shortName: "7 Cobalt",
   brand: "Loewe",
   points: 2,
   image: "/images/perfumes/gold/loewe-7-cobalt.png",
@@ -1094,6 +1133,7 @@ baseNotes: ["caramel", "musk"],
 {
   id: 204,
   name: "Replica By The Fireplace",
+  shortName: "By The Fireplace",
   brand: "Maison Martin Margiela",
   points: 2,
   image: "/images/perfumes/gold/replica-by-the-fireplace.png",
@@ -1146,6 +1186,7 @@ baseNotes: ["caramel", "musk"],
 {
   id: 301,
   name: "Allure Homme Edition Blanche EDP",
+  shortName: "Edition Blanche",
   brand: "Chanel",
   points: 2.5,
   image: "/images/perfumes/platinum/allure-homme-edition-blanche-edp.avif",
@@ -1197,6 +1238,7 @@ baseNotes: ["caramel", "musk"],
 {
   id: 302,
   name: "Allure Homme Sport Superleggera",
+  shortName: "Superleggera",
   brand: "Chanel",
   points: 2.5,
   image: "/images/perfumes/platinum/allure-homme-sport-superleggera.png",
@@ -1250,6 +1292,7 @@ baseNotes: ["caramel", "musk"],
 {
   id: 303,
   name: "Bois Imperial",
+  shortName: "Bois Imperial",
   brand: "Essential Parfums",
   points: 2.5,
   image: "/images/perfumes/platinum/bois-imperial.png",
@@ -1299,6 +1342,7 @@ baseNotes: ["caramel", "musk"],
 {
   id: 304,
   name: "Divine Vanille",
+  shortName: "Divine Vanille",
   brand: "Essential Parfums",
   points: 2.5,
   image: "/images/perfumes/platinum/divine-vanille.png",
@@ -1354,6 +1398,7 @@ baseNotes: ["caramel", "musk"],
 {
   id: 305,
   name: "Orange X Santal",
+  shortName: "Orange Santal",
   brand: "Essential Parfums",
   points: 2.5,
   image: "/images/perfumes/platinum/orange-x-santal.png",
@@ -1401,6 +1446,7 @@ baseNotes: ["caramel", "musk"],
 {
   id: 401,
   name: "Silver Mountain Water",
+  shortName: "SMW",
   brand: "Creed",
   points: 4,
   image: "/images/perfumes/diamond/silver-mountain-water.png",
@@ -1452,6 +1498,7 @@ baseNotes: ["caramel", "musk"],
 {
   id: 402,
   name: "Sauvage Elixir",
+  shortName: "Elixir",
   brand: "Dior",
   points: 4,
   image: "/images/perfumes/diamond/sauvage-elixir.png",
@@ -1505,6 +1552,7 @@ baseNotes: ["caramel", "musk"],
 {
   id: 403,
   name: "Carlisle",
+  shortName: "Carlisle",
   brand: "Parfums de Marly",
   points: 4.5,
   image: "/images/perfumes/diamond/carlisle.png",
@@ -1558,6 +1606,7 @@ baseNotes: ["caramel", "musk"],
 {
   id: 404,
   name: "Layton",
+  shortName: "Layton",
   brand: "Parfums de Marly",
   points: 4,
   image: "/images/perfumes/diamond/layton.png",
@@ -1618,6 +1667,7 @@ baseNotes: ["caramel", "musk"],
 {
   id: 500,
   name: "Squid",
+  shortName: "Squid",
   brand: "Zoologist",
   points: 5,
   image: "/images/perfumes/mythic/squid.png",
@@ -1674,6 +1724,7 @@ baseNotes: ["caramel", "musk"],
 {
   id: 501,
   name: "Tuxedo",
+  shortName: "Sharp Patchouli",
   subtitle: "Sharp Patchouli",
   subtitleColor: "#d4c46a",
   subtitleGlow: true,
@@ -1729,3 +1780,77 @@ baseNotes: ["caramel", "musk"],
 },
 
 ];
+
+const SEASON_WEIGHTS_BY_ID = {
+  1: { spring: 8, summer: 10, fall: 3, winter: 1 },
+  2: { spring: 7, summer: 10, fall: 2, winter: 0 },
+  3: { spring: 8, summer: 9, fall: 3, winter: 1 },
+  4: { spring: 7, summer: 4, fall: 7, winter: 3 },
+  5: { spring: 4, summer: 2, fall: 8, winter: 8 },
+  6: { spring: 5, summer: 2, fall: 8, winter: 7 },
+  7: { spring: 5, summer: 2, fall: 8, winter: 8 },
+  8: { spring: 2, summer: 0, fall: 9, winter: 10 },
+  9: { spring: 8, summer: 8, fall: 5, winter: 2 },
+  10: { spring: 7, summer: 3, fall: 7, winter: 4 },
+  11: { spring: 3, summer: 1, fall: 8, winter: 8 },
+  12: { spring: 6, summer: 3, fall: 7, winter: 6 },
+  13: { spring: 3, summer: 0, fall: 9, winter: 9 },
+  14: { spring: 3, summer: 1, fall: 8, winter: 8 },
+  15: { spring: 7, summer: 7, fall: 6, winter: 3 },
+  16: { spring: 2, summer: 0, fall: 9, winter: 9 },
+  17: { spring: 7, summer: 4, fall: 7, winter: 4 },
+  18: { spring: 8, summer: 9, fall: 3, winter: 1 },
+  19: { spring: 7, summer: 6, fall: 6, winter: 3 },
+  20: { spring: 4, summer: 1, fall: 8, winter: 8 },
+  21: { spring: 3, summer: 1, fall: 8, winter: 8 },
+  22: { spring: 8, summer: 8, fall: 5, winter: 2 },
+  23: { spring: 7, summer: 4, fall: 7, winter: 3 },
+  24: { spring: 7, summer: 7, fall: 6, winter: 3 },
+  25: { spring: 8, summer: 7, fall: 6, winter: 3 },
+  26: { spring: 7, summer: 7, fall: 6, winter: 3 },
+  27: { spring: 7, summer: 3, fall: 7, winter: 5 },
+  28: { spring: 8, summer: 8, fall: 4, winter: 2 },
+  29: { spring: 4, summer: 1, fall: 8, winter: 8 },
+  30: { spring: 8, summer: 8, fall: 5, winter: 2 },
+  31: { spring: 7, summer: 8, fall: 5, winter: 2 },
+  32: { spring: 4, summer: 1, fall: 8, winter: 8 },
+  100: { spring: 8, summer: 10, fall: 2, winter: 0 },
+  101: { spring: 8, summer: 10, fall: 2, winter: 0 },
+  102: { spring: 9, summer: 10, fall: 2, winter: 0 },
+  103: { spring: 8, summer: 10, fall: 2, winter: 0 },
+  201: { spring: 8, summer: 8, fall: 5, winter: 2 },
+  202: { spring: 6, summer: 3, fall: 8, winter: 7 },
+  203: { spring: 6, summer: 2, fall: 8, winter: 7 },
+  204: { spring: 1, summer: 0, fall: 9, winter: 10 },
+  301: { spring: 8, summer: 8, fall: 5, winter: 2 },
+  302: { spring: 8, summer: 9, fall: 4, winter: 1 },
+  303: { spring: 8, summer: 7, fall: 6, winter: 3 },
+  304: { spring: 2, summer: 0, fall: 9, winter: 9 },
+  305: { spring: 8, summer: 8, fall: 5, winter: 2 },
+  401: { spring: 8, summer: 8, fall: 3, winter: 2 },
+  402: { spring: 2, summer: 0, fall: 9, winter: 10 },
+  403: { spring: 2, summer: 0, fall: 9, winter: 10 },
+  404: { spring: 5, summer: 1, fall: 9, winter: 9 },
+  500: { spring: 2, summer: 1, fall: 8, winter: 9 },
+  501: { spring: 4, summer: 1, fall: 9, winter: 8 },
+};
+
+const DEFAULT_SEASON_WEIGHTS = {
+  spring: 0,
+  summer: 0,
+  fall: 0,
+  winter: 0,
+};
+
+export const perfumes = perfumeCatalog.map((perfume) => ({
+  ...perfume,
+  seasonWeights:
+    SEASON_WEIGHTS_BY_ID[perfume.id] || buildSeasonWeights(perfume.seasons),
+}));
+
+function buildSeasonWeights(seasons = []) {
+  return {
+    ...DEFAULT_SEASON_WEIGHTS,
+    ...Object.fromEntries(seasons.map((season) => [season, 6])),
+  };
+}

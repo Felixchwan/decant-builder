@@ -193,6 +193,26 @@ const confirmAddPerfume = () => {
     );
   }
 
+  function reorderPerfumes(fromIndex, toIndex) {
+    setSelectedPerfumes((current) => {
+      if (
+        fromIndex === toIndex ||
+        fromIndex < 0 ||
+        toIndex < 0 ||
+        fromIndex >= current.length ||
+        toIndex >= current.length
+      ) {
+        return current;
+      }
+
+      const reordered = [...current];
+      const [movedPerfume] = reordered.splice(fromIndex, 1);
+      reordered.splice(toIndex, 0, movedPerfume);
+
+      return reordered;
+    });
+  }
+
   function clearBox() {
     setSelectedPerfumes([]);
   }
@@ -278,6 +298,7 @@ const confirmAddPerfume = () => {
           boxSummary={boxSummary}
           onClearBox={clearBox}
           onRemovePerfume={removePerfume}
+          onReorderPerfumes={reorderPerfumes}
           minSlots={MIN_BOX_SLOTS}
           minPoints={MIN_BOX_POINTS}
           missingSlots={missingSlots}
