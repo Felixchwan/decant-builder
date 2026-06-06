@@ -23,6 +23,7 @@ import {
 
 const PERFUME_IMAGE_FALLBACK =
   "/images/perfumes/placeholders/perfume-placeholder.svg";
+const FRAGRANCE_DETAILS_HINT_KEY = "fragranceDetailsHintSeen";
 
 function App() {
   const [selectedPerfumes, setSelectedPerfumes] = useState([]);
@@ -268,16 +269,12 @@ const confirmAddPerfume = () => {
           <div className="catalog-grid">
             {visiblePerfumes.map((perfume) => {
               const tierData = getTierData(perfume.id);
-              const noteNames = getPerfumeNoteIds(perfume)
-                .map((noteId) => notes[noteId]?.name)
-                .filter(Boolean);
 
               return (
                 <PerfumeCard
                   key={perfume.id}
                   perfume={perfume}
                   tierData={tierData}
-                  noteNames={noteNames}
                   onAddToBox={addPerfume}
                   onOpenDetails={setDetailPerfume}
                   isDisabled={totalSlots >= MAX_SELECTABLE_SLOTS}
@@ -327,10 +324,7 @@ const confirmAddPerfume = () => {
               ? "Box full"
               : "Add to Box"
         }
-        onAddToBox={(perfume) => {
-          addPerfume(perfume);
-          setDetailPerfume(null);
-        }}
+        onAddToBox={addPerfume}
         onPrevious={() => navigateDetailPerfume(-1)}
         onNext={() => navigateDetailPerfume(1)}
         previousPerfume={previousDetailPerfume}
@@ -385,7 +379,20 @@ function PerfumeDetailsModal({
   const touchStartRef = useRef(null);
   const touchCurrentRef = useRef(null);
   const swipeFeedbackTimeoutRef = useRef(null);
+  const addFeedbackTimeoutRef = useRef(null);
   const [swipeFeedback, setSwipeFeedback] = useState("");
+  const [addFeedback, setAddFeedback] = useState("");
+  const [showNavigationHint, setShowNavigationHint] = useState(() => {
+    try {
+      if (typeof window === "undefined" || !window.localStorage) {
+        return true;
+      }
+
+      return window.localStorage.getItem(FRAGRANCE_DETAILS_HINT_KEY) !== "true";
+    } catch {
+      return true;
+    }
+  });
   const usesGeneralNotes = (perfume.generalNotes || []).length > 0;
   const hasPyramidNotes =
     (perfume.topNotes || []).length > 0 ||
@@ -397,8 +404,28 @@ function PerfumeDetailsModal({
       if (swipeFeedbackTimeoutRef.current) {
         window.clearTimeout(swipeFeedbackTimeoutRef.current);
       }
+
+      if (addFeedbackTimeoutRef.current) {
+        window.clearTimeout(addFeedbackTimeoutRef.current);
+      }
     };
   }, []);
+
+  useEffect(() => {
+    setAddFeedback("");
+  }, [perfume.id]);
+
+  useEffect(() => {
+    if (!showNavigationHint) {
+      return undefined;
+    }
+
+    const hintSeenTimer = window.setTimeout(() => {
+      markNavigationHintSeen();
+    }, 800);
+
+    return () => window.clearTimeout(hintSeenTimer);
+  }, [showNavigationHint]);
 
   function showSwipeFeedback(direction) {
     if (swipeFeedbackTimeoutRef.current) {
@@ -463,8 +490,46 @@ function PerfumeDetailsModal({
     onPrevious();
   }
 
+  function handleAddToBox() {
+    if (isAddDisabled) {
+      return;
+    }
+
+    onAddToBox(perfume);
+
+    if (perfume.warningMessage) {
+      return;
+    }
+
+    if (addFeedbackTimeoutRef.current) {
+      window.clearTimeout(addFeedbackTimeoutRef.current);
+    }
+
+    setAddFeedback("Added to Box");
+    addFeedbackTimeoutRef.current = window.setTimeout(() => {
+      setAddFeedback("");
+    }, 1600);
+  }
+
+  function markNavigationHintSeen() {
+    if (!showNavigationHint) {
+      return;
+    }
+
+    try {
+      window.localStorage.setItem(FRAGRANCE_DETAILS_HINT_KEY, "true");
+    } catch {
+      // The hint is decorative; storage failures should not affect browsing.
+    }
+  }
+
+  function handleClose() {
+    markNavigationHintSeen();
+    onClose();
+  }
+
   return (
-    <div className="modal-overlay" onClick={onClose}>
+    <div className="modal-overlay" onClick={handleClose}>
       <div
         className={`perfume-details-modal ${
           swipeFeedback ? `is-swipe-${swipeFeedback}` : ""
@@ -482,7 +547,7 @@ function PerfumeDetailsModal({
           <button
             type="button"
             className="perfume-details-close"
-            onClick={onClose}
+            onClick={handleClose}
             aria-label="Close fragrance details"
           >
             X
@@ -494,28 +559,6 @@ function PerfumeDetailsModal({
             <p>{perfume.brand}</p>
           </div>
 
-          <div className="perfume-details-header-actions">
-            <button
-              type="button"
-              onClick={onPrevious}
-              disabled={!canNavigate}
-              title={
-                previousPerfume
-                  ? `Previous: ${previousPerfume.name}`
-                  : "Previous perfume"
-              }
-            >
-              Previous
-            </button>
-            <button
-              type="button"
-              onClick={onNext}
-              disabled={!canNavigate}
-              title={nextPerfume ? `Next: ${nextPerfume.name}` : "Next perfume"}
-            >
-              Next
-            </button>
-          </div>
         </div>
 
         <div className="perfume-details-meta">
@@ -535,24 +578,65 @@ function PerfumeDetailsModal({
 
           <button
             className="perfume-details-meta-add"
-            onClick={() => onAddToBox(perfume)}
+            onClick={handleAddToBox}
             disabled={isAddDisabled}
           >
             {addButtonLabel}
           </button>
         </div>
 
+        <div className={`perfume-details-add-feedback ${addFeedback ? "is-visible" : ""}`} role="status">
+          {addFeedback}
+        </div>
+
         {perfume.image && (
-          <div className="perfume-details-image-panel">
-            <img
-              src={perfume.image}
-              alt={`${perfume.name} bottle`}
-              onError={(event) => {
-                event.currentTarget.onerror = null;
-                event.currentTarget.src = PERFUME_IMAGE_FALLBACK;
-              }}
-            />
-          </div>
+          <>
+            <div className="perfume-details-image-panel">
+              <div className="perfume-details-image-stage">
+                <button
+                  type="button"
+                  className="perfume-image-nav previous"
+                  onClick={onPrevious}
+                  disabled={!canNavigate}
+                  title={
+                    previousPerfume
+                      ? `Previous: ${previousPerfume.name}`
+                      : "Previous perfume"
+                  }
+                  aria-label="Previous fragrance"
+                >
+                  &lt;
+                </button>
+                <img
+                  src={perfume.image}
+                  alt={`${perfume.name} bottle`}
+                  onError={(event) => {
+                    event.currentTarget.onerror = null;
+                    event.currentTarget.src = PERFUME_IMAGE_FALLBACK;
+                  }}
+                />
+                <button
+                  type="button"
+                  className="perfume-image-nav next"
+                  onClick={onNext}
+                  disabled={!canNavigate}
+                  title={nextPerfume ? `Next: ${nextPerfume.name}` : "Next perfume"}
+                  aria-label="Next fragrance"
+                >
+                  &gt;
+                </button>
+              </div>
+
+              {showNavigationHint && (
+                <p className="perfume-details-nav-hint">
+                  <span className="nav-hint-desktop">
+                    Use &larr; &rarr; arrow keys to browse
+                  </span>
+                  <span className="nav-hint-mobile">Swipe sideways to browse</span>
+                </p>
+              )}
+            </div>
+          </>
         )}
 
         <section className="perfume-details-section">

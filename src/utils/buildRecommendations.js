@@ -231,6 +231,7 @@ function buildPreferenceProfile(selectedPerfumes, boxSummary, tierProfile) {
     vibeCounts: boxSummary.vibeCounts || {},
     occasionCounts: boxSummary.occasionCounts || {},
     seasonCounts: boxSummary.seasonStrengths || boxSummary.seasonCounts || {},
+    boxContext: buildBoxContext(boxSummary),
     tierProfile,
     averagePoints,
   };
@@ -273,6 +274,7 @@ function scorePreferenceRecommendation(perfume, preferenceProfile) {
       sharedOccasions,
       sharedSeasons,
       tierSimilarity,
+      boxContext: preferenceProfile.boxContext,
     }),
     scoreBreakdown,
   };
@@ -310,33 +312,40 @@ function getPreferenceReasons({
   sharedAccords,
   sharedVibes,
   sharedOccasions,
-  tierSimilarity,
+  boxContext,
 }) {
   const reasons = [];
-
-  if (sharedAccords.length >= 2) {
-    reasons.push(
-      `Shares ${formatLabel(sharedAccords[0])} and ${formatLabel(
-        sharedAccords[1]
-      )} accords`
-    );
-  } else if (sharedAccords.length === 1) {
-    reasons.push(`Builds on your ${formatLabel(sharedAccords[0])}-forward selections`);
-  }
-
-  if (sharedVibes.includes("fresh") && sharedAccords.includes("aromatic")) {
-    reasons.push("Matches your fresh aromatic direction");
-  } else if (sharedVibes.includes("fresh") || sharedVibes.includes("clean")) {
-    reasons.push("Fits your fresh everyday profile");
-  }
+  const hasDailyFit = sharedOccasions.some((occasion) =>
+    DAILY_OCCASIONS.includes(occasion)
+  );
 
   if (
-    sharedVibes.includes("clean") &&
-    sharedOccasions.some((occasion) => DAILY_OCCASIONS.includes(occasion))
+    sharedVibes.some((vibe) => ["fresh", "clean"].includes(vibe)) ||
+    sharedAccords.some((accord) => ["fresh", "citrus", "marine"].includes(accord))
   ) {
-    reasons.push("Similar to your clean daily picks");
-  } else if (sharedOccasions.some((occasion) => DAILY_OCCASIONS.includes(occasion))) {
-    reasons.push("Matches your everyday wear pattern");
+    reasons.push("Matches your current fresh-clean direction");
+  }
+
+  if (sharedAccords.includes("aromatic")) {
+    reasons.push("Builds on your aromatic preferences");
+  }
+
+  if (sharedAccords.includes("warm spicy")) {
+    reasons.push("Complements your warm-spicy direction");
+  }
+
+  if (sharedAccords.includes("woody")) {
+    reasons.push("Builds on your woody preferences");
+  }
+
+  if (hasDailyFit && (sharedVibes.includes("clean") || sharedVibes.includes("fresh"))) {
+    reasons.push("Stays close to your everyday style");
+  }
+
+  if (boxContext.isFreshHeavy && addsWarmContrast({ accords: sharedAccords, vibes: sharedVibes })) {
+    reasons.push("Adds contrast without changing the mood too much");
+  } else if (sharedAccords.length >= 2 || sharedVibes.length >= 2) {
+    reasons.push("Adds variety without changing the mood too much");
   }
 
   return [...new Set(reasons)].slice(0, MAX_VISIBLE_REASONS);
@@ -716,11 +725,19 @@ function getOccasionReason(target) {
 
 function getSeasonReason(target, perfume, boxContext) {
   if (target === "winter") {
-    return "Expands Cold-weather Coverage";
+    return "Strengthens weak Winter coverage";
+  }
+
+  if (target === "fall" && getSeasonWeight(perfume, "winter") >= 6) {
+    return "Improves fall and winter versatility";
   }
 
   if (boxContext.isFreshHeavy && addsWarmContrast(perfume)) {
-    return "Balances a Fresh-heavy Collection";
+    return "Balances your fresh-heavy collection";
+  }
+
+  if (boxContext.isWarmWeatherBiased && (target === "fall" || target === "winter")) {
+    return "Balances your warm-weather bias";
   }
 
   return `Expands ${formatLabel(target)} Coverage`;
@@ -728,11 +745,11 @@ function getSeasonReason(target, perfume, boxContext) {
 
 function getVibeReason(target, perfume, boxContext) {
   if (target === "warm" || target === "cozy") {
-    return "Strengthens cold-weather versatility";
+    return "Adds cold-weather depth";
   }
 
   if (target === "seductive" || target === "bold") {
-    return "Strengthens evening versatility";
+    return "Adds a stronger evening option";
   }
 
   if (target === "clean" || target === "versatile") {
@@ -744,7 +761,7 @@ function getVibeReason(target, perfume, boxContext) {
   }
 
   if (boxContext.isSweetFocused && addsFreshOrWoodyContrast(perfume)) {
-    return "Adds contrast to a Sweet-focused Collection";
+    return "Adds contrast to your sweet-heavy profile";
   }
 
   if (target === "fresh") {
@@ -775,15 +792,27 @@ function getVibeSupportReason(target, perfume) {
 }
 
 function getAccordReason(accord, boxContext) {
+  if (accord === "leather") {
+    return "Adds leather depth currently missing";
+  }
+
+  if (accord === "woody") {
+    return "Adds woody depth currently underrepresented";
+  }
+
+  if (accord === "warm spicy") {
+    return "Expands your warm spicy profile";
+  }
+
   if (boxContext.isSweetFocused && isContrastAccord(accord)) {
-    return "Adds contrast to a Sweet-focused Collection";
+    return "Adds contrast to your sweet-heavy profile";
   }
 
   if (boxContext.isFreshHeavy && isWarmAccord(accord)) {
-    return "Balances a Fresh-heavy Collection";
+    return "Adds depth to a fresh-heavy box";
   }
 
-  return `Introduces ${formatLabel(accord)} depth missing from the collection`;
+  return `Adds ${formatLabel(accord)} depth currently missing`;
 }
 
 function buildBoxContext(boxSummary) {
@@ -810,10 +839,31 @@ function buildBoxContext(boxSummary) {
     (accordCounts.sweet || 0) +
     (accordCounts.vanilla || 0) +
     (accordCounts.caramel || 0);
+  const citrusSignals = accordCounts.citrus || 0;
+  const woodySignals = accordCounts.woody || 0;
+  const warmSpicySignals = accordCounts["warm spicy"] || 0;
+  const dailySignals =
+    (boxSummary.occasionCounts?.daily || 0) +
+    (boxSummary.occasionCounts?.office || 0) +
+    (boxSummary.occasionCounts?.casual || 0);
+  const nightSignals =
+    (boxSummary.occasionCounts?.date || 0) +
+    (boxSummary.occasionCounts?.night || 0) +
+    (boxSummary.occasionCounts?.formal || 0);
+  const springSummerStrength =
+    getSeasonStrength(boxSummary, "spring") + getSeasonStrength(boxSummary, "summer");
+  const fallWinterStrength =
+    getSeasonStrength(boxSummary, "fall") + getSeasonStrength(boxSummary, "winter");
 
   return {
     isFreshHeavy: freshSignals >= 5 && freshSignals > warmSignals,
     isSweetFocused: sweetSignals >= 4,
+    isWarmSpicyHeavy: warmSpicySignals >= 3,
+    isCitrusHeavy: citrusSignals >= 3,
+    isWoodyHeavy: woodySignals >= 3,
+    isDailyHeavy: dailySignals >= 5 && dailySignals > nightSignals,
+    isNightHeavy: nightSignals >= 4 && nightSignals > dailySignals,
+    isWarmWeatherBiased: springSummerStrength > fallWinterStrength + 8,
   };
 }
 

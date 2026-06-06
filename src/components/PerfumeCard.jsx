@@ -1,7 +1,6 @@
 function PerfumeCard({
   perfume,
   tierData,
-  noteNames,
   onAddToBox,
   onOpenDetails,
   isDisabled,
@@ -61,16 +60,16 @@ function PerfumeCard({
         ))}
       </div>
 
-      <div className="hover-details">
-        <p>
-          <strong>Notes:</strong> {noteNames.join(", ")}
-        </p>
-        <p>
-          <strong>Best for:</strong>{" "}
-          {(perfume.occasions || []).join(", ")}
-        </p>
-      </div>
+      </button>
 
+      <button
+        type="button"
+        className="perfume-card-info-icon"
+        data-tooltip="View notes & details"
+        aria-label="View notes & details"
+        onClick={() => onOpenDetails(perfume)}
+      >
+        i
       </button>
 
       <div className="perfume-card-compact-actions">
