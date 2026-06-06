@@ -35,17 +35,18 @@ export function buildBoxSummary(selectedPerfumes, notes) {
   }, {});
 
   return {
-  occasions: [...new Set(allOccasions)],
-  seasons: [...new Set(allSeasons)],
-  notes: [...new Set(allNotes)],
-  vibes: [...new Set(allVibes)],
-  accordMap,
+    occasions: [...new Set(allOccasions)],
+    seasons: [...new Set(allSeasons)],
+    notes: [...new Set(allNotes)],
+    vibes: [...new Set(allVibes)],
+    accordMap,
 
-  occasionCounts: buildCountMap(allOccasions),
-  seasonCounts: buildCountMap(allSeasons),
-  seasonStrengths,
-  vibeCounts: buildCountMap(allVibes),
-};
+    occasionCounts: buildCountMap(allOccasions),
+    seasonCounts: buildCountMap(allSeasons),
+    seasonStrengths,
+    vibeCounts: buildCountMap(allVibes),
+  };
+}
 
 function buildCountMap(items) {
   return items.reduce((map, item) => {
@@ -65,5 +66,4 @@ function getSeasonWeights(perfume) {
       perfume.seasons?.includes(season) ? 6 : 0,
     ])
   );
-}
 }

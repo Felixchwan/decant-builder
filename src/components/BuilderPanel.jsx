@@ -66,11 +66,13 @@ function BuilderPanel({
     const curatorInsight = useMemo(
       () =>
         buildCuratorInsight({
+          boxSummary,
           coverageSummary,
           recommendations: curatorBonusLane,
           preference: curatorBonusPreference,
+          selectedCount: selectedPerfumes.length,
         }),
-      [coverageSummary, curatorBonusLane, curatorBonusPreference]
+      [boxSummary, coverageSummary, curatorBonusLane, curatorBonusPreference, selectedPerfumes.length]
     );
     const isCuratorBonusUnlocked =
       totalPoints >= DISCOVERY_BONUS_TARGET_POINTS && totalSlots >= minSlots;
@@ -244,6 +246,7 @@ function BuilderPanel({
         boxSummary={boxSummary}
         coverageSummary={coverageSummary}
         insight={curatorInsight}
+        selectedCount={selectedPerfumes.length}
         isExpanded={isCollectionSnapshotOpen}
         onToggle={() => setIsCollectionSnapshotOpen((isOpen) => !isOpen)}
         onOpenScentLibrary={() => setIsNotesModalOpen(true)}
@@ -471,12 +474,14 @@ function CollectionSnapshot({
   boxSummary,
   coverageSummary,
   insight,
+  selectedCount,
   isExpanded,
   onToggle,
   onOpenScentLibrary,
 }) {
   const seasonRows = buildSeasonCoverageRows(
-    boxSummary.seasonStrengths || boxSummary.seasonCounts || {}
+    boxSummary.seasonStrengths || boxSummary.seasonCounts || {},
+    selectedCount
   );
   const hasProfileData =
     boxSummary.occasions.length > 0 ||
@@ -648,18 +653,20 @@ function ProfileSummaryGroup({ label, values }) {
   );
 }
 
-function buildSeasonCoverageRows(seasonCounts) {
+function buildSeasonCoverageRows(seasonCounts, selectedCount = 0) {
   const seasons = ["spring", "summer", "fall", "winter"];
-  const maxCount = Math.max(1, ...seasons.map((season) => seasonCounts[season] || 0));
+  const maxSeasonStrength = Math.max(1, selectedCount * 10);
 
   return seasons.map((season) => {
-    const count = seasonCounts[season] || 0;
+    const strength = seasonCounts[season] || 0;
+    const score = Math.round((strength / maxSeasonStrength) * 100);
 
     return {
       id: season,
       label: formatLabel(season),
-      count,
-      percent: count > 0 ? Math.max(12, Math.round((count / maxCount) * 100)) : 0,
+      count: score,
+      strength,
+      percent: score,
     };
   });
 }
@@ -739,11 +746,34 @@ function buildHiddenCuratorPicks(recommendations, selectedPerfumeIds) {
 }
 
 function buildCuratorInsight({
+  boxSummary,
   coverageSummary,
   recommendations,
   preference,
+  selectedCount,
 }) {
+  if (selectedCount === 0) {
+    return {
+      strengths: [],
+      improvementGoals: [],
+    };
+  }
+
+  const seasonalRows = buildSeasonCoverageRows(
+    boxSummary.seasonStrengths || boxSummary.seasonCounts || {},
+    selectedCount
+  );
+  const seasonalStrengths = seasonalRows
+    .filter((season) => season.count >= 50)
+    .map((season) => `${getSeasonStrengthLevel(season.count)} ${season.label} Coverage`);
+  const seasonalOpportunities = seasonalRows
+    .filter((season) => season.count < 50)
+    .map((season) => `${getSeasonStrengthLevel(season.count)} ${season.label} Coverage`);
+  const profileStrengths = getCollectionProfileStrengths(boxSummary);
+  const profileOpportunities = getCollectionProfileOpportunities(boxSummary, seasonalRows);
   const strengths = uniqueStrings([
+    ...seasonalStrengths,
+    ...profileStrengths,
     ...(coverageSummary.strengths || []).map((item) => item.label),
   ]).slice(0, 3);
   const recommendationReasons = recommendations.flatMap(
@@ -752,15 +782,113 @@ function buildCuratorInsight({
   const improvementSources =
     preference === "complement"
       ? [
-          ...(coverageSummary.gaps || []).map((item) => item.label),
+          ...seasonalOpportunities,
+          ...profileOpportunities,
+          ...(coverageSummary.gaps || []).map((item) => getGapLabel(item)),
           ...recommendationReasons,
         ]
-      : recommendationReasons;
+      : [
+          ...profileOpportunities,
+          ...seasonalOpportunities,
+          ...recommendationReasons,
+        ];
 
   return {
     strengths,
     improvementGoals: uniqueStrings(improvementSources).slice(0, 3),
   };
+}
+
+function getSeasonStrengthLevel(score) {
+  if (score >= 90) return "Dominant";
+  if (score >= 70) return "Excellent";
+  if (score >= 50) return "Strong";
+  if (score >= 30) return "Moderate";
+  return "Weak";
+}
+
+function getCollectionProfileStrengths(boxSummary) {
+  const strengths = [];
+  const occasionCounts = boxSummary.occasionCounts || {};
+  const vibeCounts = boxSummary.vibeCounts || {};
+  const accordCounts = getAccordCounts(boxSummary);
+
+  if ((occasionCounts.daily || 0) + (occasionCounts.office || 0) >= 3) {
+    strengths.push("Strong Daily Versatility");
+  }
+
+  if ((occasionCounts.date || 0) + (occasionCounts.night || 0) >= 3) {
+    strengths.push("Strong Evening Variety");
+  }
+
+  if ((vibeCounts.fresh || 0) + (accordCounts.fresh || 0) + (accordCounts.citrus || 0) >= 4) {
+    strengths.push("Fresh-forward Profile");
+  }
+
+  if ((vibeCounts.warm || 0) + (vibeCounts.cozy || 0) + (accordCounts.amber || 0) >= 4) {
+    strengths.push("Strong Cold-weather Depth");
+  }
+
+  return strengths;
+}
+
+function getCollectionProfileOpportunities(boxSummary, seasonalRows) {
+  const opportunities = [];
+  const occasionCounts = boxSummary.occasionCounts || {};
+  const vibeCounts = boxSummary.vibeCounts || {};
+  const accordCounts = getAccordCounts(boxSummary);
+  const winterScore = seasonalRows.find((season) => season.id === "winter")?.count || 0;
+  const summerScore = seasonalRows.find((season) => season.id === "summer")?.count || 0;
+  const freshSignals =
+    (vibeCounts.fresh || 0) + (vibeCounts.clean || 0) + (accordCounts.citrus || 0);
+  const warmSignals =
+    (vibeCounts.warm || 0) +
+    (vibeCounts.cozy || 0) +
+    (accordCounts.amber || 0) +
+    (accordCounts["warm spicy"] || 0);
+
+  if (winterScore < 50 && warmSignals < freshSignals) {
+    opportunities.push("Limited Cold-weather Depth");
+  }
+
+  if (summerScore < 30) {
+    opportunities.push("Limited Warm-weather Freshness");
+  }
+
+  if ((occasionCounts.date || 0) + (occasionCounts.night || 0) < 2) {
+    opportunities.push("Missing Evening Variety");
+  }
+
+  if (!accordCounts.woody) {
+    opportunities.push("Underrepresented Woody Fragrances");
+  }
+
+  if (!accordCounts.leather && (occasionCounts.date || 0) + (occasionCounts.night || 0) < 3) {
+    opportunities.push("Missing Leather Depth");
+  }
+
+  if (freshSignals >= warmSignals + 3) {
+    opportunities.push("Fresh-heavy Profile");
+  }
+
+  return opportunities;
+}
+
+function getGapLabel(item) {
+  if (item.category === "seasons") {
+    return `Weak ${formatLabel(item.target)} Coverage`;
+  }
+
+  return `Limited ${formatLabel(item.target)} Variety`;
+}
+
+function getAccordCounts(boxSummary) {
+  return Object.fromEntries(
+    Object.entries(boxSummary.accordMap || {}).map(([accord, perfumeNames]) => [
+      accord,
+      perfumeNames.length,
+    ])
+  );
 }
 
 function uniqueStrings(values) {

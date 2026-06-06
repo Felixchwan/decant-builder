@@ -106,7 +106,7 @@ function scoreRecommendation({
     targets: SEASON_TARGETS,
     strengths: boxSummary.seasonStrengths || boxSummary.seasonCounts,
     getMissingReason: (target) => getSeasonReason(target, perfume, boxContext),
-    getWeakReason: (target) => `Reinforces ${formatLabel(target)} coverage`,
+    getWeakReason: (target) => `Strengthens ${formatLabel(target)} Coverage`,
     reasonCandidates,
   });
 
@@ -119,7 +119,7 @@ function scoreRecommendation({
     weakWeight: 4,
     maxScore: 20,
     getMissingReason: (target) => getOccasionReason(target),
-    getWeakReason: (target) => `Reinforces ${formatLabel(target)} use`,
+    getWeakReason: (target) => `Improves ${formatLabel(target)} versatility`,
     reasonCandidates,
   });
 
@@ -152,13 +152,6 @@ function scoreRecommendation({
     (noteId) => !selectedNotes.has(noteId)
   );
   const noteScore = Math.min(15, newNotes.length * 1.5);
-
-  if (newNotes.length > 0) {
-    reasonCandidates.push({
-      score: noteScore,
-      label: "Broadens the fragrance palette",
-    });
-  }
 
   if (
     scentDna?.scores?.seasonBalance < 80 &&
@@ -346,12 +339,6 @@ function getPreferenceReasons({
     reasons.push("Matches your everyday wear pattern");
   }
 
-  if (tierSimilarity >= 6) {
-    reasons.push("Fits your current box tier");
-  } else if (tierSimilarity >= 4) {
-    reasons.push("Stays close to your current box tier");
-  }
-
   return [...new Set(reasons)].slice(0, MAX_VISIBLE_REASONS);
 }
 
@@ -402,6 +389,11 @@ function scoreSeasonCoverage({
   const missingThreshold = 4;
   const weakThreshold = 10;
   const maxScore = 30;
+  const totalStrength = targets.reduce(
+    (sum, target) => sum + (strengths?.[target] || 0),
+    0
+  );
+  const idealStrength = totalStrength > 0 ? totalStrength / targets.length : 10;
   let score = 0;
 
   targets.forEach((target) => {
@@ -413,6 +405,10 @@ function scoreSeasonCoverage({
 
     const currentStrength = strengths?.[target] || 0;
     const weightMultiplier = candidateWeight / 10;
+    const deficitMultiplier =
+      idealStrength > 0
+        ? Math.max(0, Math.min(1, (idealStrength - currentStrength) / idealStrength))
+        : 1;
 
     if (currentStrength < missingThreshold) {
       const targetScore = 18 * weightMultiplier;
@@ -421,8 +417,8 @@ function scoreSeasonCoverage({
         score: targetScore,
         label: getMissingReason(target),
       });
-    } else if (currentStrength < weakThreshold) {
-      const targetScore = 9 * weightMultiplier;
+    } else if (currentStrength < weakThreshold || deficitMultiplier > 0.2) {
+      const targetScore = 9 * weightMultiplier * Math.max(0.55, deficitMultiplier);
       score += targetScore;
       reasonCandidates.push({
         score: targetScore,
@@ -608,22 +604,14 @@ function getTierReasonCandidates({
   boxSummary,
   candidateTierRank,
   targetTierRank,
-  tierAffinity,
   premiumException,
 }) {
   const reasons = [];
 
-  if (candidateTierRank === targetTierRank && tierAffinity > 0) {
-    reasons.push({
-      score: 9,
-      label: "Fits your current box tier",
-    });
-  }
-
   if (candidateTierRank > targetTierRank && premiumException >= 8) {
     reasons.push({
       score: 8,
-      label: "Premium pick with strong coverage impact",
+      label: "Adds high-impact coverage",
     });
   }
 
@@ -634,7 +622,7 @@ function getTierReasonCandidates({
   ) {
     reasons.push({
       score: 7,
-      label: "Worth the upgrade for Winter coverage",
+      label: "Strengthens Winter Coverage",
     });
   }
 
@@ -728,14 +716,14 @@ function getOccasionReason(target) {
 
 function getSeasonReason(target, perfume, boxContext) {
   if (target === "winter") {
-    return "Expands Winter coverage";
+    return "Expands Cold-weather Coverage";
   }
 
   if (boxContext.isFreshHeavy && addsWarmContrast(perfume)) {
-    return "Balances a fresh-heavy profile";
+    return "Balances a Fresh-heavy Collection";
   }
 
-  return "Expands seasonal coverage";
+  return `Expands ${formatLabel(target)} Coverage`;
 }
 
 function getVibeReason(target, perfume, boxContext) {
@@ -756,7 +744,7 @@ function getVibeReason(target, perfume, boxContext) {
   }
 
   if (boxContext.isSweetFocused && addsFreshOrWoodyContrast(perfume)) {
-    return "Adds contrast to a sweet-focused box";
+    return "Adds contrast to a Sweet-focused Collection";
   }
 
   if (target === "fresh") {
@@ -768,31 +756,31 @@ function getVibeReason(target, perfume, boxContext) {
 
 function getVibeSupportReason(target, perfume) {
   if (target === "warm" || target === "cozy") {
-    return "Deepens cold-weather comfort";
+    return "Strengthens cold-weather comfort";
   }
 
   if (target === "seductive" || target === "bold") {
-    return "Reinforces evening presence";
+    return "Strengthens evening presence";
   }
 
   if (target === "clean" || target === "versatile") {
-    return "Reinforces easy daily wear";
+    return "Strengthens easy daily wear";
   }
 
   if (addsWarmContrast(perfume)) {
-    return "Adds contrast to the current profile";
+    return "Adds contrast to the current collection";
   }
 
-  return `Deepens ${formatLabel(target)} character`;
+  return `Strengthens ${formatLabel(target)} character`;
 }
 
 function getAccordReason(accord, boxContext) {
   if (boxContext.isSweetFocused && isContrastAccord(accord)) {
-    return "Adds contrast to a sweet-focused box";
+    return "Adds contrast to a Sweet-focused Collection";
   }
 
   if (boxContext.isFreshHeavy && isWarmAccord(accord)) {
-    return "Balances a fresh-heavy profile";
+    return "Balances a Fresh-heavy Collection";
   }
 
   return `Introduces ${formatLabel(accord)} depth missing from the collection`;
