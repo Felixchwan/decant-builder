@@ -2113,7 +2113,6 @@ button {
 .perfume-details-image-panel {
   display: grid;
   place-items: center;
-  gap: 8px;
   min-height: 300px;
   margin-bottom: 18px;
   padding: 18px;
@@ -2208,14 +2207,20 @@ button {
 }
 
 .perfume-details-nav-hint {
+  position: absolute;
+  left: 50%;
+  bottom: 12px;
+  z-index: 2;
   margin: 0;
-  color: rgba(148, 163, 184, 0.72);
+  color: rgba(15, 23, 42, 0.58);
   font-size: 0.72rem;
   font-weight: 650;
   text-align: center;
   white-space: nowrap;
   opacity: 0;
   pointer-events: none;
+  text-shadow: 0 1px 8px rgba(255, 255, 255, 0.62);
+  transform: translateX(-50%);
   animation: perfume-details-hint-fade 2.6s ease forwards;
 }
 

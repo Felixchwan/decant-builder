@@ -423,8 +423,14 @@ function PerfumeDetailsModal({
     const hintSeenTimer = window.setTimeout(() => {
       markNavigationHintSeen();
     }, 800);
+    const hintRemovalTimer = window.setTimeout(() => {
+      setShowNavigationHint(false);
+    }, 2800);
 
-    return () => window.clearTimeout(hintSeenTimer);
+    return () => {
+      window.clearTimeout(hintSeenTimer);
+      window.clearTimeout(hintRemovalTimer);
+    };
   }, [showNavigationHint]);
 
   function showSwipeFeedback(direction) {
@@ -625,16 +631,16 @@ function PerfumeDetailsModal({
                 >
                   &gt;
                 </button>
-              </div>
 
-              {showNavigationHint && (
-                <p className="perfume-details-nav-hint">
-                  <span className="nav-hint-desktop">
-                    Use &larr; &rarr; arrow keys to browse
-                  </span>
-                  <span className="nav-hint-mobile">Swipe sideways to browse</span>
-                </p>
-              )}
+                {showNavigationHint && (
+                  <p className="perfume-details-nav-hint">
+                    <span className="nav-hint-desktop">
+                      Use &larr; &rarr; arrow keys to browse
+                    </span>
+                    <span className="nav-hint-mobile">Swipe sideways to browse</span>
+                  </p>
+                )}
+              </div>
             </div>
           </>
         )}
