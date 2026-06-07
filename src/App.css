@@ -1730,9 +1730,19 @@ button {
   .order-customer-form,
   .final-fragrance-list,
   .final-analysis-grid,
+  .review-insight-section,
+  .review-curator-grid,
   .scent-dna-scores,
   .scent-dna-grid {
     grid-template-columns: 1fr;
+  }
+
+  .review-modal-footer {
+    flex-direction: column-reverse;
+  }
+
+  .review-modal-footer button {
+    width: 100%;
   }
 
   .final-summary-modal .modal-header {
@@ -1865,6 +1875,13 @@ button {
   background: linear-gradient(180deg, #6ee7b7, #4ade80);
   color: #04110b;
   font-weight: 900;
+}
+
+.review-box-button.is-unlocked {
+  border-color: rgba(250, 204, 21, 0.48);
+  background:
+    linear-gradient(180deg, rgba(253, 230, 138, 0.96), rgba(74, 222, 128, 0.92));
+  box-shadow: 0 14px 34px rgba(74, 222, 128, 0.16);
 }
 
 .details-button {
@@ -2400,6 +2417,139 @@ button {
   color: #cbd5e1;
   font-size: 0.88rem;
   line-height: 1.5;
+}
+
+.discovery-review-modal {
+  width: min(980px, 94vw);
+}
+
+.review-identity-hero {
+  padding: 22px;
+  background:
+    radial-gradient(circle at 12% 0, rgba(250, 204, 21, 0.12), transparent 40%),
+    radial-gradient(circle at 88% 8%, rgba(74, 222, 128, 0.1), transparent 34%),
+    rgba(15, 23, 42, 0.58);
+}
+
+.review-identity-hero strong {
+  font-size: clamp(1.7rem, 4vw, 2.6rem);
+  line-height: 1.05;
+}
+
+.review-season-section .season-coverage-bars {
+  margin-top: 10px;
+}
+
+.review-insight-section {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.review-insight-section > div,
+.review-curator-grid > div {
+  padding: 14px;
+  border: 1px solid rgba(148, 163, 184, 0.13);
+  border-radius: 14px;
+  background: rgba(15, 23, 42, 0.42);
+}
+
+.review-list {
+  display: grid;
+  gap: 8px;
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.review-list li {
+  position: relative;
+  padding-left: 20px;
+  color: #d1fae5;
+  font-size: 0.9rem;
+  line-height: 1.42;
+}
+
+.review-list li::before {
+  position: absolute;
+  left: 0;
+  color: #86efac;
+  font-weight: 900;
+}
+
+.review-list-check li::before {
+  content: "✓";
+}
+
+.review-list-bullet li::before {
+  content: "•";
+  color: #facc15;
+}
+
+.review-curator-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 10px;
+}
+
+.review-curator-grid span {
+  display: block;
+  color: #86efac;
+  font-size: 0.68rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.review-curator-grid strong {
+  display: block;
+  margin-top: 6px;
+  color: #ecfdf5;
+}
+
+.review-curator-grid p {
+  margin: 7px 0 0;
+  color: #cbd5e1;
+  font-size: 0.84rem;
+  line-height: 1.45;
+}
+
+.review-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(148, 163, 184, 0.14);
+}
+
+.review-modal-footer button {
+  border: 0;
+  border-radius: 999px;
+  padding: 10px 16px;
+  background: linear-gradient(180deg, #6ee7b7, #4ade80);
+  color: #04110b;
+  font-weight: 900;
+}
+
+.review-modal-footer button.secondary {
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  background: rgba(15, 23, 42, 0.72);
+  color: #ecfdf5;
+}
+
+.review-modal-footer button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.review-finalize-status {
+  margin: 10px 0 0;
+  color: #86efac;
+  font-size: 0.84rem;
+  font-weight: 800;
+  text-align: right;
 }
 
 .final-summary-stats {

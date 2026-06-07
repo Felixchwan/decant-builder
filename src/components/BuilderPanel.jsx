@@ -193,6 +193,18 @@ function BuilderPanel({
         hiddenCuratorPicks={hiddenCuratorPicks}
       />
 
+      {isBoxReady && (
+        <button
+          type="button"
+          className={`review-box-button ${
+            isCuratorBonusUnlocked ? "is-unlocked" : ""
+          }`}
+          onClick={() => setIsFinalSummaryOpen(true)}
+        >
+          Review Box
+        </button>
+      )}
+
 {/*
 <div className={`box-status ${isBoxReady ? "ready" : "not-ready"}`}>
   <strong>
@@ -426,20 +438,18 @@ function BuilderPanel({
       </div>
     </div>
   </div>
-)}
+      )}
       {isFinalSummaryOpen && (
-        <FinalSummaryModal
+        <DiscoveryBoxReviewModal
           selectedPerfumes={selectedPerfumes}
-          totalSlots={totalSlots}
           totalPoints={totalPoints}
           estimatedValue={estimatedValue}
-          upgradeValue={upgradeValue}
           boxSummary={boxSummary}
           coverageSummary={coverageSummary}
-          scentDna={scentDna}
           isBoxReady={isBoxReady}
           isCuratorBonusUnlocked={isCuratorBonusUnlocked}
           curatorBonusPreference={curatorBonusPreference}
+          curatorInsight={curatorInsight}
           hiddenCuratorPicks={hiddenCuratorPicks}
           onClose={() => setIsFinalSummaryOpen(false)}
         />
@@ -1223,6 +1233,182 @@ function CollectionInsightList({ title, items, emptyText, marker }) {
         <p>{emptyText}</p>
       )}
     </div>
+  );
+}
+
+function DiscoveryBoxReviewModal({
+  selectedPerfumes,
+  totalPoints,
+  estimatedValue,
+  boxSummary,
+  coverageSummary,
+  isBoxReady,
+  isCuratorBonusUnlocked,
+  curatorBonusPreference,
+  curatorInsight,
+  hiddenCuratorPicks,
+  onClose,
+}) {
+  const [finalizeStatus, setFinalizeStatus] = useState("");
+  const collectionIdentity = getCollectionIdentity(boxSummary);
+  const curatorPreferenceLabel =
+    CURATOR_BONUS_PREFERENCES[curatorBonusPreference]?.label;
+  const seasonRows = buildSeasonCoverageRows(
+    boxSummary.seasonStrengths || boxSummary.seasonCounts || {},
+    selectedPerfumes.length
+  );
+  const strengths =
+    curatorInsight?.strengths?.length > 0
+      ? curatorInsight.strengths.slice(0, 3)
+      : coverageSummary.strengths.slice(0, 3).map((item) => item.label);
+  const opportunities =
+    curatorInsight?.improvementGoals?.length > 0
+      ? curatorInsight.improvementGoals.slice(0, 3)
+      : coverageSummary.gaps.slice(0, 3).map((item) => item.label);
+  const curatorRewardLabel =
+    hiddenCuratorPicks.length > 1 ? "Bonus Fragrances" : "Bonus Fragrance";
+
+  useEffect(() => {
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    function handleKeyDown(event) {
+      if (event.key === "Escape") {
+        onClose();
+      }
+    }
+
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [onClose]);
+
+  function handleFinalizeBox() {
+    if (!isBoxReady) {
+      return;
+    }
+
+    setFinalizeStatus("Checkout flow coming soon.");
+  }
+
+  return createPortal(
+    <div className="modal-overlay final-summary-overlay" onClick={onClose}>
+      <div
+        className="final-summary-modal discovery-review-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="discovery-review-title"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <div className="modal-header">
+          <div>
+            <p className="summary-eyebrow">Discovery Box Review</p>
+            <h3 id="discovery-review-title">Your personalized fragrance collection is ready.</h3>
+          </div>
+
+          <button type="button" onClick={onClose}>Close</button>
+        </div>
+
+        <section className="collection-identity review-identity-hero">
+          <span>Collection Identity</span>
+          <strong>{collectionIdentity.name}</strong>
+          <p>{collectionIdentity.description}</p>
+        </section>
+
+        <section className="final-summary-stats">
+          <SummaryStat label="Fragrances" value={selectedPerfumes.length} />
+          <SummaryStat label="Total Points" value={totalPoints.toFixed(1)} />
+          <SummaryStat label="Collection Value" value={`$${estimatedValue.toFixed(0)}`} />
+          <SummaryStat
+            label="Curator Bonus"
+            value={isCuratorBonusUnlocked ? "Unlocked" : "Locked"}
+          />
+        </section>
+
+        <section className="final-summary-section review-season-section">
+          <h4>Season Coverage</h4>
+
+          <div className="season-coverage-bars">
+            {seasonRows.map((season) => (
+              <div className="season-coverage-row" key={season.id}>
+                <span>{season.label}</span>
+                <div className="season-coverage-track" aria-label={`${season.label} coverage`}>
+                  <i style={{ width: `${season.percent}%` }} />
+                </div>
+                <strong>{season.count}</strong>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <section className="final-summary-section review-insight-section">
+          <div>
+            <h4>Collection Strengths</h4>
+
+            {strengths.length > 0 ? (
+              <ul className="review-list review-list-check">
+                {strengths.map((item) => (
+                  <li key={item}>{item}</li>
+                ))}
+              </ul>
+            ) : (
+              <p>Your collection is ready, with more detail appearing as it gains variety.</p>
+            )}
+          </div>
+
+          <div>
+            <h4>Opportunities</h4>
+
+            {opportunities.length > 0 ? (
+              <ul className="review-list review-list-bullet">
+                {opportunities.map((item) => (
+                  <li key={item}>{item}</li>
+                ))}
+              </ul>
+            ) : (
+              <p>No major opportunities detected. This box has a well-rounded profile.</p>
+            )}
+          </div>
+        </section>
+
+        <section className="final-summary-section review-curator-section">
+          <h4>Curator Bonus</h4>
+
+          <div className="review-curator-grid">
+            <div>
+              <span>Curator Style</span>
+              <strong>{curatorPreferenceLabel}</strong>
+            </div>
+
+            <div>
+              <span>Curator Reward</span>
+              <strong>{curatorRewardLabel}</strong>
+              <p>
+                {isCuratorBonusUnlocked
+                  ? "Your curator pick remains wrapped until reveal."
+                  : "Unlocks when your Discovery Box is complete."}
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <div className="review-modal-footer">
+          <button type="button" className="secondary" onClick={onClose}>
+            Continue Editing
+          </button>
+
+          <button type="button" onClick={handleFinalizeBox} disabled={!isBoxReady}>
+            Finalize Box
+          </button>
+        </div>
+
+        {finalizeStatus && <p className="review-finalize-status">{finalizeStatus}</p>}
+      </div>
+    </div>,
+    document.body
   );
 }
 
