@@ -27,6 +27,7 @@ const FRAGRANCE_DETAILS_HINT_KEY = "fragranceDetailsHintSeen";
 
 function App() {
   const [selectedPerfumes, setSelectedPerfumes] = useState([]);
+  const [activeMobileTab, setActiveMobileTab] = useState("catalog");
   const [activeFilters, setActiveFilters] = useState({
     seasons: "",
     occasions: "",
@@ -230,82 +231,118 @@ const confirmAddPerfume = () => {
         </p>
       </section>
 
-      <section className="layout">
-        <section className="catalog-section">
-          <div className="panel-header">
-            <div>
-              <h2>Catalog</h2>
-              <p>{visiblePerfumes.length} perfumes available</p>
-            </div>
-          </div>
+      <nav className="mobile-builder-tabs" aria-label="Builder sections">
+        <button
+          type="button"
+          className={activeMobileTab === "catalog" ? "is-active" : ""}
+          onClick={() => setActiveMobileTab("catalog")}
+          aria-controls="catalog-panel"
+          aria-selected={activeMobileTab === "catalog"}
+        >
+          Catalog
+        </button>
 
-          <div className="catalog-controls">
-            <input
-              type="search"
-              value={searchQuery}
-              onChange={(event) => setSearchQuery(event.target.value)}
-              placeholder="Search name, brand, accord, note, vibe"
+        <button
+          type="button"
+          className={activeMobileTab === "box" ? "is-active" : ""}
+          onClick={() => setActiveMobileTab("box")}
+          aria-controls="my-box-panel"
+          aria-selected={activeMobileTab === "box"}
+        >
+          My Box <span>{totalSlots}</span>
+        </button>
+      </nav>
+
+      <section className="layout">
+        <div
+          id="catalog-panel"
+          className={`mobile-tab-panel ${
+            activeMobileTab === "catalog" ? "is-active" : ""
+          }`}
+        >
+          <section className="catalog-section">
+            <div className="panel-header">
+              <div>
+                <h2>Catalog</h2>
+                <p>{visiblePerfumes.length} perfumes available</p>
+              </div>
+            </div>
+
+            <div className="catalog-controls">
+              <input
+                type="search"
+                value={searchQuery}
+                onChange={(event) => setSearchQuery(event.target.value)}
+                placeholder="Search name, brand, accord, note, vibe"
+              />
+
+              <select
+                value={sortOption}
+                onChange={(event) => setSortOption(event.target.value)}
+              >
+                <option value="bestMatch">Best match</option>
+                <option value="pointsAsc">Points ascending</option>
+                <option value="pointsDesc">Points descending</option>
+                <option value="brandAsc">Brand A-Z</option>
+                <option value="tier">Tier</option>
+                <option value="alphabetical">Alphabetical</option>
+              </select>
+            </div>
+
+            <FilterBar
+              filterOptions={filterOptions}
+              activeFilters={activeFilters}
+              handleFilterChange={handleFilterChange}
             />
 
-            <select
-              value={sortOption}
-              onChange={(event) => setSortOption(event.target.value)}
-            >
-              <option value="bestMatch">Best match</option>
-              <option value="pointsAsc">Points ascending</option>
-              <option value="pointsDesc">Points descending</option>
-              <option value="brandAsc">Brand A-Z</option>
-              <option value="tier">Tier</option>
-              <option value="alphabetical">Alphabetical</option>
-            </select>
-          </div>
+            <div className="catalog-grid">
+              {visiblePerfumes.map((perfume) => {
+                const tierData = getTierData(perfume.id);
 
-                    <FilterBar
-            filterOptions={filterOptions}
-            activeFilters={activeFilters}
-            handleFilterChange={handleFilterChange}
+                return (
+                  <PerfumeCard
+                    key={perfume.id}
+                    perfume={perfume}
+                    tierData={tierData}
+                    onAddToBox={addPerfume}
+                    onOpenDetails={setDetailPerfume}
+                    isDisabled={totalSlots >= MAX_SELECTABLE_SLOTS}
+                  />
+                );
+              })}
+            </div>
+          </section>
+        </div>
+
+        <div
+          id="my-box-panel"
+          className={`mobile-tab-panel ${
+            activeMobileTab === "box" ? "is-active" : ""
+          }`}
+        >
+          <BuilderPanel
+            totalSlots={totalSlots}
+            maxSlots={MAX_BOX_SLOTS}
+            maxSelectableSlots={MAX_SELECTABLE_SLOTS}
+            totalPoints={totalPoints}
+            estimatedValue={estimatedValue}
+            upgradeValue={upgradeValue}
+            selectedPerfumes={selectedPerfumes}
+            boxSummary={boxSummary}
+            onClearBox={clearBox}
+            onRemovePerfume={removePerfume}
+            onReorderPerfumes={reorderPerfumes}
+            minSlots={MIN_BOX_SLOTS}
+            minPoints={MIN_BOX_POINTS}
+            missingSlots={missingSlots}
+            missingPoints={missingPoints}
+            coverageSummary={coverageSummary}
+            recommendations={recommendations}
+            scentDna={scentDna}
+            isBoxReady={isBoxReady}
+            onAddPerfume={addPerfume}
           />
-
-          <div className="catalog-grid">
-            {visiblePerfumes.map((perfume) => {
-              const tierData = getTierData(perfume.id);
-
-              return (
-                <PerfumeCard
-                  key={perfume.id}
-                  perfume={perfume}
-                  tierData={tierData}
-                  onAddToBox={addPerfume}
-                  onOpenDetails={setDetailPerfume}
-                  isDisabled={totalSlots >= MAX_SELECTABLE_SLOTS}
-                />
-              );
-            })}
-          </div>
-        </section>
-
-        <BuilderPanel
-          totalSlots={totalSlots}
-          maxSlots={MAX_BOX_SLOTS}
-          maxSelectableSlots={MAX_SELECTABLE_SLOTS}
-          totalPoints={totalPoints}
-          estimatedValue={estimatedValue}
-          upgradeValue={upgradeValue}
-          selectedPerfumes={selectedPerfumes}
-          boxSummary={boxSummary}
-          onClearBox={clearBox}
-          onRemovePerfume={removePerfume}
-          onReorderPerfumes={reorderPerfumes}
-          minSlots={MIN_BOX_SLOTS}
-          minPoints={MIN_BOX_POINTS}
-          missingSlots={missingSlots}
-          missingPoints={missingPoints}
-          coverageSummary={coverageSummary}
-          recommendations={recommendations}
-          scentDna={scentDna}
-          isBoxReady={isBoxReady}
-          onAddPerfume={addPerfume}
-        />
+        </div>
       </section>
     </main>
     {detailPerfume && (

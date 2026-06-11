@@ -77,6 +77,16 @@ function BuilderPanel({
     );
     const isCuratorBonusUnlocked =
       totalPoints >= DISCOVERY_BONUS_TARGET_POINTS && totalSlots >= minSlots;
+    const reviewRequirementText = [
+      missingSlots > 0
+        ? `${missingSlots} more fragrance${missingSlots === 1 ? "" : "s"}`
+        : null,
+      missingPoints > 0
+        ? `${missingPoints.toFixed(1)} more point${missingPoints === 1 ? "" : "s"}`
+        : null,
+    ]
+      .filter(Boolean)
+      .join(" and ");
     const shouldShowDiscoveryIntro =
       selectedPerfumes.length === 0 &&
       (!hasSeenDiscoveryIntro || isDiscoveryIntroOpen);
@@ -194,17 +204,22 @@ function BuilderPanel({
         hiddenCuratorPicks={hiddenCuratorPicks}
       />
 
-      {isBoxReady && (
+      <div className={`review-action ${isBoxReady ? "is-ready" : "is-incomplete"}`}>
         <button
           type="button"
           className={`review-box-button ${
             isCuratorBonusUnlocked ? "is-unlocked" : ""
           }`}
+          disabled={!isBoxReady}
           onClick={() => setIsFinalSummaryOpen(true)}
         >
-          Review Box
+          Review My Box
         </button>
-      )}
+
+        {!isBoxReady && (
+          <p>Need {reviewRequirementText || "minimum requirements"} to review.</p>
+        )}
+      </div>
 
 {/*
 <div className={`box-status ${isBoxReady ? "ready" : "not-ready"}`}>
