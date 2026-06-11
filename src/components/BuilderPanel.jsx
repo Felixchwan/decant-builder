@@ -1,5 +1,6 @@
 import { forwardRef, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { businessConfig } from "../config/business";
 import { getTierData } from "../utils/tierUtils";
 
 const DISCOVERY_BONUS_TARGET_POINTS = 12;
@@ -1291,7 +1292,20 @@ function DiscoveryBoxReviewModal({
       return;
     }
 
-    setFinalizeStatus("Checkout flow coming soon.");
+    const whatsappMessage = buildDiscoveryBoxWhatsAppMessage({
+      selectedPerfumes,
+      totalPoints,
+      estimatedValue,
+      isCuratorBonusUnlocked,
+      curatorPreferenceLabel,
+      curatorRewardLabel,
+    });
+    const whatsappUrl = `https://wa.me/${businessConfig.whatsappNumber}?text=${encodeURIComponent(
+      whatsappMessage
+    )}`;
+
+    window.open(whatsappUrl, "_blank", "noopener,noreferrer");
+    setFinalizeStatus(`Opening WhatsApp to message ${businessConfig.businessName}.`);
   }
 
   return createPortal(
@@ -1410,6 +1424,37 @@ function DiscoveryBoxReviewModal({
     </div>,
     document.body
   );
+}
+
+function buildDiscoveryBoxWhatsAppMessage({
+  selectedPerfumes,
+  totalPoints,
+  estimatedValue,
+  isCuratorBonusUnlocked,
+  curatorPreferenceLabel,
+  curatorRewardLabel,
+}) {
+  const perfumeLines = selectedPerfumes.map(
+    (perfume, index) =>
+      `${index + 1}. ${perfume.name} - ${perfume.brand} (${perfume.points} pt)`
+  );
+  const curatorStatus = isCuratorBonusUnlocked
+    ? `Curator Bonus: Unlocked - ${curatorPreferenceLabel} / ${curatorRewardLabel}`
+    : "Curator Bonus: Not unlocked";
+
+  return [
+    `Hello ${businessConfig.businessName}, I would like to finalize my Discovery Box order.`,
+    "",
+    "Selected fragrances:",
+    ...perfumeLines,
+    "",
+    `Total slots: ${selectedPerfumes.length}`,
+    `Total points: ${totalPoints.toFixed(1)}`,
+    `Estimated price: $${estimatedValue.toFixed(0)}`,
+    curatorStatus,
+    "",
+    "Please confirm availability and next steps. Thank you.",
+  ].join("\n");
 }
 
 function FinalSummaryModal({
