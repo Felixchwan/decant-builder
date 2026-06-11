@@ -785,6 +785,22 @@ occasions: ["daily", "casual", "date"],
 vibes: ["fresh", "bright", "warm"]
 },
 {
+id: 33,
+name: "Jaguar Pace",
+shortName: "Pace",
+brand: "Jaguar",
+points: 1,
+image: "/images/perfumes/bronze/batch-02/jaguar-pace.png",
+accords: ["aromatic", "fresh spicy", "woody", "amber", "earthy"],
+topNotes: ["blackPepper", "apple", "rosemary"],
+middleNotes: ["lavender", "cashmeran", "iris"],
+baseNotes: ["amberwood", "patchouli", "moss"],
+generalNotes: [],
+seasons: ["spring", "summer", "fall"],
+occasions: ["daily", "office", "casual"],
+vibes: ["fresh", "modern", "easy", "sporty"]
+},
+{
   id: 100,
   name: "Arancia di Capri",
   shortName: "Arancia",
@@ -1439,6 +1455,499 @@ baseNotes: ["caramel", "musk"],
 },
 
 {
+  id: 205,
+  name: "Givenchy Gentleman EDP",
+  shortName: "Gentleman EDP",
+  brand: "Givenchy",
+  points: 2,
+  image: "/images/perfumes/gold/gentleman-edp.png",
+
+  accords: [
+    "iris",
+    "vanilla",
+    "powdery",
+    "aromatic",
+    "warm spicy",
+  ],
+
+  topNotes: [
+    "blackPepper",
+    "lavender",
+    "bergamot",
+  ],
+
+  middleNotes: [
+    "iris",
+    "cloves",
+    "cinnamon",
+  ],
+
+  baseNotes: [
+    "vanilla",
+    "tonkaBean",
+    "benzoin",
+    "patchouli",
+  ],
+
+  seasons: [
+    "fall",
+    "winter",
+    "spring",
+  ],
+
+  occasions: [
+    "date",
+    "night",
+    "formal",
+    "office",
+  ],
+
+  vibes: [
+    "elegant",
+    "warm",
+    "seductive",
+    "sophisticated",
+  ],
+},
+
+{
+  id: 206,
+  name: "Polo Blue Parfum",
+  shortName: "Polo Blue Parfum",
+  brand: "Ralph Lauren",
+  points: 2,
+  image: "/images/perfumes/gold/polo-blue-parfum.png",
+
+  accords: [
+    "aromatic",
+    "fresh spicy",
+    "woody",
+    "citrus",
+    "amber",
+  ],
+
+  topNotes: [
+    "mandarin",
+    "cardamom",
+    "pinkPepper",
+  ],
+
+  middleNotes: [
+    "lavender",
+    "clarySage",
+    "vetiver",
+  ],
+
+  baseNotes: [
+    "oak",
+    "patchouli",
+    "olibanum",
+  ],
+
+  seasons: [
+    "spring",
+    "summer",
+    "fall",
+  ],
+
+  occasions: [
+    "daily",
+    "office",
+    "casual",
+    "date",
+  ],
+
+  vibes: [
+    "fresh",
+    "clean",
+    "modern",
+    "confident",
+  ],
+},
+
+{
+  id: 207,
+  name: "Polo Deep Blue Parfum",
+  shortName: "Deep Blue",
+  brand: "Ralph Lauren",
+  points: 2,
+  image: "/images/perfumes/gold/polo-deep-blue-parfum.png",
+
+  accords: [
+    "aromatic",
+    "aquatic",
+    "fresh spicy",
+    "citrus",
+    "woody",
+  ],
+
+  topNotes: [
+    "greenMango",
+    "grapefruit",
+    "bergamot",
+  ],
+
+  middleNotes: [
+    "cypress",
+    "clarySage",
+    "geranium",
+  ],
+
+  baseNotes: [
+    "seaNotes",
+    "ambroxan",
+    "patchouli",
+    "musk",
+  ],
+
+  seasons: [
+    "spring",
+    "summer",
+    "fall",
+  ],
+
+  occasions: [
+    "daily",
+    "casual",
+    "office",
+    "vacation",
+  ],
+
+  vibes: [
+    "fresh",
+    "aquatic",
+    "modern",
+    "relaxed",
+  ],
+},
+
+{
+  id: 208,
+  name: "Prada L'Homme",
+  shortName: "Prada L'Homme",
+  brand: "Prada",
+  points: 2,
+  image: "/images/perfumes/gold/prada-l-homme.png",
+
+  accords: [
+    "powdery",
+    "iris",
+    "amber",
+    "clean",
+    "woody",
+  ],
+
+  topNotes: [
+    "neroli",
+    "blackPepper",
+    "cardamom",
+    "carrotSeeds",
+  ],
+
+  middleNotes: [
+    "iris",
+    "violet",
+    "geranium",
+  ],
+
+  baseNotes: [
+    "amber",
+    "cedar",
+    "patchouli",
+    "sandalwood",
+  ],
+
+  seasons: [
+    "spring",
+    "summer",
+    "fall",
+  ],
+
+  occasions: [
+    "daily",
+    "office",
+    "formal",
+  ],
+
+  vibes: [
+    "clean",
+    "elegant",
+    "sophisticated",
+    "soft",
+  ],
+},
+
+{
+  id: 209,
+  name: "Prada Luna Rossa Black",
+  shortName: "Luna Rossa Black",
+  brand: "Prada",
+  points: 2,
+  image: "/images/perfumes/gold/prada-luna-rossa-black.png",
+
+  accords: [
+    "amber",
+    "powdery",
+    "sweet",
+    "woody",
+    "musky",
+  ],
+
+  topNotes: [
+    "bergamot",
+  ],
+
+  middleNotes: [
+    "angelica",
+    "patchouli",
+  ],
+
+  baseNotes: [
+    "coumarin",
+    "amber",
+    "musk",
+  ],
+
+  seasons: [
+    "fall",
+    "winter",
+    "spring",
+  ],
+
+  occasions: [
+    "date",
+    "night",
+    "office",
+  ],
+
+  vibes: [
+    "smooth",
+    "modern",
+    "seductive",
+    "warm",
+  ],
+},
+
+{
+  id: 210,
+  name: "Valentino Uomo Born In Roma",
+  shortName: "Born In Roma",
+  brand: "Valentino",
+  points: 2,
+  image: "/images/perfumes/gold/valentino-uomo-born-in-roma.png",
+
+  accords: [
+    "woody",
+    "aromatic",
+    "mineral",
+    "fresh spicy",
+    "salty",
+  ],
+
+  topNotes: [
+    "mineralNotes",
+    "violetLeaf",
+    "seaSalt",
+  ],
+
+  middleNotes: [
+    "sage",
+    "ginger",
+  ],
+
+  baseNotes: [
+    "vetiver",
+    "woodyNotes",
+  ],
+
+  seasons: [
+    "spring",
+    "summer",
+    "fall",
+  ],
+
+  occasions: [
+    "daily",
+    "date",
+    "casual",
+    "night",
+  ],
+
+  vibes: [
+    "modern",
+    "confident",
+    "fresh",
+    "edgy",
+  ],
+},
+
+{
+  id: 211,
+  name: "Valentino Uomo Born In Roma Coral Fantasy",
+  shortName: "Coral Fantasy",
+  brand: "Valentino",
+  points: 2,
+  image: "/images/perfumes/gold/valentino-uomo-born-in-roma-coral-fantasy.png",
+
+  accords: [
+    "fruity",
+    "sweet",
+    "tobacco",
+    "aromatic",
+    "fresh spicy",
+  ],
+
+  topNotes: [
+    "redApple",
+    "cardamom",
+    "bergamot",
+  ],
+
+  middleNotes: [
+    "lavender",
+    "clarySage",
+    "geranium",
+  ],
+
+  baseNotes: [
+    "tobacco",
+    "patchouli",
+    "vetiver",
+  ],
+
+  seasons: [
+    "spring",
+    "summer",
+    "fall",
+  ],
+
+  occasions: [
+    "date",
+    "casual",
+    "night",
+  ],
+
+  vibes: [
+    "sweet",
+    "playful",
+    "confident",
+    "warm",
+  ],
+},
+
+{
+  id: 212,
+  name: "Spicebomb Extreme",
+  shortName: "Spicebomb Extreme",
+  brand: "Viktor&Rolf",
+  points: 2,
+  image: "/images/perfumes/gold/spicebomb-extreme.png",
+
+  accords: [
+    "warm spicy",
+    "vanilla",
+    "tobacco",
+    "aromatic",
+    "sweet",
+  ],
+
+  topNotes: [
+    "caraway",
+    "lavender",
+    "blackPepper",
+  ],
+
+  middleNotes: [
+    "cinnamon",
+    "cumin",
+  ],
+
+  baseNotes: [
+    "tobacco",
+    "vanilla",
+    "bourbonVanilla",
+  ],
+
+  seasons: [
+    "fall",
+    "winter",
+  ],
+
+  occasions: [
+    "date",
+    "night",
+    "club",
+    "special",
+  ],
+
+  vibes: [
+    "warm",
+    "bold",
+    "seductive",
+    "cozy",
+  ],
+},
+
+{
+  id: 213,
+  name: "YSL Y EDP",
+  shortName: "Y EDP",
+  brand: "Yves Saint Laurent",
+  points: 2,
+  image: "/images/perfumes/gold/y-edp.png",
+
+  accords: [
+    "aromatic",
+    "fresh spicy",
+    "woody",
+    "amber",
+    "citrus",
+  ],
+
+  topNotes: [
+    "apple",
+    "ginger",
+    "bergamot",
+  ],
+
+  middleNotes: [
+    "sage",
+    "juniper",
+    "geranium",
+  ],
+
+  baseNotes: [
+    "amberwood",
+    "tonkaBean",
+    "cedar",
+    "vetiver",
+    "olibanum",
+  ],
+
+  seasons: [
+    "spring",
+    "summer",
+    "fall",
+    "winter",
+  ],
+
+  occasions: [
+    "daily",
+    "office",
+    "date",
+    "night",
+    "club",
+  ],
+
+  vibes: [
+    "fresh",
+    "bold",
+    "versatile",
+    "confident",
+  ],
+},
+
+{
   id: 301,
   name: "Allure Homme Edition Blanche EDP",
   shortName: "Edition Blanche",
@@ -1699,6 +2208,62 @@ baseNotes: ["caramel", "musk"],
 },
 
 {
+  id: 306,
+  name: "Acqua di Gio Elixir",
+  shortName: "ADG Elixir",
+  brand: "Giorgio Armani",
+  points: 2.5,
+  image: "/images/perfumes/platinum/acqua-di-gio-elixir.png",
+
+  accords: [
+    "aquatic",
+    "aromatic",
+    "woody",
+    "fresh spicy",
+    "violet",
+  ],
+
+  topNotes: [
+    "bergamot",
+    "greenMandarin",
+    "nutmeg",
+  ],
+
+  middleNotes: [
+    "violetLeaf",
+    "seaNotes",
+    "lavender",
+  ],
+
+  baseNotes: [
+    "patchouli",
+    "vetiver",
+    "leather",
+    "amberwood",
+  ],
+
+  seasons: [
+    "spring",
+    "summer",
+    "fall",
+  ],
+
+  occasions: [
+    "daily",
+    "office",
+    "date",
+    "night",
+  ],
+
+  vibes: [
+    "fresh",
+    "elegant",
+    "modern",
+    "intense",
+  ],
+},
+
+{
   id: 401,
   name: "Silver Mountain Water",
   shortName: "SMW",
@@ -1920,6 +2485,61 @@ baseNotes: ["caramel", "musk"],
 },
 
 {
+  id: 405,
+  name: "Mefisto",
+  shortName: "Mefisto",
+  brand: "Casamorati",
+  points: 4,
+  image: "/images/perfumes/diamond/mefisto.png",
+
+  accords: [
+    "citrus",
+    "aromatic",
+    "fresh spicy",
+    "powdery",
+    "floral",
+  ],
+
+  topNotes: [
+    "grapefruit",
+    "bergamot",
+    "lemon",
+  ],
+
+  middleNotes: [
+    "lavender",
+    "iris",
+    "rose",
+  ],
+
+  baseNotes: [
+    "musk",
+    "amber",
+    "sandalwood",
+    "cedar",
+  ],
+
+  seasons: [
+    "spring",
+    "summer",
+  ],
+
+  occasions: [
+    "daily",
+    "office",
+    "formal",
+    "special",
+  ],
+
+  vibes: [
+    "fresh",
+    "elegant",
+    "classic",
+    "luxurious",
+  ],
+},
+
+{
   id: 500,
   name: "Squid",
   shortName: "Squid",
@@ -1984,7 +2604,7 @@ baseNotes: ["caramel", "musk"],
   subtitleColor: "#d4c46a",
   subtitleGlow: true,
   brand: "Yves Saint Laurent",
-  points: 6,
+  points: 5,
   image: "/images/perfumes/mythic/tuxedo.png",
 
   accords: [
@@ -2069,6 +2689,7 @@ const SEASON_WEIGHTS_BY_ID = {
   30: { spring: 8, summer: 8, fall: 5, winter: 2 },
   31: { spring: 7, summer: 8, fall: 5, winter: 2 },
   32: { spring: 4, summer: 1, fall: 8, winter: 8 },
+  33: { spring: 8, summer: 7, fall: 5, winter: 2 },
   100: { spring: 8, summer: 10, fall: 2, winter: 0 },
   101: { spring: 8, summer: 10, fall: 2, winter: 0 },
   102: { spring: 9, summer: 10, fall: 2, winter: 0 },
@@ -2092,15 +2713,26 @@ const SEASON_WEIGHTS_BY_ID = {
   202: { spring: 6, summer: 3, fall: 8, winter: 7 },
   203: { spring: 6, summer: 2, fall: 8, winter: 7 },
   204: { spring: 1, summer: 0, fall: 9, winter: 10 },
+  205: { spring: 5, summer: 1, fall: 8, winter: 8 },
+  206: { spring: 8, summer: 8, fall: 6, winter: 3 },
+  207: { spring: 8, summer: 9, fall: 5, winter: 2 },
+  208: { spring: 8, summer: 7, fall: 6, winter: 3 },
+  209: { spring: 5, summer: 1, fall: 8, winter: 8 },
+  210: { spring: 7, summer: 6, fall: 6, winter: 3 },
+  211: { spring: 7, summer: 6, fall: 7, winter: 4 },
+  212: { spring: 2, summer: 0, fall: 9, winter: 10 },
+  213: { spring: 8, summer: 7, fall: 7, winter: 5 },
   301: { spring: 8, summer: 8, fall: 5, winter: 2 },
   302: { spring: 8, summer: 9, fall: 4, winter: 1 },
   303: { spring: 8, summer: 7, fall: 6, winter: 3 },
   304: { spring: 2, summer: 0, fall: 9, winter: 9 },
   305: { spring: 8, summer: 8, fall: 5, winter: 2 },
+  306: { spring: 8, summer: 8, fall: 7, winter: 4 },
   401: { spring: 8, summer: 8, fall: 3, winter: 2 },
   402: { spring: 2, summer: 0, fall: 9, winter: 10 },
   403: { spring: 2, summer: 0, fall: 9, winter: 10 },
   404: { spring: 5, summer: 1, fall: 9, winter: 9 },
+  405: { spring: 9, summer: 8, fall: 4, winter: 2 },
   500: { spring: 2, summer: 1, fall: 8, winter: 9 },
   501: { spring: 4, summer: 1, fall: 9, winter: 8 },
 };
