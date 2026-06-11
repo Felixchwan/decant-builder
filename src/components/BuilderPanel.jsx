@@ -154,7 +154,7 @@ function BuilderPanel({
         </div>
 
         <div className="stat-card">
-          <span>Value</span>
+          <span>Order total</span>
           <strong>${estimatedValue.toFixed(0)}</strong>
         </div>
 
@@ -1251,6 +1251,12 @@ function DiscoveryBoxReviewModal({
   onClose,
 }) {
   const [finalizeStatus, setFinalizeStatus] = useState("");
+  const [customerInfo, setCustomerInfo] = useState({
+    name: "",
+    city: "",
+    notes: "",
+  });
+  const [fallbackWhatsAppUrl, setFallbackWhatsAppUrl] = useState("");
   const collectionIdentity = getCollectionIdentity(boxSummary);
   const curatorPreferenceLabel =
     CURATOR_BONUS_PREFERENCES[curatorBonusPreference]?.label;
@@ -1268,6 +1274,8 @@ function DiscoveryBoxReviewModal({
       : coverageSummary.gaps.slice(0, 3).map((item) => item.label);
   const curatorRewardLabel =
     hiddenCuratorPicks.length > 1 ? "Bonus Fragrances" : "Bonus Fragrance";
+  const canFinalize =
+    isBoxReady && customerInfo.name.trim() && customerInfo.city.trim();
 
   useEffect(() => {
     const previousOverflow = document.body.style.overflow;
@@ -1287,25 +1295,52 @@ function DiscoveryBoxReviewModal({
     };
   }, [onClose]);
 
-  function handleFinalizeBox() {
-    if (!isBoxReady) {
+  function handleCustomerInfoChange(field, value) {
+    setCustomerInfo((currentInfo) => ({
+      ...currentInfo,
+      [field]: value,
+    }));
+  }
+
+  async function handleFinalizeBox() {
+    if (!canFinalize) {
+      setFinalizeStatus("Enter customer name and city before finalizing.");
       return;
     }
 
     const whatsappMessage = buildDiscoveryBoxWhatsAppMessage({
+      customerInfo,
       selectedPerfumes,
       totalPoints,
       estimatedValue,
       isCuratorBonusUnlocked,
       curatorPreferenceLabel,
-      curatorRewardLabel,
     });
     const whatsappUrl = `https://wa.me/${businessConfig.whatsappNumber}?text=${encodeURIComponent(
       whatsappMessage
     )}`;
+    const openedWindow = window.open(whatsappUrl, "_blank");
+    if (openedWindow) {
+      openedWindow.opener = null;
+    }
+    const didCopy = await copyText(whatsappMessage);
 
-    window.open(whatsappUrl, "_blank", "noopener,noreferrer");
-    setFinalizeStatus(`Opening WhatsApp to message ${businessConfig.businessName}.`);
+    if (!openedWindow) {
+      setFallbackWhatsAppUrl(whatsappUrl);
+      setFinalizeStatus(
+        didCopy
+          ? "WhatsApp was blocked. The order message was copied; use the button below to open WhatsApp."
+          : "WhatsApp was blocked. Use the button below to open WhatsApp manually."
+      );
+      return;
+    }
+
+    setFallbackWhatsAppUrl("");
+    setFinalizeStatus(
+      didCopy
+        ? `Opening WhatsApp to message ${businessConfig.businessName}. Order message copied.`
+        : `Opening WhatsApp to message ${businessConfig.businessName}.`
+    );
   }
 
   return createPortal(
@@ -1335,11 +1370,64 @@ function DiscoveryBoxReviewModal({
         <section className="final-summary-stats">
           <SummaryStat label="Fragrances" value={selectedPerfumes.length} />
           <SummaryStat label="Total Points" value={totalPoints.toFixed(1)} />
-          <SummaryStat label="Collection Value" value={`$${estimatedValue.toFixed(0)}`} />
+          <SummaryStat label="Order Total" value={`$${estimatedValue.toFixed(0)}`} />
           <SummaryStat
             label="Curator Bonus"
             value={isCuratorBonusUnlocked ? "Unlocked" : "Locked"}
           />
+        </section>
+
+        <section className="final-summary-section review-customer-section">
+          <h4>Customer Info</h4>
+
+          <div className="review-customer-form">
+            <label>
+              <span>Customer name</span>
+              <input
+                type="text"
+                value={customerInfo.name}
+                onChange={(event) =>
+                  handleCustomerInfoChange("name", event.target.value)
+                }
+                placeholder="Required"
+              />
+            </label>
+
+            <label>
+              <span>City</span>
+              <input
+                type="text"
+                value={customerInfo.city}
+                onChange={(event) =>
+                  handleCustomerInfoChange("city", event.target.value)
+                }
+                placeholder="Required"
+              />
+            </label>
+
+            <label className="review-notes-field">
+              <span>Notes</span>
+              <textarea
+                value={customerInfo.notes}
+                onChange={(event) =>
+                  handleCustomerInfoChange("notes", event.target.value)
+                }
+                placeholder="Optional preferences or delivery notes"
+                rows={2}
+              />
+            </label>
+          </div>
+        </section>
+
+        <section className="final-summary-section review-rules-section">
+          <h4>Box Rules</h4>
+
+          <ul className="review-rules-list">
+            <li>Build at least 6 fragrances, up to 14 selectable fragrances.</li>
+            <li>1 point = $100. Your order total is based on selected points.</li>
+            <li>Curator Bonus unlocks at 12 points and 6 fragrances.</li>
+            <li>The physical box has 16 slots, with 2 reserved for Curator Bonus picks.</li>
+          </ul>
         </section>
 
         <section className="final-summary-section review-season-section">
@@ -1414,12 +1502,23 @@ function DiscoveryBoxReviewModal({
             Continue Editing
           </button>
 
-          <button type="button" onClick={handleFinalizeBox} disabled={!isBoxReady}>
+          <button type="button" onClick={handleFinalizeBox} disabled={!canFinalize}>
             Finalize Box
           </button>
         </div>
 
         {finalizeStatus && <p className="review-finalize-status">{finalizeStatus}</p>}
+
+        {fallbackWhatsAppUrl && (
+          <a
+            className="review-whatsapp-fallback"
+            href={fallbackWhatsAppUrl}
+            target="_blank"
+            rel="noreferrer"
+          >
+            Open WhatsApp manually
+          </a>
+        )}
       </div>
     </div>,
     document.body
@@ -1427,34 +1526,42 @@ function DiscoveryBoxReviewModal({
 }
 
 function buildDiscoveryBoxWhatsAppMessage({
+  customerInfo,
   selectedPerfumes,
   totalPoints,
   estimatedValue,
   isCuratorBonusUnlocked,
   curatorPreferenceLabel,
-  curatorRewardLabel,
 }) {
+  const customerNotes = customerInfo.notes.trim();
   const perfumeLines = selectedPerfumes.map(
     (perfume, index) =>
       `${index + 1}. ${perfume.name} - ${perfume.brand} (${perfume.points} pt)`
   );
   const curatorStatus = isCuratorBonusUnlocked
-    ? `Curator Bonus: Unlocked - ${curatorPreferenceLabel} / ${curatorRewardLabel}`
+    ? [
+        "Curator Bonus: Unlocked",
+        `Curator Style: ${curatorPreferenceLabel}`,
+      ].join("\n")
     : "Curator Bonus: Not unlocked";
 
   return [
     `Hello ${businessConfig.businessName}, I would like to finalize my Discovery Box order.`,
+    "",
+    `Customer: ${customerInfo.name.trim()}`,
+    `City: ${customerInfo.city.trim()}`,
+    customerNotes ? `Notes: ${customerNotes}` : "",
     "",
     "Selected fragrances:",
     ...perfumeLines,
     "",
     `Total slots: ${selectedPerfumes.length}`,
     `Total points: ${totalPoints.toFixed(1)}`,
-    `Estimated price: $${estimatedValue.toFixed(0)}`,
+    `Order total: $${estimatedValue.toFixed(0)}`,
     curatorStatus,
     "",
     "Please confirm availability and next steps. Thank you.",
-  ].join("\n");
+  ].filter(Boolean).join("\n");
 }
 
 function FinalSummaryModal({

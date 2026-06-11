@@ -1728,6 +1728,7 @@ button {
   .final-summary-stats,
   .final-readiness-grid,
   .order-customer-form,
+  .review-customer-form,
   .final-fragrance-list,
   .final-analysis-grid,
   .review-insight-section,
@@ -2440,6 +2441,55 @@ button {
   margin-top: 10px;
 }
 
+.review-customer-form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 10px;
+}
+
+.review-customer-form label {
+  display: grid;
+  gap: 6px;
+}
+
+.review-customer-form span {
+  color: #86efac;
+  font-size: 0.68rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.review-customer-form input,
+.review-customer-form textarea {
+  width: 100%;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 10px;
+  padding: 10px 11px;
+  background: rgba(2, 6, 23, 0.55);
+  color: #ecfdf5;
+  font: inherit;
+}
+
+.review-customer-form textarea {
+  resize: vertical;
+}
+
+.review-notes-field {
+  grid-column: 1 / -1;
+}
+
+.review-rules-list {
+  display: grid;
+  gap: 7px;
+  margin: 10px 0 0;
+  padding-left: 18px;
+  color: #cbd5e1;
+  font-size: 0.86rem;
+  line-height: 1.45;
+}
+
 .review-insight-section {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -2550,6 +2600,19 @@ button {
   font-size: 0.84rem;
   font-weight: 800;
   text-align: right;
+}
+
+.review-whatsapp-fallback {
+  display: inline-flex;
+  justify-content: center;
+  margin-top: 10px;
+  border-radius: 999px;
+  padding: 9px 14px;
+  background: rgba(74, 222, 128, 0.12);
+  color: #bbf7d0;
+  font-size: 0.84rem;
+  font-weight: 900;
+  text-decoration: none;
 }
 
 .final-summary-stats {
