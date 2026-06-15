@@ -504,6 +504,67 @@ button {
   border-radius: inherit;
 }
 
+.share-box-actions {
+  display: grid;
+  gap: 10px;
+  margin: 0 0 16px;
+  padding: 12px;
+  border: 1px solid rgba(250, 204, 21, 0.16);
+  border-radius: 16px;
+  background:
+    radial-gradient(circle at 18% 0, rgba(250, 204, 21, 0.09), transparent 34%),
+    linear-gradient(180deg, rgba(15, 23, 42, 0.42), rgba(3, 7, 10, 0.62));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.035);
+}
+
+.share-box-copy {
+  display: grid;
+  gap: 3px;
+}
+
+.share-box-copy strong {
+  color: #f8fafc;
+  font-size: 0.88rem;
+}
+
+.share-box-copy span,
+.share-box-status {
+  color: #94a3b8;
+  font-size: 0.74rem;
+  line-height: 1.35;
+}
+
+.share-box-buttons {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.share-box-buttons button {
+  min-height: 38px;
+  border: 1px solid rgba(250, 204, 21, 0.22);
+  border-radius: 999px;
+  background: rgba(250, 204, 21, 0.08);
+  color: #fef3c7;
+  font-size: 0.74rem;
+  font-weight: 900;
+}
+
+.share-box-buttons button:hover:not(:disabled) {
+  border-color: rgba(250, 204, 21, 0.42);
+  background: rgba(250, 204, 21, 0.14);
+}
+
+.share-box-buttons button:disabled {
+  cursor: not-allowed;
+  opacity: 0.46;
+}
+
+.share-box-status {
+  margin: 0;
+  color: #d9f99d;
+}
+
 .discovery-bonus-panel {
   display: grid;
   gap: 12px;
