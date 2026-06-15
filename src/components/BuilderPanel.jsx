@@ -2585,6 +2585,8 @@ function BoxVialSlot({
   }
 
   const tierData = getTierData(perfume.id);
+  const slotLabel = perfume.shortName || getShortPerfumeName(perfume.name);
+  const hasCuratedShortName = Boolean(perfume.shortName);
 
   return (
     <div
@@ -2609,8 +2611,8 @@ function BoxVialSlot({
     >
       <span className="vial-cap" />
       <span className="vial-body">
-        <span className="vial-label">
-          <strong>{perfume.shortName || getShortPerfumeName(perfume.name)}</strong>
+        <span className={`vial-label ${hasCuratedShortName ? "has-short-name" : ""}`}>
+          <strong>{slotLabel}</strong>
         </span>
         <button
           type="button"
