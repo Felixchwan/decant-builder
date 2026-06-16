@@ -505,48 +505,105 @@ button {
 }
 
 .share-box-actions {
-  display: grid;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
   gap: 10px;
-  margin: 0 0 16px;
-  padding: 12px;
-  border: 1px solid rgba(250, 204, 21, 0.16);
-  border-radius: 16px;
-  background:
-    radial-gradient(circle at 18% 0, rgba(250, 204, 21, 0.09), transparent 34%),
-    linear-gradient(180deg, rgba(15, 23, 42, 0.42), rgba(3, 7, 10, 0.62));
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.035);
+  margin: -4px 0 12px;
 }
 
-.share-box-copy {
-  display: grid;
-  gap: 3px;
+.share-box-toolbar {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
-.share-box-copy strong {
-  color: #f8fafc;
-  font-size: 0.88rem;
-}
-
-.share-box-copy span,
-.share-box-status {
-  color: #94a3b8;
+.share-box-label {
+  color: rgba(248, 250, 252, 0.82);
   font-size: 0.74rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.share-info-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.share-info-button {
+  display: inline-grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: 1px solid rgba(250, 204, 21, 0.20);
+  border-radius: 999px;
+  background: rgba(250, 204, 21, 0.07);
+  color: rgba(254, 243, 199, 0.74);
+  font-size: 0.72rem;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.share-info-button:hover,
+.share-info-button:focus-visible {
+  border-color: rgba(250, 204, 21, 0.42);
+  background: rgba(250, 204, 21, 0.14);
+  color: #fef3c7;
+  outline: none;
+}
+
+.share-box-tooltip {
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 8px);
+  z-index: 12;
+  width: min(230px, 72vw);
+  padding: 8px 10px;
+  border: 1px solid rgba(250, 204, 21, 0.22);
+  border-radius: 10px;
+  background: rgba(2, 6, 23, 0.96);
+  color: #cbd5e1;
+  font-size: 0.72rem;
+  font-weight: 700;
   line-height: 1.35;
+  text-transform: none;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.38);
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-50%, 4px);
+  transition:
+    opacity 160ms ease,
+    transform 160ms ease;
+}
+
+.share-info-wrap:hover .share-box-tooltip,
+.share-info-button:focus + .share-box-tooltip,
+.share-box-tooltip.is-visible {
+  opacity: 1;
+  transform: translate(-50%, 0);
 }
 
 .share-box-buttons {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  display: flex;
+  align-items: center;
+  flex: 0 0 auto;
   gap: 8px;
 }
 
 .share-box-buttons button {
-  min-height: 38px;
+  min-height: 36px;
+  padding: 8px 12px;
   border: 1px solid rgba(250, 204, 21, 0.22);
   border-radius: 999px;
   background: rgba(250, 204, 21, 0.08);
   color: #fef3c7;
-  font-size: 0.74rem;
+  font-size: 0.72rem;
   font-weight: 900;
 }
 
@@ -561,8 +618,43 @@ button {
 }
 
 .share-box-status {
-  margin: 0;
+  flex: 1 0 100%;
+  margin: -2px 0 0;
   color: #d9f99d;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-align: right;
+}
+
+@media (max-width: 520px) {
+  .share-box-actions {
+    flex-wrap: wrap;
+  }
+
+  .share-box-toolbar {
+    flex: 1 1 100%;
+  }
+
+  .share-box-buttons {
+    width: 100%;
+  }
+
+  .share-box-buttons button {
+    flex: 1 1 0;
+    min-height: 40px;
+  }
+
+  .share-box-tooltip {
+    left: 0;
+    width: min(250px, 82vw);
+    transform: translate(0, 4px);
+  }
+
+  .share-info-wrap:hover .share-box-tooltip,
+  .share-info-button:focus + .share-box-tooltip,
+  .share-box-tooltip.is-visible {
+    transform: translate(0, 0);
+  }
 }
 
 .discovery-bonus-panel {
@@ -2621,7 +2713,7 @@ button {
   gap: 7px;
 }
 
-.details-tag-row span {
+.details-tag-row > span {
   padding: 6px 9px;
   border-radius: 999px;
   background: rgba(74, 222, 128, 0.09);
@@ -2629,6 +2721,28 @@ button {
   color: #bbf7d0;
   font-size: 0.78rem;
   font-weight: 800;
+}
+
+.details-tag-row > .detail-note-pill.has-note-image {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 4px 10px 4px 5px;
+}
+
+.detail-note-pill img {
+  width: 26px;
+  height: 26px;
+  flex: 0 0 auto;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 999px;
+  background:
+    radial-gradient(circle at 50% 40%, rgba(255, 255, 255, 0.16), transparent 62%),
+    rgba(2, 6, 23, 0.38);
+  object-fit: cover;
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.24),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
 }
 
 .details-tag-row p,

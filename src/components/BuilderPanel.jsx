@@ -55,6 +55,7 @@ function BuilderPanel({
     const curatorBonusModuleRef = useRef(null);
     const [isCuratorBonusAnimating, setIsCuratorBonusAnimating] = useState(false);
     const [shareStatus, setShareStatus] = useState("");
+    const [isShareTooltipOpen, setIsShareTooltipOpen] = useState(false);
     const shareStatusTimeoutRef = useRef(null);
     const sortedNotes = [...boxSummary.notes].sort();
     const selectedPerfumeIds = new Set(
@@ -261,9 +262,31 @@ function BuilderPanel({
       />
 
       <div className="share-box-actions">
-        <div className="share-box-copy">
-          <strong>Share My Box</strong>
-          <span>Export a clean visual snapshot of your Discovery Box.</span>
+        <div className="share-box-toolbar">
+          <span className="share-box-label">Share My Box</span>
+
+          <span className="share-info-wrap">
+            <button
+              type="button"
+              className="share-info-button"
+              aria-label="About Share My Box"
+              aria-describedby="share-box-tooltip"
+              aria-expanded={isShareTooltipOpen}
+              onClick={() => setIsShareTooltipOpen((isOpen) => !isOpen)}
+              onBlur={() => setIsShareTooltipOpen(false)}
+            >
+              i
+            </button>
+            <span
+              id="share-box-tooltip"
+              className={`share-box-tooltip ${
+                isShareTooltipOpen ? "is-visible" : ""
+              }`}
+              role="tooltip"
+            >
+              Export a clean visual snapshot of your Discovery Box.
+            </span>
+          </span>
         </div>
 
         <div className="share-box-buttons">

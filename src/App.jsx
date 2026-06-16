@@ -763,10 +763,33 @@ function DetailNoteGroup({ title, noteIds, notes }) {
 
       <div className="details-tag-row">
         {noteIds.map((noteId) => (
-          <span key={noteId}>{notes[noteId]?.name || formatLabel(noteId)}</span>
+          <DetailNotePill key={noteId} note={notes[noteId]} noteId={noteId} />
         ))}
       </div>
     </div>
+  );
+}
+
+function DetailNotePill({ note, noteId }) {
+  const noteName = note?.name || formatLabel(noteId);
+  const noteImage = note?.noteImage || note?.image;
+
+  if (!noteImage) {
+    return <span>{noteName}</span>;
+  }
+
+  return (
+    <span className="detail-note-pill has-note-image">
+      <img
+        src={noteImage}
+        alt=""
+        loading="lazy"
+        onError={(event) => {
+          event.currentTarget.remove();
+        }}
+      />
+      <span>{noteName}</span>
+    </span>
   );
 }
 
