@@ -162,6 +162,7 @@ candyApple: {
   name: "Candy Apple",
   family: "fruity",
   image: "",
+  noteImage: "/images/notes/apple.jpg",
 },
 
 ambroxan: {
@@ -208,6 +209,7 @@ toffee: {
   name: "Toffee",
   family: "sweet",
   image: "",
+  noteImage: "/images/notes/caramel.jpg",
 },
 
 amberwood: {
@@ -233,6 +235,7 @@ caramel: {
   name: "Caramel",
   family: "sweet",
   image: "",
+  noteImage: "/images/notes/caramel.jpg",
 },
 
 grapefruit: {
@@ -253,6 +256,7 @@ lilyOfTheValley: {
   name: "Lily-of-the-Valley",
   family: "floral",
   image: "",
+  noteImage: "/images/notes/lilyOfTheValley.jpg",
 },
 
 sage: {
@@ -298,6 +302,7 @@ benzoin: {
   name: "Benzoin",
   family: "resinous",
   image: "",
+  noteImage: "/images/notes/benzoin.jpg",
 },
 
 greenMandarin: {
@@ -318,6 +323,7 @@ spearmint: {
   name: "Spearmint",
   family: "aromatic",
   image: "",
+  noteImage: "/images/notes/spearmint.jpg",
 },
 
 elemi: {
@@ -329,6 +335,7 @@ elemi: {
 olibanum: {
   name: "Olibanum",
   image: "",
+  noteImage: "/images/notes/olibanum.jpg",
 },
 
 sichuanPepper: {
@@ -344,11 +351,13 @@ starAnise: {
 blackCurrant: {
   name: "Black Currant",
   image: "",
+  noteImage: "/images/notes/blackCurrant.jpg",
 },
 
 chestnut: {
   name: "Chestnut",
   image: "",
+  noteImage: "/images/notes/chestnut.jpg",
 },
 
 guaiacWood: {
@@ -399,6 +408,7 @@ pomarose: {
 siamBenzoin: {
   name: "Siam Benzoin",
   image: "",
+  noteImage: "/images/notes/siamBenzoin.jpg",
 },
 
 texasCedar: {
@@ -448,6 +458,7 @@ greenApple: {
 saffron: {
   name: "Saffron",
   image: "",
+  noteImage: "/images/notes/saffron.jpg",
 },
 
 davana: {
@@ -458,6 +469,7 @@ davana: {
 opoponax: {
   name: "Opoponax",
   image: "",
+  noteImage: "/images/notes/opoponax.jpg",
 },
 
 ambermax: {
@@ -504,9 +516,9 @@ bourbonVanilla: {
 fir: { name: "Fir", image: "" },
 brazilianRosewood: { name: "Brazilian Rosewood", image: "" },
 citruses: { name: "Citruses", image: "", noteImage: "/images/notes/orange.jpg" },
-almond: { name: "Almond", image: "" },
-grass: { name: "Grass", image: "" },
-sugar: { name: "Sugar", image: "" },
+almond: { name: "Almond", image: "", noteImage: "/images/notes/almond.jpg" },
+grass: { name: "Grass", image: "", noteImage: "/images/notes/grass.jpg" },
+sugar: { name: "Sugar", image: "", noteImage: "/images/notes/sugar.jpg" },
 suede: { name: "Suede", image: "" },
 cashmirwood: { name: "Cashmirwood", image: "" },
 martini: { name: "Martini", image: "" },
@@ -522,13 +534,13 @@ roastedCoffeeBeans: { name: "Roasted Coffee Beans", image: "", noteImage: "/imag
 birchLeaf: { name: "Birch Leaf", image: "" },
 pine: { name: "Pine", image: "" },
 firBalsam: { name: "Fir Balsam", image: "" },
-basil: { name: "Basil", family: "aromatic", image: "" },
+basil: { name: "Basil", family: "aromatic", image: "", noteImage: "/images/notes/basil.jpg" },
 tobacco: { name: "Tobacco", family: "tobacco", image: "" , noteImage: "/images/notes/tobacco.jpg" },
 moss: { name: "Moss", family: "green", image: "", noteImage: "/images/notes/oakmoss.jpg" },
 cedarwood: { name: "Cedarwood", family: "woody", image: "", noteImage: "/images/notes/cedar.jpg" },
 incense: { name: "Incense", family: "resinous", image: "", noteImage: "/images/notes/incense.jpg" },
-fingerLime: { name: "Finger Lime", family: "citrus", image: "" },
-eucalyptus: { name: "Eucalyptus", family: "aromatic", image: "" },
+fingerLime: { name: "Finger Lime", family: "citrus", image: "", noteImage: "/images/notes/fingerLime.jpg" },
+eucalyptus: { name: "Eucalyptus", family: "aromatic", image: "", noteImage: "/images/notes/eucalyptus.jpg" },
 aldehydes: { name: "Aldehydes", family: "aldehydic", image: "" },
 mandarin: { name: "Mandarin", family: "citrus", image: "", noteImage: "/images/notes/mandarinOrange.jpg" },
 citrus: { name: "Citrus", family: "citrus", image: "", noteImage: "/images/notes/orange.jpg" },
@@ -538,7 +550,7 @@ bamboo: { name: "Bamboo", family: "green", image: "" },
 birch: { name: "Birch", family: "woody", image: "" },
 chinotto: { name: "Chinotto", family: "citrus", image: "" },
 cranberry: { name: "Cranberry", family: "fruity", image: "" },
-labdanum: { name: "Labdanum", family: "resinous", image: "" },
+labdanum: { name: "Labdanum", family: "resinous", image: "", noteImage: "/images/notes/labdanum.jpg" },
 magnolia: { name: "Magnolia", family: "floral", image: "" },
 mahogany: { name: "Mahogany", family: "woody", image: "" },
 whitePepper: { name: "White Pepper", family: "spicy", image: "", noteImage: "/images/notes/blackPepper.jpg" },
@@ -554,12 +566,12 @@ iris: { name: "Iris", family: "floral", image: "", noteImage: "/images/notes/iri
 greenMango: { name: "Green Mango", family: "fruity", image: "" },
 carrotSeeds: { name: "Carrot Seeds", family: "earthy", image: "" },
 angelica: { name: "Angelica", family: "aromatic", image: "" },
-cumin: { name: "Cumin", family: "spicy", image: "" },
+cumin: { name: "Cumin", family: "spicy", image: "", noteImage: "/images/notes/cumin.jpg" },
 mineralNotes: { name: "Mineral Notes", family: "mineral", image: "", noteImage: "/images/notes/mineralNotes.jpg" },
 oak: { name: "Oak", family: "woody", image: "" },
 oliveBlossom: { name: "Olive Blossom", family: "floral", image: "" },
 orientalNotes: { name: "Oriental Notes", family: "amber", image: "" },
-passionFruit: { name: "Passion Fruit", family: "fruity", image: "" },
+passionFruit: { name: "Passion Fruit", family: "fruity", image: "", noteImage: "/images/notes/passionFruit.jpg" },
 plum: { name: "Plum", family: "fruity", image: "", noteImage: "/images/notes/plum.jpg" },
 spicyNotes: { name: "Spicy Notes", family: "spicy", image: "" },
 truffle: { name: "Truffle", family: "earthy", image: "" },
