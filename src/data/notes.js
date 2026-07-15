@@ -13,7 +13,7 @@ export const notes = {
   neroli: { name: "Neroli", family: "floral", image: "", noteImage: "/images/notes/neroli.jpg" },
 
   seaNotes: { name: "Sea Notes", family: "aquatic", image: "", noteImage: "/images/notes/seaNotes.jpg" },
-  calone: { name: "Calone", family: "aquatic", image: "" },
+  calone: { name: "Calone", family: "aquatic", image: "", noteImage: "/images/notes/calone.jpg" },
   rosemary: { name: "Rosemary", family: "aromatic", image: "" , noteImage: "/images/notes/rosemary.jpg" },
   peach: { name: "Peach", family: "fruity", image: "" , noteImage: "/images/notes/peach.jpg" },
   freesia: { name: "Freesia", family: "floral", image: "", noteImage: "/images/notes/freesia.jpg" },
@@ -105,6 +105,7 @@ coumarin: {
   name: "Coumarin",
   family: "sweet",
   image: "",
+  noteImage: "/images/notes/coumarin.jpg",
 },
 
 sandalwood: {
@@ -132,6 +133,7 @@ artemisia: {
   name: "Artemisia",
   family: "green",
   image: "",
+  noteImage: "/images/notes/artemisia.jpg",
 },
 
 cinnamon: {
@@ -173,6 +175,7 @@ ambroxan: {
   name: "Ambroxan",
   family: "amber",
   image: "",
+  noteImage: "/images/notes/ambroxan.jpg",
 },
 
 bitterOrange: {
@@ -200,6 +203,7 @@ maninka: {
   name: "Maninka",
   family: "fruity",
   image: "",
+  noteImage: "/images/notes/maninka.jpg",
 },
 
 woodyNotes: {
@@ -220,6 +224,7 @@ amberwood: {
   name: "Amberwood",
   family: "woody",
   image: "",
+  noteImage: "/images/notes/amberwood.jpg",
 },
 
 sicilianMandarin: {
@@ -401,6 +406,7 @@ madagascarVanilla: {
 akigalawood: {
   name: "Akigalawood",
   image: "",
+  noteImage: "/images/notes/akigalawood.jpg",
 },
 
 timur: {
@@ -541,12 +547,14 @@ almond: { name: "Almond", image: "", noteImage: "/images/notes/almond.jpg" },
 grass: { name: "Grass", image: "", noteImage: "/images/notes/grass.jpg" },
 sugar: { name: "Sugar", image: "", noteImage: "/images/notes/sugar.jpg" },
 suede: { name: "Suede", image: "", noteImage: "/images/notes/suede.jpg" },
-cashmirwood: { name: "Cashmirwood", image: "" },
+cashmirwood: { name: "Cashmirwood", image: "", noteImage: "/images/notes/cashmirwood.jpg" },
 martini: { name: "Martini", image: "", noteImage: "/images/notes/martini.jpg" },
 gingerFlower: { name: "Ginger Flower", image: "", noteImage: "/images/notes/gingerFlower.jpg" },
 icedMango: { name: "Iced Mango", image: "", noteImage: "/images/notes/icedMango.jpg" },
+mango: { name: "Mango", family: "fruity", image: "" },
 mandarinOil: { name: "Mandarin Oil", image: "", noteImage: "/images/notes/mandarinOrange.jpg" },
 lemonOil: { name: "Lemon Oil", image: "", noteImage: "/images/notes/lemon.jpg" },
+tangerine: { name: "Tangerine", family: "citrus", image: "" },
 ozone: { name: "Ozone", image: "" },
 silverArmoise: { name: "Silver Armoise", image: "" },
 patchouliNoir: { name: "Patchouli Noir", image: "" },
@@ -575,7 +583,7 @@ labdanum: { name: "Labdanum", family: "resinous", image: "", noteImage: "/images
 magnolia: { name: "Magnolia", family: "floral", image: "", noteImage: "/images/notes/magnolia.jpg" },
 mahogany: { name: "Mahogany", family: "woody", image: "", noteImage: "/images/notes/mahogany.jpg" },
 whitePepper: { name: "White Pepper", family: "spicy", image: "", noteImage: "/images/notes/blackPepper.jpg" },
-wormwood: { name: "Wormwood", family: "aromatic", image: "" },
+wormwood: { name: "Wormwood", family: "aromatic", image: "", noteImage: "/images/notes/wormwood.jpg" },
 anise: { name: "Anise", family: "spicy", image: "", noteImage: "/images/notes/anise.jpg" },
 blackVanilla: { name: "Black Vanilla", family: "sweet", image: "", noteImage: "/images/notes/blackVanilla.jpg" },
 coconut: { name: "Coconut", family: "tropical", image: "" , noteImage: "/images/notes/coconut.jpg" },
