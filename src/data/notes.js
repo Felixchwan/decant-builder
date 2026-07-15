@@ -35,6 +35,7 @@ roseDeMai: {
   name: "Rose de Mai",
   family: "floral",
   image: "",
+  noteImage: "/images/notes/roseDeMai.jpg",
 },
 
 clarySage: {
@@ -456,6 +457,7 @@ galbanum: {
 licorice: {
   name: "Licorice",
   image: "",
+  noteImage: "/images/notes/licorice.jpg",
 },
 
 haitianVetiver: {
@@ -512,6 +514,7 @@ ink: {
 seaSalt: {
   name: "Sea Salt",
   image: "",
+  noteImage: "/images/notes/seaSalt.jpg",
 },
 
 ambergris: {
@@ -549,7 +552,7 @@ silverArmoise: { name: "Silver Armoise", image: "" },
 patchouliNoir: { name: "Patchouli Noir", image: "" },
 italianMandarin: { name: "Italian Mandarin", image: "", noteImage: "/images/notes/mandarinOrange.jpg" },
 roastedCoffeeBeans: { name: "Roasted Coffee Beans", image: "", noteImage: "/images/notes/roastedCoffeeBeans.jpg" },
-birchLeaf: { name: "Birch Leaf", image: "" },
+birchLeaf: { name: "Birch Leaf", image: "", noteImage: "/images/notes/birchLeaf.jpg" },
 pine: { name: "Pine", image: "", noteImage: "/images/notes/pine.jpg" },
 firBalsam: { name: "Fir Balsam", image: "", noteImage: "/images/notes/firBalsam.jpg" },
 basil: { name: "Basil", family: "aromatic", image: "", noteImage: "/images/notes/basil.jpg" },
@@ -576,9 +579,9 @@ wormwood: { name: "Wormwood", family: "aromatic", image: "" },
 anise: { name: "Anise", family: "spicy", image: "", noteImage: "/images/notes/anise.jpg" },
 blackVanilla: { name: "Black Vanilla", family: "sweet", image: "", noteImage: "/images/notes/blackVanilla.jpg" },
 coconut: { name: "Coconut", family: "tropical", image: "" , noteImage: "/images/notes/coconut.jpg" },
-fennel: { name: "Fennel", family: "aromatic", image: "" },
+fennel: { name: "Fennel", family: "aromatic", image: "", noteImage: "/images/notes/fennel.jpg" },
 fig: { name: "Fig", family: "fruity", image: "", noteImage: "/images/notes/fig.jpg" },
-frangipani: { name: "Frangipani", family: "floral", image: "" },
+frangipani: { name: "Frangipani", family: "floral", image: "", noteImage: "/images/notes/frangipani.jpg" },
 fruityNotes: { name: "Fruity Notes", family: "fruity", image: "", noteImage: "/images/notes/fruityNotes.jpg" },
 iris: { name: "Iris", family: "floral", image: "", noteImage: "/images/notes/iris.jpg" },
 greenMango: { name: "Green Mango", family: "fruity", image: "", noteImage: "/images/notes/greenMango.jpg" },
