@@ -801,6 +801,22 @@ occasions: ["daily", "office", "casual"],
 vibes: ["fresh", "modern", "easy", "sporty"]
 },
 {
+id: 34,
+name: "Gentleman Only Blue Label",
+shortName: "Blue Label",
+brand: "Givenchy",
+points: 1,
+image: "/images/perfumes/bronze/batch-02/gentleman-only-blue-label.png",
+accords: ["woody", "citrus", "fresh spicy", "aromatic", "green"],
+topNotes: ["pinkPepper", "greenMandarin", "birchLeaf", "nutmeg", "bergamot"],
+middleNotes: ["vetiver", "cedar", "patchouli"],
+baseNotes: ["incense", "musk"],
+generalNotes: [],
+seasons: ["spring", "summer", "fall"],
+occasions: ["daily", "office", "casual"],
+vibes: ["fresh", "clean", "elegant", "confident"]
+},
+{
   id: 100,
   name: "Arancia di Capri",
   shortName: "Arancia",
@@ -1239,6 +1255,23 @@ baseNotes: ["caramel", "musk"],
   seasons: ["spring", "fall", "winter"],
   occasions: ["date", "night", "formal"],
   vibes: ["seductive", "elegant", "warm", "classic"],
+},
+
+{
+  id: 119,
+  name: "Mirto di Panarea",
+  shortName: "Mirto",
+  brand: "Acqua di Parma",
+  points: 1.5,
+  image: "/images/perfumes/silver/mirto-di-panarea.png",
+  accords: ["citrus", "aromatic", "fresh spicy", "aquatic", "woody"],
+  topNotes: ["basil", "lemon", "bergamot"],
+  middleNotes: ["seaNotes", "jasmine", "rose"],
+  baseNotes: ["juniper", "cedar", "amber"],
+  generalNotes: [],
+  seasons: ["spring", "summer"],
+  occasions: ["daily", "casual", "vacation"],
+  vibes: ["fresh", "mediterranean", "relaxed", "aquatic"],
 },
 
 {
@@ -2540,6 +2573,171 @@ baseNotes: ["caramel", "musk"],
 },
 
 {
+  id: 406,
+  name: "Hacivat",
+  shortName: "Hacivat",
+  brand: "Nishane",
+  points: 4,
+  image: "/images/perfumes/diamond/hacivat.png",
+
+  accords: [
+    "fruity",
+    "woody",
+    "citrus",
+    "oakmoss",
+    "fresh",
+  ],
+
+  topNotes: [
+    "bergamot",
+    "pineapple",
+    "grapefruit",
+  ],
+
+  middleNotes: [
+    "jasmine",
+    "patchouli",
+    "cedarwood",
+  ],
+
+  baseNotes: [
+    "woodyNotes",
+    "oakmoss",
+    "cedar",
+  ],
+
+  seasons: [
+    "spring",
+    "summer",
+    "fall",
+  ],
+
+  occasions: [
+    "daily",
+    "office",
+    "formal",
+    "special",
+  ],
+
+  vibes: [
+    "fresh",
+    "sophisticated",
+    "confident",
+    "luxurious",
+  ],
+},
+
+{
+  id: 407,
+  name: "Summer Hammer",
+  shortName: "Summer Hammer",
+  brand: "Lorenzo Pazzaglia",
+  points: 4,
+  image: "/images/perfumes/diamond/summer-hammer.png",
+
+  accords: [
+    "tropical",
+    "fruity",
+    "sweet",
+    "aquatic",
+    "woody",
+  ],
+
+  topNotes: [
+    "greenMango",
+    "pineapple",
+    "fruityNotes",
+    "coconut",
+    "bergamot",
+  ],
+
+  middleNotes: [
+    "coconut",
+    "seaNotes",
+    "jasmine",
+  ],
+
+  baseNotes: [
+    "musk",
+    "vetiver",
+    "sandalwood",
+    "amber",
+  ],
+
+  seasons: [
+    "spring",
+    "summer",
+  ],
+
+  occasions: [
+    "vacation",
+    "casual",
+    "special",
+  ],
+
+  vibes: [
+    "tropical",
+    "playful",
+    "bright",
+    "unique",
+  ],
+},
+
+{
+  id: 408,
+  name: "Torino21",
+  shortName: "Torino21",
+  brand: "Xerjoff",
+  points: 4,
+  image: "/images/perfumes/diamond/torino21.png",
+
+  accords: [
+    "aromatic",
+    "green",
+    "fresh spicy",
+    "citrus",
+    "fresh",
+  ],
+
+  topNotes: [
+    "mint",
+    "lemon",
+    "basil",
+  ],
+
+  middleNotes: [
+    "blackCurrant",
+    "rosemary",
+    "jasmine",
+    "lavender",
+  ],
+
+  baseNotes: [
+    "musk",
+    "lemonVerbena",
+  ],
+
+  seasons: [
+    "spring",
+    "summer",
+  ],
+
+  occasions: [
+    "daily",
+    "office",
+    "special",
+    "vacation",
+  ],
+
+  vibes: [
+    "fresh",
+    "green",
+    "energetic",
+    "luxurious",
+  ],
+},
+
+{
   id: 500,
   name: "Squid",
   shortName: "Squid",
@@ -2690,6 +2888,7 @@ const SEASON_WEIGHTS_BY_ID = {
   31: { spring: 7, summer: 8, fall: 5, winter: 2 },
   32: { spring: 4, summer: 1, fall: 8, winter: 8 },
   33: { spring: 8, summer: 7, fall: 5, winter: 2 },
+  34: { spring: 8, summer: 7, fall: 5, winter: 2 },
   100: { spring: 8, summer: 10, fall: 2, winter: 0 },
   101: { spring: 8, summer: 10, fall: 2, winter: 0 },
   102: { spring: 9, summer: 10, fall: 2, winter: 0 },
@@ -2709,6 +2908,7 @@ const SEASON_WEIGHTS_BY_ID = {
   116: { spring: 4, summer: 1, fall: 8, winter: 8 },
   117: { spring: 8, summer: 7, fall: 6, winter: 3 },
   118: { spring: 5, summer: 2, fall: 8, winter: 8 },
+  119: { spring: 8, summer: 10, fall: 2, winter: 0 },
   201: { spring: 8, summer: 8, fall: 5, winter: 2 },
   202: { spring: 6, summer: 3, fall: 8, winter: 7 },
   203: { spring: 6, summer: 2, fall: 8, winter: 7 },
@@ -2733,6 +2933,9 @@ const SEASON_WEIGHTS_BY_ID = {
   403: { spring: 2, summer: 0, fall: 9, winter: 10 },
   404: { spring: 5, summer: 1, fall: 9, winter: 9 },
   405: { spring: 9, summer: 8, fall: 4, winter: 2 },
+  406: { spring: 8, summer: 8, fall: 6, winter: 3 },
+  407: { spring: 8, summer: 10, fall: 3, winter: 1 },
+  408: { spring: 9, summer: 9, fall: 4, winter: 1 },
   500: { spring: 2, summer: 1, fall: 8, winter: 9 },
   501: { spring: 4, summer: 1, fall: 9, winter: 8 },
 };
