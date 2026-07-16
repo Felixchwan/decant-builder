@@ -688,7 +688,7 @@ function PerfumeDetailsModal({
 
           <DetailTagGroup label="Seasons" values={perfume.seasons || []} assetType="seasons" />
           <DetailTagGroup label="Occasions" values={perfume.occasions || []} assetType="occasions" />
-          <DetailTagGroup label="Vibes" values={perfume.vibes || []} />
+          <DetailTagGroup label="Vibes" values={perfume.vibes || []} assetType="vibes" />
         </section>
 
         <section className="perfume-details-section">
