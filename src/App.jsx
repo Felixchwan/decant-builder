@@ -694,11 +694,7 @@ function PerfumeDetailsModal({
 
         <section className="perfume-details-section">
           <h4>Accords</h4>
-          <div className="details-tag-row">
-            {(perfume.accords || []).map((accord) => (
-              <span key={accord}>{accord}</span>
-            ))}
-          </div>
+          <DetailTagGroup label="Accords" values={perfume.accords || []} assetType="accords" />
         </section>
 
         <section className="perfume-details-section">
