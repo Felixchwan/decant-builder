@@ -14,6 +14,7 @@ import { buildCoverageSummary } from "./utils/buildCoverageSummary";
 import { buildScentDna } from "./utils/buildScentDna";
 import { buildRecommendations } from "./utils/buildRecommendations";
 import { getMetadataAsset } from "./data/metadataAssets";
+import { getBrandAsset } from "./data/brandAssets";
 import {
   MIN_BOX_SLOTS,
   MAX_BOX_SLOTS,
@@ -437,6 +438,7 @@ function PerfumeDetailsModal({
     (perfume.topNotes || []).length > 0 ||
     (perfume.middleNotes || []).length > 0 ||
     (perfume.baseNotes || []).length > 0;
+  const brandAsset = getBrandAsset(perfume.brand);
 
   useEffect(() => {
     return () => {
@@ -638,6 +640,19 @@ function PerfumeDetailsModal({
           <>
             <div className="perfume-details-image-panel">
               <div className="perfume-details-image-stage">
+                {brandAsset && (
+                  <span className="perfume-details-brand-badge" aria-hidden="true">
+                    <img
+                      src={brandAsset}
+                      alt=""
+                      loading="lazy"
+                      onError={(event) => {
+                        event.currentTarget.closest(".perfume-details-brand-badge")?.remove();
+                      }}
+                    />
+                  </span>
+                )}
+
                 <button
                   type="button"
                   className="perfume-image-nav previous"

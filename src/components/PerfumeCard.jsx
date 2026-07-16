@@ -1,3 +1,5 @@
+import { getBrandAsset } from "../data/brandAssets";
+
 function PerfumeCard({
   perfume,
   tierData,
@@ -6,6 +8,7 @@ function PerfumeCard({
   isDisabled,
 }) {
   const imageFallback = "/images/perfumes/placeholders/perfume-placeholder.svg";
+  const brandAsset = getBrandAsset(perfume.brand);
 
   return (
     <article className="perfume-card">
@@ -14,52 +17,65 @@ function PerfumeCard({
         className="perfume-card-details-trigger"
         onClick={() => onOpenDetails(perfume)}
       >
-      <div className="perfume-card-image">
-        <img
-          src={perfume.image || imageFallback}
-          alt={`${perfume.name} bottle`}
-          onError={(event) => {
-            event.currentTarget.onerror = null;
-            event.currentTarget.src = imageFallback;
-          }}
-        />
-      </div>
+        <div className="perfume-card-image">
+          {brandAsset && (
+            <span className="perfume-card-brand-badge" aria-hidden="true">
+              <img
+                src={brandAsset}
+                alt=""
+                loading="lazy"
+                onError={(event) => {
+                  event.currentTarget.closest(".perfume-card-brand-badge")?.remove();
+                }}
+              />
+            </span>
+          )}
 
-      <div className="perfume-info">
-        <h3>{perfume.name}</h3>
-        {perfume.subtitle && (
-        <p
-        className={`perfume-subtitle ${
-        perfume.subtitleGlow ? "perfume-subtitle-glow" : ""
-        }`}
-        style={{
-        color: perfume.subtitleColor || "#fbbf24",
-        }}
-        >
-        {perfume.subtitle}
-        </p>
-        )}
-        <p>{perfume.brand}</p>
-
-        <div
-          className="tier-badge perfume-card-tier-desktop"
-          style={{
-            borderColor: tierData.color,
-            backgroundColor: tierData.background,
-            color: tierData.color,
-          }}
-        >
-          <span>{tierData.emoji}</span>
-          {tierData.name} • {perfume.points} pt
+          <img
+            className="perfume-card-bottle-image"
+            src={perfume.image || imageFallback}
+            alt={`${perfume.name} bottle`}
+            onError={(event) => {
+              event.currentTarget.onerror = null;
+              event.currentTarget.src = imageFallback;
+            }}
+          />
         </div>
-      </div>
 
-      <div className="tag-row">
-        {(perfume.accords || []).slice(0, 3).map((accord) => (
-          <span key={accord}>{accord}</span>
-        ))}
-      </div>
+        <div className="perfume-info">
+          <h3>{perfume.name}</h3>
+          {perfume.subtitle && (
+            <p
+              className={`perfume-subtitle ${
+                perfume.subtitleGlow ? "perfume-subtitle-glow" : ""
+              }`}
+              style={{
+                color: perfume.subtitleColor || "#fbbf24",
+              }}
+            >
+              {perfume.subtitle}
+            </p>
+          )}
+          <p>{perfume.brand}</p>
 
+          <div
+            className="tier-badge perfume-card-tier-desktop"
+            style={{
+              borderColor: tierData.color,
+              backgroundColor: tierData.background,
+              color: tierData.color,
+            }}
+          >
+            <span>{tierData.emoji}</span>
+            {tierData.name} - {perfume.points} pt
+          </div>
+        </div>
+
+        <div className="tag-row">
+          {(perfume.accords || []).slice(0, 3).map((accord) => (
+            <span key={accord}>{accord}</span>
+          ))}
+        </div>
       </button>
 
       <button

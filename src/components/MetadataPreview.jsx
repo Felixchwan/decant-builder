@@ -1,4 +1,4 @@
-import { cloneElement, useEffect, useRef, useState } from "react";
+import { cloneElement, useEffect, useId, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
 const LONG_PRESS_MS = 450;
@@ -9,6 +9,7 @@ function clamp(value, min, max) {
 }
 
 export default function MetadataPreview({ title, image, description, children }) {
+  const previewId = useId();
   const triggerRef = useRef(null);
   const previewRef = useRef(null);
   const longPressTimeoutRef = useRef(null);
@@ -143,20 +144,30 @@ export default function MetadataPreview({ title, image, description, children })
     };
   }, []);
 
+  function mergeHandlers(childHandler, previewHandler) {
+    return (event) => {
+      childHandler?.(event);
+
+      if (!event.defaultPrevented) {
+        previewHandler(event);
+      }
+    };
+  }
+
   const trigger = cloneElement(children, {
     ref: triggerRef,
     tabIndex: 0,
-    "aria-describedby": isVisible ? "metadata-preview-card" : undefined,
-    onMouseEnter: showPreview,
-    onMouseLeave: hidePreview,
-    onFocus: handleFocus,
-    onBlur: hidePreview,
-    onClick: handleClick,
-    onPointerEnter: handlePointerEnter,
-    onPointerDown: handlePointerDown,
-    onPointerUp: handlePointerEnd,
-    onPointerCancel: handlePointerEnd,
-    onPointerLeave: handlePointerEnd,
+    "aria-describedby": isVisible ? previewId : undefined,
+    onMouseEnter: mergeHandlers(children.props.onMouseEnter, showPreview),
+    onMouseLeave: mergeHandlers(children.props.onMouseLeave, hidePreview),
+    onFocus: mergeHandlers(children.props.onFocus, handleFocus),
+    onBlur: mergeHandlers(children.props.onBlur, hidePreview),
+    onClick: mergeHandlers(children.props.onClick, handleClick),
+    onPointerEnter: mergeHandlers(children.props.onPointerEnter, handlePointerEnter),
+    onPointerDown: mergeHandlers(children.props.onPointerDown, handlePointerDown),
+    onPointerUp: mergeHandlers(children.props.onPointerUp, handlePointerEnd),
+    onPointerCancel: mergeHandlers(children.props.onPointerCancel, handlePointerEnd),
+    onPointerLeave: mergeHandlers(children.props.onPointerLeave, handlePointerEnd),
   });
 
   return (
@@ -166,7 +177,7 @@ export default function MetadataPreview({ title, image, description, children })
         position &&
         createPortal(
           <div
-            id="metadata-preview-card"
+            id={previewId}
             ref={previewRef}
             className={`metadata-preview-card is-visible is-${position.placement}`}
             style={{
