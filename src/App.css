@@ -354,6 +354,39 @@ button {
   display: none;
 }
 
+.perfume-card-tier-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  margin-top: 10px;
+}
+
+.perfume-card-tier-row .tier-badge {
+  margin: 0;
+}
+
+.perfume-card-brand-logo-desktop {
+  display: inline-flex;
+  flex: 0 1 auto;
+  align-items: center;
+  justify-content: flex-end;
+  height: 28px;
+  max-width: 100px;
+  margin-left: auto;
+  opacity: 0.85;
+  pointer-events: none;
+}
+
+.perfume-card-brand-logo-desktop img {
+  display: block;
+  width: auto;
+  max-width: 100px;
+  max-height: 24px;
+  object-fit: contain;
+  filter: none;
+}
+
 .perfume-card:hover .perfume-card-brand-badge,
 .perfume-card:focus-within .perfume-card-brand-badge {
   border-color: rgba(250, 204, 21, 0.28);
@@ -2106,6 +2139,14 @@ button {
     max-height: 30px;
     object-fit: contain;
     filter: none;
+  }
+
+  .perfume-card-brand-logo-desktop {
+    display: none;
+  }
+
+  .perfume-card-tier-row {
+    display: none;
   }
 
   .perfume-card-image .perfume-card-bottle-image {

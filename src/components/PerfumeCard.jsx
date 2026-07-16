@@ -18,19 +18,6 @@ function PerfumeCard({
         onClick={() => onOpenDetails(perfume)}
       >
         <div className="perfume-card-image">
-          {brandAsset && (
-            <span className="perfume-card-brand-badge" aria-hidden="true">
-              <img
-                src={brandAsset}
-                alt=""
-                loading="lazy"
-                onError={(event) => {
-                  event.currentTarget.closest(".perfume-card-brand-badge")?.remove();
-                }}
-              />
-            </span>
-          )}
-
           <img
             className="perfume-card-bottle-image"
             src={perfume.image || imageFallback}
@@ -60,16 +47,33 @@ function PerfumeCard({
               )}
               <p>{perfume.brand}</p>
 
-              <div
-                className="tier-badge perfume-card-tier-desktop"
-                style={{
-                  borderColor: tierData.color,
-                  backgroundColor: tierData.background,
-                  color: tierData.color,
-                }}
-              >
-                <span>{tierData.emoji}</span>
-                {tierData.name} - {perfume.points} pt
+              <div className="perfume-card-tier-row">
+                <div
+                  className="tier-badge perfume-card-tier-desktop"
+                  style={{
+                    borderColor: tierData.color,
+                    backgroundColor: tierData.background,
+                    color: tierData.color,
+                  }}
+                >
+                  <span>{tierData.emoji}</span>
+                  {tierData.name} - {perfume.points} pt
+                </div>
+
+                {brandAsset && (
+                  <span className="perfume-card-brand-logo-desktop" aria-hidden="true">
+                    <img
+                      src={brandAsset}
+                      alt=""
+                      loading="lazy"
+                      onError={(event) => {
+                        event.currentTarget
+                          .closest(".perfume-card-brand-logo-desktop")
+                          ?.remove();
+                      }}
+                    />
+                  </span>
+                )}
               </div>
             </div>
 
