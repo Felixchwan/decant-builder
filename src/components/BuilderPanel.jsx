@@ -80,6 +80,16 @@ function BuilderPanel({
         }),
       [boxSummary, coverageSummary, curatorBonusLane, curatorBonusPreference, selectedPerfumes.length]
     );
+    const boxIntelligence = useMemo(
+      () =>
+        buildBoxIntelligence({
+          boxSummary,
+          coverageSummary,
+          scentDna,
+          selectedPerfumes,
+        }),
+      [boxSummary, coverageSummary, scentDna, selectedPerfumes]
+    );
     const isCuratorBonusUnlocked =
       totalPoints >= DISCOVERY_BONUS_TARGET_POINTS && totalSlots >= minSlots;
     const reviewRequirementText = [
@@ -401,6 +411,8 @@ function BuilderPanel({
         onToggle={() => setIsCollectionSnapshotOpen((isOpen) => !isOpen)}
         onOpenScentLibrary={() => setIsNotesModalOpen(true)}
       />
+
+      <BoxIntelligenceSummary intelligence={boxIntelligence} />
 
       <div className="coverage-panel">
     <h3>Box Analysis</h3>
@@ -947,6 +959,323 @@ function buildCuratorInsight({
   };
 }
 
+function buildBoxIntelligence({
+  boxSummary,
+  coverageSummary,
+  scentDna,
+  selectedPerfumes,
+}) {
+  const selectedCount = selectedPerfumes.length;
+
+  if (selectedCount === 0) {
+    return {
+      isEarly: false,
+      items: [],
+    };
+  }
+
+  const seasonRows = buildSeasonCoverageRows(
+    boxSummary.seasonStrengths || boxSummary.seasonCounts || {},
+    selectedCount
+  );
+  const occasionCounts = boxSummary.occasionCounts || {};
+  const vibeCounts = boxSummary.vibeCounts || {};
+  const accordCounts = getAccordCounts(boxSummary);
+  const profileSignals = getBoxProfileSignals({
+    occasionCounts,
+    vibeCounts,
+    accordCounts,
+  });
+  const dominantProfile = getDominantBoxProfile({
+    profileSignals,
+    scentDna,
+    selectedCount,
+  });
+  const strongestCoverage = getStrongestBoxCoverage({
+    seasonRows,
+    occasionCounts,
+    selectedCount,
+  });
+  const mostImportantGap = getMostImportantBoxGap({
+    boxSummary,
+    coverageSummary,
+    seasonRows,
+    occasionCounts,
+    vibeCounts,
+    accordCounts,
+    profileSignals,
+    selectedCount,
+  });
+  const bestNextMove = getBestBoxNextMove({
+    gap: mostImportantGap,
+    profileSignals,
+    occasionCounts,
+    accordCounts,
+  });
+
+  return {
+    isEarly: selectedCount < 3,
+    items: uniqueInsightItems([
+      {
+        type: "profile",
+        label: selectedCount < 3 ? "Early profile" : "Dominant profile",
+        value: dominantProfile,
+      },
+      {
+        type: "coverage",
+        label: "Strongest coverage",
+        value: strongestCoverage,
+      },
+      {
+        type: "gap",
+        label: "Main gap",
+        value: mostImportantGap.label,
+      },
+      {
+        type: "next",
+        label: "Best next move",
+        value: bestNextMove,
+      },
+    ]).slice(0, 4),
+  };
+}
+
+function getBoxProfileSignals({ occasionCounts, vibeCounts, accordCounts }) {
+  const fresh =
+    (vibeCounts.fresh || 0) +
+    (vibeCounts.clean || 0) +
+    (accordCounts.fresh || 0) +
+    (accordCounts.citrus || 0) +
+    (accordCounts.marine || 0) +
+    (accordCounts.aquatic || 0) +
+    (accordCounts.aromatic || 0);
+  const warmEvening =
+    (occasionCounts.date || 0) +
+    (occasionCounts.night || 0) +
+    (occasionCounts.evening || 0) +
+    (occasionCounts.formal || 0) +
+    (vibeCounts.warm || 0) +
+    (vibeCounts.cozy || 0) +
+    (vibeCounts.seductive || 0) +
+    (accordCounts.amber || 0) +
+    (accordCounts["warm spicy"] || 0) +
+    (accordCounts.smoky || 0);
+  const sweetSeductive =
+    (vibeCounts.seductive || 0) +
+    (accordCounts.sweet || 0) +
+    (accordCounts.vanilla || 0) +
+    (accordCounts.amber || 0);
+  const woodySophisticated =
+    (accordCounts.woody || 0) +
+    (accordCounts.leather || 0) +
+    (accordCounts.iris || 0) +
+    (accordCounts.powdery || 0) +
+    (occasionCounts.formal || 0) +
+    (vibeCounts.elegant || 0);
+
+  return {
+    fresh,
+    warmEvening,
+    sweetSeductive,
+    woodySophisticated,
+  };
+}
+
+function getDominantBoxProfile({ profileSignals, scentDna, selectedCount }) {
+  const sortedSignals = Object.entries(profileSignals).sort(
+    ([, scoreA], [, scoreB]) => scoreB - scoreA
+  );
+  const [topSignal, topScore] = sortedSignals[0] || ["balanced", 0];
+  const secondScore = sortedSignals[1]?.[1] || 0;
+  const seasonBalance = scentDna?.scores?.seasonBalance || 0;
+  const versatility = scentDna?.scores?.versatility || 0;
+
+  if (
+    (selectedCount >= 6 && seasonBalance >= 60 && versatility >= 70) ||
+    (selectedCount >= 4 && seasonBalance >= 60 && versatility >= 70 && topScore <= secondScore + 4)
+  ) {
+    return "Balanced and versatile";
+  }
+
+  if (topSignal === "warmEvening") {
+    return "Warm and evening-oriented";
+  }
+
+  if (topSignal === "sweetSeductive") {
+    return "Sweet and seductive";
+  }
+
+  if (topSignal === "woodySophisticated") {
+    return "Woody and sophisticated";
+  }
+
+  if (topSignal === "fresh" && topScore > 0) {
+    return "Fresh-heavy";
+  }
+
+  return selectedCount < 3 ? "Still taking shape" : "Balanced and versatile";
+}
+
+function getStrongestBoxCoverage({ seasonRows, occasionCounts, selectedCount }) {
+  const seasonCandidates = seasonRows
+    .filter((season) => season.count >= 30)
+    .map((season) => ({
+      score: season.count,
+      label: `${getSeasonStrengthLevel(season.count)} ${season.label.toLowerCase()} coverage`,
+    }));
+  const occasionCandidates = [
+    {
+      score: getOccasionCoverageScore(occasionCounts, ["office"], selectedCount),
+      label: "Strong office versatility",
+    },
+    {
+      score: getOccasionCoverageScore(occasionCounts, ["date", "night", "evening"], selectedCount),
+      label: "Strong date-night profile",
+    },
+    {
+      score: getOccasionCoverageScore(occasionCounts, ["daily", "casual"], selectedCount),
+      label: "Strong daily versatility",
+    },
+    {
+      score: getOccasionCoverageScore(occasionCounts, ["formal"], selectedCount),
+      label: "Strong formal coverage",
+    },
+  ].filter((candidate) => candidate.score >= 50);
+  const topCandidate = [...seasonCandidates, ...occasionCandidates].sort(
+    (a, b) => b.score - a.score || a.label.localeCompare(b.label)
+  )[0];
+
+  return topCandidate?.label || "Profile still developing";
+}
+
+function getMostImportantBoxGap({
+  coverageSummary,
+  seasonRows,
+  occasionCounts,
+  accordCounts,
+  profileSignals,
+  selectedCount,
+}) {
+  const winterScore = seasonRows.find((season) => season.id === "winter")?.count || 0;
+  const summerScore = seasonRows.find((season) => season.id === "summer")?.count || 0;
+  const formalCount = occasionCounts.formal || 0;
+  const eveningCount =
+    (occasionCounts.date || 0) + (occasionCounts.night || 0) + (occasionCounts.evening || 0);
+  const accordDiversity = Object.keys(accordCounts).length;
+  const gapCandidate = (coverageSummary.gaps || [])[0];
+
+  if (winterScore < 35 && profileSignals.fresh > profileSignals.warmEvening) {
+    return {
+      type: "winter",
+      label: "Limited winter depth",
+    };
+  }
+
+  if (formalCount === 0 && selectedCount >= 3) {
+    return {
+      type: "formal",
+      label: "Weak formal coverage",
+    };
+  }
+
+  if (eveningCount < 2 && selectedCount >= 3) {
+    return {
+      type: "evening",
+      label: "Limited evening versatility",
+    };
+  }
+
+  if (profileSignals.fresh >= profileSignals.warmEvening + 3) {
+    return {
+      type: "warmth",
+      label: "Missing warm or smoky character",
+    };
+  }
+
+  if (accordDiversity < Math.min(5, selectedCount + 2)) {
+    return {
+      type: "diversity",
+      label: "Low accord diversity",
+    };
+  }
+
+  if (summerScore < 30 && selectedCount >= 3) {
+    return {
+      type: "summer",
+      label: "Limited warm-weather freshness",
+    };
+  }
+
+  if (gapCandidate) {
+    return {
+      type: gapCandidate.category || "coverage",
+      label: getGapLabel(gapCandidate),
+    };
+  }
+
+  return {
+    type: "contrast",
+    label: "Missing a clear contrast profile",
+  };
+}
+
+function getBestBoxNextMove({ gap, profileSignals, occasionCounts, accordCounts }) {
+  if (gap.type === "winter" || gap.type === "warmth") {
+    return "Add one warm evening fragrance";
+  }
+
+  if (gap.type === "formal") {
+    return "Add a formal woody option";
+  }
+
+  if (gap.type === "summer") {
+    return "Add a fresh daytime fragrance";
+  }
+
+  if (gap.type === "evening") {
+    return "Add a stronger evening fragrance";
+  }
+
+  if (gap.type === "diversity") {
+    return "Add a contrasting profile for more diversity";
+  }
+
+  if (!accordCounts.woody && (occasionCounts.formal || 0) === 0) {
+    return "Add a polished woody fragrance";
+  }
+
+  if (profileSignals.warmEvening > profileSignals.fresh + 2) {
+    return "Add a fresh daytime fragrance";
+  }
+
+  return "Add a clear contrast fragrance";
+}
+
+function getOccasionCoverageScore(occasionCounts, targets, selectedCount) {
+  const count = targets.reduce((sum, target) => sum + (occasionCounts[target] || 0), 0);
+
+  if (selectedCount === 0) {
+    return 0;
+  }
+
+  return Math.round((count / selectedCount) * 100);
+}
+
+function uniqueInsightItems(items) {
+  const seenValues = new Set();
+
+  return items.filter((item) => {
+    const normalizedValue = item.value.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+
+    if (seenValues.has(normalizedValue)) {
+      return false;
+    }
+
+    seenValues.add(normalizedValue);
+    return true;
+  });
+}
+
 function getSeasonStrengthLevel(score) {
   if (score >= 90) return "Dominant";
   if (score >= 70) return "Excellent";
@@ -1353,6 +1682,30 @@ function RequirementLine({ isMet, value }) {
       <span aria-hidden="true" />
       {value}
     </p>
+  );
+}
+
+function BoxIntelligenceSummary({ intelligence }) {
+  if (!intelligence?.items?.length) {
+    return null;
+  }
+
+  return (
+    <section className="box-intelligence" aria-label="Box Intelligence">
+      <div className="box-intelligence-header">
+        <h3>Box Intelligence</h3>
+        {intelligence.isEarly && <span>Early read</span>}
+      </div>
+
+      <div className="box-intelligence-grid">
+        {intelligence.items.map((item) => (
+          <div className="box-intelligence-item" key={item.type}>
+            <span>{item.label}</span>
+            <strong>{item.value}</strong>
+          </div>
+        ))}
+      </div>
+    </section>
   );
 }
 
@@ -2272,11 +2625,21 @@ const LOW_VALUE_RECOMMENDATION_REASON_PATTERNS = [
   /^shares /i,
   /^good recommendation$/i,
   /^broadens the fragrance palette$/i,
+  /^adds variety without changing the mood too much$/i,
 ];
 
 const RECOMMENDATION_REASON_REWRITES = {
   "Adds high-impact coverage": "Improves multiple coverage gaps",
   "Adds contrast to the current collection": "Adds contrast to your current collection",
+  "Expands Spring Coverage": "Expands spring versatility",
+  "Expands Summer Coverage": "Expands warm-weather options",
+  "Expands Fall Coverage": "Adds fall-season range",
+  "Expands Winter Coverage": "Strengthens cold-weather coverage",
+  "Improves Season Balance": "Improves seasonal balance",
+  "Adds fresh everyday range": "Adds fresh daytime range",
+  "Strengthens easy daily wear": "Broadens daily rotation",
+  "Adds a useful scent mood": "Adds a distinct scent mood",
+  "Adds contrast without changing the mood too much": "Adds contrast within your current style",
 };
 
 function getRecommendationExplanations(recommendation) {
@@ -2298,6 +2661,7 @@ function getRecommendationExplanations(recommendation) {
   const selectedReasons = [];
   const seenLabels = new Set();
   const seenCategories = new Set();
+  const seenConcepts = new Set();
   const prioritizedOptions = reasonOptions.sort(
     (a, b) => a.priority - b.priority || a.label.localeCompare(b.label)
   );
@@ -2309,6 +2673,11 @@ function getRecommendationExplanations(recommendation) {
 
     const normalizedLabel = normalizeRecommendationReason(reason.label);
     if (seenLabels.has(normalizedLabel)) {
+      return;
+    }
+
+    const concept = getRecommendationReasonConcept(reason.label);
+    if (concept && seenConcepts.has(concept)) {
       return;
     }
 
@@ -2325,6 +2694,11 @@ function getRecommendationExplanations(recommendation) {
 
     selectedReasons.push(reason.label);
     seenLabels.add(normalizedLabel);
+
+    if (concept) {
+      seenConcepts.add(concept);
+    }
+
     seenCategories.add(reason.category);
 
     if (reason.topic) {
@@ -2334,11 +2708,13 @@ function getRecommendationExplanations(recommendation) {
 
   return selectedReasons.length > 0
     ? selectedReasons
-    : ["Complements your current box profile"];
+    : [];
 }
 
 function createRecommendationReasonOption(reason) {
-  const label = RECOMMENDATION_REASON_REWRITES[reason] || reason;
+  const label = polishRecommendationReasonLabel(
+    RECOMMENDATION_REASON_REWRITES[reason] || reason
+  );
 
   if (!label) {
     return null;
@@ -2354,14 +2730,27 @@ function createRecommendationReasonOption(reason) {
   };
 }
 
+function polishRecommendationReasonLabel(reason) {
+  const missingDepthMatch = reason.match(/^Adds (.+) depth currently missing$/);
+
+  if (missingDepthMatch) {
+    return getAccordRecommendationCopy(missingDepthMatch[1].toLowerCase());
+  }
+
+  return reason;
+}
+
 function getFallbackRecommendationReasonOptions(recommendation) {
   const breakdown = recommendation.scoreBreakdown || {};
   const perfume = recommendation.perfume || {};
   const fallbackReasons = [];
 
   if (breakdown.seasons > 0) {
+    const strongestSeason = getStrongestRecommendationSeason(perfume);
     fallbackReasons.push({
-      label: "Improves seasonal coverage",
+      label: strongestSeason
+        ? getSeasonRecommendationCopy(strongestSeason)
+        : "Improves seasonal balance",
       category: "coverage",
       priority: 1,
       topic: "season",
@@ -2369,8 +2758,11 @@ function getFallbackRecommendationReasonOptions(recommendation) {
   }
 
   if (breakdown.occasions > 0) {
+    const occasion = getPreferredRecommendationOccasion(perfume);
     fallbackReasons.push({
-      label: "Improves wearing occasion coverage",
+      label: occasion
+        ? getOccasionRecommendationCopy(occasion)
+        : "Improves occasion coverage",
       category: "coverage",
       priority: 1,
       topic: "occasion",
@@ -2378,8 +2770,11 @@ function getFallbackRecommendationReasonOptions(recommendation) {
   }
 
   if (breakdown.vibes > 0) {
+    const vibe = getPreferredRecommendationVibe(perfume);
     fallbackReasons.push({
-      label: "Adds a useful scent mood",
+      label: vibe
+        ? getVibeRecommendationCopy(vibe)
+        : "Adds a distinct scent mood",
       category: "balance",
       priority: 2,
       topic: "vibe",
@@ -2390,8 +2785,8 @@ function getFallbackRecommendationReasonOptions(recommendation) {
     const accord = perfume.accords?.[0];
     fallbackReasons.push({
       label: accord
-        ? `Adds ${formatRecommendationLabel(accord)} character`
-        : "Adds scent profile variety",
+        ? getAccordRecommendationCopy(accord)
+        : "Adds a new scent profile",
       category: "balance",
       priority: 2,
       topic: "accord",
@@ -2399,8 +2794,11 @@ function getFallbackRecommendationReasonOptions(recommendation) {
   }
 
   if (breakdown.sharedOccasions > 0) {
+    const occasion = getPreferredRecommendationOccasion(perfume);
     fallbackReasons.push({
-      label: "Stays useful across your wearing habits",
+      label: occasion
+        ? getOccasionRecommendationCopy(occasion)
+        : "Adds another wearable option",
       category: "support",
       priority: 3,
       topic: "occasion",
@@ -2408,8 +2806,11 @@ function getFallbackRecommendationReasonOptions(recommendation) {
   }
 
   if (breakdown.sharedVibes > 0 || breakdown.sharedSeasons > 0) {
+    const vibe = getPreferredRecommendationVibe(perfume);
     fallbackReasons.push({
-      label: "Complements your current scent direction",
+      label: vibe
+        ? getVibeRecommendationCopy(vibe)
+        : "Adds a compatible scent profile",
       category: "affinity",
       priority: 4,
       topic: "vibe",
@@ -2418,7 +2819,7 @@ function getFallbackRecommendationReasonOptions(recommendation) {
 
   if (breakdown.noteDiversity > 0) {
     fallbackReasons.push({
-      label: "Expands note variety",
+      label: "Expands the note palette",
       category: "balance",
       priority: 2,
       topic: "note",
@@ -2426,6 +2827,119 @@ function getFallbackRecommendationReasonOptions(recommendation) {
   }
 
   return fallbackReasons;
+}
+
+function getStrongestRecommendationSeason(perfume) {
+  const weights = perfume.seasonWeights || {};
+  const weightedSeason = Object.entries(weights)
+    .filter(([, weight]) => weight > 0)
+    .sort(([, weightA], [, weightB]) => weightB - weightA)[0]?.[0];
+
+  return weightedSeason || perfume.seasons?.[0] || "";
+}
+
+function getPreferredRecommendationOccasion(perfume) {
+  const priority = ["formal", "office", "date", "night", "evening", "daily", "casual"];
+
+  return priority.find((occasion) => perfume.occasions?.includes(occasion)) || perfume.occasions?.[0] || "";
+}
+
+function getPreferredRecommendationVibe(perfume) {
+  const priority = [
+    "warm",
+    "dark",
+    "seductive",
+    "elegant",
+    "fresh",
+    "clean",
+    "energetic",
+    "cozy",
+    "tropical",
+  ];
+
+  return priority.find((vibe) => perfume.vibes?.includes(vibe)) || perfume.vibes?.[0] || "";
+}
+
+function getSeasonRecommendationCopy(season) {
+  const copy = {
+    spring: "Expands spring versatility",
+    summer: "Expands warm-weather options",
+    fall: "Adds fall-season range",
+    winter: "Strengthens cold-weather coverage",
+  };
+
+  return copy[season] || `Expands ${formatRecommendationLabel(season)} coverage`;
+}
+
+function getOccasionRecommendationCopy(occasion) {
+  const copy = {
+    office: "Broadens office rotation",
+    formal: "Strengthens formal versatility",
+    date: "Adds date-night range",
+    night: "Adds a darker evening profile",
+    evening: "Adds evening versatility",
+    daily: "Broadens daily rotation",
+    casual: "Adds easy casual wear",
+    club: "Adds a stronger night-out option",
+    vacation: "Adds a relaxed travel option",
+    special: "Adds special-occasion polish",
+  };
+
+  return copy[occasion] || `Improves ${formatRecommendationLabel(occasion)} coverage`;
+}
+
+function getVibeRecommendationCopy(vibe) {
+  const copy = {
+    fresh: "Adds fresh brightness",
+    clean: "Adds clean versatility",
+    warm: "Adds warmth",
+    cozy: "Adds cozy depth",
+    seductive: "Adds a seductive evening profile",
+    dark: "Adds a darker profile",
+    elegant: "Adds polished character",
+    energetic: "Adds energetic lift",
+    tropical: "Adds tropical brightness",
+    aquatic: "Brings marine freshness",
+    luxurious: "Adds luxury character",
+    confident: "Adds confident presence",
+    playful: "Adds playful contrast",
+    romantic: "Adds romantic softness",
+  };
+
+  return copy[vibe] || `Adds ${formatRecommendationLabel(vibe)} character`;
+}
+
+function getAccordRecommendationCopy(accord) {
+  const copy = {
+    citrus: "Adds citrus brightness",
+    fresh: "Adds fresh brightness",
+    marine: "Brings marine freshness",
+    aquatic: "Brings aquatic freshness",
+    green: "Increases green freshness",
+    woody: "Introduces woody depth",
+    aromatic: "Expands aromatic lift",
+    "fresh spicy": "Expands fresh-spicy variety",
+    "warm spicy": "Expands warm-spicy depth",
+    leather: "Adds leather depth",
+    smoky: "Adds smoky depth",
+    incense: "Adds incense depth",
+    amber: "Adds amber warmth",
+    vanilla: "Introduces a sweeter direction",
+    sweet: "Introduces a sweeter direction",
+    powdery: "Adds powdery elegance",
+    musky: "Adds musky softness",
+    iris: "Adds iris polish",
+    floral: "Adds floral lift",
+    fruity: "Adds fruity brightness",
+    coffee: "Adds roasted depth",
+    oud: "Adds niche woody depth",
+    tobacco: "Adds tobacco depth",
+    mineral: "Adds mineral contrast",
+    ozonic: "Adds airy freshness",
+    salty: "Adds salty freshness",
+  };
+
+  return copy[accord] || `Adds ${formatRecommendationLabel(accord)} character`;
 }
 
 function getRecommendationReasonCategory(reason) {
@@ -2498,6 +3012,30 @@ function getRecommendationReasonTopic(reason) {
 
 function normalizeRecommendationReason(reason) {
   return reason.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+}
+
+function getRecommendationReasonConcept(reason) {
+  if (/\b(citrus|fresh|marine|aquatic|green|airy|salty|warm-weather)\b/i.test(reason)) {
+    return "freshness";
+  }
+
+  if (/\b(warm|amber|cold-weather|winter|cozy)\b/i.test(reason)) {
+    return "warmth";
+  }
+
+  if (/\b(date|night|evening|night-out|seductive|darker)\b/i.test(reason)) {
+    return "evening";
+  }
+
+  if (/\b(office|formal|polished|polish)\b/i.test(reason)) {
+    return "polish";
+  }
+
+  if (/\b(woody|leather|smoky|incense|oud|roasted|depth)\b/i.test(reason)) {
+    return "depth";
+  }
+
+  return "";
 }
 
 function getRecommendationConfidence(recommendation) {
