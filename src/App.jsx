@@ -7,6 +7,7 @@ import { getTierData } from "./utils/tierUtils";
 import PerfumeCard from "./components/PerfumeCard";
 import FilterBar from "./components/FilterBar";
 import BuilderPanel from "./components/BuilderPanel";
+import MetadataPreview from "./components/MetadataPreview";
 import { buildBoxSummary } from "./utils/buildBoxSummary";
 import { getPerfumeNoteIds } from "./utils/noteUtils";
 import { buildCoverageSummary } from "./utils/buildCoverageSummary";
@@ -805,17 +806,19 @@ function DetailNotePill({ note, noteId }) {
   }
 
   return (
-    <span className="detail-note-pill has-note-image">
-      <img
-        src={noteImage}
-        alt=""
-        loading="lazy"
-        onError={(event) => {
-          event.currentTarget.remove();
-        }}
-      />
-      <span>{noteName}</span>
-    </span>
+    <MetadataPreview title={noteName} image={noteImage}>
+      <span className="detail-note-pill has-note-image">
+        <img
+          src={noteImage}
+          alt=""
+          loading="lazy"
+          onError={(event) => {
+            event.currentTarget.remove();
+          }}
+        />
+        <span>{noteName}</span>
+      </span>
+    </MetadataPreview>
   );
 }
 
