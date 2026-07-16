@@ -2196,7 +2196,9 @@ function RecommendationCard({
   isBoxFull,
   onAddPerfume,
 }) {
-  const { perfume, score, reasons } = recommendation;
+  const { perfume, score } = recommendation;
+  const explanations = getRecommendationExplanations(recommendation);
+  const confidence = getRecommendationConfidence(recommendation);
   const imageFallback = "/images/perfumes/placeholders/perfume-placeholder.svg";
   const isAddDisabled = isAdded || isBoxFull;
   const addButtonLabel = isAdded ? "Added" : isBoxFull ? "Box full" : "Add to Box";
@@ -2229,13 +2231,24 @@ function RecommendationCard({
         <span className="recommendation-score">{score}</span>
       </div>
 
-      {reasons.length > 0 && (
+      <div className="recommendation-intelligence">
+        <div className="recommendation-intelligence-header">
+          <span>Why this fits</span>
+          <span
+            className={`recommendation-confidence recommendation-confidence-${confidence
+              .toLowerCase()
+              .replace(/\s+/g, "-")}`}
+          >
+            {confidence}
+          </span>
+        </div>
+
         <div className="recommendation-reasons">
-          {reasons.map((reason) => (
+          {explanations.map((reason) => (
             <p key={reason}>{reason}</p>
           ))}
         </div>
-      )}
+      </div>
 
       <div className="recommendation-actions">
         <button
@@ -2248,6 +2261,264 @@ function RecommendationCard({
       </div>
     </article>
   );
+}
+
+const MAX_RECOMMENDATION_EXPLANATIONS = 3;
+
+const LOW_VALUE_RECOMMENDATION_REASON_PATTERNS = [
+  /^fits your current box tier$/i,
+  /^matches current tier$/i,
+  /^similar to daily picks$/i,
+  /^shares /i,
+  /^good recommendation$/i,
+  /^broadens the fragrance palette$/i,
+];
+
+const RECOMMENDATION_REASON_REWRITES = {
+  "Adds high-impact coverage": "Improves multiple coverage gaps",
+  "Adds contrast to the current collection": "Adds contrast to your current collection",
+};
+
+function getRecommendationExplanations(recommendation) {
+  const reasons = Array.isArray(recommendation.reasons)
+    ? recommendation.reasons
+    : [];
+  const reasonOptions = [
+    ...reasons.map((reason) => createRecommendationReasonOption(reason)),
+    ...getFallbackRecommendationReasonOptions(recommendation),
+  ]
+    .filter(Boolean)
+    .filter(
+      ({ label }) =>
+        !LOW_VALUE_RECOMMENDATION_REASON_PATTERNS.some((pattern) =>
+          pattern.test(label)
+        )
+    );
+
+  const selectedReasons = [];
+  const seenLabels = new Set();
+  const seenCategories = new Set();
+  const prioritizedOptions = reasonOptions.sort(
+    (a, b) => a.priority - b.priority || a.label.localeCompare(b.label)
+  );
+
+  prioritizedOptions.forEach((reason) => {
+    if (selectedReasons.length >= MAX_RECOMMENDATION_EXPLANATIONS) {
+      return;
+    }
+
+    const normalizedLabel = normalizeRecommendationReason(reason.label);
+    if (seenLabels.has(normalizedLabel)) {
+      return;
+    }
+
+    if (reason.category === "affinity" && seenCategories.has("affinity")) {
+      return;
+    }
+
+    if (
+      reason.topic &&
+      [...seenCategories].some((category) => category === reason.topic)
+    ) {
+      return;
+    }
+
+    selectedReasons.push(reason.label);
+    seenLabels.add(normalizedLabel);
+    seenCategories.add(reason.category);
+
+    if (reason.topic) {
+      seenCategories.add(reason.topic);
+    }
+  });
+
+  return selectedReasons.length > 0
+    ? selectedReasons
+    : ["Complements your current box profile"];
+}
+
+function createRecommendationReasonOption(reason) {
+  const label = RECOMMENDATION_REASON_REWRITES[reason] || reason;
+
+  if (!label) {
+    return null;
+  }
+
+  const category = getRecommendationReasonCategory(label);
+
+  return {
+    label,
+    category,
+    priority: getRecommendationReasonPriority(category),
+    topic: getRecommendationReasonTopic(label),
+  };
+}
+
+function getFallbackRecommendationReasonOptions(recommendation) {
+  const breakdown = recommendation.scoreBreakdown || {};
+  const perfume = recommendation.perfume || {};
+  const fallbackReasons = [];
+
+  if (breakdown.seasons > 0) {
+    fallbackReasons.push({
+      label: "Improves seasonal coverage",
+      category: "coverage",
+      priority: 1,
+      topic: "season",
+    });
+  }
+
+  if (breakdown.occasions > 0) {
+    fallbackReasons.push({
+      label: "Improves wearing occasion coverage",
+      category: "coverage",
+      priority: 1,
+      topic: "occasion",
+    });
+  }
+
+  if (breakdown.vibes > 0) {
+    fallbackReasons.push({
+      label: "Adds a useful scent mood",
+      category: "balance",
+      priority: 2,
+      topic: "vibe",
+    });
+  }
+
+  if (breakdown.accordDiversity > 0 || breakdown.sharedAccords > 0) {
+    const accord = perfume.accords?.[0];
+    fallbackReasons.push({
+      label: accord
+        ? `Adds ${formatRecommendationLabel(accord)} character`
+        : "Adds scent profile variety",
+      category: "balance",
+      priority: 2,
+      topic: "accord",
+    });
+  }
+
+  if (breakdown.sharedOccasions > 0) {
+    fallbackReasons.push({
+      label: "Stays useful across your wearing habits",
+      category: "support",
+      priority: 3,
+      topic: "occasion",
+    });
+  }
+
+  if (breakdown.sharedVibes > 0 || breakdown.sharedSeasons > 0) {
+    fallbackReasons.push({
+      label: "Complements your current scent direction",
+      category: "affinity",
+      priority: 4,
+      topic: "vibe",
+    });
+  }
+
+  if (breakdown.noteDiversity > 0) {
+    fallbackReasons.push({
+      label: "Expands note variety",
+      category: "balance",
+      priority: 2,
+      topic: "note",
+    });
+  }
+
+  return fallbackReasons;
+}
+
+function getRecommendationReasonCategory(reason) {
+  if (
+    /\b(matches|builds on|complements your|stays close|current|preferences|direction|style)\b/i.test(
+      reason
+    )
+  ) {
+    return "affinity";
+  }
+
+  if (
+    /\b(coverage|season|spring|summer|fall|winter|occasion|office|formal|date|night|evening|daily|everyday|wear|versatility|range)\b/i.test(
+      reason
+    )
+  ) {
+    return "coverage";
+  }
+
+  if (
+    /\b(balance|balances|contrast|depth|warmth|warm|cold|missing|underrepresented|diversity|variety|profile|dimension|polish|presence|comfort)\b/i.test(
+      reason
+    )
+  ) {
+    return "balance";
+  }
+
+  return "support";
+}
+
+function getRecommendationReasonPriority(category) {
+  if (category === "coverage") {
+    return 1;
+  }
+
+  if (category === "balance") {
+    return 2;
+  }
+
+  if (category === "support") {
+    return 3;
+  }
+
+  return 4;
+}
+
+function getRecommendationReasonTopic(reason) {
+  if (/\b(spring|summer|fall|winter|season|coverage)\b/i.test(reason)) {
+    return "season";
+  }
+
+  if (/\b(office|formal|date|night|evening|daily|everyday|occasion|wear)\b/i.test(reason)) {
+    return "occasion";
+  }
+
+  if (/\b(vibe|mood|profile|direction|style)\b/i.test(reason)) {
+    return "vibe";
+  }
+
+  if (/\b(accord|woody|aromatic|citrus|fresh|spicy|leather|sweet)\b/i.test(reason)) {
+    return "accord";
+  }
+
+  if (/\b(note|palette)\b/i.test(reason)) {
+    return "note";
+  }
+
+  return "";
+}
+
+function normalizeRecommendationReason(reason) {
+  return reason.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+}
+
+function getRecommendationConfidence(recommendation) {
+  const score = Number(recommendation.finalScore ?? recommendation.score ?? 0);
+
+  if (score >= 75) {
+    return "High";
+  }
+
+  if (score >= 45) {
+    return "Medium";
+  }
+
+  return "Situational";
+}
+
+function formatRecommendationLabel(value = "") {
+  return value
+    .replace(/([a-z])([A-Z])/g, "$1 $2")
+    .replace(/[-_]/g, " ")
+    .replace(/\b\w/g, (letter) => letter.toUpperCase());
 }
 
 function ScentDnaPanel({ scentDna }) {
