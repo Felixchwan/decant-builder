@@ -43,31 +43,50 @@ function PerfumeCard({
         </div>
 
         <div className="perfume-info">
-          <h3>{perfume.name}</h3>
-          {perfume.subtitle && (
-            <p
-              className={`perfume-subtitle ${
-                perfume.subtitleGlow ? "perfume-subtitle-glow" : ""
-              }`}
-              style={{
-                color: perfume.subtitleColor || "#fbbf24",
-              }}
-            >
-              {perfume.subtitle}
-            </p>
-          )}
-          <p>{perfume.brand}</p>
+          <div className="perfume-info-heading">
+            <div className="perfume-info-copy">
+              <h3>{perfume.name}</h3>
+              {perfume.subtitle && (
+                <p
+                  className={`perfume-subtitle ${
+                    perfume.subtitleGlow ? "perfume-subtitle-glow" : ""
+                  }`}
+                  style={{
+                    color: perfume.subtitleColor || "#fbbf24",
+                  }}
+                >
+                  {perfume.subtitle}
+                </p>
+              )}
+              <p>{perfume.brand}</p>
 
-          <div
-            className="tier-badge perfume-card-tier-desktop"
-            style={{
-              borderColor: tierData.color,
-              backgroundColor: tierData.background,
-              color: tierData.color,
-            }}
-          >
-            <span>{tierData.emoji}</span>
-            {tierData.name} - {perfume.points} pt
+              <div
+                className="tier-badge perfume-card-tier-desktop"
+                style={{
+                  borderColor: tierData.color,
+                  backgroundColor: tierData.background,
+                  color: tierData.color,
+                }}
+              >
+                <span>{tierData.emoji}</span>
+                {tierData.name} - {perfume.points} pt
+              </div>
+            </div>
+
+            {brandAsset && (
+              <span className="perfume-card-brand-logo-mobile" aria-hidden="true">
+                <img
+                  src={brandAsset}
+                  alt=""
+                  loading="lazy"
+                  onError={(event) => {
+                    event.currentTarget
+                      .closest(".perfume-card-brand-logo-mobile")
+                      ?.remove();
+                  }}
+                />
+              </span>
+            )}
           </div>
         </div>
 

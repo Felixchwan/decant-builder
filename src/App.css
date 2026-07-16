@@ -350,6 +350,10 @@ button {
   transition: filter 180ms ease, opacity 180ms ease;
 }
 
+.perfume-card-brand-logo-mobile {
+  display: none;
+}
+
 .perfume-card:hover .perfume-card-brand-badge,
 .perfume-card:focus-within .perfume-card-brand-badge {
   border-color: rgba(250, 204, 21, 0.28);
@@ -2068,19 +2072,40 @@ button {
   }
 
   .perfume-card-brand-badge {
-    top: 7px;
-    left: 7px;
-    max-width: 44px;
-    height: 22px;
-    padding: 3px 5px;
-    transform: none;
+    display: none;
   }
 
-  .perfume-card-brand-badge img {
-    max-width: 38px;
-    max-height: 16px;
+  .perfume-info-heading {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 10px;
+    align-items: flex-start;
+  }
+
+  .perfume-info-copy {
+    flex: 1 1 190px;
+    min-width: 0;
+  }
+
+  .perfume-card-brand-logo-mobile {
+    display: inline-flex;
+    flex: 0 1 72px;
+    justify-content: flex-end;
+    align-items: center;
+    max-width: 72px;
+    margin: 1px 0 0 auto;
+    opacity: 0.85;
+    pointer-events: none;
+  }
+
+  .perfume-card-brand-logo-mobile img {
+    display: block;
+    width: auto;
+    max-width: 72px;
+    height: auto;
+    max-height: 30px;
+    object-fit: contain;
     filter: none;
-    opacity: 0.86;
   }
 
   .perfume-card-image .perfume-card-bottle-image {
