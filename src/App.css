@@ -2730,6 +2730,52 @@ button {
   padding: 4px 10px 4px 5px;
 }
 
+.details-tag-row > .detail-asset-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 4px 10px 4px 5px;
+  outline: none;
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    transform 160ms ease,
+    background-color 160ms ease;
+}
+
+.detail-asset-chip img {
+  width: 24px;
+  height: 24px;
+  flex: 0 0 auto;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 999px;
+  background:
+    radial-gradient(circle at 50% 35%, rgba(255, 255, 255, 0.16), transparent 64%),
+    rgba(2, 6, 23, 0.42);
+  object-fit: cover;
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .details-tag-row > .detail-asset-chip:hover,
+  .details-tag-row > .detail-asset-chip:focus-visible {
+    border-color: rgba(134, 239, 172, 0.38);
+    background: rgba(74, 222, 128, 0.13);
+    box-shadow:
+      0 0 0 1px rgba(134, 239, 172, 0.08),
+      0 8px 20px rgba(0, 0, 0, 0.18);
+    transform: translateY(-1px) scale(1.025);
+  }
+}
+
+.details-tag-row > .detail-asset-chip:active {
+  border-color: rgba(134, 239, 172, 0.34);
+  background: rgba(74, 222, 128, 0.14);
+  transform: scale(1.035);
+}
+
 .detail-note-pill img {
   width: 26px;
   height: 26px;
@@ -2743,6 +2789,18 @@ button {
   box-shadow:
     0 2px 8px rgba(0, 0, 0, 0.24),
     inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .details-tag-row > .detail-asset-chip {
+    transition: none;
+  }
+
+  .details-tag-row > .detail-asset-chip:hover,
+  .details-tag-row > .detail-asset-chip:focus-visible,
+  .details-tag-row > .detail-asset-chip:active {
+    transform: none;
+  }
 }
 
 .details-tag-row p,

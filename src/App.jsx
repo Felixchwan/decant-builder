@@ -12,6 +12,7 @@ import { getPerfumeNoteIds } from "./utils/noteUtils";
 import { buildCoverageSummary } from "./utils/buildCoverageSummary";
 import { buildScentDna } from "./utils/buildScentDna";
 import { buildRecommendations } from "./utils/buildRecommendations";
+import { getMetadataAsset } from "./data/metadataAssets";
 import {
   MIN_BOX_SLOTS,
   MAX_BOX_SLOTS,
@@ -685,8 +686,8 @@ function PerfumeDetailsModal({
         <section className="perfume-details-section">
           <h4>Profile</h4>
 
-          <DetailTagGroup label="Seasons" values={perfume.seasons || []} />
-          <DetailTagGroup label="Occasions" values={perfume.occasions || []} />
+          <DetailTagGroup label="Seasons" values={perfume.seasons || []} assetType="seasons" />
+          <DetailTagGroup label="Occasions" values={perfume.occasions || []} assetType="occasions" />
           <DetailTagGroup label="Vibes" values={perfume.vibes || []} />
         </section>
 
@@ -736,19 +737,44 @@ function PerfumeDetailsModal({
   );
 }
 
-function DetailTagGroup({ label, values }) {
+function DetailTagGroup({ label, values, assetType }) {
   return (
     <div className="detail-profile-group">
       <span>{label}</span>
 
       <div className="details-tag-row">
         {values.length > 0 ? (
-          values.map((value) => <span key={value}>{value}</span>)
+          values.map((value) => (
+            <DetailMetadataChip key={value} value={value} assetType={assetType} />
+          ))
         ) : (
           <p>No data yet</p>
         )}
       </div>
     </div>
+  );
+}
+
+function DetailMetadataChip({ value, assetType }) {
+  const asset = assetType ? getMetadataAsset(assetType, value) : null;
+
+  if (!asset) {
+    return <span>{value}</span>;
+  }
+
+  return (
+    <span className="detail-asset-chip" tabIndex={0}>
+      <img
+        src={asset}
+        alt=""
+        loading="lazy"
+        onError={(event) => {
+          event.currentTarget.remove();
+          event.currentTarget.parentElement?.classList.remove("detail-asset-chip");
+        }}
+      />
+      <span>{value}</span>
+    </span>
   );
 }
 
