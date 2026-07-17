@@ -56,7 +56,10 @@ function BuilderPanel({
     const [isCuratorBonusAnimating, setIsCuratorBonusAnimating] = useState(false);
     const [shareStatus, setShareStatus] = useState("");
     const [isShareTooltipOpen, setIsShareTooltipOpen] = useState(false);
+    const [isBalanceLaneEmphasized, setIsBalanceLaneEmphasized] = useState(false);
     const shareStatusTimeoutRef = useRef(null);
+    const balanceLaneRef = useRef(null);
+    const balanceLaneEmphasisTimeoutRef = useRef(null);
     const sortedNotes = [...boxSummary.notes].sort();
     const selectedPerfumeIds = new Set(
       selectedPerfumes.map((perfume) => perfume.id)
@@ -109,6 +112,46 @@ function BuilderPanel({
       typeof window !== "undefined" &&
       typeof window.ClipboardItem !== "undefined" &&
       Boolean(navigator.clipboard?.write);
+    const nextAvailableSlotIndex = getNextAvailableSlotIndex(
+      selectedPerfumes,
+      maxSelectableSlots
+    );
+
+    const showBalanceLaneEmphasis = () => {
+      setIsBalanceLaneEmphasized(true);
+
+      if (balanceLaneEmphasisTimeoutRef.current) {
+        window.clearTimeout(balanceLaneEmphasisTimeoutRef.current);
+      }
+
+      balanceLaneEmphasisTimeoutRef.current = window.setTimeout(() => {
+        setIsBalanceLaneEmphasized(false);
+        balanceLaneEmphasisTimeoutRef.current = null;
+      }, 1100);
+    };
+
+    const focusBalanceLane = () => {
+      const firstCard = balanceLaneRef.current?.querySelector(".recommendation-card");
+      const heading = balanceLaneRef.current?.querySelector("h4");
+      const focusTarget = firstCard || heading;
+
+      if (focusTarget) {
+        focusTarget.focus({ preventScroll: true });
+      }
+    };
+
+    const handleNextSlotRecommendation = () => {
+      if (!balanceLaneRef.current) {
+        return;
+      }
+
+      balanceLaneRef.current.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
+      showBalanceLaneEmphasis();
+      window.setTimeout(focusBalanceLane, 420);
+    };
 
     const dismissDiscoveryIntro = () => {
       if (typeof window !== "undefined") {
@@ -213,6 +256,10 @@ function BuilderPanel({
         if (shareStatusTimeoutRef.current) {
           window.clearTimeout(shareStatusTimeoutRef.current);
         }
+
+        if (balanceLaneEmphasisTimeoutRef.current) {
+          window.clearTimeout(balanceLaneEmphasisTimeoutRef.current);
+        }
       },
       []
     );
@@ -245,20 +292,20 @@ function BuilderPanel({
         <DiscoveryBoxCoachmark onDismiss={dismissDiscoveryIntro} />
       )}
 
-      <div className="stats-grid">
-        <div className="stat-card">
-          <span>Points</span>
+      <div className="box-summary-card" aria-label="Box summary">
+        <div className="box-summary-metric">
+          <strong>{totalSlots} / {maxSelectableSlots}</strong>
+          <span>Slots</span>
+        </div>
+
+        <div className="box-summary-metric">
           <strong>{totalPoints.toFixed(1)}</strong>
+          <span>Points</span>
         </div>
 
-        <div className="stat-card">
-          <span>Order total</span>
+        <div className="box-summary-metric box-summary-total">
           <strong>${estimatedValue.toFixed(0)}</strong>
-        </div>
-
-        <div className="stat-card">
-          <span>Upgrade</span>
-          <strong>${upgradeValue.toFixed(0)}</strong>
+          <span>Estimated Total</span>
         </div>
       </div>
 
@@ -267,6 +314,8 @@ function BuilderPanel({
         maxSlots={maxSlots}
         maxSelectableSlots={maxSelectableSlots}
         isCuratorBonusUnlocked={isCuratorBonusUnlocked}
+        nextAvailableSlotIndex={nextAvailableSlotIndex}
+        onNextSlotRecommendation={handleNextSlotRecommendation}
         onRemovePerfume={onRemovePerfume}
         onReorderPerfumes={onReorderPerfumes}
       />
@@ -468,6 +517,8 @@ function BuilderPanel({
       selectedPerfumeIds={selectedPerfumeIds}
       isBoxFull={totalSlots >= maxSelectableSlots}
       onAddPerfume={onAddPerfume}
+      sectionRef={balanceLaneRef}
+      isEmphasized={isBalanceLaneEmphasized}
     />
     </div>
     )}
@@ -2468,6 +2519,8 @@ function RecommendationLane({
   selectedPerfumeIds,
   isBoxFull,
   onAddPerfume,
+  sectionRef,
+  isEmphasized = false,
 }) {
   const [activeIndex, setActiveIndex] = useState(0);
 
@@ -2499,9 +2552,12 @@ function RecommendationLane({
   };
 
   return (
-    <section className="recommendation-lane">
+    <section
+      ref={sectionRef}
+      className={`recommendation-lane ${isEmphasized ? "is-emphasized" : ""}`}
+    >
       <div className="recommendation-lane-header">
-        <h4>{title}</h4>
+        <h4 tabIndex={-1}>{title}</h4>
 
         <div className="recommendation-carousel-controls" aria-label={`${title} recommendations`}>
           <button
@@ -2536,6 +2592,7 @@ function RecommendationLane({
           isAdded={selectedPerfumeIds.has(activeRecommendation.perfume.id)}
           isBoxFull={isBoxFull}
           onAddPerfume={onAddPerfume}
+          isFocusable
         />
       </div>
     </section>
@@ -2548,6 +2605,7 @@ function RecommendationCard({
   isAdded,
   isBoxFull,
   onAddPerfume,
+  isFocusable = false,
 }) {
   const { perfume, score } = recommendation;
   const explanations = getRecommendationExplanations(recommendation);
@@ -2557,7 +2615,7 @@ function RecommendationCard({
   const addButtonLabel = isAdded ? "Added" : isBoxFull ? "Box full" : "Add to Box";
 
   return (
-    <article className="recommendation-card">
+    <article className="recommendation-card" tabIndex={isFocusable ? -1 : undefined}>
       <div className="recommendation-card-header">
         <div className="recommendation-title-group">
           <span className="recommendation-rank">#{rank}</span>
@@ -3718,11 +3776,21 @@ function formatSharePoints(totalPoints) {
   return `${formattedPoints} pts`;
 }
 
+function getNextAvailableSlotIndex(selectedPerfumes, maxSelectableSlots) {
+  if (selectedPerfumes.length >= maxSelectableSlots) {
+    return null;
+  }
+
+  return selectedPerfumes.length;
+}
+
 function BoxSlotTray({
   selectedPerfumes,
   maxSlots,
   maxSelectableSlots,
   isCuratorBonusUnlocked,
+  nextAvailableSlotIndex,
+  onNextSlotRecommendation,
   onRemovePerfume,
   onReorderPerfumes,
 }) {
@@ -3824,9 +3892,11 @@ function BoxSlotTray({
               perfume={selectedPerfumes[leftIndex]}
               isReserved={leftIndex >= maxSelectableSlots}
               isCuratorBonusUnlocked={isCuratorBonusUnlocked}
+              isNextAvailable={leftIndex === nextAvailableSlotIndex}
               isActive={activeSlotIndex === leftIndex}
               isDragging={draggingIndex === leftIndex}
               isDragTarget={dragOverIndex === leftIndex}
+              onNextSlotRecommendation={onNextSlotRecommendation}
               onRemove={handleRemove}
               onDragStart={handleDragStart}
               onDragOver={(event) => {
@@ -3858,9 +3928,11 @@ function BoxSlotTray({
               perfume={selectedPerfumes[rightIndex]}
               isReserved={rightIndex >= maxSelectableSlots}
               isCuratorBonusUnlocked={isCuratorBonusUnlocked}
+              isNextAvailable={rightIndex === nextAvailableSlotIndex}
               isActive={activeSlotIndex === rightIndex}
               isDragging={draggingIndex === rightIndex}
               isDragTarget={dragOverIndex === rightIndex}
+              onNextSlotRecommendation={onNextSlotRecommendation}
               onRemove={handleRemove}
               onDragStart={handleDragStart}
               onDragOver={(event) => {
@@ -3890,9 +3962,11 @@ function BoxVialSlot({
   index,
   isReserved,
   isCuratorBonusUnlocked,
+  isNextAvailable,
   isActive,
   isDragging,
   isDragTarget,
+  onNextSlotRecommendation,
   onRemove,
   onDragStart,
   onDragOver,
@@ -3908,6 +3982,7 @@ function BoxVialSlot({
         className={`box-vial bonus-reserved ${
           isCuratorBonusUnlocked ? "bonus-unlocked" : "bonus-locked"
         }`}
+        data-slot-index={index}
         aria-label={`Curator Bonus reserved slot ${index + 1}`}
       >
         <span className="vial-cap" />
@@ -3919,10 +3994,24 @@ function BoxVialSlot({
   }
 
   if (!perfume) {
+    const EmptySlotElement = isNextAvailable ? "button" : "div";
+    const handleNextSlotKeyDown = (event) => {
+      if (!isNextAvailable || (event.key !== "Enter" && event.key !== " ")) {
+        return;
+      }
+
+      event.preventDefault();
+      onNextSlotRecommendation?.();
+    };
+
     return (
-      <div
-        className={`box-vial empty ${isDragTarget ? "drag-target" : ""}`}
-        aria-label={`Empty slot ${index + 1}`}
+      <EmptySlotElement
+        className={`box-vial empty ${isNextAvailable ? "next-available" : "passive-empty"} ${isDragTarget ? "drag-target" : ""}`}
+        data-slot-index={index}
+        aria-label={isNextAvailable ? "View recommendations for the next box slot" : `Empty slot ${index + 1}`}
+        type={isNextAvailable ? "button" : undefined}
+        onClick={isNextAvailable ? onNextSlotRecommendation : undefined}
+        onKeyDown={isNextAvailable ? handleNextSlotKeyDown : undefined}
         onDragOver={onDragOver}
         onDrop={(event) => onDrop(event, index)}
         onPointerEnter={onPointerEnter}
@@ -3932,7 +4021,7 @@ function BoxVialSlot({
         <span className="vial-body">
           <span className="empty-slot-add" aria-hidden="true">+</span>
         </span>
-      </div>
+      </EmptySlotElement>
     );
   }
 
@@ -3945,6 +4034,7 @@ function BoxVialSlot({
       className={`box-vial filled ${isActive ? "is-active" : ""} ${
         isDragging ? "is-dragging" : ""
       } ${isDragTarget ? "drag-target" : ""}`}
+      data-slot-index={index}
       aria-label={`Filled slot ${index + 1}: ${perfume.name}`}
       title={perfume.name}
       draggable

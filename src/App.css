@@ -28,7 +28,8 @@ button {
 }
 
 .hero {
-  margin-bottom: 16px;
+  margin-bottom: 18px;
+  padding-top: 4px;
 }
 
 .eyebrow {
@@ -81,7 +82,7 @@ button {
 
 .builder-panel {
   position: sticky;
-  top: 24px;
+  top: 12px;
 }
 
 .panel-header {
@@ -124,6 +125,16 @@ button {
 .panel-header p {
   margin: 4px 0 0;
   color: #94a3b8;
+}
+
+.catalog-title-group {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+}
+
+.catalog-title-group p {
+  margin: 0;
 }
 
 .discovery-coachmark {
@@ -185,9 +196,8 @@ button {
 
 .catalog-controls {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 190px;
-  gap: 10px;
-  margin-bottom: 14px;
+  grid-template-columns: 1fr;
+  margin-bottom: 10px;
 }
 
 .catalog-controls input,
@@ -574,29 +584,76 @@ button {
   color: #ecfdf5;
 }
 
-.stats-grid {
+.builder-panel > .panel-header {
+  margin-bottom: 14px;
+}
+
+.box-summary-card {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0;
+  margin-bottom: 14px;
+  padding: 9px 12px;
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  border-radius: 20px;
+  background:
+    radial-gradient(circle at 70% 0, rgba(250, 204, 21, 0.08), transparent 46%),
+    rgba(15, 23, 42, 0.72);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  text-align: center;
 }
 
-.stat-card {
-  padding: 14px;
-  border-radius: 18px;
-  background: rgba(15, 23, 42, 0.72);
-  border: 1px solid rgba(148, 163, 184, 0.14);
+.box-summary-metric {
+  display: grid;
+  gap: 2px;
+  align-content: center;
+  min-width: 0;
+  padding: 0 10px;
 }
 
-.stat-card span {
-  display: block;
+.box-summary-metric + .box-summary-metric {
+  border-left: 1px solid rgba(148, 163, 184, 0.14);
+}
+
+.box-summary-metric span {
   color: #94a3b8;
-  font-size: 0.78rem;
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.07em;
+  line-height: 1.1;
+  text-transform: uppercase;
 }
 
-.stat-card strong {
-  display: block;
-  margin-top: 4px;
-  font-size: 1.2rem;
+.box-summary-metric strong {
+  color: #ecfdf5;
+  font-size: clamp(0.96rem, 2.2vw, 1.22rem);
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  line-height: 1.05;
+}
+
+.box-summary-total strong {
+  color: #d9f99d;
+  font-size: clamp(1.08rem, 2.5vw, 1.38rem);
+}
+
+@media (max-width: 420px) {
+  .box-summary-card {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    padding: 9px 11px;
+  }
+
+  .box-summary-total {
+    grid-column: 1 / -1;
+    margin-top: 9px;
+    padding-top: 9px;
+    border-left: 0;
+    border-top: 1px solid rgba(148, 163, 184, 0.14);
+  }
+
+  .box-summary-total strong {
+    font-size: 1.23rem;
+  }
 }
 
 .slot-bar {
@@ -1400,12 +1457,15 @@ button {
   border: 1px solid rgba(255, 255, 255, 0.025);
   border-radius: 8px;
   background:
-    radial-gradient(ellipse at 50% 32%, rgba(255, 255, 255, 0.04), transparent 42%),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.035), transparent 18%, transparent 82%, rgba(255, 255, 255, 0.03)),
-    linear-gradient(180deg, rgba(2, 2, 2, 0.88), rgba(0, 0, 0, 0.74));
+    linear-gradient(115deg, rgba(255, 255, 255, 0.014) 0 10%, transparent 10% 22%, rgba(255, 255, 255, 0.01) 22% 34%, transparent 34% 100%),
+    radial-gradient(ellipse at 50% 18%, rgba(255, 255, 255, 0.045), transparent 38%),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.04), transparent 18%, transparent 82%, rgba(255, 255, 255, 0.034)),
+    linear-gradient(180deg, rgba(5, 6, 5, 0.92), rgba(0, 0, 0, 0.78) 48%, rgba(3, 3, 3, 0.9));
   box-shadow:
     inset 9px 0 14px rgba(0, 0, 0, 0.70),
     inset -9px 0 14px rgba(0, 0, 0, 0.70),
+    inset 0 1px 0 rgba(255, 255, 255, 0.035),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.74),
     inset 0 0 32px rgba(0, 0, 0, 0.74);
 }
 
@@ -1418,9 +1478,17 @@ button {
   display: grid;
   grid-template-columns: 18px minmax(0, 1fr);
   align-items: center;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
   filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.34));
   cursor: grab;
   user-select: none;
+  transition:
+    filter 240ms ease,
+    opacity 220ms ease;
 }
 
 .vial-cap {
@@ -1496,7 +1564,33 @@ button {
     0 0 5px color-mix(in srgb, var(--tier-color) 9%, transparent);
 }
 
+.box-vial.filled .vial-body::before,
+.box-vial.filled .vial-body::after {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+}
+
+.box-vial.filled .vial-body::before {
+  inset: 2px auto 2px 10%;
+  width: 20%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.035));
+  opacity: 0.44;
+}
+
+.box-vial.filled .vial-body::after {
+  left: 0;
+  right: 0;
+  bottom: -4px;
+  height: 7px;
+  border-radius: 999px;
+  background: radial-gradient(ellipse at 50% 50%, rgba(0, 0, 0, 0.38), transparent 68%);
+}
+
 .vial-label {
+  position: relative;
+  z-index: 1;
   display: block;
   max-width: 100%;
   overflow: hidden;
@@ -1507,7 +1601,7 @@ button {
   background:
     linear-gradient(90deg, color-mix(in srgb, var(--tier-color) 10%, transparent), transparent 42%),
     rgba(6, 10, 9, 0.50);
-  color: rgba(248, 250, 252, 0.90);
+  color: rgba(248, 250, 252, 0.95);
   font-size: 0.5rem;
   font-weight: 900;
   letter-spacing: 0.035em;
@@ -1518,6 +1612,7 @@ button {
   white-space: nowrap;
   box-shadow:
     inset 0 0 0 1px rgba(255, 255, 255, 0.025),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
     0 0 10px color-mix(in srgb, var(--tier-color) 6%, transparent);
 }
 
@@ -1617,19 +1712,20 @@ button {
 
 .box-vial.empty {
   cursor: default;
-  opacity: 0.36;
+  opacity: 0.42;
   filter: none;
 }
 
 .box-vial.empty .vial-cap {
   background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.055), transparent 32%),
     linear-gradient(90deg, rgba(226, 232, 240, 0.06), transparent 22%),
     radial-gradient(ellipse at 42% 50%, rgba(148, 163, 184, 0.06), transparent 58%),
-    linear-gradient(180deg, rgba(33, 37, 39, 0.54), rgba(0, 0, 0, 0.50));
-  border-color: rgba(148, 163, 184, 0.08);
+    linear-gradient(180deg, rgba(34, 38, 39, 0.48), rgba(0, 0, 0, 0.62));
+  border-color: rgba(148, 163, 184, 0.10);
   box-shadow:
-    inset 2px 0 3px rgba(255, 255, 255, 0.035),
-    inset -1px 0 3px rgba(0, 0, 0, 0.66);
+    inset 2px 0 3px rgba(255, 255, 255, 0.04),
+    inset -1px 0 4px rgba(0, 0, 0, 0.78);
 }
 
 .box-vial.empty .vial-cap::before {
@@ -1641,13 +1737,15 @@ button {
 }
 
 .box-vial.empty .vial-body {
-  border-color: rgba(148, 163, 184, 0.16);
+  border-color: rgba(148, 163, 184, 0.14);
   background:
-    linear-gradient(90deg, rgba(255, 255, 255, 0.055), transparent 14%),
-    rgba(0, 0, 0, 0.34);
+    linear-gradient(180deg, rgba(255, 255, 255, 0.06), transparent 28%),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.045), transparent 14%),
+    radial-gradient(ellipse at 50% 58%, rgba(0, 0, 0, 0.72), rgba(0, 0, 0, 0.34) 68%);
   box-shadow:
-    inset 0 3px 8px rgba(0, 0, 0, 0.48),
-    inset 0 -1px 0 rgba(255, 255, 255, 0.025);
+    inset 0 5px 9px rgba(0, 0, 0, 0.58),
+    inset 0 -7px 11px rgba(0, 0, 0, 0.52),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
 .empty-slot-add {
@@ -1655,12 +1753,95 @@ button {
   place-items: center;
   width: 15px;
   height: 15px;
-  border: 1px dashed rgba(245, 231, 195, 0.28);
+  border: 1px dashed rgba(245, 231, 195, 0.18);
   border-radius: 999px;
-  color: rgba(245, 231, 195, 0.34);
+  color: rgba(245, 231, 195, 0.24);
   font-size: 0.72rem;
   font-weight: 600;
   line-height: 1;
+  transition:
+    border-color 280ms ease,
+    color 280ms ease,
+    opacity 280ms ease;
+}
+
+.box-vial.next-available {
+  cursor: pointer;
+  opacity: 0.88;
+  filter:
+    drop-shadow(0 2px 5px rgba(0, 0, 0, 0.34))
+    drop-shadow(0 0 9px rgba(255, 255, 255, 0.16));
+}
+
+.box-vial.next-available .vial-body {
+  border-color: rgba(255, 255, 255, 0.46);
+  box-shadow:
+    inset 0 5px 9px rgba(0, 0, 0, 0.56),
+    inset 0 -7px 11px rgba(0, 0, 0, 0.48),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    0 0 0 1px rgba(255, 255, 255, 0.18),
+    0 0 15px rgba(255, 255, 255, 0.12);
+  animation: nextSlotBreath 3.8s ease-in-out infinite;
+}
+
+.box-vial.next-available .empty-slot-add {
+  border-color: rgba(255, 255, 255, 0.46);
+  color: rgba(255, 255, 255, 0.72);
+  animation: nextSlotPlusBreath 3.8s ease-in-out infinite;
+}
+
+.box-vial.next-available:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.72);
+  outline-offset: 3px;
+}
+
+@keyframes nextSlotBreath {
+  0%,
+  100% {
+    border-color: rgba(255, 255, 255, 0.34);
+    box-shadow:
+      inset 0 5px 9px rgba(0, 0, 0, 0.56),
+      inset 0 -7px 11px rgba(0, 0, 0, 0.48),
+      inset 0 1px 0 rgba(255, 255, 255, 0.10),
+      0 0 0 1px rgba(255, 255, 255, 0.12),
+      0 0 9px rgba(255, 255, 255, 0.08);
+  }
+  50% {
+    border-color: rgba(255, 255, 255, 0.56);
+    box-shadow:
+      inset 0 5px 9px rgba(0, 0, 0, 0.54),
+      inset 0 -7px 11px rgba(0, 0, 0, 0.46),
+      inset 0 1px 0 rgba(255, 255, 255, 0.16),
+      0 0 0 1px rgba(255, 255, 255, 0.24),
+      0 0 18px rgba(255, 255, 255, 0.16);
+  }
+}
+
+@keyframes nextSlotPlusBreath {
+  0%,
+  100% {
+    opacity: 0.62;
+  }
+  50% {
+    opacity: 0.92;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .box-vial.next-available .vial-body,
+  .box-vial.next-available .empty-slot-add {
+    animation: none;
+  }
+
+  .box-vial.next-available .vial-body {
+    border-color: rgba(255, 255, 255, 0.48);
+    box-shadow:
+      inset 0 5px 9px rgba(0, 0, 0, 0.56),
+      inset 0 -7px 11px rgba(0, 0, 0, 0.48),
+      inset 0 1px 0 rgba(255, 255, 255, 0.12),
+      0 0 0 1px rgba(255, 255, 255, 0.18),
+      0 0 14px rgba(255, 255, 255, 0.12);
+  }
 }
 
 .box-vial.bonus-reserved {
@@ -1684,6 +1865,7 @@ button {
     linear-gradient(180deg, rgba(24, 22, 14, 0.96), rgba(5, 8, 7, 0.96));
   box-shadow:
     inset 0 0 9px rgba(250, 204, 21, 0.08),
+    0 5px 7px rgba(0, 0, 0, 0.26),
     0 0 10px rgba(250, 204, 21, 0.06);
 }
 
@@ -1711,6 +1893,8 @@ button {
   box-shadow:
     inset 0 0 10px rgba(250, 204, 21, 0.11),
     inset 0 1px 0 rgba(250, 204, 21, 0.10),
+    inset 0 -6px 10px rgba(0, 0, 0, 0.24),
+    0 5px 8px rgba(0, 0, 0, 0.28),
     0 0 12px rgba(250, 204, 21, 0.08);
 }
 
@@ -1724,6 +1908,7 @@ button {
   border: 1px solid rgba(250, 204, 21, 0.16);
   border-radius: 3px;
   background:
+    radial-gradient(circle at 50% 50%, rgba(120, 53, 15, 0.42), transparent 30%),
     linear-gradient(90deg, transparent 0 44%, rgba(250, 204, 21, 0.10) 44% 56%, transparent 56%),
     linear-gradient(180deg, transparent 0 45%, rgba(250, 204, 21, 0.08) 45% 56%, transparent 56%);
   opacity: 0.72;
@@ -1734,7 +1919,9 @@ button {
   content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(110deg, transparent 0 34%, rgba(255, 255, 255, 0.075) 45%, transparent 56% 100%);
+  background:
+    linear-gradient(115deg, transparent 0 28%, rgba(255, 255, 255, 0.07) 39%, transparent 48% 100%),
+    linear-gradient(245deg, transparent 0 50%, rgba(0, 0, 0, 0.16) 62%, transparent 72%);
   opacity: 0.32;
   pointer-events: none;
 }
@@ -1766,6 +1953,8 @@ button {
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.38),
     inset 0 -1px 0 rgba(120, 53, 15, 0.7),
+    inset 0 -7px 12px rgba(120, 53, 15, 0.32),
+    0 5px 8px rgba(0, 0, 0, 0.30),
     0 0 14px rgba(250, 204, 21, 0.18);
 }
 
@@ -1787,9 +1976,10 @@ button {
   border-radius: 999px;
   background: radial-gradient(circle at 35% 28%, #b91c1c, #7f1d1d 58%, #450a0a);
   box-shadow:
-    inset 0 1px 1px rgba(254, 202, 202, 0.36),
+    inset 0 1px 1px rgba(254, 202, 202, 0.42),
     inset 0 -1px 2px rgba(69, 10, 10, 0.72),
-    0 1px 4px rgba(69, 10, 10, 0.5);
+    0 1px 4px rgba(69, 10, 10, 0.5),
+    0 0 0 1px rgba(69, 10, 10, 0.18);
 }
 
 .box-vial.bonus-unlocked .bonus-slot-icon::after {
@@ -2590,7 +2780,7 @@ button {
   grid-template-columns: 1fr;
   align-items: flex-start;
   padding-right: 46px;
-  margin-bottom: 10px;
+  margin-bottom: 12px;
 }
 
 .perfume-details-close {
@@ -2607,14 +2797,14 @@ button {
 }
 
 .perfume-details-modal .modal-header h3 {
-  margin: 4px 0 0;
+  margin: 0;
   color: #f8fafc;
   font-size: 1.55rem;
   line-height: 1.05;
 }
 
 .perfume-details-modal .modal-header p:not(.summary-eyebrow) {
-  margin: 5px 0 0;
+  margin: 6px 0 0;
   color: #94a3b8;
 }
 
@@ -2654,7 +2844,7 @@ button {
   justify-content: space-between;
   gap: 16px;
   align-items: center;
-  margin-bottom: 18px;
+  margin-bottom: 16px;
   padding: 12px;
   border-radius: 14px;
   background: rgba(2, 6, 23, 0.34);
@@ -4222,6 +4412,37 @@ button {
 .recommendation-lane {
   display: grid;
   gap: 9px;
+  border-radius: 16px;
+}
+
+.recommendation-lane.is-emphasized {
+  animation: recommendationLaneEmphasis 1100ms ease-out both;
+}
+
+@keyframes recommendationLaneEmphasis {
+  0% {
+    background: rgba(255, 255, 255, 0);
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0);
+  }
+  18%,
+  72% {
+    background: rgba(255, 255, 255, 0.035);
+    box-shadow:
+      0 0 0 1px rgba(255, 255, 255, 0.16),
+      0 0 18px rgba(255, 255, 255, 0.08);
+  }
+  100% {
+    background: rgba(255, 255, 255, 0);
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .recommendation-lane.is-emphasized {
+    animation: none;
+    background: rgba(255, 255, 255, 0.035);
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.16);
+  }
 }
 
 .recommendation-lane-header {

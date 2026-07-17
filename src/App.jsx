@@ -226,7 +226,6 @@ const confirmAddPerfume = () => {
     <>
     <main className="app">
       <section className="hero">
-        <p className="eyebrow">Decant Box Builder</p>
         <h1>Build your fragrance box</h1>
         <p>
           Select up to {MAX_SELECTABLE_SLOTS} decants, explore different moods, and see the
@@ -265,7 +264,7 @@ const confirmAddPerfume = () => {
         >
           <section className="catalog-section">
             <div className="panel-header">
-              <div>
+              <div className="catalog-title-group">
                 <h2>Catalog</h2>
                 <p>{visiblePerfumes.length} perfumes available</p>
               </div>
@@ -278,24 +277,14 @@ const confirmAddPerfume = () => {
                 onChange={(event) => setSearchQuery(event.target.value)}
                 placeholder="Search name, brand, accord, note, vibe"
               />
-
-              <select
-                value={sortOption}
-                onChange={(event) => setSortOption(event.target.value)}
-              >
-                <option value="bestMatch">Best match</option>
-                <option value="pointsAsc">Points ascending</option>
-                <option value="pointsDesc">Points descending</option>
-                <option value="brandAsc">Brand A-Z</option>
-                <option value="tier">Tier</option>
-                <option value="alphabetical">Alphabetical</option>
-              </select>
             </div>
 
             <FilterBar
               filterOptions={filterOptions}
               activeFilters={activeFilters}
               handleFilterChange={handleFilterChange}
+              sortOption={sortOption}
+              setSortOption={setSortOption}
             />
 
             <div className="catalog-grid">
@@ -601,7 +590,6 @@ function PerfumeDetailsModal({
           </button>
 
           <div className="perfume-details-title">
-            <p className="summary-eyebrow">Fragrance Details</p>
             <h3>{perfume.name}</h3>
             <p>{perfume.brand}</p>
           </div>
