@@ -6,6 +6,7 @@ import { getTierData } from "../utils/tierUtils";
 const DISCOVERY_BONUS_TARGET_POINTS = 12;
 const SHARE_IMAGE_WIDTH = 1080;
 const SHARE_IMAGE_HEIGHT = 1350;
+const EMPTY_RECOMMENDATIONS = [];
 const CURATOR_BONUS_PREFERENCES = {
   complement: {
     label: "Complement My Collection",
@@ -64,8 +65,9 @@ function BuilderPanel({
     const selectedPerfumeIds = new Set(
       selectedPerfumes.map((perfume) => perfume.id)
     );
-    const basedOnYourPicks = recommendations?.basedOnYourPicks || [];
-    const toBalanceYourBox = recommendations?.toBalanceYourBox || [];
+    const basedOnYourPicks = recommendations?.basedOnYourPicks || EMPTY_RECOMMENDATIONS;
+    const toBalanceYourBox = recommendations?.toBalanceYourBox || EMPTY_RECOMMENDATIONS;
+    const primaryBalanceRecommendation = toBalanceYourBox[0];
     const curatorBonusLane =
       curatorBonusPreference === "similar" ? basedOnYourPicks : toBalanceYourBox;
     const hiddenCuratorPicks = useMemo(
@@ -92,6 +94,28 @@ function BuilderPanel({
           selectedPerfumes,
         }),
       [boxSummary, coverageSummary, scentDna, selectedPerfumes]
+    );
+    const nextImprovementGuidance = useMemo(
+      () =>
+        buildNextImprovementGuidance({
+          mainGap: boxIntelligence.mainGap,
+          bestNextMove: boxIntelligence.bestNextMove,
+          profile: boxIntelligence.dominantProfile,
+          coverage: boxIntelligence.strongestCoverage,
+          recommendation: primaryBalanceRecommendation,
+          selectedCount: selectedPerfumes.length,
+          isBoxFull: totalSlots >= maxSelectableSlots,
+        }),
+      [
+        boxIntelligence.mainGap,
+        boxIntelligence.bestNextMove,
+        boxIntelligence.dominantProfile,
+        boxIntelligence.strongestCoverage,
+        primaryBalanceRecommendation,
+        selectedPerfumes.length,
+        totalSlots,
+        maxSelectableSlots,
+      ]
     );
     const isCuratorBonusUnlocked =
       totalPoints >= DISCOVERY_BONUS_TARGET_POINTS && totalSlots >= minSlots;
@@ -511,8 +535,8 @@ function BuilderPanel({
       onAddPerfume={onAddPerfume}
     />
 
-    <RecommendationLane
-      title="To Balance Your Box"
+    <NextImprovementSection
+      guidance={nextImprovementGuidance}
       recommendations={toBalanceYourBox}
       selectedPerfumeIds={selectedPerfumeIds}
       isBoxFull={totalSlots >= maxSelectableSlots}
@@ -1022,6 +1046,10 @@ function buildBoxIntelligence({
     return {
       isEarly: false,
       items: [],
+      mainGap: null,
+      bestNextMove: "",
+      dominantProfile: "",
+      strongestCoverage: "",
     };
   }
 
@@ -1066,6 +1094,10 @@ function buildBoxIntelligence({
 
   return {
     isEarly: selectedCount < 3,
+    mainGap: mostImportantGap,
+    bestNextMove,
+    dominantProfile,
+    strongestCoverage,
     items: uniqueInsightItems([
       {
         type: "profile",
@@ -1077,18 +1109,137 @@ function buildBoxIntelligence({
         label: "Strongest coverage",
         value: strongestCoverage,
       },
-      {
-        type: "gap",
-        label: "Main gap",
-        value: mostImportantGap.label,
-      },
-      {
-        type: "next",
-        label: "Best next move",
-        value: bestNextMove,
-      },
-    ]).slice(0, 4),
+    ]).slice(0, 2),
   };
+}
+
+function buildNextImprovementGuidance({
+  mainGap,
+  bestNextMove,
+  profile,
+  coverage,
+  recommendation,
+  selectedCount,
+  isBoxFull,
+}) {
+  if (!recommendation && selectedCount === 0) {
+    return null;
+  }
+
+  if (isBoxFull) {
+    return {
+      eyebrow: "NEXT IMPROVEMENT",
+      title: "Box complete",
+      description:
+        "Your Discovery Box is full. Use the recommendation below only as a comparison point for future swaps.",
+    };
+  }
+
+  if (selectedCount === 0) {
+    return {
+      eyebrow: "STARTER DIRECTION",
+      title: "Start with a versatile anchor",
+      description:
+        "Choose a first fragrance that gives the box a clear center. The recommendation below is a strong opening pick.",
+    };
+  }
+
+  const recommendationName = recommendation?.perfume?.shortName || recommendation?.perfume?.name;
+  const moveTitle = normalizeNextMoveTitle(bestNextMove, mainGap);
+  const profilePhrase =
+    selectedCount < 3
+      ? getEarlyProfilePhrase(profile)
+      : getProfileGuidancePhrase(profile, coverage);
+  const improvementPhrase = getImprovementGuidancePhrase(mainGap, bestNextMove, recommendationName);
+
+  return {
+    eyebrow: selectedCount < 3 ? "EARLY OPPORTUNITY" : "NEXT IMPROVEMENT",
+    title: moveTitle,
+    description: `${profilePhrase} ${improvementPhrase}`,
+  };
+}
+
+function normalizeNextMoveTitle(bestNextMove, mainGap) {
+  const normalizedMove = bestNextMove
+    ?.replace(/^Add one\s+/i, "")
+    .replace(/^Add a\s+/i, "")
+    .replace(/^Add an\s+/i, "")
+    .replace(/^Add\s+/i, "")
+    .trim();
+
+  if (normalizedMove) {
+    return `Add ${normalizedMove.charAt(0).toLowerCase()}${normalizedMove.slice(1)}`;
+  }
+
+  if (mainGap?.type === "winter" || mainGap?.type === "warmth") {
+    return "Add warm evening depth";
+  }
+
+  if (mainGap?.type === "formal") {
+    return "Expand formal versatility";
+  }
+
+  if (mainGap?.type === "summer") {
+    return "Add fresh daytime contrast";
+  }
+
+  if (mainGap?.type === "diversity") {
+    return "Add a contrasting profile";
+  }
+
+  return "Add a clearer contrast";
+}
+
+function getEarlyProfilePhrase(profile) {
+  if (!profile || profile === "Still taking shape") {
+    return "Your box is just beginning to form a profile.";
+  }
+
+  return `Your box is beginning to lean ${profile.toLowerCase()}.`;
+}
+
+function getProfileGuidancePhrase(profile, coverage) {
+  if (profile === "Balanced and versatile") {
+    return `Your box already reads balanced, with ${coverage.toLowerCase()}.`;
+  }
+
+  if (profile) {
+    return `Your box is currently strongest as ${profile.toLowerCase()}.`;
+  }
+
+  return "Your box has a clear starting point.";
+}
+
+function getImprovementGuidancePhrase(mainGap, bestNextMove, recommendationName) {
+  const recommendationCopy = recommendationName
+    ? `${recommendationName} is the pick that best answers that opportunity.`
+    : "The next recommendation is chosen to answer that opportunity.";
+
+  if (mainGap?.type === "winter" || mainGap?.type === "warmth") {
+    return `A warmer evening addition would add depth and improve cold-weather range. ${recommendationCopy}`;
+  }
+
+  if (mainGap?.type === "formal") {
+    return `A polished formal fragrance would make the box more useful for dressed-up occasions. ${recommendationCopy}`;
+  }
+
+  if (mainGap?.type === "summer") {
+    return `A brighter daytime fragrance would add contrast and improve warm-weather versatility. ${recommendationCopy}`;
+  }
+
+  if (mainGap?.type === "evening") {
+    return `A stronger evening profile would make the box feel more complete after dark. ${recommendationCopy}`;
+  }
+
+  if (mainGap?.type === "diversity") {
+    return `A contrasting scent direction would prevent the box from feeling too similar. ${recommendationCopy}`;
+  }
+
+  if (/fresh daytime/i.test(bestNextMove || "")) {
+    return `A brighter daytime fragrance would add contrast and improve versatility. ${recommendationCopy}`;
+  }
+
+  return `A clearer contrast would make the box more versatile without changing its core style. ${recommendationCopy}`;
 }
 
 function getBoxProfileSignals({ occasionCounts, vibeCounts, accordCounts }) {
@@ -2511,6 +2662,42 @@ async function copyText(text) {
   } finally {
     document.body.removeChild(textarea);
   }
+}
+
+function NextImprovementSection({
+  guidance,
+  recommendations,
+  selectedPerfumeIds,
+  isBoxFull,
+  onAddPerfume,
+  sectionRef,
+  isEmphasized = false,
+}) {
+  if (!guidance || recommendations.length === 0) {
+    return null;
+  }
+
+  return (
+    <section
+      ref={sectionRef}
+      className={`next-improvement-section ${isEmphasized ? "is-emphasized" : ""}`}
+      aria-label="Next improvement"
+    >
+      <div className="next-improvement-copy">
+        <span>{guidance.eyebrow}</span>
+        <h4 tabIndex={-1}>{guidance.title}</h4>
+        <p>{guidance.description}</p>
+      </div>
+
+      <RecommendationLane
+        title="Recommended Next Pick"
+        recommendations={recommendations}
+        selectedPerfumeIds={selectedPerfumeIds}
+        isBoxFull={isBoxFull}
+        onAddPerfume={onAddPerfume}
+      />
+    </section>
+  );
 }
 
 function RecommendationLane({

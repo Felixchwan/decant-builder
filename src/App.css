@@ -4530,6 +4530,51 @@ button {
   animation: recommendationLaneEmphasis 1100ms ease-out both;
 }
 
+.next-improvement-section {
+  display: grid;
+  gap: 12px;
+  padding: 13px;
+  border-radius: 16px;
+  background:
+    radial-gradient(circle at 14% 0, rgba(134, 239, 172, 0.08), transparent 34%),
+    rgba(2, 6, 23, 0.30);
+  border: 1px solid rgba(148, 163, 184, 0.12);
+}
+
+.next-improvement-section.is-emphasized {
+  animation: recommendationLaneEmphasis 1100ms ease-out both;
+}
+
+.next-improvement-copy {
+  display: grid;
+  gap: 6px;
+}
+
+.next-improvement-copy span {
+  color: rgba(134, 239, 172, 0.62);
+  font-size: 0.68rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.recommendations .next-improvement-copy h4 {
+  margin: 0;
+  color: #f8fafc;
+  font-size: 0.98rem;
+  font-weight: 900;
+  letter-spacing: 0;
+  line-height: 1.2;
+  text-transform: none;
+}
+
+.next-improvement-copy p {
+  margin: 0;
+  color: #a8b6ad;
+  font-size: 0.78rem;
+  line-height: 1.45;
+}
+
 @keyframes recommendationLaneEmphasis {
   0% {
     background: rgba(255, 255, 255, 0);
@@ -4549,7 +4594,8 @@ button {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .recommendation-lane.is-emphasized {
+  .recommendation-lane.is-emphasized,
+  .next-improvement-section.is-emphasized {
     animation: none;
     background: rgba(255, 255, 255, 0.035);
     box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.16);
