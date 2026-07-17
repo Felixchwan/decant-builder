@@ -2287,8 +2287,23 @@ button {
 }
 
 @media (max-width: 520px) {
+  .hero h1 {
+    color: #ecfdf5;
+  }
+
   .catalog-controls {
     grid-template-columns: 1fr;
+  }
+
+  .filters {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .filters select {
+    width: 100%;
+    min-width: 0;
   }
 
   .catalog-grid {
