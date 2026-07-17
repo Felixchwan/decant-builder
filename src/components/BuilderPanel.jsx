@@ -4049,6 +4049,8 @@ function BoxVialSlot({
       style={{
         "--tier-color": tierData.color,
         "--tier-background": tierData.background,
+        "--glass-tint-mid": tierData.glassTintMid,
+        "--glass-tint-edge": tierData.glassTintEdge,
       }}
     >
       <span className="vial-cap" />

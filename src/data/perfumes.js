@@ -2794,7 +2794,7 @@ baseNotes: ["caramel", "musk"],
 {
   id: 501,
   name: "Tuxedo",
-  shortName: "Sharp Patchouli",
+  shortName: "Tuxedo",
   subtitle: "Sharp Patchouli",
   subtitleColor: "#d4c46a",
   subtitleGlow: true,

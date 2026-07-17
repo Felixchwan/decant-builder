@@ -1541,6 +1541,51 @@ button {
   box-shadow: none;
 }
 
+.box-vial.filled .vial-cap {
+  z-index: 2;
+  width: 21px;
+  height: 21px;
+  border-radius: 5px 3px 3px 5px;
+  background:
+    radial-gradient(circle at 21% 28%, rgba(255, 255, 255, 0.14), transparent 24%),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.13), transparent 25%),
+    radial-gradient(ellipse at 46% 52%, color-mix(in srgb, var(--tier-color) 18%, transparent), transparent 56%),
+    linear-gradient(180deg, rgba(43, 47, 46, 0.98), rgba(8, 10, 10, 0.98));
+  border-color: color-mix(in srgb, var(--tier-color) 34%, rgba(255, 255, 255, 0.07));
+  box-shadow:
+    inset 1px 0 2px rgba(255, 255, 255, 0.08),
+    inset -1px 0 3px rgba(0, 0, 0, 0.68),
+    1px 0 0 rgba(255, 255, 255, 0.035),
+    0 3px 6px rgba(0, 0, 0, 0.22),
+    0 0 7px color-mix(in srgb, var(--tier-color) 9%, transparent);
+  transform: translateX(2px);
+}
+
+.box-vial.filled .vial-cap::before {
+  right: -3px;
+  width: 5px;
+  height: 12px;
+  border-radius: 2px 1px 1px 2px;
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--tier-color) 12%, rgba(255, 255, 255, 0.08)), rgba(4, 6, 6, 0.95));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.10),
+    inset -1px 0 2px rgba(0, 0, 0, 0.64),
+    1px 0 2px rgba(0, 0, 0, 0.26);
+}
+
+.box-vial.filled .vial-cap::after {
+  right: 4px;
+  top: 5px;
+  width: 8px;
+  height: 2px;
+  border-radius: 999px;
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--tier-color) 28%, rgba(255, 255, 255, 0.15)), rgba(2, 3, 3, 0.74));
+  box-shadow:
+    5px 0 0 -3px rgba(226, 232, 240, 0.42);
+}
+
 .vial-body {
   min-width: 0;
   height: 28px;
@@ -1564,6 +1609,22 @@ button {
     0 0 5px color-mix(in srgb, var(--tier-color) 9%, transparent);
 }
 
+.box-vial.filled .vial-body {
+  border-color: color-mix(in srgb, var(--tier-color) 16%, rgba(148, 163, 184, 0.18));
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.11), transparent 15%),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.19), rgba(255, 255, 255, 0.052) 8%, transparent 17%, rgba(255, 255, 255, 0.026) 84%, transparent),
+    radial-gradient(ellipse at 50% 52%, rgba(0, 0, 0, 0.18), transparent 60%),
+    linear-gradient(180deg, rgba(27, 32, 31, 0.97), rgba(9, 13, 12, 0.98) 55%, rgba(3, 5, 5, 0.99));
+  box-shadow:
+    inset 0 4px 8px rgba(0, 0, 0, 0.35),
+    inset 0 -7px 11px rgba(0, 0, 0, 0.34),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    inset -1px 0 0 rgba(255, 255, 255, 0.03),
+    0 2px 4px rgba(0, 0, 0, 0.30),
+    0 0 5px color-mix(in srgb, var(--tier-color) 7%, transparent);
+}
+
 .box-vial.filled .vial-body::before,
 .box-vial.filled .vial-body::after {
   content: "";
@@ -1572,11 +1633,19 @@ button {
 }
 
 .box-vial.filled .vial-body::before {
-  inset: 2px auto 2px 10%;
-  width: 20%;
-  border-radius: 999px;
-  background: linear-gradient(90deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.035));
-  opacity: 0.44;
+  z-index: 0;
+  inset: 0;
+  border-radius: inherit;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.055), transparent 24%),
+    radial-gradient(
+      ellipse at center,
+      rgba(0, 0, 0, 0.72) 0%,
+      rgba(0, 0, 0, 0.46) 34%,
+      var(--glass-tint-mid, rgba(148, 163, 184, 0.16)) 63%,
+      var(--glass-tint-edge, rgba(148, 163, 184, 0.22)) 100%
+    );
+  opacity: 0.96;
 }
 
 .box-vial.filled .vial-body::after {
@@ -1586,6 +1655,12 @@ button {
   height: 7px;
   border-radius: 999px;
   background: radial-gradient(ellipse at 50% 50%, rgba(0, 0, 0, 0.38), transparent 68%);
+}
+
+.box-vial.filled {
+  filter:
+    drop-shadow(0 2px 4px rgba(0, 0, 0, 0.38))
+    drop-shadow(0 0 4px color-mix(in srgb, var(--tier-color) 6%, transparent));
 }
 
 .vial-label {
@@ -1614,6 +1689,23 @@ button {
     inset 0 0 0 1px rgba(255, 255, 255, 0.025),
     inset 0 1px 0 rgba(255, 255, 255, 0.05),
     0 0 10px color-mix(in srgb, var(--tier-color) 6%, transparent);
+}
+
+.box-vial.filled .vial-label {
+  border-color: rgba(241, 245, 249, 0.065);
+  border-left-color: color-mix(in srgb, var(--tier-color) 38%, rgba(241, 245, 249, 0.08));
+  border-radius: 3px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.045), transparent 34%),
+    linear-gradient(90deg, color-mix(in srgb, var(--tier-color) 5%, transparent), transparent 40%),
+    rgba(6, 10, 9, 0.52);
+  color: rgba(231, 238, 234, 0.91);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    inset 0 -1px 1px rgba(0, 0, 0, 0.12),
+    0 1px 1px rgba(0, 0, 0, 0.10),
+    0 0 5px color-mix(in srgb, var(--tier-color) 3%, transparent);
+  transform: translateY(-1px);
 }
 
 .vial-label strong {
@@ -2464,6 +2556,10 @@ button {
   .vial-label {
     font-size: 0.46rem;
     padding-inline: 5px;
+  }
+
+  .box-vial.filled .vial-label {
+    transform: translateY(-1px);
   }
 
   .slot-action-popover {
