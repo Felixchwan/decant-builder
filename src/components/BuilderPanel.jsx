@@ -67,7 +67,6 @@ function BuilderPanel({
     );
     const basedOnYourPicks = recommendations?.basedOnYourPicks || EMPTY_RECOMMENDATIONS;
     const toBalanceYourBox = recommendations?.toBalanceYourBox || EMPTY_RECOMMENDATIONS;
-    const primaryBalanceRecommendation = toBalanceYourBox[0];
     const curatorBonusLane =
       curatorBonusPreference === "similar" ? basedOnYourPicks : toBalanceYourBox;
     const hiddenCuratorPicks = useMemo(
@@ -95,23 +94,19 @@ function BuilderPanel({
         }),
       [boxSummary, coverageSummary, scentDna, selectedPerfumes]
     );
-    const nextImprovementGuidance = useMemo(
+    const nextImprovementResult = useMemo(
       () =>
-        buildNextImprovementGuidance({
-          mainGap: boxIntelligence.mainGap,
-          bestNextMove: boxIntelligence.bestNextMove,
-          profile: boxIntelligence.dominantProfile,
-          coverage: boxIntelligence.strongestCoverage,
-          recommendation: primaryBalanceRecommendation,
+        buildNextImprovementResult({
+          intelligence: boxIntelligence,
+          selectedPerfumes,
+          balanceRecommendations: toBalanceYourBox,
           selectedCount: selectedPerfumes.length,
           isBoxFull: totalSlots >= maxSelectableSlots,
         }),
       [
-        boxIntelligence.mainGap,
-        boxIntelligence.bestNextMove,
-        boxIntelligence.dominantProfile,
-        boxIntelligence.strongestCoverage,
-        primaryBalanceRecommendation,
+        boxIntelligence,
+        selectedPerfumes,
+        toBalanceYourBox,
         selectedPerfumes.length,
         totalSlots,
         maxSelectableSlots,
@@ -536,8 +531,7 @@ function BuilderPanel({
     />
 
     <NextImprovementSection
-      guidance={nextImprovementGuidance}
-      recommendations={toBalanceYourBox}
+      result={nextImprovementResult}
       selectedPerfumeIds={selectedPerfumeIds}
       isBoxFull={totalSlots >= maxSelectableSlots}
       onAddPerfume={onAddPerfume}
@@ -1113,7 +1107,248 @@ function buildBoxIntelligence({
   };
 }
 
+function buildNextImprovementResult({
+  intelligence,
+  selectedPerfumes,
+  balanceRecommendations,
+  selectedCount,
+  isBoxFull,
+}) {
+  const recommendations = Array.isArray(balanceRecommendations)
+    ? balanceRecommendations
+    : [];
+
+  if (recommendations.length === 0 && selectedCount === 0) {
+    return null;
+  }
+
+  const objectivePriorities = getObjectiveUrgencies({
+    intelligence,
+    selectedPerfumes,
+    selectedCount,
+  });
+  const objectiveResult =
+    getHighestPriorityObjectiveResult(objectivePriorities, recommendations) || {
+      objectiveKey: objectivePriorities[0]?.objectiveKey || "contrast",
+      urgency: objectivePriorities[0]?.urgency || 0,
+      recommendations: [],
+    };
+  const primaryRecommendation = objectiveResult.recommendations[0];
+  const guidance = buildNextImprovementGuidance({
+    objectiveKey: objectiveResult.objectiveKey,
+    mainGap: intelligence.mainGap,
+    bestNextMove: intelligence.bestNextMove,
+    profile: intelligence.dominantProfile,
+    coverage: intelligence.strongestCoverage,
+    recommendation: primaryRecommendation,
+    selectedCount,
+    isBoxFull,
+  });
+
+  if (!guidance) {
+    return null;
+  }
+
+  return {
+    objectiveKey: objectiveResult.objectiveKey,
+    objectiveUrgency: objectiveResult.urgency,
+    title: guidance.title,
+    description: guidance.description,
+    eyebrow: guidance.eyebrow,
+    recommendations: objectiveResult.recommendations,
+    primaryRecommendation,
+  };
+}
+
+const OBJECTIVE_DEFINITIONS = {
+  freshDaytime: {
+    baseImportance: 74,
+    signals: {
+      accords: ["citrus", "fresh", "green", "marine", "aquatic", "aromatic"],
+      vibes: ["fresh", "clean", "green", "bright", "sporty", "easy"],
+      occasions: ["daily", "office", "casual"],
+      seasons: ["spring", "summer"],
+    },
+    reasons: {
+      accords: "Adds fresh daytime contrast",
+      vibes: "Adds fresh daytime contrast",
+      occasions: "Broadens daily rotation",
+      seasons: "Improves warm-weather versatility",
+    },
+  },
+  coldWeather: {
+    baseImportance: 76,
+    signals: {
+      accords: ["warm spicy", "amber", "vanilla", "tobacco", "woody", "sweet", "smoky", "leather"],
+      vibes: ["warm", "seductive", "cozy", "dark", "bold"],
+      occasions: ["date", "night", "evening", "formal"],
+      seasons: ["fall", "winter"],
+    },
+    reasons: {
+      accords: "Adds warm evening depth",
+      vibes: "Adds warm evening depth",
+      occasions: "Adds evening range",
+      seasons: "Strengthens cold-weather coverage",
+    },
+  },
+  formal: {
+    baseImportance: 68,
+    signals: {
+      accords: ["woody", "iris", "leather", "powdery", "aromatic"],
+      vibes: ["elegant", "sophisticated", "classic", "smooth"],
+      occasions: ["formal", "office", "special"],
+      seasons: ["spring", "fall"],
+    },
+    reasons: {
+      accords: "Adds polished formal range",
+      vibes: "Adds polished formal range",
+      occasions: "Improves dressed-up versatility",
+      seasons: "Broadens formal-season range",
+    },
+  },
+  evening: {
+    baseImportance: 66,
+    signals: {
+      accords: ["amber", "vanilla", "warm spicy", "leather", "sweet", "smoky"],
+      vibes: ["seductive", "bold", "dark", "warm", "intense"],
+      occasions: ["date", "night", "evening", "club", "special"],
+      seasons: ["fall", "winter"],
+    },
+    reasons: {
+      accords: "Adds a stronger after-dark profile",
+      vibes: "Adds a stronger after-dark profile",
+      occasions: "Adds evening range",
+      seasons: "Strengthens night-out seasonality",
+    },
+  },
+  contrast: {
+    baseImportance: 58,
+    signals: {
+      accords: ["woody", "leather", "green", "marine", "citrus", "amber", "iris"],
+      vibes: ["unique", "bold", "fresh", "warm", "elegant", "artistic"],
+      occasions: ["daily", "date", "formal", "special"],
+      seasons: ["spring", "summer", "fall", "winter"],
+    },
+    reasons: {
+      accords: "Adds a distinct scent direction",
+      vibes: "Adds a distinct scent direction",
+      occasions: "Expands wearable range",
+      seasons: "Broadens seasonal range",
+    },
+  },
+};
+
+const OBJECTIVE_KEYS = ["freshDaytime", "coldWeather", "formal", "evening", "contrast"];
+const OBJECTIVE_DIMINISHING_RETURNS = [1, 0.55, 0.25, 0.1, 0.05];
+const OBJECTIVE_SIGNAL_WEIGHTS = {
+  accords: 0.34,
+  vibes: 0.28,
+  occasions: 0.23,
+  seasons: 0.15,
+};
+const OBJECTIVE_MIN_COMPATIBILITY = 0.45;
+const OBJECTIVE_SWITCH_MARGIN = 4;
+
+function getObjectiveUrgencies({ intelligence, selectedPerfumes, selectedCount }) {
+  const strongestObjective = getObjectiveFromGap({
+    mainGap: intelligence.mainGap,
+    bestNextMove: intelligence.bestNextMove,
+  });
+  const objectiveCoverages = Object.fromEntries(
+    OBJECTIVE_KEYS.map((objectiveKey) => [
+      objectiveKey,
+      getObjectiveCoverage(selectedPerfumes, OBJECTIVE_DEFINITIONS[objectiveKey]),
+    ])
+  );
+  const warmCoverage = objectiveCoverages.coldWeather?.saturation || 0;
+  const freshCoverage = objectiveCoverages.freshDaytime?.saturation || 0;
+  const contextMultiplier = (objectiveKey) => {
+    if (selectedCount === 0 && objectiveKey === "contrast") {
+      return 1.9;
+    }
+
+    if (objectiveKey === "freshDaytime" && warmCoverage > freshCoverage + 0.18) {
+      return 1.18;
+    }
+
+    if (objectiveKey === "coldWeather" && freshCoverage > warmCoverage + 0.18) {
+      return 1.18;
+    }
+
+    if (objectiveKey === "formal" && selectedCount >= 3) {
+      return 1.12;
+    }
+
+    if (objectiveKey === strongestObjective) {
+      return 1.08;
+    }
+
+    return 1;
+  };
+  const urgencyByObjective = OBJECTIVE_KEYS.map((objectiveKey) => {
+    const definition = OBJECTIVE_DEFINITIONS[objectiveKey];
+    const coverage = objectiveCoverages[objectiveKey];
+    const missingCoverage = 1 - coverage.saturation;
+    const rawUrgency =
+      definition.baseImportance *
+      missingCoverage *
+      contextMultiplier(objectiveKey);
+
+    return {
+      objectiveKey,
+      coverage,
+      missingCoverage,
+      urgency: rawUrgency,
+    };
+  });
+
+  return urgencyByObjective
+    .map((objective) => ({
+      ...objective,
+      urgency: Math.max(0, Math.round(objective.urgency)),
+    }))
+    .sort((a, b) => b.urgency - a.urgency || a.objectiveKey.localeCompare(b.objectiveKey));
+}
+
+function getHighestPriorityObjectiveResult(objectivePriorities, recommendations) {
+  const viableResults = objectivePriorities
+    .map((objective) => {
+      const result = getCompatibleRecommendationResult(
+        objective.objectiveKey,
+        recommendations,
+        objective.urgency
+      );
+
+      return result
+        ? {
+            ...result,
+            coverage: objective.coverage,
+            missingCoverage: objective.missingCoverage,
+            urgency: objective.urgency,
+          }
+        : null;
+    })
+    .filter(Boolean);
+
+  return viableResults.sort((a, b) => {
+    const urgencyDelta = b.urgency - a.urgency;
+
+    if (Math.abs(urgencyDelta) > OBJECTIVE_SWITCH_MARGIN) {
+      return urgencyDelta;
+    }
+
+    return (
+      b.missingCoverage - a.missingCoverage ||
+      b.recommendations[0].objectiveCompatibilityScore -
+        a.recommendations[0].objectiveCompatibilityScore ||
+      b.recommendations[0].finalScore - a.recommendations[0].finalScore ||
+      a.objectiveKey.localeCompare(b.objectiveKey)
+    );
+  })[0];
+}
+
 function buildNextImprovementGuidance({
+  objectiveKey,
   mainGap,
   bestNextMove,
   profile,
@@ -1122,10 +1357,6 @@ function buildNextImprovementGuidance({
   selectedCount,
   isBoxFull,
 }) {
-  if (!recommendation && selectedCount === 0) {
-    return null;
-  }
-
   if (isBoxFull) {
     return {
       eyebrow: "NEXT IMPROVEMENT",
@@ -1145,12 +1376,17 @@ function buildNextImprovementGuidance({
   }
 
   const recommendationName = recommendation?.perfume?.shortName || recommendation?.perfume?.name;
-  const moveTitle = normalizeNextMoveTitle(bestNextMove, mainGap);
+  const moveTitle = getObjectiveTitle(objectiveKey, bestNextMove, mainGap);
   const profilePhrase =
     selectedCount < 3
       ? getEarlyProfilePhrase(profile)
       : getProfileGuidancePhrase(profile, coverage);
-  const improvementPhrase = getImprovementGuidancePhrase(mainGap, bestNextMove, recommendationName);
+  const improvementPhrase = getImprovementGuidancePhrase(
+    objectiveKey,
+    mainGap,
+    bestNextMove,
+    recommendationName
+  );
 
   return {
     eyebrow: selectedCount < 3 ? "EARLY OPPORTUNITY" : "NEXT IMPROVEMENT",
@@ -1159,7 +1395,168 @@ function buildNextImprovementGuidance({
   };
 }
 
-function normalizeNextMoveTitle(bestNextMove, mainGap) {
+function getObjectiveFromGap({ mainGap, bestNextMove }) {
+  if (mainGap?.type === "winter" || mainGap?.type === "warmth") {
+    return "coldWeather";
+  }
+
+  if (mainGap?.type === "formal") {
+    return "formal";
+  }
+
+  if (mainGap?.type === "summer") {
+    return "freshDaytime";
+  }
+
+  if (mainGap?.type === "evening") {
+    return "evening";
+  }
+
+  if (/fresh daytime/i.test(bestNextMove || "")) {
+    return "freshDaytime";
+  }
+
+  if (/warm|winter|cold/i.test(bestNextMove || "")) {
+    return "coldWeather";
+  }
+
+  if (/formal|woody/i.test(bestNextMove || "")) {
+    return "formal";
+  }
+
+  if (mainGap?.type === "diversity") {
+    return "contrast";
+  }
+
+  return "contrast";
+}
+
+function getCompatibleRecommendationResult(objectiveKey, recommendations, urgency = 0) {
+  const compatibleRecommendations = recommendations
+    .map((recommendation) => ({
+      recommendation,
+      compatibility: getObjectiveCompatibilityScore(
+        objectiveKey,
+        recommendation.perfume
+      ),
+    }))
+    .filter(({ compatibility }) => compatibility.normalizedScore >= OBJECTIVE_MIN_COMPATIBILITY)
+    .sort(
+      (a, b) =>
+        b.compatibility.normalizedScore * Math.max(1, urgency / 20) -
+          a.compatibility.normalizedScore * Math.max(1, urgency / 20) ||
+        b.recommendation.finalScore - a.recommendation.finalScore ||
+        b.recommendation.score - a.recommendation.score ||
+        a.recommendation.perfume.name.localeCompare(b.recommendation.perfume.name)
+    )
+    .map(({ recommendation, compatibility }) =>
+      applyObjectiveRecommendationReasons(recommendation, objectiveKey, compatibility)
+    );
+
+  if (compatibleRecommendations.length === 0) {
+    return null;
+  }
+
+  return {
+    objectiveKey,
+    urgency,
+    recommendations: compatibleRecommendations,
+  };
+}
+
+function getObjectiveCompatibilityScore(objectiveKey, perfume) {
+  const definition = OBJECTIVE_DEFINITIONS[objectiveKey] || OBJECTIVE_DEFINITIONS.contrast;
+  const signalMatch = getObjectiveSignalMatch(perfume, definition);
+  const reasons = [];
+
+  signalMatch.groups.forEach((group) => {
+    const reason = definition.reasons[group];
+
+    if (reason) {
+      reasons.push(reason);
+    }
+  });
+
+  return {
+    score: Math.round(signalMatch.normalizedScore * 10),
+    normalizedScore: signalMatch.normalizedScore,
+    reasons: uniqueStrings(reasons).slice(0, MAX_RECOMMENDATION_EXPLANATIONS),
+  };
+}
+
+function getObjectiveCoverage(selectedPerfumes, definition) {
+  const matches = (selectedPerfumes || [])
+    .map((perfume) => getObjectiveSignalMatch(perfume, definition))
+    .filter((match) => match.normalizedScore > 0)
+    .sort((a, b) => b.normalizedScore - a.normalizedScore);
+  const weightedContribution = matches.reduce((sum, match, index) => {
+    const weight =
+      OBJECTIVE_DIMINISHING_RETURNS[
+        Math.min(index, OBJECTIVE_DIMINISHING_RETURNS.length - 1)
+      ];
+
+    return sum + match.normalizedScore * weight;
+  }, 0);
+  const matchedGroups = new Set(matches.flatMap((match) => match.groups));
+  const matchedSignals = new Set(matches.flatMap((match) => match.signals));
+  const diversityBonus = Math.min(
+    0.14,
+    matchedGroups.size * 0.03 + matchedSignals.size * 0.004
+  );
+  const saturation = clamp01(weightedContribution * 0.68 + diversityBonus);
+
+  return {
+    saturation,
+    weightedContribution,
+    diversityBonus,
+    matchedGroups: [...matchedGroups],
+    matchedSignals: [...matchedSignals],
+  };
+}
+
+function getObjectiveSignalMatch(perfume, definition) {
+  const groups = [];
+  const signals = [];
+  const weightedScore = Object.entries(OBJECTIVE_SIGNAL_WEIGHTS).reduce(
+    (sum, [group, weight]) => {
+      const perfumeValues = new Set(perfume?.[group] || []);
+      const definitionValues = definition.signals[group] || [];
+      const matches = definitionValues.filter((value) => perfumeValues.has(value));
+
+      if (matches.length === 0) {
+        return sum;
+      }
+
+      groups.push(group);
+      signals.push(...matches);
+
+      const density = Math.min(1, matches.length / Math.min(3, definitionValues.length));
+      return sum + weight * (0.72 + density * 0.28);
+    },
+    0
+  );
+
+  return {
+    normalizedScore: clamp01(weightedScore),
+    groups,
+    signals: uniqueStrings(signals),
+  };
+}
+
+function clamp01(value) {
+  return Math.max(0, Math.min(1, Number.isFinite(value) ? value : 0));
+}
+
+function applyObjectiveRecommendationReasons(recommendation, objectiveKey, compatibility) {
+  return {
+    ...recommendation,
+    objectiveKey,
+    objectiveCompatibilityScore: compatibility.score,
+    objectiveReasons: compatibility.reasons,
+  };
+}
+
+function getObjectiveTitle(objectiveKey, bestNextMove, mainGap) {
   const normalizedMove = bestNextMove
     ?.replace(/^Add one\s+/i, "")
     .replace(/^Add a\s+/i, "")
@@ -1167,23 +1564,27 @@ function normalizeNextMoveTitle(bestNextMove, mainGap) {
     .replace(/^Add\s+/i, "")
     .trim();
 
-  if (normalizedMove) {
+  if (objectiveKey === getObjectiveFromGap({ mainGap, bestNextMove }) && normalizedMove) {
     return `Add ${normalizedMove.charAt(0).toLowerCase()}${normalizedMove.slice(1)}`;
   }
 
-  if (mainGap?.type === "winter" || mainGap?.type === "warmth") {
+  if (objectiveKey === "coldWeather") {
     return "Add warm evening depth";
   }
 
-  if (mainGap?.type === "formal") {
+  if (objectiveKey === "formal") {
     return "Expand formal versatility";
   }
 
-  if (mainGap?.type === "summer") {
+  if (objectiveKey === "freshDaytime") {
     return "Add fresh daytime contrast";
   }
 
-  if (mainGap?.type === "diversity") {
+  if (objectiveKey === "evening") {
+    return "Add a stronger evening profile";
+  }
+
+  if (objectiveKey === "contrast") {
     return "Add a contrasting profile";
   }
 
@@ -1210,28 +1611,33 @@ function getProfileGuidancePhrase(profile, coverage) {
   return "Your box has a clear starting point.";
 }
 
-function getImprovementGuidancePhrase(mainGap, bestNextMove, recommendationName) {
+function getImprovementGuidancePhrase(
+  objectiveKey,
+  mainGap,
+  bestNextMove,
+  recommendationName
+) {
   const recommendationCopy = recommendationName
     ? `${recommendationName} is the pick that best answers that opportunity.`
     : "The next recommendation is chosen to answer that opportunity.";
 
-  if (mainGap?.type === "winter" || mainGap?.type === "warmth") {
+  if (objectiveKey === "coldWeather") {
     return `A warmer evening addition would add depth and improve cold-weather range. ${recommendationCopy}`;
   }
 
-  if (mainGap?.type === "formal") {
+  if (objectiveKey === "formal") {
     return `A polished formal fragrance would make the box more useful for dressed-up occasions. ${recommendationCopy}`;
   }
 
-  if (mainGap?.type === "summer") {
+  if (objectiveKey === "freshDaytime") {
     return `A brighter daytime fragrance would add contrast and improve warm-weather versatility. ${recommendationCopy}`;
   }
 
-  if (mainGap?.type === "evening") {
+  if (objectiveKey === "evening") {
     return `A stronger evening profile would make the box feel more complete after dark. ${recommendationCopy}`;
   }
 
-  if (mainGap?.type === "diversity") {
+  if (objectiveKey === "contrast") {
     return `A contrasting scent direction would prevent the box from feeling too similar. ${recommendationCopy}`;
   }
 
@@ -1956,14 +2362,18 @@ function DiscoveryBoxReviewModal({
     boxSummary.seasonStrengths || boxSummary.seasonCounts || {},
     selectedPerfumes.length
   );
-  const strengths =
-    curatorInsight?.strengths?.length > 0
-      ? curatorInsight.strengths.slice(0, 3)
-      : coverageSummary.strengths.slice(0, 3).map((item) => item.label);
-  const opportunities =
-    curatorInsight?.improvementGoals?.length > 0
-      ? curatorInsight.improvementGoals.slice(0, 3)
-      : coverageSummary.gaps.slice(0, 3).map((item) => item.label);
+  const collectionReview = buildCuratedCollectionReview({
+    boxSummary,
+    coverageSummary,
+    selectedPerfumes,
+    seasonRows,
+    collectionIdentity,
+    curatorInsight,
+  });
+  const strengths = collectionReview.strengths;
+  const opportunities = collectionReview.opportunities;
+  const assessmentBadge = collectionReview.assessmentBadge;
+  const assessmentSummary = collectionReview.assessmentSummary;
   const curatorRewardLabel =
     hiddenCuratorPicks.length > 1 ? "Bonus Fragrances" : "Bonus Fragrance";
   const canFinalize =
@@ -2046,84 +2456,21 @@ function DiscoveryBoxReviewModal({
       >
         <div className="modal-header">
           <div>
-            <p className="summary-eyebrow">Discovery Box Review</p>
             <h3 id="discovery-review-title">Your personalized fragrance collection is ready.</h3>
           </div>
 
           <button type="button" onClick={onClose}>Close</button>
         </div>
 
-        <section className="collection-identity review-identity-hero">
-          <span>Collection Identity</span>
-          <strong>{collectionIdentity.name}</strong>
-          <p>{collectionIdentity.description}</p>
-        </section>
-
-        <section className="final-summary-stats">
-          <SummaryStat label="Fragrances" value={selectedPerfumes.length} />
-          <SummaryStat label="Total Points" value={totalPoints.toFixed(1)} />
-          <SummaryStat label="Order Total" value={`$${estimatedValue.toFixed(0)}`} />
-          <SummaryStat
-            label="Curator Bonus"
-            value={isCuratorBonusUnlocked ? "Unlocked" : "Locked"}
-          />
-        </section>
-
-        <section className="final-summary-section review-customer-section">
-          <h4>Customer Info</h4>
-
-          <div className="review-customer-form">
-            <label>
-              <span>Customer name</span>
-              <input
-                type="text"
-                value={customerInfo.name}
-                onChange={(event) =>
-                  handleCustomerInfoChange("name", event.target.value)
-                }
-                placeholder="Required"
-              />
-            </label>
-
-            <label>
-              <span>City</span>
-              <input
-                type="text"
-                value={customerInfo.city}
-                onChange={(event) =>
-                  handleCustomerInfoChange("city", event.target.value)
-                }
-                placeholder="Required"
-              />
-            </label>
-
-            <label className="review-notes-field">
-              <span>Notes</span>
-              <textarea
-                value={customerInfo.notes}
-                onChange={(event) =>
-                  handleCustomerInfoChange("notes", event.target.value)
-                }
-                placeholder="Optional preferences or delivery notes"
-                rows={2}
-              />
-            </label>
+        <section className="final-summary-section review-overview-section">
+          <div className="review-section-heading">
+            <span>Curator Assessment</span>
+            <h4>{collectionIdentity.name}</h4>
+            <strong className="review-assessment-badge">{assessmentBadge}</strong>
+            <p>{assessmentSummary}</p>
           </div>
-        </section>
 
-        <section className="final-summary-section review-rules-section">
-          <h4>Box Rules</h4>
-
-          <ul className="review-rules-list">
-            <li>Build at least 6 fragrances, up to 14 selectable fragrances.</li>
-            <li>1 point = $100. Your order total is based on selected points.</li>
-            <li>Curator Bonus unlocks at 12 points and 6 fragrances.</li>
-            <li>The physical box has 16 slots, with 2 reserved for Curator Bonus picks.</li>
-          </ul>
-        </section>
-
-        <section className="final-summary-section review-season-section">
-          <h4>Season Coverage</h4>
+          <h5>Season Coverage</h5>
 
           <div className="season-coverage-bars">
             {seasonRows.map((season) => (
@@ -2168,6 +2515,15 @@ function DiscoveryBoxReviewModal({
           </div>
         </section>
 
+        <section className="final-summary-section review-curator-note-section">
+          <div className="review-section-heading">
+            <span>Curator Notes</span>
+            <h4>Closing Notes</h4>
+          </div>
+
+          <p>{collectionReview.curatorNote}</p>
+        </section>
+
         <section className="final-summary-section review-curator-section">
           <h4>Curator Bonus</h4>
 
@@ -2186,6 +2542,62 @@ function DiscoveryBoxReviewModal({
                   : "Unlocks when your Discovery Box is complete."}
               </p>
             </div>
+          </div>
+        </section>
+
+        <section className="final-summary-section review-order-section">
+          <h4>Order Summary</h4>
+
+          <section className="final-summary-stats review-order-stats">
+            <SummaryStat label="Fragrances" value={selectedPerfumes.length} />
+            <SummaryStat label="Total Points" value={totalPoints.toFixed(1)} />
+            <SummaryStat label="Order Total" value={`$${estimatedValue.toFixed(0)}`} />
+            <SummaryStat
+              label="Curator Bonus"
+              value={isCuratorBonusUnlocked ? "Unlocked" : "Locked"}
+            />
+          </section>
+        </section>
+
+        <section className="final-summary-section review-customer-section">
+          <h4>Finalize Details</h4>
+
+          <div className="review-customer-form">
+            <label>
+              <span>Customer name</span>
+              <input
+                type="text"
+                value={customerInfo.name}
+                onChange={(event) =>
+                  handleCustomerInfoChange("name", event.target.value)
+                }
+                placeholder="Required"
+              />
+            </label>
+
+            <label>
+              <span>City</span>
+              <input
+                type="text"
+                value={customerInfo.city}
+                onChange={(event) =>
+                  handleCustomerInfoChange("city", event.target.value)
+                }
+                placeholder="Required"
+              />
+            </label>
+
+            <label className="review-notes-field">
+              <span>Notes</span>
+              <textarea
+                value={customerInfo.notes}
+                onChange={(event) =>
+                  handleCustomerInfoChange("notes", event.target.value)
+                }
+                placeholder="Optional preferences or delivery notes"
+                rows={2}
+              />
+            </label>
           </div>
         </section>
 
@@ -2254,6 +2666,610 @@ function buildDiscoveryBoxWhatsAppMessage({
     "",
     "Please confirm availability and next steps. Thank you.",
   ].filter(Boolean).join("\n");
+}
+
+function buildCuratedCollectionReview({
+  boxSummary,
+  coverageSummary,
+  selectedPerfumes,
+  seasonRows,
+  collectionIdentity,
+  curatorInsight,
+}) {
+  const selectedCount = selectedPerfumes.length;
+  const occasionCounts = boxSummary.occasionCounts || {};
+  const vibeCounts = boxSummary.vibeCounts || {};
+  const accordCounts = getAccordCounts(boxSummary);
+  const seasonScores = Object.fromEntries(
+    seasonRows.map((season) => [season.id, season.count])
+  );
+  const dailySignals =
+    (occasionCounts.daily || 0) +
+    (occasionCounts.office || 0) +
+    (occasionCounts.casual || 0);
+  const eveningSignals =
+    (occasionCounts.date || 0) +
+    (occasionCounts.night || 0) +
+    (occasionCounts.evening || 0);
+  const formalSignals = (occasionCounts.formal || 0) + (occasionCounts.office || 0);
+  const freshSignals =
+    (vibeCounts.fresh || 0) +
+    (vibeCounts.clean || 0) +
+    (accordCounts.citrus || 0) +
+    (accordCounts.fresh || 0) +
+    (accordCounts.green || 0);
+  const warmSignals =
+    (vibeCounts.warm || 0) +
+    (vibeCounts.cozy || 0) +
+    (vibeCounts.seductive || 0) +
+    (accordCounts.amber || 0) +
+    (accordCounts.vanilla || 0) +
+    (accordCounts["warm spicy"] || 0) +
+    (accordCounts.tobacco || 0);
+  const darkSignals =
+    (vibeCounts.dark || 0) +
+    (vibeCounts.bold || 0) +
+    (accordCounts.smoky || 0) +
+    (accordCounts.leather || 0) +
+    (accordCounts.oud || 0);
+  const polishedSignals =
+    (vibeCounts.elegant || 0) +
+    (vibeCounts.sophisticated || 0) +
+    (vibeCounts.classic || 0) +
+    (accordCounts.iris || 0) +
+    (accordCounts.powdery || 0);
+  const activeSeasonCount = Object.values(seasonScores).filter((score) => score >= 35).length;
+  const minSeasonScore = Math.min(...Object.values(seasonScores));
+  const maxSeasonScore = Math.max(...Object.values(seasonScores));
+  const seasonBalance = maxSeasonScore > 0 ? minSeasonScore / maxSeasonScore : 0;
+  const uniqueOccasionCount = Object.values(occasionCounts).filter((count) => count > 0).length;
+  const reviewSignals = {
+    selectedCount,
+    occasionCounts,
+    vibeCounts,
+    accordCounts,
+    dailySignals,
+    eveningSignals,
+    formalSignals,
+    freshSignals,
+    warmSignals,
+    darkSignals,
+    polishedSignals,
+    activeSeasonCount,
+    seasonBalance,
+    uniqueOccasionCount,
+  };
+  const strengthItems = getCollectionStrengths(reviewSignals, curatorInsight);
+  const opportunityItems = getGrowthOpportunities(
+    reviewSignals,
+    curatorInsight,
+    coverageSummary,
+    strengthItems
+  );
+  const assessmentBadge = getAssessmentBadge({
+    collectionIdentity,
+    ...reviewSignals,
+    strengthKeys: strengthItems.map((item) => item.key),
+    opportunityCount: opportunityItems.length,
+  });
+  const assessmentSummary = getAssessmentSummary({
+    collectionIdentity,
+    strengths: strengthItems,
+    opportunities: opportunityItems,
+    ...reviewSignals,
+  });
+  const curatorNote = buildCuratorNote({
+    collectionIdentity,
+    strengths: strengthItems,
+    primaryOpportunity: opportunityItems[0],
+    ...reviewSignals,
+  });
+  const semanticAudit = {
+    identity: collectionIdentity.name,
+    badge: assessmentBadge,
+    strengthKeys: strengthItems.map((item) => item.key),
+    opportunityKeys: opportunityItems.map((item) => item.key),
+    curatorNoteOpportunityKey: opportunityItems[0]?.key || "none",
+  };
+
+  return {
+    semanticAudit,
+    assessmentBadge,
+    assessmentSummary: normalizeSentence(assessmentSummary),
+    strengths:
+      strengthItems.length > 0
+        ? strengthItems.map((item) => normalizeListItem(item.text))
+        : ["A clear collection profile is beginning to take shape"],
+    opportunities: opportunityItems.map((item) => normalizeListItem(item.text)),
+    curatorNote: normalizeParagraph(curatorNote),
+  };
+}
+
+function getAssessmentBadge({
+  collectionIdentity,
+  selectedCount,
+  dailySignals,
+  eveningSignals,
+  seasonBalance,
+  uniqueOccasionCount,
+  freshSignals,
+  warmSignals,
+  darkSignals,
+  polishedSignals,
+  strengthKeys,
+  opportunityCount,
+}) {
+  if (selectedCount < 4) {
+    return "Developing Collection";
+  }
+
+  if (/evening/i.test(collectionIdentity.name) && eveningSignals >= 3) {
+    return warmSignals + darkSignals >= freshSignals
+      ? "Confident Evening Character"
+      : "Versatile After-Dark Profile";
+  }
+
+  if (/fresh|daily|versatile/i.test(collectionIdentity.name) && dailySignals >= 4) {
+    return polishedSignals >= 3 ? "Refined Daily Wear" : "Strong Daily Rotation";
+  }
+
+  if (/balanced/i.test(collectionIdentity.name) && seasonBalance >= 0.58 && uniqueOccasionCount >= 4) {
+    return "Excellent Balance";
+  }
+
+  if (strengthKeys.includes("dailyVersatility")) {
+    return "Highly Versatile";
+  }
+
+  if (polishedSignals >= 4 || darkSignals >= 3) {
+    return "Distinctive Character";
+  }
+
+  if (uniqueOccasionCount >= 4) {
+    return "Highly Versatile";
+  }
+
+  if (seasonBalance >= 0.62 && uniqueOccasionCount >= 5 && opportunityCount <= 1) {
+    return "Excellent Balance";
+  }
+
+  return "Well Rounded";
+}
+
+function getAssessmentSummary({
+  collectionIdentity,
+  freshSignals,
+  warmSignals,
+  polishedSignals,
+  eveningSignals,
+  dailySignals,
+  uniqueOccasionCount,
+  strengths,
+}) {
+  const character = getCollectionCharacterPhrase({
+    freshSignals,
+    warmSignals,
+    polishedSignals,
+    eveningSignals,
+  });
+  const performance =
+    dailySignals >= 4 && eveningSignals >= 2
+      ? "moving comfortably from daytime wear into evening use"
+      : dailySignals >= 4
+        ? "built for reliable everyday wear"
+        : eveningSignals >= 3
+          ? "with a clear after-dark point of view"
+          : uniqueOccasionCount >= 4
+            ? "with enough range for varied settings"
+            : "with a focused but still flexible profile";
+  const strengthPhrase = strengths[0]
+    ? ` The strongest impression is ${lowercaseFirst(strengths[0].text)}.`
+    : "";
+
+  return `${sentenceCase(`${getArticle(collectionIdentity.name)} ${collectionIdentity.name.toLowerCase()}`)} with ${character}, ${performance}.${strengthPhrase}`;
+}
+
+function getCollectionStrengths(signals, curatorInsight) {
+  const {
+    selectedCount,
+    dailySignals,
+    formalSignals,
+    eveningSignals,
+    freshSignals,
+    warmSignals,
+    darkSignals,
+    polishedSignals,
+    activeSeasonCount,
+    seasonBalance,
+    uniqueOccasionCount,
+  } = signals;
+  const candidates = [
+    selectedCount >= 6 && dailySignals >= Math.max(4, selectedCount * 0.65)
+      ? createReviewItem("dailyVersatility", "Excellent everyday versatility", 96)
+      : null,
+    selectedCount >= 5 && dailySignals >= 3 && formalSignals >= 2
+      ? createReviewItem("officeWear", "Strong office and casual rotation", 88)
+      : null,
+    selectedCount >= 6 && seasonBalance >= 0.55
+      ? createReviewItem("warmCoolBalance", "Balanced warm and cool weather selection", 84)
+      : null,
+    selectedCount >= 6 && activeSeasonCount >= 3
+      ? createReviewItem("seasonalBalance", "Wide seasonal flexibility", 78)
+      : null,
+    uniqueOccasionCount >= 4
+      ? createReviewItem("occasionRange", "Covers most daily situations confidently", 82)
+      : null,
+    polishedSignals >= 4
+      ? createReviewItem("signaturePotential", "Great signature scent potential", 80)
+      : null,
+    eveningSignals >= 3 && darkSignals + warmSignals >= 4
+      ? createReviewItem("eveningDepth", "Confident evening presence", 92)
+      : null,
+    freshSignals >= 4 && polishedSignals >= 2
+      ? createReviewItem("freshContrast", "Refined fresh-clean character", 76)
+      : null,
+    ...(curatorInsight?.strengths || []).map((strength) =>
+      rewriteReviewStrength(strength)
+    ),
+  ];
+
+  return removeSimilarReviewItems(
+    candidates.filter(Boolean).filter(
+      (strength) => !isSeasonChartRestatement(strength.text)
+    )
+  )
+    .sort((first, second) => second.score - first.score)
+    .slice(0, 4);
+}
+
+function getGrowthOpportunities(signals, curatorInsight, coverageSummary, strengths = []) {
+  const {
+    accordCounts,
+    darkSignals,
+    eveningSignals,
+    warmSignals,
+    freshSignals,
+    polishedSignals,
+    formalSignals,
+  } = signals;
+  const candidates = [
+    darkSignals < 2
+      ? createReviewItem("earthyDepth", "Could benefit from darker earthy or smoky depth", 84)
+      : null,
+    eveningSignals < 2 || warmSignals < 2
+      ? createReviewItem("eveningDepth", "Could use richer evening character", 82)
+      : null,
+    (accordCounts["warm spicy"] || 0) < 1 && warmSignals < 4
+      ? createReviewItem("spicyWarmth", "Limited spicy warmth", 76)
+      : null,
+    (accordCounts.green || 0) < 1 && freshSignals < 4
+      ? createReviewItem("greenFreshness", "A greener aromatic profile would add freshness", 72)
+      : null,
+    polishedSignals < 2 && formalSignals < 2
+      ? createReviewItem("formalElegance", "Could benefit from more formal elegance", 74)
+      : null,
+    (accordCounts.citrus || 0) < 1 && freshSignals < 3
+      ? createReviewItem("freshContrast", "A brighter citrus profile would add contrast", 78)
+      : null,
+    ...(curatorInsight?.improvementGoals || []).map((opportunity) =>
+      rewriteReviewOpportunity(opportunity)
+    ),
+    ...(coverageSummary.gaps || []).map((gap) => rewriteCoverageGap(gap)),
+  ];
+
+  return removeSimilarReviewItems(
+    candidates.filter(Boolean).filter(
+      (opportunity) =>
+        !isSeasonChartRestatement(opportunity.text) &&
+        !doesOpportunityConflictWithStrength(opportunity, strengths)
+    )
+  )
+    .sort((first, second) => second.score - first.score)
+    .slice(0, 3);
+}
+
+function rewriteReviewStrength(strength) {
+  const safeStrength = toSafeString(strength);
+  const normalized = safeStrength.toLowerCase();
+
+  if (/daily|versatility|everyday/.test(normalized)) {
+    return createReviewItem("dailyVersatility", "Excellent everyday versatility", 70);
+  }
+
+  if (/evening|date|night/.test(normalized)) {
+    return createReviewItem("eveningDepth", "Confident evening presence", 70);
+  }
+
+  if (/fresh/.test(normalized)) {
+    return createReviewItem("freshContrast", "Refined fresh-clean character", 68);
+  }
+
+  if (/cold|winter|warm/.test(normalized)) {
+    return createReviewItem("warmCoolBalance", "Strong cool-weather depth", 66);
+  }
+
+  if (/formal|office/.test(normalized)) {
+    return createReviewItem("officeWear", "Strong office and dressed-up rotation", 66);
+  }
+
+  return createReviewItem(getReviewItemTopic(safeStrength), sentenceCase(safeStrength), 50);
+}
+
+function rewriteReviewOpportunity(opportunity) {
+  const safeOpportunity = toSafeString(opportunity);
+  const normalized = safeOpportunity.toLowerCase();
+
+  if (/adds?\s+(.+?)\s+depth currently missing/i.test(safeOpportunity)) {
+    const match = safeOpportunity.match(/adds?\s+(.+?)\s+depth currently missing/i);
+    const phrase = formatPhrase(match?.[1] || "");
+    return createReviewItem(
+      `${phrase || "textural"}Depth`,
+      `Could benefit from greater ${phrase} depth`,
+      64
+    );
+  }
+
+  if (/cold|winter|warm/.test(normalized)) {
+    return createReviewItem("spicyWarmth", "Could use richer evening warmth", 62);
+  }
+
+  if (/summer|fresh/.test(normalized)) {
+    return createReviewItem("freshContrast", "Could use brighter fresh contrast", 66);
+  }
+
+  if (/evening|date|night/.test(normalized)) {
+    return createReviewItem("eveningDepth", "Could use richer evening character", 62);
+  }
+
+  if (/woody|leather|earth/.test(normalized)) {
+    return createReviewItem("earthyDepth", "Could benefit from darker earthy depth", 62);
+  }
+
+  if (/formal|office/.test(normalized)) {
+    return createReviewItem("formalElegance", "Could benefit from more formal elegance", 62);
+  }
+
+  return createReviewItem(getReviewItemTopic(safeOpportunity), sentenceCase(safeOpportunity), 45);
+}
+
+function rewriteCoverageGap(gap) {
+  if (gap.category === "seasons") {
+    const copy = {
+      spring: createReviewItem("greenFreshness", "Could use more green aromatic lift", 46),
+      summer: createReviewItem("freshContrast", "Could use brighter fresh contrast", 48),
+      fall: createReviewItem("spicyWarmth", "Could use richer textured warmth", 46),
+      winter: createReviewItem("earthyDepth", "Could use deeper cold-weather character", 48),
+    };
+
+    return copy[gap.target] || null;
+  }
+
+  return rewriteReviewOpportunity(gap.label);
+}
+
+function buildCuratorNote({
+  strengths = [],
+  primaryOpportunity = null,
+  freshSignals,
+  warmSignals,
+  polishedSignals,
+  eveningSignals,
+  dailySignals,
+  uniqueOccasionCount,
+  selectedCount,
+}) {
+  const opening =
+    selectedCount >= 10
+      ? "This is the kind of box that should feel satisfying over repeated wear, with enough range to avoid becoming predictable."
+      : selectedCount >= 6
+        ? "This box should feel easy to live with, giving you several reliable moods without asking you to overthink the choice."
+        : "This box should feel like a clear starting point, with enough personality to make each wear feel intentional.";
+  const performance =
+    dailySignals >= 4 && eveningSignals >= 2
+      ? "You will likely reach for it across office, casual and date-night situations, which is where its range starts to show."
+      : dailySignals >= 4
+        ? "Its most natural strength is day-to-day wear: polished, dependable and easy to return to."
+        : eveningSignals >= 3
+          ? "It will feel most at home after dark, where texture and presence matter more than simple freshness."
+          : uniqueOccasionCount >= 4
+            ? "There is enough flexibility here to move across several settings while still feeling considered."
+            : "It remains focused for now, which gives future additions a clear role rather than adding noise.";
+  const texture =
+    strengths[0]?.text && selectedCount >= 6
+      ? ` The collection's quiet advantage is ${lowercaseFirst(strengths[0].text)}.`
+      : "";
+  const opportunitySentence =
+    primaryOpportunity
+      ? getOpportunitySentence(primaryOpportunity)
+      : "Future additions can be chosen for personal taste rather than correcting a major gap.";
+
+  return `${opening} ${performance}${texture} ${opportunitySentence}`;
+}
+
+function getCollectionCharacterPhrase({
+  freshSignals,
+  warmSignals,
+  polishedSignals,
+  eveningSignals,
+}) {
+  if (freshSignals >= warmSignals + 2 && polishedSignals >= 2) {
+    return "a polished fresh character and clean versatility";
+  }
+
+  if (warmSignals >= freshSignals + 2 && eveningSignals >= 2) {
+    return "warm texture, evening depth and a confident signature";
+  }
+
+  if (polishedSignals >= 4) {
+    return "refined structure, elegance and signature-scent potential";
+  }
+
+  if (eveningSignals >= 3) {
+    return "a clear evening character and enough depth for after-dark wear";
+  }
+
+  if (freshSignals >= warmSignals + 1) {
+    return "freshness, clarity and easy daily wear";
+  }
+
+  return "balanced freshness and warmth";
+}
+
+function getOpportunitySentence(opportunity) {
+  const normalized = getReviewItemText(opportunity).toLowerCase();
+
+  if (["freshContrast", "greenFreshness"].includes(opportunity?.key)) {
+    return "For future growth, a brighter fresh fragrance would add lift and keep the rotation from feeling too concentrated.";
+  }
+
+  if (["spicyWarmth", "earthyDepth"].includes(opportunity?.key)) {
+    return "For future growth, a richer textured fragrance would add shadow and make the wardrobe feel more dimensional.";
+  }
+
+  if (opportunity?.key === "formalElegance") {
+    return "For future growth, a more formal fragrance would add polish for dinners, events and dressed-up occasions.";
+  }
+
+  if (/citrus|fresh|green/.test(normalized)) {
+    return "For future growth, a brighter fresh fragrance would add lift and keep the rotation from feeling too concentrated.";
+  }
+
+  return "For future growth, one more contrasting fragrance would broaden the wardrobe without disturbing its current mood.";
+}
+
+function removeSimilarReviewItems(items) {
+  const seenTopics = new Set();
+
+  return items.filter((item) => {
+    const topic = getReviewItemTopic(getReviewItemText(item) || item?.key);
+
+    if (seenTopics.has(topic)) {
+      return false;
+    }
+
+    seenTopics.add(topic);
+    return true;
+  });
+}
+
+function createReviewItem(key, text, score = 50) {
+  return {
+    key: toSafeString(key) || "general",
+    text: normalizeListItem(text),
+    score,
+  };
+}
+
+function doesOpportunityConflictWithStrength(opportunity, strengths) {
+  const strengthKeys = new Set((strengths || []).map((strength) => strength?.key));
+  const directConflicts = {
+    dailyVersatility: ["dailyVersatility", "officeWear"],
+    officeWear: ["officeWear", "dailyVersatility"],
+    eveningDepth: ["eveningDepth"],
+    seasonalBalance: ["seasonalBalance", "warmCoolBalance"],
+    warmCoolBalance: ["warmCoolBalance", "seasonalBalance"],
+    signaturePotential: ["signaturePotential"],
+    formalElegance: ["formalElegance", "officeWear"],
+    freshContrast: ["freshContrast"],
+  };
+
+  return (directConflicts[opportunity?.key] || []).some((key) => strengthKeys.has(key));
+}
+
+function getReviewItemText(item) {
+  if (!item) {
+    return "";
+  }
+
+  if (typeof item === "string") {
+    return item;
+  }
+
+  return toSafeString(item.text);
+}
+
+function getReviewItemTopic(item) {
+  const normalized = toSafeString(item).toLowerCase();
+
+  if (/season|warm and cool|seasonal|weather/.test(normalized)) return "seasonal-range";
+  if (/daily|office|casual|everyday/.test(normalized)) return "daily-range";
+  if (/evening|date|night|after-dark/.test(normalized)) return "evening-range";
+  if (/formal|elegance|polished|signature/.test(normalized)) return "polish";
+  if (/fresh|citrus|green/.test(normalized)) return "freshness";
+  if (/warm|spicy|smoky|earthy|depth/.test(normalized)) return "depth";
+
+  return normalized.replace(/[^a-z0-9]+/g, "-");
+}
+
+function getArticle(phrase) {
+  return /^[aeiou]/i.test(toSafeString(phrase).trim()) ? "an" : "a";
+}
+
+function lowercaseFirst(value) {
+  const safeValue = toSafeString(value);
+  return safeValue
+    ? `${safeValue.charAt(0).toLowerCase()}${safeValue.slice(1)}`
+    : "";
+}
+
+function sentenceCase(value) {
+  const cleaned = cleanGeneratedCopy(value);
+  return cleaned ? `${cleaned.charAt(0).toUpperCase()}${cleaned.slice(1)}` : "";
+}
+
+function formatPhrase(value) {
+  return toSafeString(value)
+    .trim()
+    .replace(/[-_]+/g, " ")
+    .toLowerCase();
+}
+
+function normalizeSentence(value) {
+  const cleaned = cleanGeneratedCopy(value);
+
+  if (!cleaned) {
+    return "";
+  }
+
+  const withoutTrailingRepeats = cleaned.replace(/[.!?]+$/, "");
+  const punctuated = `${withoutTrailingRepeats}.`;
+  return sentenceCase(punctuated);
+}
+
+function normalizeParagraph(value) {
+  return cleanGeneratedCopy(value)
+    .split(/(?<=[.!?])\s+/)
+    .map(normalizeSentence)
+    .filter(Boolean)
+    .join(" ")
+    .replace(/\s+/g, " ")
+    .replace(/([.!?]){2,}/g, "$1")
+    .replace(/,{2,}/g, ",")
+    .trim();
+}
+
+function normalizeListItem(value) {
+  return sentenceCase(cleanGeneratedCopy(value).replace(/[.!?]+$/, ""));
+}
+
+function cleanGeneratedCopy(value) {
+  return toSafeString(value)
+    .replace(/\s+/g, " ")
+    .replace(/\s+([,.;:!?])/g, "$1")
+    .replace(/([,.;:!?])\1+/g, "$1")
+    .replace(/\s+,/g, ",")
+    .trim();
+}
+
+function toSafeString(value) {
+  return typeof value === "string" ? value : "";
+}
+
+function isSeasonChartRestatement(value) {
+  const safeValue = toSafeString(value);
+  return /\b(strong|weak|limited|covered|coverage)\s+(spring|summer|fall|winter)\b/i.test(
+    safeValue
+  ) || /\b(spring|summer|fall|winter)\s+(covered|coverage)\b/i.test(safeValue);
 }
 
 function FinalSummaryModal({
@@ -2665,15 +3681,14 @@ async function copyText(text) {
 }
 
 function NextImprovementSection({
-  guidance,
-  recommendations,
+  result,
   selectedPerfumeIds,
   isBoxFull,
   onAddPerfume,
   sectionRef,
   isEmphasized = false,
 }) {
-  if (!guidance || recommendations.length === 0) {
+  if (!result || result.recommendations.length === 0) {
     return null;
   }
 
@@ -2684,17 +3699,18 @@ function NextImprovementSection({
       aria-label="Next improvement"
     >
       <div className="next-improvement-copy">
-        <span>{guidance.eyebrow}</span>
-        <h4 tabIndex={-1}>{guidance.title}</h4>
-        <p>{guidance.description}</p>
+        <span>{result.eyebrow}</span>
+        <h4 tabIndex={-1}>{result.title}</h4>
+        <p>{result.description}</p>
       </div>
 
       <RecommendationLane
         title="Recommended Next Pick"
-        recommendations={recommendations}
+        recommendations={result.recommendations}
         selectedPerfumeIds={selectedPerfumeIds}
         isBoxFull={isBoxFull}
         onAddPerfume={onAddPerfume}
+        objectiveKey={result.objectiveKey}
       />
     </section>
   );
@@ -2708,18 +3724,16 @@ function RecommendationLane({
   onAddPerfume,
   sectionRef,
   isEmphasized = false,
+  objectiveKey,
 }) {
   const [activeIndex, setActiveIndex] = useState(0);
+  const recommendationSignature = recommendations
+    .map((recommendation) => recommendation.perfume.id)
+    .join("-");
 
   useEffect(() => {
-    setActiveIndex((currentIndex) => {
-      if (recommendations.length === 0) {
-        return 0;
-      }
-
-      return Math.min(currentIndex, recommendations.length - 1);
-    });
-  }, [recommendations.length]);
+    setActiveIndex(0);
+  }, [recommendationSignature, objectiveKey]);
 
   if (recommendations.length === 0) {
     return null;
@@ -2780,6 +3794,7 @@ function RecommendationLane({
           isBoxFull={isBoxFull}
           onAddPerfume={onAddPerfume}
           isFocusable
+          objectiveKey={objectiveKey}
         />
       </div>
     </section>
@@ -2793,9 +3808,10 @@ function RecommendationCard({
   isBoxFull,
   onAddPerfume,
   isFocusable = false,
+  objectiveKey,
 }) {
   const { perfume, score } = recommendation;
-  const explanations = getRecommendationExplanations(recommendation);
+  const explanations = getRecommendationExplanations(recommendation, objectiveKey);
   const confidence = getRecommendationConfidence(recommendation);
   const imageFallback = "/images/perfumes/placeholders/perfume-placeholder.svg";
   const isAddDisabled = isAdded || isBoxFull;
@@ -2887,11 +3903,15 @@ const RECOMMENDATION_REASON_REWRITES = {
   "Adds contrast without changing the mood too much": "Adds contrast within your current style",
 };
 
-function getRecommendationExplanations(recommendation) {
+function getRecommendationExplanations(recommendation, objectiveKey) {
   const reasons = Array.isArray(recommendation.reasons)
     ? recommendation.reasons
     : [];
+  const objectiveReasons = objectiveKey
+    ? getObjectiveReasonOptions(recommendation, objectiveKey)
+    : [];
   const reasonOptions = [
+    ...objectiveReasons,
     ...reasons.map((reason) => createRecommendationReasonOption(reason)),
     ...getFallbackRecommendationReasonOptions(recommendation),
   ]
@@ -2931,6 +3951,7 @@ function getRecommendationExplanations(recommendation) {
     }
 
     if (
+      reason.category !== "objective" &&
       reason.topic &&
       [...seenCategories].some((category) => category === reason.topic)
     ) {
@@ -2954,6 +3975,28 @@ function getRecommendationExplanations(recommendation) {
   return selectedReasons.length > 0
     ? selectedReasons
     : [];
+}
+
+function getObjectiveReasonOptions(recommendation, objectiveKey) {
+  const compatibilityReasons = recommendation.objectiveReasons || [];
+
+  if (compatibilityReasons.length > 0) {
+    return compatibilityReasons.map((reason) => ({
+      label: reason,
+      category: "objective",
+      priority: 0,
+      topic: objectiveKey,
+    }));
+  }
+
+  return getObjectiveCompatibilityScore(objectiveKey, recommendation.perfume).reasons.map(
+    (reason) => ({
+      label: reason,
+      category: "objective",
+      priority: 0,
+      topic: objectiveKey,
+    })
+  );
 }
 
 function createRecommendationReasonOption(reason) {

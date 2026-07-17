@@ -3497,21 +3497,83 @@ button {
   width: min(980px, 94vw);
 }
 
-.review-identity-hero {
-  padding: 22px;
+.review-overview-section {
+  margin-top: 8px;
+  padding: 14px 16px;
+  border: 1px solid rgba(74, 222, 128, 0.18);
+  border-radius: 16px;
   background:
-    radial-gradient(circle at 12% 0, rgba(250, 204, 21, 0.12), transparent 40%),
-    radial-gradient(circle at 88% 8%, rgba(74, 222, 128, 0.1), transparent 34%),
-    rgba(15, 23, 42, 0.58);
+    radial-gradient(circle at 12% 0, rgba(250, 204, 21, 0.1), transparent 38%),
+    radial-gradient(circle at 88% 8%, rgba(74, 222, 128, 0.08), transparent 32%),
+    rgba(15, 23, 42, 0.46);
 }
 
-.review-identity-hero strong {
-  font-size: clamp(1.7rem, 4vw, 2.6rem);
-  line-height: 1.05;
+.review-section-heading {
+  display: grid;
+  gap: 5px;
+}
+
+.review-section-heading span,
+.review-overview-section h5 {
+  margin: 0;
+  color: #86efac;
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.review-section-heading h4 {
+  margin: 0;
+}
+
+.review-section-heading p {
+  margin: 0;
+  max-width: 68ch;
+  color: #cbd5e1;
+  font-size: 0.88rem;
+  line-height: 1.5;
+}
+
+.review-overview-section .review-section-heading h4 {
+  color: #ecfdf5;
+  font-size: clamp(1.55rem, 3.5vw, 2.25rem);
+  line-height: 1.02;
+}
+
+.review-assessment-badge {
+  justify-self: start;
+  border: 1px solid rgba(134, 239, 172, 0.2);
+  border-radius: 999px;
+  padding: 4px 9px;
+  background: rgba(74, 222, 128, 0.08);
+  color: #bbf7d0;
+  font-size: 0.7rem;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.review-overview-section h5 {
+  margin-top: 12px;
+  margin-bottom: 8px;
 }
 
 .review-season-section .season-coverage-bars {
   margin-top: 10px;
+}
+
+.review-overview-section .season-coverage-bars {
+  gap: 4px;
+}
+
+.review-overview-section .season-coverage-row {
+  grid-template-columns: 54px minmax(0, 1fr) 20px;
+  gap: 6px;
+}
+
+.review-overview-section .season-coverage-track {
+  height: 5px;
 }
 
 .review-customer-form {
@@ -3609,6 +3671,30 @@ button {
   color: #facc15;
 }
 
+.review-list-check li::before {
+  content: "\2713";
+}
+
+.review-list-bullet li::before {
+  content: "\2022";
+}
+
+.review-curator-note-section {
+  padding: 16px;
+  border: 1px solid rgba(250, 204, 21, 0.15);
+  border-radius: 16px;
+  background:
+    radial-gradient(circle at 12% 0, rgba(250, 204, 21, 0.07), transparent 42%),
+    rgba(15, 23, 42, 0.38);
+}
+
+.review-curator-note-section p {
+  margin: 12px 0 0;
+  color: #dbeafe;
+  font-size: 0.95rem;
+  line-height: 1.62;
+}
+
 .review-curator-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -3636,6 +3722,22 @@ button {
   color: #cbd5e1;
   font-size: 0.84rem;
   line-height: 1.45;
+}
+
+.review-order-section h4 {
+  margin-bottom: 10px;
+}
+
+.review-order-stats {
+  margin-bottom: 0;
+}
+
+.review-order-stats .final-stat-card {
+  padding: 11px 12px;
+}
+
+.review-order-stats .final-stat-card strong {
+  font-size: 1rem;
 }
 
 .review-modal-footer {
@@ -3878,6 +3980,17 @@ button {
 
 .final-summary-section h4 {
   margin: 0 0 12px;
+}
+
+.final-summary-section.review-overview-section {
+  margin-top: 8px;
+  padding: 14px 16px;
+  border: 1px solid rgba(74, 222, 128, 0.18);
+}
+
+.final-summary-section.review-curator-note-section {
+  padding: 16px;
+  border: 1px solid rgba(250, 204, 21, 0.15);
 }
 
 .final-fragrance-list {
