@@ -39,6 +39,10 @@ function BuilderPanel({
   scentDna,
   isBoxReady,
   onAddPerfume,
+  curatorBonusPreference,
+  onCuratorBonusPreferenceChange,
+  reviewCustomerInfo,
+  onReviewCustomerInfoChange,
 }) {
     const [hasSeenDiscoveryIntro, setHasSeenDiscoveryIntro] = useState(() => {
       if (typeof window === "undefined") {
@@ -51,7 +55,6 @@ function BuilderPanel({
     const [isNotesModalOpen, setIsNotesModalOpen] = useState(false);
     const [isFinalSummaryOpen, setIsFinalSummaryOpen] = useState(false);
     const [isCollectionSnapshotOpen, setIsCollectionSnapshotOpen] = useState(false);
-    const [curatorBonusPreference, setCuratorBonusPreference] = useState("complement");
     const previousCuratorBonusUnlockedRef = useRef(false);
     const curatorBonusModuleRef = useRef(null);
     const [isCuratorBonusAnimating, setIsCuratorBonusAnimating] = useState(false);
@@ -303,7 +306,7 @@ function BuilderPanel({
         </div>
 
         <button className="ghost-button" onClick={onClearBox}>
-          Clear
+          Clear Builder
         </button>
       </div>
 
@@ -400,7 +403,7 @@ function BuilderPanel({
         isUnlocked={isCuratorBonusUnlocked}
         isAnimating={isCuratorBonusAnimating}
         preference={curatorBonusPreference}
-        onPreferenceChange={setCuratorBonusPreference}
+        onPreferenceChange={onCuratorBonusPreferenceChange}
         hiddenCuratorPicks={hiddenCuratorPicks}
       />
 
@@ -670,6 +673,8 @@ function BuilderPanel({
           curatorBonusPreference={curatorBonusPreference}
           curatorInsight={curatorInsight}
           hiddenCuratorPicks={hiddenCuratorPicks}
+          customerInfo={reviewCustomerInfo}
+          onCustomerInfoChange={onReviewCustomerInfoChange}
           onClose={() => setIsFinalSummaryOpen(false)}
         />
       )}
@@ -2346,14 +2351,11 @@ function DiscoveryBoxReviewModal({
   curatorBonusPreference,
   curatorInsight,
   hiddenCuratorPicks,
+  customerInfo,
+  onCustomerInfoChange,
   onClose,
 }) {
   const [finalizeStatus, setFinalizeStatus] = useState("");
-  const [customerInfo, setCustomerInfo] = useState({
-    name: "",
-    city: "",
-    notes: "",
-  });
   const [fallbackWhatsAppUrl, setFallbackWhatsAppUrl] = useState("");
   const collectionIdentity = getCollectionIdentity(boxSummary);
   const curatorPreferenceLabel =
@@ -2398,7 +2400,7 @@ function DiscoveryBoxReviewModal({
   }, [onClose]);
 
   function handleCustomerInfoChange(field, value) {
-    setCustomerInfo((currentInfo) => ({
+    onCustomerInfoChange((currentInfo) => ({
       ...currentInfo,
       [field]: value,
     }));

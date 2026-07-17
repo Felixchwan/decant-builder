@@ -27,9 +27,32 @@ import {
 const PERFUME_IMAGE_FALLBACK =
   "/images/perfumes/placeholders/perfume-placeholder.svg";
 const FRAGRANCE_DETAILS_HINT_KEY = "fragranceDetailsHintSeen";
+const BUILDER_STORAGE_KEY = "decant-builder-v1";
+const DEFAULT_CUSTOMER_INFO = {
+  name: "",
+  city: "",
+  notes: "",
+};
+const DEFAULT_BUILDER_STATE = {
+  selectedPerfumeIds: [],
+  curatorBonusPreference: "complement",
+  customerInfo: DEFAULT_CUSTOMER_INFO,
+};
 
 function App() {
-  const [selectedPerfumes, setSelectedPerfumes] = useState([]);
+  const persistedBuilderState = useMemo(() => loadPersistedBuilderState(), []);
+  const [selectedPerfumes, setSelectedPerfumes] = useState(() =>
+    hydratePersistedPerfumes(persistedBuilderState.selectedPerfumeIds)
+  );
+  const [curatorBonusPreference, setCuratorBonusPreference] = useState(
+    persistedBuilderState.curatorBonusPreference
+  );
+  const [reviewCustomerInfo, setReviewCustomerInfo] = useState(
+    persistedBuilderState.customerInfo
+  );
+  const [restoreMessage, setRestoreMessage] = useState(
+    persistedBuilderState.wasRestored ? "Your previous box has been restored." : ""
+  );
   const [activeMobileTab, setActiveMobileTab] = useState("catalog");
   const [activeFilters, setActiveFilters] = useState({
     seasons: "",
@@ -113,6 +136,34 @@ const recommendations = useMemo(() => {
     scentDna,
   });
 }, [selectedPerfumes, boxSummary, coverageSummary, scentDna]);
+
+  useEffect(() => {
+    const persistedState = {
+      version: 1,
+      selectedPerfumeIds: selectedPerfumes.map((perfume) => perfume.id),
+      curatorBonusPreference,
+      customerInfo: reviewCustomerInfo,
+    };
+
+    if (!hasMeaningfulPersistedProgress(persistedState)) {
+      clearPersistedBuilderState();
+      return;
+    }
+
+    savePersistedBuilderState(persistedState);
+  }, [selectedPerfumes, curatorBonusPreference, reviewCustomerInfo]);
+
+  useEffect(() => {
+    if (!restoreMessage) {
+      return undefined;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      setRestoreMessage("");
+    }, 3200);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [restoreMessage]);
 
   function handleFilterChange(category, value) {
     setActiveFilters((currentFilters) => ({
@@ -220,11 +271,21 @@ const confirmAddPerfume = () => {
 
   function clearBox() {
     setSelectedPerfumes([]);
+    setCuratorBonusPreference("complement");
+    setReviewCustomerInfo(DEFAULT_CUSTOMER_INFO);
+    clearPersistedBuilderState();
+    setRestoreMessage("");
   }
 
   return (
     <>
     <main className="app">
+      {restoreMessage && (
+        <p className="builder-restore-message" role="status">
+          {restoreMessage}
+        </p>
+      )}
+
       <section className="hero">
         <h1>Build your fragrance box</h1>
         <p>
@@ -333,6 +394,10 @@ const confirmAddPerfume = () => {
             scentDna={scentDna}
             isBoxReady={isBoxReady}
             onAddPerfume={addPerfume}
+            curatorBonusPreference={curatorBonusPreference}
+            onCuratorBonusPreferenceChange={setCuratorBonusPreference}
+            reviewCustomerInfo={reviewCustomerInfo}
+            onReviewCustomerInfoChange={setReviewCustomerInfo}
           />
         </div>
       </section>
@@ -389,6 +454,110 @@ const confirmAddPerfume = () => {
 )}
     </>
   );
+}
+
+function loadPersistedBuilderState() {
+  if (typeof window === "undefined" || !window.localStorage) {
+    return DEFAULT_BUILDER_STATE;
+  }
+
+  try {
+    const rawValue = window.localStorage.getItem(BUILDER_STORAGE_KEY);
+
+    if (!rawValue) {
+      return DEFAULT_BUILDER_STATE;
+    }
+
+    const parsedValue = JSON.parse(rawValue);
+    const validatedState = validatePersistedBuilderState(parsedValue);
+
+    return validatedState
+      ? { ...validatedState, wasRestored: validatedState.selectedPerfumeIds.length > 0 }
+      : DEFAULT_BUILDER_STATE;
+  } catch {
+    return DEFAULT_BUILDER_STATE;
+  }
+}
+
+function validatePersistedBuilderState(value) {
+  if (!value || typeof value !== "object" || value.version !== 1) {
+    return null;
+  }
+
+  const selectedPerfumeIds = Array.isArray(value.selectedPerfumeIds)
+    ? value.selectedPerfumeIds
+        .filter((id) => Number.isInteger(id) && perfumes.some((perfume) => perfume.id === id))
+        .slice(0, MAX_SELECTABLE_SLOTS)
+    : [];
+  const curatorBonusPreference =
+    value.curatorBonusPreference === "similar" ||
+    value.curatorBonusPreference === "complement"
+      ? value.curatorBonusPreference
+      : DEFAULT_BUILDER_STATE.curatorBonusPreference;
+  const customerInfo = validatePersistedCustomerInfo(value.customerInfo);
+
+  return {
+    selectedPerfumeIds: [...new Set(selectedPerfumeIds)],
+    curatorBonusPreference,
+    customerInfo,
+  };
+}
+
+function validatePersistedCustomerInfo(value) {
+  if (!value || typeof value !== "object") {
+    return DEFAULT_CUSTOMER_INFO;
+  }
+
+  return {
+    name: typeof value.name === "string" ? value.name : "",
+    city: typeof value.city === "string" ? value.city : "",
+    notes: typeof value.notes === "string" ? value.notes : "",
+  };
+}
+
+function hydratePersistedPerfumes(selectedPerfumeIds) {
+  return (selectedPerfumeIds || [])
+    .map((id) => perfumes.find((perfume) => perfume.id === id))
+    .filter(Boolean);
+}
+
+function savePersistedBuilderState(value) {
+  if (typeof window === "undefined" || !window.localStorage) {
+    return;
+  }
+
+  try {
+    window.localStorage.setItem(BUILDER_STORAGE_KEY, JSON.stringify(value));
+  } catch {
+    // Persistence is a convenience; storage failures should not block the builder.
+  }
+}
+
+function hasMeaningfulPersistedProgress(value) {
+  const customerInfo = validatePersistedCustomerInfo(value.customerInfo);
+  const selectedPerfumeIds = Array.isArray(value.selectedPerfumeIds)
+    ? value.selectedPerfumeIds
+    : [];
+
+  return (
+    selectedPerfumeIds.length > 0 ||
+    value.curatorBonusPreference !== DEFAULT_BUILDER_STATE.curatorBonusPreference ||
+    Boolean(customerInfo.name.trim()) ||
+    Boolean(customerInfo.city.trim()) ||
+    Boolean(customerInfo.notes.trim())
+  );
+}
+
+function clearPersistedBuilderState() {
+  if (typeof window === "undefined" || !window.localStorage) {
+    return;
+  }
+
+  try {
+    window.localStorage.removeItem(BUILDER_STORAGE_KEY);
+  } catch {
+    // Ignore localStorage failures so the visible reset can still complete.
+  }
 }
 
 function PerfumeDetailsModal({
