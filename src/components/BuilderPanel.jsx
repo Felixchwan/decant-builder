@@ -1,11 +1,15 @@
 import { forwardRef, useEffect, useMemo, useRef, useState } from "react";
-import { createPortal } from "react-dom";
+import { createPortal, flushSync } from "react-dom";
+import { createRoot } from "react-dom/client";
+import { toBlob } from "html-to-image";
 import { businessConfig } from "../config/business";
+import { getCollectionIdentityProfile } from "../utils/collectionIdentityEngine";
 import { getTierData } from "../utils/tierUtils";
+import CollectionCard from "./CollectionCard";
 
 const DISCOVERY_BONUS_TARGET_POINTS = 12;
 const SHARE_IMAGE_WIDTH = 1080;
-const SHARE_IMAGE_HEIGHT = 1350;
+const SHARE_IMAGE_HEIGHT = 1920;
 const EMPTY_RECOMMENDATIONS = [];
 const CURATOR_BONUS_PREFERENCES = {
   complement: {
@@ -54,11 +58,13 @@ function BuilderPanel({
     const [isDiscoveryIntroOpen, setIsDiscoveryIntroOpen] = useState(false);
     const [isNotesModalOpen, setIsNotesModalOpen] = useState(false);
     const [isFinalSummaryOpen, setIsFinalSummaryOpen] = useState(false);
+    const [isCollectionCardPreviewOpen, setIsCollectionCardPreviewOpen] = useState(false);
     const [isCollectionSnapshotOpen, setIsCollectionSnapshotOpen] = useState(false);
     const previousCuratorBonusUnlockedRef = useRef(false);
     const curatorBonusModuleRef = useRef(null);
     const [isCuratorBonusAnimating, setIsCuratorBonusAnimating] = useState(false);
     const [shareStatus, setShareStatus] = useState("");
+    const [activeShareAction, setActiveShareAction] = useState("");
     const [isShareTooltipOpen, setIsShareTooltipOpen] = useState(false);
     const [isBalanceLaneEmphasized, setIsBalanceLaneEmphasized] = useState(false);
     const shareStatusTimeoutRef = useRef(null);
@@ -97,6 +103,36 @@ function BuilderPanel({
         }),
       [boxSummary, coverageSummary, scentDna, selectedPerfumes]
     );
+    const collectionIdentityProfile = useMemo(
+      () => getCollectionIdentityProfile(boxSummary),
+      [boxSummary]
+    );
+    const collectionCardSeasonRows = useMemo(
+      () =>
+        buildSeasonCoverageRows(
+          boxSummary.seasonStrengths || boxSummary.seasonCounts || {},
+          selectedPerfumes.length
+        ),
+      [boxSummary, selectedPerfumes.length]
+    );
+    const collectionCardProfileTraits = useMemo(
+      () =>
+        buildCollectionProfileTraits({
+          boxSummary,
+          coverageSummary,
+          scentDna,
+          selectedCount: selectedPerfumes.length,
+          seasonRows: collectionCardSeasonRows,
+        }),
+      [boxSummary, coverageSummary, scentDna, selectedPerfumes.length, collectionCardSeasonRows]
+    );
+    const collectionCardDnaDescriptors = useMemo(
+      () =>
+        buildCollectionDnaItems({ boxSummary, scentDna })
+          .slice(0, 3)
+          .map((item) => formatLabel(item.label)),
+      [boxSummary, scentDna]
+    );
     const nextImprovementResult = useMemo(
       () =>
         buildNextImprovementResult({
@@ -134,6 +170,15 @@ function BuilderPanel({
       typeof window !== "undefined" &&
       typeof window.ClipboardItem !== "undefined" &&
       Boolean(navigator.clipboard?.write);
+    const canNativeShareCard =
+      typeof window !== "undefined" &&
+      typeof navigator.share === "function" &&
+      typeof navigator.canShare === "function" &&
+      typeof window.File !== "undefined" &&
+      navigator.canShare({
+        files: [new File([""], "discovery-decants-collection.png", { type: "image/png" })],
+      });
+    const isShareGenerating = Boolean(activeShareAction);
     const nextAvailableSlotIndex = getNextAvailableSlotIndex(
       selectedPerfumes,
       maxSelectableSlots
@@ -196,51 +241,109 @@ function BuilderPanel({
       }, 2400);
     };
 
-    const createShareImageBlob = () =>
-      renderDiscoveryBoxShareImage({
-        selectedPerfumes,
-        maxSlots,
-        maxSelectableSlots,
-        isCuratorBonusUnlocked,
-        totalPoints,
-        businessName: businessConfig.businessName,
-      });
+    const collectionCardExportProps = {
+      perfumes: selectedPerfumes,
+      title: collectionIdentityProfile.title,
+      subtitle: collectionIdentityProfile.subtitle,
+      mood: collectionIdentityProfile.mood,
+      palette: collectionIdentityProfile.palette,
+      fragranceCount: selectedPerfumes.length,
+      collectionPoints: totalPoints,
+      profileTraits: collectionCardProfileTraits.slice(0, 3),
+      dnaDescriptors: collectionCardDnaDescriptors,
+      isCuratorBonusUnlocked,
+      maxSlots,
+      maxSelectableSlots,
+    };
+
+    const createShareImageBlob = () => renderCollectionCardPng(collectionCardExportProps);
 
     const handleDownloadShareImage = async () => {
+      if (isShareGenerating) {
+        return;
+      }
+
+      setActiveShareAction("download");
       try {
         const blob = await createShareImageBlob();
         const url = URL.createObjectURL(blob);
         const link = document.createElement("a");
         link.href = url;
-        link.download = "discovery-decants-box.png";
+        link.download = getCollectionCardFilename(collectionIdentityProfile.title);
         document.body.appendChild(link);
         link.click();
         link.remove();
         window.setTimeout(() => URL.revokeObjectURL(url), 1000);
-        showShareStatus("Share image downloaded.");
+        showShareStatus("Collection Card downloaded.");
       } catch (error) {
-        console.error("Unable to download share image", error);
-        showShareStatus("Could not create the share image.");
+        console.error("Unable to download Collection Card", error);
+        showShareStatus(
+          error?.message?.startsWith("The Collection Card could not be rendered")
+            ? "The Collection Card could not be rendered. Please try again."
+            : "Could not create the Collection Card PNG."
+        );
+      } finally {
+        setActiveShareAction("");
       }
     };
 
     const handleCopyShareImage = async () => {
       if (!canCopyShareImage) {
-        showShareStatus("Image copy is not supported in this browser.");
+        showShareStatus("Image copying is not supported in this browser. Download the PNG instead.");
         return;
       }
 
+      if (isShareGenerating) {
+        return;
+      }
+
+      setActiveShareAction("copy");
       try {
         const blob = await createShareImageBlob();
         await navigator.clipboard.write([
-          new ClipboardItem({
+          new window.ClipboardItem({
             "image/png": blob,
           }),
         ]);
-        showShareStatus("Share image copied.");
+        showShareStatus("Collection Card copied.");
       } catch (error) {
-        console.error("Unable to copy share image", error);
-        showShareStatus("Copy failed. Try Download PNG instead.");
+        console.error("Unable to copy Collection Card", error);
+        showShareStatus("Image copying is not supported in this browser. Download the PNG instead.");
+      } finally {
+        setActiveShareAction("");
+      }
+    };
+
+    const handleNativeShareCard = async () => {
+      if (!canNativeShareCard || isShareGenerating) {
+        return;
+      }
+
+      setActiveShareAction("share");
+      try {
+        const blob = await createShareImageBlob();
+        const file = new File([blob], getCollectionCardFilename(collectionIdentityProfile.title), {
+          type: "image/png",
+        });
+
+        if (!navigator.canShare({ files: [file] })) {
+          showShareStatus("Native image sharing is unavailable. Download the PNG instead.");
+          return;
+        }
+
+        await navigator.share({
+          title: "My Discovery Decants Collection",
+          text: "A curated Discovery Decants collection.",
+          files: [file],
+        });
+        showShareStatus("Collection Card shared.");
+      } catch (error) {
+        if (error?.name !== "AbortError") {
+          console.error("Unable to share Collection Card", error);
+          showShareStatus("Native sharing is unavailable. Download the PNG instead.");
+        }
+      } finally {
+        setActiveShareAction("");
       }
     };
 
@@ -370,20 +473,48 @@ function BuilderPanel({
           </span>
         </div>
 
-        <div className="share-box-buttons">
-          <button type="button" onClick={handleDownloadShareImage}>
-            Download PNG
-          </button>
+        <div className="share-box-buttons" aria-busy={isShareGenerating}>
           <button
             type="button"
-            onClick={handleCopyShareImage}
-            disabled={!canCopyShareImage}
+            onClick={handleDownloadShareImage}
+            disabled={isShareGenerating}
           >
-            Copy Image
+            {activeShareAction === "download" ? "Generating..." : "Download PNG"}
           </button>
+          {canCopyShareImage && (
+            <button
+              type="button"
+              onClick={handleCopyShareImage}
+              disabled={isShareGenerating}
+            >
+              {activeShareAction === "copy" ? "Generating..." : "Copy Image"}
+            </button>
+          )}
+          {canNativeShareCard && (
+            <button
+              type="button"
+              onClick={handleNativeShareCard}
+              disabled={isShareGenerating}
+            >
+              {activeShareAction === "share" ? "Generating..." : "Share Card"}
+            </button>
+          )}
+          {import.meta.env.DEV && (
+            <button
+              type="button"
+              onClick={() => setIsCollectionCardPreviewOpen(true)}
+              disabled={isShareGenerating}
+            >
+              Preview Card
+            </button>
+          )}
         </div>
 
-        {shareStatus && <p className="share-box-status">{shareStatus}</p>}
+        {shareStatus && (
+          <p className="share-box-status" aria-live="polite">
+            {shareStatus}
+          </p>
+        )}
       </div>
 
       <div className="slot-bar">
@@ -476,7 +607,7 @@ function BuilderPanel({
       <CollectionSnapshot
         boxSummary={boxSummary}
         coverageSummary={coverageSummary}
-        insight={curatorInsight}
+        scentDna={scentDna}
         selectedCount={selectedPerfumes.length}
         isExpanded={isCollectionSnapshotOpen}
         onToggle={() => setIsCollectionSnapshotOpen((isOpen) => !isOpen)}
@@ -678,7 +809,71 @@ function BuilderPanel({
           onClose={() => setIsFinalSummaryOpen(false)}
         />
       )}
+      {isCollectionCardPreviewOpen && (
+        <CollectionCardPreviewModal
+          selectedPerfumes={selectedPerfumes}
+          identityProfile={collectionIdentityProfile}
+          fragranceCount={selectedPerfumes.length}
+          collectionPoints={totalPoints}
+          profileTraits={collectionCardProfileTraits.slice(0, 3)}
+          dnaDescriptors={collectionCardDnaDescriptors}
+          isCuratorBonusUnlocked={isCuratorBonusUnlocked}
+          maxSlots={maxSlots}
+          maxSelectableSlots={maxSelectableSlots}
+          onClose={() => setIsCollectionCardPreviewOpen(false)}
+        />
+      )}
     </aside>
+  );
+}
+
+function CollectionCardPreviewModal({
+  selectedPerfumes,
+  identityProfile,
+  fragranceCount,
+  collectionPoints,
+  profileTraits,
+  dnaDescriptors,
+  isCuratorBonusUnlocked,
+  maxSlots,
+  maxSelectableSlots,
+  onClose,
+}) {
+  return createPortal(
+    <div className="modal-overlay final-summary-overlay" onClick={onClose}>
+      <div
+        className="collection-card-preview-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="collection-card-preview-title"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <div className="modal-header collection-card-preview-header">
+          <div>
+            <span>Development Preview</span>
+            <h3 id="collection-card-preview-title">Collection Card</h3>
+          </div>
+
+          <button type="button" onClick={onClose}>Close</button>
+        </div>
+
+        <CollectionCard
+          perfumes={selectedPerfumes}
+          title={identityProfile.title}
+          subtitle={identityProfile.subtitle}
+          mood={identityProfile.mood}
+          palette={identityProfile.palette}
+          fragranceCount={fragranceCount}
+          collectionPoints={collectionPoints}
+          profileTraits={profileTraits}
+          dnaDescriptors={dnaDescriptors}
+          isCuratorBonusUnlocked={isCuratorBonusUnlocked}
+          maxSlots={maxSlots}
+          maxSelectableSlots={maxSelectableSlots}
+        />
+      </div>
+    </div>,
+    document.body
   );
 }
 
@@ -707,7 +902,7 @@ function DiscoveryBoxCoachmark({ onDismiss }) {
 function CollectionSnapshot({
   boxSummary,
   coverageSummary,
-  insight,
+  scentDna,
   selectedCount,
   isExpanded,
   onToggle,
@@ -725,14 +920,44 @@ function CollectionSnapshot({
     boxSummary.notes.length > 0;
   const hasAnalysisData =
     coverageSummary.strengths.length > 0 || coverageSummary.gaps.length > 0;
+  const collectionProfileTraits = buildCollectionProfileTraits({
+    boxSummary,
+    coverageSummary,
+    scentDna,
+    selectedCount,
+    seasonRows,
+  });
+  const collectionDna = buildCollectionDnaItems({ boxSummary, scentDna });
+  const balanceRows = buildCollectionBalanceRows({
+    boxSummary,
+    scentDna,
+    selectedCount,
+    seasonRows,
+  });
 
   return (
     <section className={`collection-snapshot ${isExpanded ? "is-expanded" : ""}`}>
       <div className="collection-snapshot-header">
-        <h3>Collection Snapshot</h3>
+        <h3>Collection Intelligence</h3>
         <button type="button" onClick={onToggle} aria-expanded={isExpanded}>
           {isExpanded ? "Hide Full Analysis" : "View Full Analysis"}
         </button>
+      </div>
+
+      <div className="collection-profile-summary">
+        <span>Collection Profile</span>
+
+        {collectionProfileTraits.length > 0 ? (
+          <div className="collection-profile-chips">
+            {collectionProfileTraits.map((trait) => (
+              <span key={trait}>{trait}</span>
+            ))}
+          </div>
+        ) : (
+          <p className="collection-empty-message">
+            Add fragrances to reveal the collection profile.
+          </p>
+        )}
       </div>
 
       <div className="collection-snapshot-overview">
@@ -751,22 +976,37 @@ function CollectionSnapshot({
         </div>
       </div>
 
-      <div className="collection-insight">
-        <span>Collection Insight</span>
+      <div className="collection-dna-summary">
+        <span>Collection DNA</span>
 
-        <div className="collection-insight-grid">
-          <CollectionInsightList
-            title="Your collection currently excels in:"
-            items={insight.strengths}
-            emptyText="Select fragrances to generate collection insights."
-            marker="check"
-          />
-          <CollectionInsightList
-            title="Opportunities:"
-            items={insight.improvementGoals}
-            emptyText="Build your collection to reveal its opportunities."
-            marker="bullet"
-          />
+        {collectionDna.length > 0 ? (
+          <div className="collection-dna-chips">
+            {collectionDna.map((item) => (
+              <span key={item.label}>
+                {formatLabel(item.label)}
+                <strong>{item.count}</strong>
+              </span>
+            ))}
+          </div>
+        ) : (
+          <p className="collection-empty-message">
+            Dominant accords appear as the box takes shape.
+          </p>
+        )}
+      </div>
+
+      <div className="collection-balance-summary">
+        <span>Collection Balance</span>
+
+        <div className="collection-balance-list">
+          {balanceRows.map((row) => (
+            <div className="collection-balance-row" key={row.label}>
+              <span>{row.label}</span>
+              <strong aria-label={`${row.label}: ${row.level} out of 5`}>
+                {formatFiveStarRating(row.level)}
+              </strong>
+            </div>
+          ))}
         </div>
       </div>
 
@@ -885,6 +1125,162 @@ function ProfileSummaryGroup({ label, values }) {
       </div>
     </div>
   );
+}
+
+function buildCollectionProfileTraits({
+  boxSummary,
+  coverageSummary,
+  scentDna,
+  selectedCount,
+  seasonRows,
+}) {
+  if (selectedCount === 0) {
+    return [];
+  }
+
+  const traits = [];
+  const occasionCounts = boxSummary.occasionCounts || {};
+  const vibeCounts = boxSummary.vibeCounts || {};
+  const accordCounts = getAccordCounts(boxSummary);
+  const profileSignals = getBoxProfileSignals({
+    occasionCounts,
+    vibeCounts,
+    accordCounts,
+  });
+  const versatilityScore = scentDna?.scores?.versatility || 0;
+  const depthScore = scentDna?.scores?.depth || 0;
+  const seasonBalanceScore = scentDna?.scores?.seasonBalance || 0;
+  const springScore = seasonRows.find((season) => season.id === "spring")?.count || 0;
+  const summerScore = seasonRows.find((season) => season.id === "summer")?.count || 0;
+  const fallScore = seasonRows.find((season) => season.id === "fall")?.count || 0;
+  const winterScore = seasonRows.find((season) => season.id === "winter")?.count || 0;
+  const dailySignals = (occasionCounts.daily || 0) + (occasionCounts.office || 0);
+  const eveningSignals =
+    (occasionCounts.date || 0) +
+    (occasionCounts.night || 0) +
+    (occasionCounts.evening || 0);
+
+  if (versatilityScore >= 78 && seasonBalanceScore >= 62) {
+    traits.push("Balanced Rotation");
+  } else if (versatilityScore >= 72) {
+    traits.push("Highly Versatile");
+  }
+
+  if (dailySignals >= 3 || (occasionCounts.office || 0) >= 2) {
+    traits.push("Office Friendly");
+  }
+
+  if (eveningSignals >= 3 || profileSignals.warmEvening >= profileSignals.fresh + 2) {
+    traits.push("Evening Focused");
+  }
+
+  if (profileSignals.fresh >= profileSignals.warmEvening + 2) {
+    traits.push("Fresh-Leaning");
+  }
+
+  if (profileSignals.warmEvening >= profileSignals.fresh + 2) {
+    traits.push("Warm-Leaning");
+  }
+
+  if ((occasionCounts.date || 0) + (occasionCounts.night || 0) >= 2) {
+    traits.push("Date Night Strong");
+  }
+
+  if (springScore + summerScore >= fallScore + winterScore + 24) {
+    traits.push("Spring/Summer Specialist");
+  }
+
+  if (fallScore >= 55 && winterScore >= 45) {
+    traits.push("Autumn Specialist");
+  }
+
+  if (depthScore >= 70 && selectedCount >= 5) {
+    traits.push("Collector Friendly");
+  }
+
+  if (versatilityScore >= 70 && depthScore >= 58 && selectedCount >= 4) {
+    traits.push("Signature Ready");
+  }
+
+  if (traits.length === 0 && coverageSummary.strengths.length > 0) {
+    traits.push(...coverageSummary.strengths.slice(0, 2).map((item) => item.label));
+  }
+
+  if (traits.length === 0) {
+    traits.push(selectedCount < 3 ? "Taking Shape" : "Casual Heavy");
+  }
+
+  return uniqueStrings(traits).slice(0, 5);
+}
+
+function buildCollectionDnaItems({ boxSummary, scentDna }) {
+  const topAccords = scentDna?.topAccords || [];
+
+  if (topAccords.length > 0) {
+    return topAccords.slice(0, 6);
+  }
+
+  return Object.entries(getAccordCounts(boxSummary))
+    .map(([label, count]) => ({ label, count }))
+    .sort((a, b) => b.count - a.count || a.label.localeCompare(b.label))
+    .slice(0, 6);
+}
+
+function buildCollectionBalanceRows({ boxSummary, scentDna, selectedCount, seasonRows }) {
+  const scores = scentDna?.scores || {};
+  const accordCounts = getAccordCounts(boxSummary);
+  const vibeCounts = boxSummary.vibeCounts || {};
+  const occasionCounts = boxSummary.occasionCounts || {};
+  const freshSignals =
+    (vibeCounts.fresh || 0) +
+    (vibeCounts.clean || 0) +
+    (accordCounts.fresh || 0) +
+    (accordCounts.citrus || 0) +
+    (accordCounts.marine || 0);
+  const signatureSignals =
+    (occasionCounts.formal || 0) +
+    (occasionCounts.date || 0) +
+    (accordCounts.woody || 0) +
+    (accordCounts.iris || 0) +
+    (accordCounts.leather || 0) +
+    Math.round((scores.versatility || 0) / 30);
+  const maxSeasonScore = Math.max(...seasonRows.map((season) => season.count), 0);
+
+  return [
+    {
+      label: "Versatility",
+      level: scoreToFiveLevel(scores.versatility || 0),
+    },
+    {
+      label: "Depth",
+      level: scoreToFiveLevel(scores.depth || 0),
+    },
+    {
+      label: "Freshness",
+      level: scoreToFiveLevel(
+        selectedCount > 0 ? Math.min(100, (freshSignals / Math.max(selectedCount, 1)) * 42) : 0
+      ),
+    },
+    {
+      label: "Season Balance",
+      level: scoreToFiveLevel(scores.seasonBalance || maxSeasonScore),
+    },
+    {
+      label: "Signature Potential",
+      level: scoreToFiveLevel(
+        selectedCount > 0 ? Math.min(100, signatureSignals * 16) : 0
+      ),
+    },
+  ];
+}
+
+function scoreToFiveLevel(score) {
+  if (score <= 0) return 0;
+  return Math.max(1, Math.min(5, Math.round(score / 20)));
+}
+
+function formatFiveStarRating(level) {
+  return `${"★".repeat(level)}${"☆".repeat(5 - level)}`;
 }
 
 function buildSeasonCoverageRows(seasonCounts, selectedCount = 0) {
@@ -2319,24 +2715,6 @@ function BoxIntelligenceSummary({ intelligence }) {
         ))}
       </div>
     </section>
-  );
-}
-
-function CollectionInsightList({ title, items, emptyText, marker }) {
-  return (
-    <div>
-      <span>{title}</span>
-
-      {items.length > 0 ? (
-        <ul>
-          {items.map((item) => (
-            <li className={`insight-marker-${marker}`} key={item}>{item}</li>
-          ))}
-        </ul>
-      ) : (
-        <p>{emptyText}</p>
-      )}
-    </div>
   );
 }
 
@@ -4435,156 +4813,262 @@ function ProfileGroup({ label, values }) {
 }
 
 function getCollectionIdentity(boxSummary) {
-  const vibes = new Set(boxSummary.vibes || []);
-  const occasions = new Set(boxSummary.occasions || []);
-  const seasons = new Set(boxSummary.seasons || []);
-  const occasionCounts = boxSummary.occasionCounts || {};
-  const vibeCounts = boxSummary.vibeCounts || {};
-  const accordLabels = getTopCollectionLabels(boxSummary.accordMap);
-  const scentProfile = formatIdentityList(accordLabels, "a varied scent profile");
-  const seasonProfile = getSeasonProfile(seasons);
-  const occasionProfile = getOccasionProfile(occasions, occasionCounts);
-
-  if (isEveningRotation(vibes, occasions, accordLabels, occasionCounts, vibeCounts)) {
-    return {
-      name: "Evening Rotation",
-      description: `Focused on ${scentProfile}, with a profile suited to ${occasionProfile}.`,
-    };
-  }
-
-  if (isFreshRotation(vibes, occasions, accordLabels, occasionCounts, vibeCounts)) {
-    return {
-      name: "Fresh Rotation",
-      description: `Built around ${scentProfile}, ${seasonProfile} and ${occasionProfile}.`,
-    };
-  }
-
-  if (seasons.size >= 4 && occasions.size >= 5) {
-    return {
-      name: "Balanced Rotation",
-      description: `Designed for strong year-round coverage with ${occasionProfile} and broad appeal.`,
-    };
-  }
-
-  if (occasions.size >= 4 || vibes.has("versatile")) {
-    return {
-      name: "Versatile Rotation",
-      description: `Built for ${occasionProfile}, supported by ${scentProfile}.`,
-    };
-  }
-
+  const profile = getCollectionIdentityProfile(boxSummary);
   return {
-    name: "Curated Selection",
-    description: `A focused selection shaped by ${scentProfile} and ${seasonProfile}.`,
+    name: profile.title,
+    description: profile.subtitle,
   };
 }
 
-function isFreshRotation(vibes, occasions, accordLabels, occasionCounts, vibeCounts) {
-  const freshScore =
-    getCount(vibeCounts, "fresh") +
-    getCount(vibeCounts, "clean") +
-    getCount(occasionCounts, "office") +
-    getCount(occasionCounts, "daily") +
-    getMatchingLabelCount(accordLabels, ["citrus", "aromatic", "fresh spicy", "green"]);
-
-  return freshScore >= 3 || (vibes.has("fresh") && occasions.has("office"));
-}
-
-function isEveningRotation(vibes, occasions, accordLabels, occasionCounts, vibeCounts) {
-  const eveningScore =
-    getCount(occasionCounts, "date") +
-    getCount(occasionCounts, "night") +
-    getCount(occasionCounts, "evening") +
-    getCount(occasionCounts, "formal") +
-    getCount(vibeCounts, "seductive") +
-    getCount(vibeCounts, "bold") +
-    getMatchingLabelCount(accordLabels, ["amber", "sweet", "warm spicy", "vanilla", "woody"]);
-
-  return eveningScore >= 4 || (occasions.has("night") && occasions.has("date"));
-}
-
-function getTopCollectionLabels(valueMap = {}) {
-  return Object.entries(valueMap)
-    .sort(([, firstItems], [, secondItems]) => secondItems.length - firstItems.length)
-    .slice(0, 3)
-    .map(([label]) => formatLabel(label).toLowerCase());
-}
-
-function getCount(countMap, key) {
-  return countMap[key] || 0;
-}
-
-function getMatchingLabelCount(labels, targets) {
-  return labels.filter((label) => targets.includes(label)).length;
-}
-
-function getSeasonProfile(seasons) {
-  if (seasons.size >= 4) {
-    return "year-round coverage";
+async function renderCollectionCardPng(collectionCardProps) {
+  if (typeof document === "undefined") {
+    throw new Error("Collection Card export requires a browser document.");
   }
 
-  if (seasons.has("spring") && seasons.has("summer")) {
-    return "warm-weather versatility";
-  }
+  const exportStage = document.createElement("div");
+  exportStage.className = "collection-card-export-stage";
+  exportStage.setAttribute("aria-hidden", "true");
+  document.body.appendChild(exportStage);
 
-  if (seasons.has("fall") || seasons.has("winter")) {
-    return "cool-weather depth";
-  }
+  const root = createRoot(exportStage);
+  let exportCardNode = null;
 
-  if (seasons.size > 0) {
-    return `${formatIdentityList([...seasons].map(formatLabel))} coverage`;
-  }
+  try {
+    flushSync(() => {
+      root.render(
+        <CollectionCard
+          {...collectionCardProps}
+          exportMode
+          ref={(node) => {
+            exportCardNode = node;
+          }}
+        />
+      );
+    });
+    await waitForFonts();
+    await waitForImages(exportStage);
+    await waitForNextFrames(2);
+    await waitForPaintDelay(90);
+    validateCollectionCardExportNode(exportStage, exportCardNode, collectionCardProps.title);
 
-  return "seasonal flexibility";
+    const blob = await toBlob(exportCardNode, {
+      pixelRatio: 1,
+      cacheBust: true,
+      backgroundColor: "#020605",
+    });
+
+    if (!blob) {
+      throw new Error("Collection Card capture returned an empty image.");
+    }
+
+    await validateCollectionCardBlob(blob);
+
+    return blob;
+  } finally {
+    root.unmount();
+    exportStage.remove();
+  }
 }
 
-function getOccasionProfile(occasions, occasionCounts = {}) {
-  const daytimeCount =
-    getCount(occasionCounts, "daily") +
-    getCount(occasionCounts, "office") +
-    getCount(occasionCounts, "casual");
-  const eveningCount =
-    getCount(occasionCounts, "date") +
-    getCount(occasionCounts, "night") +
-    getCount(occasionCounts, "evening");
-
-  if (eveningCount > daytimeCount) {
-    return "evening wear";
-  }
-
-  if (getCount(occasionCounts, "formal") > daytimeCount) {
-    return "polished occasions";
-  }
+function validateCollectionCardExportNode(exportStage, card, expectedTitle) {
+  const stageRect = exportStage.getBoundingClientRect();
+  const cardRect = card?.getBoundingClientRect();
+  const stageStyle = window.getComputedStyle(exportStage);
+  const cardStyle = card ? window.getComputedStyle(card) : null;
+  const paintedElement = document.elementFromPoint(100, 100);
+  const diagnostics = {
+    nodeTag: exportStage.tagName,
+    nodeClassName: exportStage.className,
+    boundingRect: rectToDiagnostics(stageRect),
+    scrollWidth: exportStage.scrollWidth,
+    scrollHeight: exportStage.scrollHeight,
+    computedWidth: stageStyle.width,
+    computedHeight: stageStyle.height,
+    display: stageStyle.display,
+    visibility: stageStyle.visibility,
+    opacity: stageStyle.opacity,
+    transform: stageStyle.transform,
+    position: stageStyle.position,
+    childCount: exportStage.childElementCount,
+    textContentPreview: exportStage.textContent?.trim().slice(0, 220) || "",
+    card: card
+      ? {
+          nodeTag: card.tagName,
+          nodeClassName: card.className,
+          boundingRect: rectToDiagnostics(cardRect),
+          computedWidth: cardStyle.width,
+          computedHeight: cardStyle.height,
+          display: cardStyle.display,
+          visibility: cardStyle.visibility,
+          opacity: cardStyle.opacity,
+          transform: cardStyle.transform,
+          position: cardStyle.position,
+          childCount: card.childElementCount,
+          textContentPreview: card.textContent?.trim().slice(0, 220) || "",
+        }
+      : null,
+    elementFromPoint: paintedElement
+      ? {
+          tagName: paintedElement.tagName,
+          className: paintedElement.className,
+          textContentPreview: paintedElement.textContent?.trim().slice(0, 120) || "",
+        }
+      : null,
+  };
 
   if (
-    occasions.has("daily") &&
-    occasions.has("office") &&
-    occasions.has("casual")
+    !card ||
+    cardRect.width <= 0 ||
+    cardRect.height <= 0 ||
+    exportStage.childElementCount === 0 ||
+    !card.textContent?.includes(expectedTitle)
   ) {
-    return "daily versatility";
+    throw new Error(`Collection Card export node is not ready: ${JSON.stringify(diagnostics)}`);
   }
 
-  if (occasions.size > 0) {
-    return formatIdentityList([...occasions].map(formatLabel).slice(0, 3));
+  const isCardContained =
+    cardRect.left >= stageRect.left &&
+    cardRect.top >= stageRect.top &&
+    cardRect.right <= stageRect.right &&
+    cardRect.bottom <= stageRect.bottom;
+
+  if (!isCardContained) {
+    throw new Error(`Collection Card is outside the export stage: ${JSON.stringify(diagnostics)}`);
   }
 
-  return "flexible wear";
+  if (!card.contains(paintedElement) && paintedElement !== card) {
+    throw new Error(`Collection Card export node is not painted: ${JSON.stringify(diagnostics)}`);
+  }
 }
 
-function formatIdentityList(items, fallback = "a balanced profile") {
-  const filteredItems = items.filter(Boolean);
+function rectToDiagnostics(rect) {
+  return {
+    x: Math.round(rect.x),
+    y: Math.round(rect.y),
+    width: Math.round(rect.width),
+    height: Math.round(rect.height),
+    top: Math.round(rect.top),
+    right: Math.round(rect.right),
+    bottom: Math.round(rect.bottom),
+    left: Math.round(rect.left),
+  };
+}
 
-  if (filteredItems.length === 0) {
-    return fallback;
+async function validateCollectionCardBlob(blob) {
+  if (blob.type !== "image/png" || blob.size < 50000) {
+    throw new Error("The Collection Card could not be rendered. Please try again.");
   }
 
-  if (filteredItems.length === 1) {
-    return filteredItems[0];
+  const image = await createImageBitmap(blob);
+  const canvas = document.createElement("canvas");
+  const sampleWidth = 180;
+  const sampleHeight = 320;
+  canvas.width = sampleWidth;
+  canvas.height = sampleHeight;
+  const ctx = canvas.getContext("2d");
+  ctx.drawImage(image, 0, 0, sampleWidth, sampleHeight);
+  image.close?.();
+
+  const { data } = ctx.getImageData(0, 0, sampleWidth, sampleHeight);
+  let minLuma = 255;
+  let maxLuma = 0;
+  let minRed = 255;
+  let maxRed = 0;
+  let minGreen = 255;
+  let maxGreen = 0;
+  let minBlue = 255;
+  let maxBlue = 0;
+  const distinctColors = new Set();
+
+  for (let index = 0; index < data.length; index += 4) {
+    const red = data[index];
+    const green = data[index + 1];
+    const blue = data[index + 2];
+    const luma = red * 0.2126 + green * 0.7152 + blue * 0.0722;
+
+    minLuma = Math.min(minLuma, luma);
+    maxLuma = Math.max(maxLuma, luma);
+    minRed = Math.min(minRed, red);
+    maxRed = Math.max(maxRed, red);
+    minGreen = Math.min(minGreen, green);
+    maxGreen = Math.max(maxGreen, green);
+    minBlue = Math.min(minBlue, blue);
+    maxBlue = Math.max(maxBlue, blue);
+    distinctColors.add(
+      `${Math.floor(red / 8)}-${Math.floor(green / 8)}-${Math.floor(blue / 8)}`
+    );
   }
 
-  return `${filteredItems.slice(0, -1).join(", ")} and ${
-    filteredItems[filteredItems.length - 1]
-  }`;
+  const luminanceSpread = maxLuma - minLuma;
+  const colorSpread = maxRed - minRed + (maxGreen - minGreen) + (maxBlue - minBlue);
+
+  if (distinctColors.size < 32 || (luminanceSpread < 24 && colorSpread < 90)) {
+    throw new Error("The Collection Card could not be rendered. Please try again.");
+  }
+}
+
+async function waitForFonts() {
+  if (document.fonts?.ready) {
+    await document.fonts.ready;
+  }
+}
+
+async function waitForImages(node) {
+  const images = [...node.querySelectorAll("img")];
+
+  if (images.length === 0) {
+    return;
+  }
+
+  await Promise.race([
+    Promise.all(
+      images.map(
+        (image) =>
+          new Promise((resolve) => {
+            if (image.complete) {
+              resolve();
+              return;
+            }
+
+            image.addEventListener("load", resolve, { once: true });
+            image.addEventListener("error", resolve, { once: true });
+          })
+      )
+    ),
+    new Promise((resolve) => window.setTimeout(resolve, 2800)),
+  ]);
+}
+
+function waitForNextFrames(count = 1) {
+  return new Promise((resolve) => {
+    const wait = (remaining) => {
+      if (remaining <= 0) {
+        resolve();
+        return;
+      }
+
+      window.requestAnimationFrame(() => wait(remaining - 1));
+    };
+
+    wait(count);
+  });
+}
+
+function waitForPaintDelay(delayMs = 90) {
+  return new Promise((resolve) => window.setTimeout(resolve, delayMs));
+}
+
+function getCollectionCardFilename(title) {
+  const slug = String(title || "")
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/['']/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .replace(/-{2,}/g, "-");
+
+  return `discovery-decants-${slug || "collection"}.png`;
 }
 
 function renderDiscoveryBoxShareImage({
