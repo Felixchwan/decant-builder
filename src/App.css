@@ -2573,9 +2573,33 @@ button {
     grid-template-columns: 18px minmax(0, 1fr);
   }
 
+  .box-vial.filled {
+    filter:
+      drop-shadow(0 3px 5px rgba(0, 0, 0, 0.42))
+      drop-shadow(0 0 4px color-mix(in srgb, var(--tier-color) 7%, transparent));
+  }
+
   .vial-cap {
     width: 18px;
     height: 20px;
+  }
+
+  .box-vial.filled .vial-cap {
+    box-shadow:
+      inset 1px 0 2px rgba(255, 255, 255, 0.10),
+      inset -1px 0 3px rgba(0, 0, 0, 0.72),
+      inset 0 -2px 3px rgba(0, 0, 0, 0.36),
+      1px 0 0 rgba(255, 255, 255, 0.035),
+      0 2px 5px rgba(0, 0, 0, 0.30),
+      0 0 6px color-mix(in srgb, var(--tier-color) 8%, transparent);
+  }
+
+  .box-vial.filled .vial-cap::after {
+    background:
+      linear-gradient(90deg, color-mix(in srgb, var(--tier-color) 24%, rgba(255, 255, 255, 0.18)), rgba(2, 3, 3, 0.72));
+    box-shadow:
+      5px 0 0 -3px rgba(226, 232, 240, 0.48),
+      0 1px 1px rgba(0, 0, 0, 0.32);
   }
 
   .vial-body {
@@ -2583,8 +2607,41 @@ button {
     padding: 3px 6px;
   }
 
+  .box-vial.filled .vial-body {
+    box-shadow:
+      inset 0 4px 8px rgba(0, 0, 0, 0.32),
+      inset 0 -8px 11px rgba(0, 0, 0, 0.42),
+      inset 4px 0 7px rgba(255, 255, 255, 0.045),
+      inset -4px 0 8px rgba(255, 255, 255, 0.025),
+      inset 0 1px 0 rgba(255, 255, 255, 0.11),
+      inset 0 -1px 0 color-mix(in srgb, var(--tier-color) 14%, transparent),
+      0 2px 4px rgba(0, 0, 0, 0.34),
+      0 0 5px color-mix(in srgb, var(--tier-color) 6%, transparent);
+  }
+
+  .box-vial.filled .vial-body::before {
+    background:
+      linear-gradient(180deg, rgba(255, 255, 255, 0.085), transparent 22%),
+      linear-gradient(100deg, transparent 0 18%, rgba(255, 255, 255, 0.055) 28%, transparent 42% 100%),
+      radial-gradient(
+        ellipse at center,
+        rgba(0, 0, 0, 0.67) 0%,
+        rgba(0, 0, 0, 0.40) 34%,
+        color-mix(in srgb, var(--glass-tint-mid, rgba(148, 163, 184, 0.16)) 86%, var(--tier-color) 14%) 63%,
+        color-mix(in srgb, var(--glass-tint-edge, rgba(148, 163, 184, 0.22)) 86%, var(--tier-color) 14%) 100%
+      );
+    opacity: 0.98;
+  }
+
+  .box-vial.filled .vial-body::after {
+    bottom: -3px;
+    height: 6px;
+    background: radial-gradient(ellipse at 50% 50%, rgba(0, 0, 0, 0.46), transparent 68%);
+  }
+
   .vial-label {
     font-size: 0.46rem;
+    padding-block: 2.5px;
     padding-inline: 5px;
   }
 
