@@ -787,12 +787,16 @@ button {
 
 .share-box-buttons {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  flex: 0 0 auto;
+  justify-content: flex-end;
+  flex: 1 1 100%;
   gap: 8px;
+  min-width: 0;
 }
 
 .share-box-buttons button {
+  flex: 0 1 auto;
   min-height: 32px;
   padding: 6px 10px;
   border: 1px solid rgba(250, 204, 21, 0.22);
@@ -852,7 +856,7 @@ button {
   }
 
   .share-box-buttons button {
-    flex: 1 1 0;
+    flex: 1 1 calc(50% - 8px);
     min-height: 38px;
   }
 
@@ -867,6 +871,7 @@ button {
   .share-box-tooltip.is-visible {
     transform: translate(0, 0);
   }
+
 }
 
 .discovery-bonus-panel {
@@ -4624,7 +4629,8 @@ button {
 }
 
 .collection-profile-chips span,
-.collection-dna-chips span {
+.collection-dna-chips span,
+.collection-dna-chip {
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -4639,6 +4645,31 @@ button {
   line-height: 1.1;
 }
 
+.collection-dna-chip {
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+  transition:
+    border-color 160ms ease,
+    background 160ms ease,
+    color 160ms ease,
+    transform 160ms ease;
+}
+
+.collection-dna-chip:hover,
+.collection-dna-chip:focus-visible,
+.collection-dna-chip.is-active {
+  border-color: rgba(250, 204, 21, 0.28);
+  background: rgba(250, 204, 21, 0.10);
+  color: #f8fafc;
+  outline: none;
+}
+
+.collection-dna-chip:hover,
+.collection-dna-chip:focus-visible {
+  transform: translateY(-1px);
+}
+
 .collection-profile-chips span {
   color: #ecfdf5;
 }
@@ -4647,6 +4678,506 @@ button {
   color: #8fa99a;
   font-size: 0.66rem;
   font-weight: 900;
+}
+
+.dna-modal-overlay {
+  padding: 20px;
+  background:
+    radial-gradient(circle at 50% 8%, rgba(250, 204, 21, 0.08), transparent 34%),
+    rgba(0, 0, 0, 0.76);
+}
+
+.dna-modal {
+  display: grid;
+  gap: 14px;
+  width: min(620px, 94vw);
+  max-height: min(780px, 88vh);
+  overflow-y: auto;
+  padding: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 20px;
+  background:
+    radial-gradient(circle at 12% 0, rgba(74, 222, 128, 0.10), transparent 34%),
+    radial-gradient(circle at 90% 8%, rgba(250, 204, 21, 0.08), transparent 32%),
+    #08110d;
+  box-shadow: 0 28px 90px rgba(0, 0, 0, 0.58);
+}
+
+.dna-modal-header {
+  position: sticky;
+  top: -20px;
+  z-index: 3;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 14px;
+  align-items: start;
+  margin: -20px -20px 0;
+  padding: 18px 20px 14px;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.11);
+  background:
+    radial-gradient(circle at 12% 0, rgba(74, 222, 128, 0.10), transparent 34%),
+    rgba(8, 17, 13, 0.94);
+  backdrop-filter: blur(12px);
+}
+
+.dna-modal-header span,
+.dna-modal-section > span {
+  display: block;
+  color: #86efac;
+  font-size: 0.7rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.dna-modal-header h3 {
+  margin: 5px 0 0;
+  color: #ecfdf5;
+  font-size: 1.28rem;
+  line-height: 1.08;
+}
+
+.dna-modal-header p,
+.dna-empty-message,
+.dna-section-helper {
+  margin: 7px 0 0;
+  color: #cbd5e1;
+  font-size: 0.86rem;
+  line-height: 1.45;
+}
+
+.dna-section-helper {
+  margin-top: -3px;
+  color: #94a3b8;
+  font-size: 0.78rem;
+}
+
+.dna-accord-switcher {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+.dna-accord-switcher button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  padding: 6px 8px;
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.34);
+  color: #cbd5e1;
+  font-size: 0.7rem;
+  font-weight: 850;
+  line-height: 1.1;
+  cursor: pointer;
+}
+
+.dna-accord-switcher button:hover,
+.dna-accord-switcher button:focus-visible,
+.dna-accord-switcher button.is-active {
+  border-color: rgba(250, 204, 21, 0.30);
+  background: rgba(250, 204, 21, 0.10);
+  color: #f8fafc;
+  outline: none;
+}
+
+.dna-accord-switcher strong {
+  color: #8fa99a;
+  font-size: 0.66rem;
+  font-weight: 900;
+}
+
+.dna-accord-content {
+  display: grid;
+  gap: 14px;
+  animation: dnaAccordIn 180ms ease both;
+}
+
+@keyframes dnaAccordIn {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.dna-modal-close,
+.dna-perfume-row button {
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  border-radius: 999px;
+  padding: 8px 11px;
+  background: rgba(15, 23, 42, 0.72);
+  color: #ecfdf5;
+  font-size: 0.76rem;
+  font-weight: 900;
+}
+
+.dna-modal-close:hover,
+.dna-modal-close:focus-visible,
+.dna-perfume-row button:hover:not(:disabled),
+.dna-perfume-row button:focus-visible:not(:disabled) {
+  border-color: rgba(250, 204, 21, 0.34);
+  background: rgba(250, 204, 21, 0.12);
+  color: #fef3c7;
+  outline: none;
+}
+
+.dna-strength-card {
+  display: grid;
+  gap: 10px;
+  padding: 13px;
+  border: 1px solid rgba(250, 204, 21, 0.14);
+  border-radius: 16px;
+  background:
+    radial-gradient(circle at 12% 0, rgba(250, 204, 21, 0.08), transparent 42%),
+    rgba(15, 23, 42, 0.34);
+}
+
+.dna-strength-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.dna-strength-heading > div {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dna-strength-heading span {
+  color: rgba(250, 204, 21, 0.74);
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+}
+
+.dna-strength-heading strong {
+  color: #ecfdf5;
+  font-size: 0.82rem;
+}
+
+.dna-strength-meter {
+  display: inline-flex;
+  gap: 3px;
+}
+
+.dna-strength-meter i {
+  width: 12px;
+  height: 5px;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.18);
+}
+
+.dna-strength-meter i.is-filled {
+  background: rgba(250, 204, 21, 0.62);
+}
+
+.dna-strength-card p {
+  margin: 0;
+  color: #cbd5e1;
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+.dna-main-contributors {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.dna-main-contributors > div {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.dna-contributor-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+  max-width: 170px;
+  padding: 5px 8px 5px 5px;
+  border: 1px solid rgba(148, 163, 184, 0.12);
+  border-radius: 999px;
+  background: rgba(2, 6, 23, 0.34);
+  color: inherit;
+  cursor: pointer;
+}
+
+.dna-contributor-trigger:hover,
+.dna-contributor-trigger:focus-visible {
+  border-color: rgba(250, 204, 21, 0.30);
+  background: rgba(250, 204, 21, 0.10);
+  outline: none;
+}
+
+.dna-main-contributors img {
+  width: 26px;
+  height: 26px;
+  flex: 0 0 auto;
+  border-radius: 999px;
+  background: rgba(226, 232, 240, 0.88);
+  object-fit: contain;
+}
+
+.dna-contributor-trigger span {
+  overflow: hidden;
+  color: #e2e8f0;
+  font-size: 0.68rem;
+  font-weight: 900;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dna-main-contributors .dna-quick-detail {
+  flex: 1 1 100%;
+  min-width: 100%;
+}
+
+.dna-modal-section {
+  display: grid;
+  gap: 9px;
+  padding-top: 13px;
+  border-top: 1px solid rgba(148, 163, 184, 0.12);
+}
+
+.dna-match-list {
+  display: grid;
+  gap: 8px;
+}
+
+.dna-perfume-row {
+  display: grid;
+  grid-template-columns: 52px minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+  padding: 10px;
+  border: 1px solid rgba(148, 163, 184, 0.12);
+  border-radius: 14px;
+  background: rgba(15, 23, 42, 0.38);
+}
+
+.dna-row-image-button,
+.dna-row-name-button {
+  border: 0 !important;
+  border-radius: 0 !important;
+  padding: 0 !important;
+  background: transparent !important;
+  color: inherit !important;
+  box-shadow: none !important;
+  cursor: pointer;
+}
+
+.dna-row-image-button {
+  display: block;
+  width: 52px;
+  height: 52px;
+}
+
+.dna-perfume-row img {
+  width: 52px;
+  height: 52px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 12px;
+  background:
+    radial-gradient(circle at 50% 35%, rgba(255, 255, 255, 0.22), rgba(226, 232, 240, 0.82));
+  object-fit: contain;
+}
+
+.dna-row-name-button {
+  display: block;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  color: #ecfdf5;
+  font-size: 0.88rem;
+  font-weight: 900;
+  line-height: 1.18;
+  text-align: left;
+  white-space: normal !important;
+}
+
+.dna-row-image-button:hover img,
+.dna-row-image-button:focus-visible img,
+.dna-row-name-button:hover,
+.dna-row-name-button:focus-visible {
+  border-color: rgba(250, 204, 21, 0.30);
+  color: #fef3c7 !important;
+  outline: none;
+}
+
+.dna-perfume-row span,
+.dna-perfume-row p {
+  display: block;
+  margin: 3px 0 0;
+  color: #94a3b8;
+  font-size: 0.73rem;
+  line-height: 1.32;
+}
+
+.dna-perfume-row p {
+  color: #cbd5e1;
+}
+
+.dna-recommendation-reason {
+  grid-column: 2 / 3;
+  margin: -3px 0 0 !important;
+  color: #fef3c7 !important;
+  font-size: 0.74rem !important;
+  font-weight: 850;
+}
+
+.dna-perfume-row button {
+  white-space: nowrap;
+}
+
+.dna-perfume-row button:disabled {
+  cursor: not-allowed;
+  opacity: 0.48;
+}
+
+.dna-quick-detail {
+  grid-column: 1 / -1;
+  display: grid;
+  gap: 9px;
+  padding: 12px;
+  border: 1px solid rgba(250, 204, 21, 0.14);
+  border-radius: 14px;
+  background:
+    radial-gradient(circle at 10% 0, rgba(250, 204, 21, 0.08), transparent 38%),
+    rgba(2, 6, 23, 0.44);
+}
+
+.dna-quick-detail strong {
+  display: block;
+  color: #ecfdf5;
+  font-size: 0.9rem;
+  line-height: 1.18;
+}
+
+.dna-quick-detail > div > span,
+.dna-quick-detail p {
+  margin: 3px 0 0;
+  color: #94a3b8;
+  font-size: 0.76rem;
+  line-height: 1.4;
+}
+
+.dna-quick-detail p span {
+  display: inline;
+  margin-right: 5px;
+  color: #86efac;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.dna-quick-detail-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.dna-quick-detail-tags span {
+  display: inline-flex;
+  margin: 0;
+  padding: 5px 8px;
+  border: 1px solid rgba(148, 163, 184, 0.13);
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.40);
+  color: #cbd5e1;
+  font-size: 0.7rem;
+  font-weight: 850;
+}
+
+.dna-quick-detail-tags span.is-active {
+  border-color: rgba(250, 204, 21, 0.30);
+  background: rgba(250, 204, 21, 0.10);
+  color: #fef3c7;
+}
+
+@media (max-width: 520px) {
+  .dna-modal-overlay {
+    align-items: flex-end;
+    padding: 12px;
+  }
+
+  .dna-modal {
+    width: 100%;
+    max-height: 88vh;
+    padding: 16px;
+    border-radius: 18px;
+  }
+
+  .dna-modal-header {
+    top: -16px;
+    grid-template-columns: minmax(0, 1fr);
+    margin: -16px -16px 0;
+    padding: 16px 16px 13px;
+  }
+
+  .dna-modal-close {
+    justify-self: start;
+  }
+
+  .dna-accord-switcher {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding-bottom: 2px;
+    scrollbar-width: none;
+  }
+
+  .dna-accord-switcher::-webkit-scrollbar {
+    display: none;
+  }
+
+  .dna-accord-switcher button {
+    flex: 0 0 auto;
+  }
+
+  .dna-perfume-row {
+    grid-template-columns: 46px minmax(0, 1fr);
+  }
+
+  .dna-perfume-row img {
+    width: 46px;
+    height: 46px;
+  }
+
+  .dna-perfume-row > button:not(.dna-row-image-button) {
+    grid-column: 1 / -1;
+    justify-self: stretch;
+    min-height: 38px;
+  }
+
+  .dna-row-image-button {
+    grid-column: auto;
+    justify-self: auto;
+    min-height: 0;
+  }
+
+  .dna-recommendation-reason {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dna-accord-content {
+    animation: none;
+  }
 }
 
 .collection-balance-list {

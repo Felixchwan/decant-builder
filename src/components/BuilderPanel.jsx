@@ -11,6 +11,8 @@ const DISCOVERY_BONUS_TARGET_POINTS = 12;
 const SHARE_IMAGE_WIDTH = 1080;
 const SHARE_IMAGE_HEIGHT = 1920;
 const EMPTY_RECOMMENDATIONS = [];
+const PERFUME_IMAGE_FALLBACK =
+  "/images/perfumes/placeholders/perfume-placeholder.svg";
 const CURATOR_BONUS_PREFERENCES = {
   complement: {
     label: "Complement My Collection",
@@ -30,6 +32,7 @@ function BuilderPanel({
   estimatedValue,
   upgradeValue,
   selectedPerfumes,
+  catalogPerfumes,
   boxSummary,
   onClearBox,
   onRemovePerfume,
@@ -60,6 +63,7 @@ function BuilderPanel({
     const [isFinalSummaryOpen, setIsFinalSummaryOpen] = useState(false);
     const [isCollectionCardPreviewOpen, setIsCollectionCardPreviewOpen] = useState(false);
     const [isCollectionSnapshotOpen, setIsCollectionSnapshotOpen] = useState(false);
+    const [selectedDnaAccord, setSelectedDnaAccord] = useState(null);
     const previousCuratorBonusUnlockedRef = useRef(false);
     const curatorBonusModuleRef = useRef(null);
     const [isCuratorBonusAnimating, setIsCuratorBonusAnimating] = useState(false);
@@ -133,6 +137,7 @@ function BuilderPanel({
           .map((item) => formatLabel(item.label)),
       [boxSummary, scentDna]
     );
+    const primaryDna = collectionCardDnaDescriptors[0] || "";
     const nextImprovementResult = useMemo(
       () =>
         buildNextImprovementResult({
@@ -166,10 +171,6 @@ function BuilderPanel({
     const shouldShowDiscoveryIntro =
       selectedPerfumes.length === 0 &&
       (!hasSeenDiscoveryIntro || isDiscoveryIntroOpen);
-    const canCopyShareImage =
-      typeof window !== "undefined" &&
-      typeof window.ClipboardItem !== "undefined" &&
-      Boolean(navigator.clipboard?.write);
     const canNativeShareCard =
       typeof window !== "undefined" &&
       typeof navigator.share === "function" &&
@@ -251,6 +252,7 @@ function BuilderPanel({
       collectionPoints: totalPoints,
       profileTraits: collectionCardProfileTraits.slice(0, 3),
       dnaDescriptors: collectionCardDnaDescriptors,
+      primaryDna,
       isCuratorBonusUnlocked,
       maxSlots,
       maxSelectableSlots,
@@ -282,33 +284,6 @@ function BuilderPanel({
             ? "The Collection Card could not be rendered. Please try again."
             : "Could not create the Collection Card PNG."
         );
-      } finally {
-        setActiveShareAction("");
-      }
-    };
-
-    const handleCopyShareImage = async () => {
-      if (!canCopyShareImage) {
-        showShareStatus("Image copying is not supported in this browser. Download the PNG instead.");
-        return;
-      }
-
-      if (isShareGenerating) {
-        return;
-      }
-
-      setActiveShareAction("copy");
-      try {
-        const blob = await createShareImageBlob();
-        await navigator.clipboard.write([
-          new window.ClipboardItem({
-            "image/png": blob,
-          }),
-        ]);
-        showShareStatus("Collection Card copied.");
-      } catch (error) {
-        console.error("Unable to copy Collection Card", error);
-        showShareStatus("Image copying is not supported in this browser. Download the PNG instead.");
       } finally {
         setActiveShareAction("");
       }
@@ -447,13 +422,13 @@ function BuilderPanel({
 
       <div className="share-box-actions">
         <div className="share-box-toolbar">
-          <span className="share-box-label">Share My Box</span>
+          <span className="share-box-label">Collection Card</span>
 
           <span className="share-info-wrap">
             <button
               type="button"
               className="share-info-button"
-              aria-label="About Share My Box"
+              aria-label="About Collection Card"
               aria-describedby="share-box-tooltip"
               aria-expanded={isShareTooltipOpen}
               onClick={() => setIsShareTooltipOpen((isOpen) => !isOpen)}
@@ -468,7 +443,7 @@ function BuilderPanel({
               }`}
               role="tooltip"
             >
-              Export a clean visual snapshot of your Discovery Box.
+              Export an editorial card for your finished Discovery Box.
             </span>
           </span>
         </div>
@@ -481,15 +456,6 @@ function BuilderPanel({
           >
             {activeShareAction === "download" ? "Generating..." : "Download PNG"}
           </button>
-          {canCopyShareImage && (
-            <button
-              type="button"
-              onClick={handleCopyShareImage}
-              disabled={isShareGenerating}
-            >
-              {activeShareAction === "copy" ? "Generating..." : "Copy Image"}
-            </button>
-          )}
           {canNativeShareCard && (
             <button
               type="button"
@@ -608,10 +574,20 @@ function BuilderPanel({
         boxSummary={boxSummary}
         coverageSummary={coverageSummary}
         scentDna={scentDna}
+        selectedPerfumes={selectedPerfumes}
+        catalogPerfumes={catalogPerfumes}
+        selectedPerfumeIds={selectedPerfumeIds}
         selectedCount={selectedPerfumes.length}
+        recommendations={recommendations}
+        isBoxFull={totalSlots >= maxSelectableSlots}
         isExpanded={isCollectionSnapshotOpen}
+        selectedDnaAccord={selectedDnaAccord}
         onToggle={() => setIsCollectionSnapshotOpen((isOpen) => !isOpen)}
         onOpenScentLibrary={() => setIsNotesModalOpen(true)}
+        onOpenDnaAccord={setSelectedDnaAccord}
+        onCloseDnaAccord={() => setSelectedDnaAccord(null)}
+        onAddPerfume={onAddPerfume}
+        onRemovePerfume={onRemovePerfume}
       />
 
       <BoxIntelligenceSummary intelligence={boxIntelligence} />
@@ -817,6 +793,7 @@ function BuilderPanel({
           collectionPoints={totalPoints}
           profileTraits={collectionCardProfileTraits.slice(0, 3)}
           dnaDescriptors={collectionCardDnaDescriptors}
+          primaryDna={primaryDna}
           isCuratorBonusUnlocked={isCuratorBonusUnlocked}
           maxSlots={maxSlots}
           maxSelectableSlots={maxSelectableSlots}
@@ -834,6 +811,7 @@ function CollectionCardPreviewModal({
   collectionPoints,
   profileTraits,
   dnaDescriptors,
+  primaryDna,
   isCuratorBonusUnlocked,
   maxSlots,
   maxSelectableSlots,
@@ -867,6 +845,7 @@ function CollectionCardPreviewModal({
           collectionPoints={collectionPoints}
           profileTraits={profileTraits}
           dnaDescriptors={dnaDescriptors}
+          primaryDna={primaryDna}
           isCuratorBonusUnlocked={isCuratorBonusUnlocked}
           maxSlots={maxSlots}
           maxSelectableSlots={maxSelectableSlots}
@@ -903,11 +882,22 @@ function CollectionSnapshot({
   boxSummary,
   coverageSummary,
   scentDna,
+  selectedPerfumes,
+  catalogPerfumes,
+  selectedPerfumeIds,
   selectedCount,
+  recommendations,
+  isBoxFull,
   isExpanded,
+  selectedDnaAccord,
   onToggle,
   onOpenScentLibrary,
+  onOpenDnaAccord,
+  onCloseDnaAccord,
+  onAddPerfume,
+  onRemovePerfume,
 }) {
+  const dnaTriggerRefs = useRef(new Map());
   const seasonRows = buildSeasonCoverageRows(
     boxSummary.seasonStrengths || boxSummary.seasonCounts || {},
     selectedCount
@@ -928,12 +918,37 @@ function CollectionSnapshot({
     seasonRows,
   });
   const collectionDna = buildCollectionDnaItems({ boxSummary, scentDna });
+  const visibleCollectionDna = collectionDna
+    .map((item) => ({
+      ...item,
+      count: getSelectedPerfumesByAccord(selectedPerfumes, item.label).length,
+    }))
+    .filter((item) => item.count > 0);
+  const selectedDnaItem = selectedDnaAccord
+    ? {
+        label: selectedDnaAccord,
+        count: getSelectedPerfumesByAccord(selectedPerfumes, selectedDnaAccord).length,
+      }
+    : null;
   const balanceRows = buildCollectionBalanceRows({
     boxSummary,
     scentDna,
     selectedCount,
     seasonRows,
   });
+  const handleOpenDnaAccord = (accord) => {
+    onOpenDnaAccord(accord);
+  };
+  const handleSelectDnaAccord = (accord) => {
+    onOpenDnaAccord(accord);
+  };
+  const handleCloseDnaAccord = () => {
+    const accordToRestore = selectedDnaAccord;
+    onCloseDnaAccord();
+    window.setTimeout(() => {
+      dnaTriggerRefs.current.get(accordToRestore)?.focus();
+    }, 0);
+  };
 
   return (
     <section className={`collection-snapshot ${isExpanded ? "is-expanded" : ""}`}>
@@ -979,13 +994,37 @@ function CollectionSnapshot({
       <div className="collection-dna-summary">
         <span>Collection DNA</span>
 
-        {collectionDna.length > 0 ? (
+        {visibleCollectionDna.length > 0 ? (
           <div className="collection-dna-chips">
-            {collectionDna.map((item) => (
-              <span key={item.label}>
+            {visibleCollectionDna.map((item) => (
+              <button
+                ref={(node) => {
+                  if (node) {
+                    dnaTriggerRefs.current.set(item.label, node);
+                  } else {
+                    dnaTriggerRefs.current.delete(item.label);
+                  }
+                }}
+                type="button"
+                className={`collection-dna-chip ${
+                  normalizeAccordLabel(selectedDnaAccord) === normalizeAccordLabel(item.label)
+                    ? "is-active"
+                    : ""
+                }`}
+                key={item.label}
+                onClick={() => handleOpenDnaAccord(item.label)}
+                aria-current={
+                  normalizeAccordLabel(selectedDnaAccord) === normalizeAccordLabel(item.label)
+                    ? "true"
+                    : undefined
+                }
+                aria-label={`View ${item.count} ${formatLabel(item.label).toLowerCase()} fragrance${
+                  item.count === 1 ? "" : "s"
+                } in your box`}
+              >
                 {formatLabel(item.label)}
                 <strong>{item.count}</strong>
-              </span>
+              </button>
             ))}
           </div>
         ) : (
@@ -994,6 +1033,22 @@ function CollectionSnapshot({
           </p>
         )}
       </div>
+
+      {selectedDnaItem && (
+        <CollectionDnaPanel
+          accord={selectedDnaItem.label}
+          accordItems={visibleCollectionDna}
+          selectedPerfumes={selectedPerfumes}
+          catalogPerfumes={catalogPerfumes}
+          selectedPerfumeIds={selectedPerfumeIds}
+          recommendations={recommendations}
+          isBoxFull={isBoxFull}
+          onSelectAccord={handleSelectDnaAccord}
+          onClose={handleCloseDnaAccord}
+          onAddPerfume={onAddPerfume}
+          onRemovePerfume={onRemovePerfume}
+        />
+      )}
 
       <div className="collection-balance-summary">
         <span>Collection Balance</span>
@@ -1110,6 +1165,759 @@ function CollectionSnapshot({
       </div>
     </section>
   );
+}
+
+function CollectionDnaPanel({
+  accord,
+  accordItems = [],
+  selectedPerfumes,
+  catalogPerfumes,
+  selectedPerfumeIds,
+  recommendations,
+  isBoxFull,
+  onSelectAccord,
+  onClose,
+  onAddPerfume,
+  onRemovePerfume,
+}) {
+  const [activeQuickDetailId, setActiveQuickDetailId] = useState(null);
+  const [activeQuickDetailSource, setActiveQuickDetailSource] = useState(null);
+  const closeButtonRef = useRef(null);
+  const modalRef = useRef(null);
+  const previousAccordRef = useRef(accord);
+  const formattedAccord = formatLabel(accord);
+  const matchingSelectedPerfumes = getSelectedPerfumesByAccord(
+    selectedPerfumes,
+    accord
+  );
+  const strength = getAccordStrength({
+    accord,
+    matchingCount: matchingSelectedPerfumes.length,
+    selectedCount: selectedPerfumes.length,
+  });
+  const mainContributors = matchingSelectedPerfumes.slice(0, 3);
+  const similarPicks = buildSimilarAccordPicks({
+    accord,
+    catalogPerfumes,
+    selectedPerfumes,
+    selectedPerfumeIds,
+    recommendations,
+  });
+
+  useEffect(() => {
+    closeButtonRef.current?.focus();
+  }, []);
+
+  useEffect(() => {
+    if (previousAccordRef.current !== accord) {
+      setActiveQuickDetailId(null);
+      setActiveQuickDetailSource(null);
+      modalRef.current?.scrollTo({ top: 0, behavior: "auto" });
+      previousAccordRef.current = accord;
+    }
+  }, [accord]);
+
+  const visibleQuickDetailId =
+    activeQuickDetailId &&
+    [...matchingSelectedPerfumes, ...similarPicks].some(
+      (item) => item.perfume.id === activeQuickDetailId
+    )
+      ? activeQuickDetailId
+      : null;
+  const visibleQuickDetailSource = visibleQuickDetailId
+    ? activeQuickDetailSource
+    : null;
+
+  const handleSetActiveQuickDetailId = (perfumeId, source = "row") => {
+    setActiveQuickDetailId((currentId) => {
+      if (currentId === perfumeId && activeQuickDetailSource === source) {
+        setActiveQuickDetailSource(null);
+        return null;
+      }
+
+      setActiveQuickDetailSource(source);
+      return perfumeId;
+    });
+  };
+
+  const handleSelectAccord = (nextAccord) => {
+    if (normalizeAccordLabel(nextAccord) === normalizeAccordLabel(accord)) {
+      return;
+    }
+
+    setActiveQuickDetailId(null);
+    setActiveQuickDetailSource(null);
+    onSelectAccord(nextAccord);
+  };
+
+  useEffect(() => {
+    function handleKeyDown(event) {
+      if (event.key === "Escape") {
+        if (visibleQuickDetailId) {
+          setActiveQuickDetailId(null);
+          setActiveQuickDetailSource(null);
+          return;
+        }
+
+        onClose();
+      }
+    }
+
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [onClose, visibleQuickDetailId]);
+
+  const handleOverlayClick = (event) => {
+    if (event.target === event.currentTarget) {
+      onClose();
+    }
+  };
+
+  const handleModalClick = (event) => {
+    if (
+      visibleQuickDetailId &&
+      !event.target.closest(".dna-quick-detail") &&
+      !event.target.closest(".dna-row-detail-trigger")
+    ) {
+      setActiveQuickDetailId(null);
+      setActiveQuickDetailSource(null);
+    }
+  };
+
+  return createPortal(
+    <div
+      className="modal-overlay dna-modal-overlay"
+      role="presentation"
+      onClick={handleOverlayClick}
+    >
+      <section
+        ref={modalRef}
+        className="dna-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="dna-modal-title"
+        onClick={handleModalClick}
+      >
+        <div className="dna-modal-header">
+          <div>
+            <span>{formattedAccord} in your box</span>
+            <h3 id="dna-modal-title">{strength.title}</h3>
+            <p>
+              These fragrances currently shape the {formattedAccord.toLowerCase()} character
+              of your collection.
+            </p>
+          </div>
+
+          <button
+            ref={closeButtonRef}
+            type="button"
+            className="dna-modal-close"
+            onClick={onClose}
+          >
+            Close
+          </button>
+        </div>
+
+        <div className="dna-accord-switcher" aria-label="Browse collection DNA accords">
+          {accordItems.map((item) => {
+            const isActive =
+              normalizeAccordLabel(item.label) === normalizeAccordLabel(accord);
+
+            return (
+              <button
+                type="button"
+                key={item.label}
+                className={isActive ? "is-active" : ""}
+                onClick={() => handleSelectAccord(item.label)}
+                aria-current={isActive ? "true" : undefined}
+              >
+                {formatLabel(item.label)}
+                <strong>{item.count}</strong>
+              </button>
+            );
+          })}
+        </div>
+
+        <div className="dna-accord-content" key={accord}>
+        <div className="dna-strength-card">
+            <div className="dna-strength-heading">
+              <span>{formattedAccord}</span>
+              <div>
+                <DnaStrengthMeter strength={strength} />
+                <strong>{strength.level}</strong>
+              </div>
+            </div>
+            <p>{strength.description}</p>
+
+            {mainContributors.length > 0 && (
+              <div
+                className="dna-main-contributors"
+                aria-label={`Main ${formattedAccord} contributors`}
+              >
+                {mainContributors.map(({ perfume }) => {
+                  const detailId = `dna-summary-detail-${perfume.id}`;
+                  const isDetailOpen =
+                    visibleQuickDetailId === perfume.id &&
+                    visibleQuickDetailSource === "summary";
+
+                  return (
+                    <div key={perfume.id}>
+                      <button
+                        type="button"
+                        className="dna-contributor-trigger dna-row-detail-trigger"
+                        onClick={() => handleSetActiveQuickDetailId(perfume.id, "summary")}
+                        aria-label={`View details for ${perfume.name}`}
+                        aria-expanded={isDetailOpen}
+                        aria-controls={isDetailOpen ? detailId : undefined}
+                      >
+                        <img
+                          src={perfume.image || PERFUME_IMAGE_FALLBACK}
+                          alt=""
+                          aria-hidden="true"
+                          onError={(event) => {
+                            event.currentTarget.onerror = null;
+                            event.currentTarget.src = PERFUME_IMAGE_FALLBACK;
+                          }}
+                        />
+                        <span>{perfume.shortName || perfume.name}</span>
+                      </button>
+                      {isDetailOpen && (
+                        <DnaQuickDetail
+                          id={detailId}
+                          accord={accord}
+                          perfume={perfume}
+                          tierName={getTierData(perfume.id).name}
+                        />
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+        <div className="dna-modal-section">
+          <span>Selected Matches</span>
+
+          {matchingSelectedPerfumes.length > 0 ? (
+            <div className="dna-match-list">
+              {matchingSelectedPerfumes.map(({ perfume, index }) => (
+                <DnaPerfumeRow
+                  key={`${perfume.id}-${index}`}
+                  accord={accord}
+                  perfume={perfume}
+                  actionLabel="Remove"
+                  supportingAccords={getSupportingAccords(perfume, accord)}
+                  isDetailOpen={
+                    visibleQuickDetailId === perfume.id &&
+                    visibleQuickDetailSource === "row"
+                  }
+                  onToggleDetail={() => handleSetActiveQuickDetailId(perfume.id, "row")}
+                  onAction={() => onRemovePerfume(index)}
+                />
+              ))}
+            </div>
+          ) : (
+            <p className="dna-empty-message">
+              No selected fragrances currently contribute to this accord.
+            </p>
+          )}
+        </div>
+
+        <div className="dna-modal-section">
+          <span>Expand this accord</span>
+          <p className="dna-section-helper">
+            Recommended additions that reinforce this character while introducing new facets.
+          </p>
+
+          {similarPicks.length > 0 ? (
+            <div className="dna-match-list">
+              {similarPicks.map(({ perfume, reason }) => (
+                <DnaPerfumeRow
+                  key={perfume.id}
+                  accord={accord}
+                  perfume={perfume}
+                  actionLabel={isBoxFull ? "Box full" : "Add to box"}
+                  supportingAccords={getSupportingAccords(perfume, accord)}
+                  recommendationReason={reason}
+                  isDetailOpen={
+                    visibleQuickDetailId === perfume.id &&
+                    visibleQuickDetailSource === "row"
+                  }
+                  onToggleDetail={() => handleSetActiveQuickDetailId(perfume.id, "row")}
+                  onAction={() => onAddPerfume(perfume)}
+                  isActionDisabled={isBoxFull}
+                />
+              ))}
+            </div>
+          ) : (
+            <p className="dna-empty-message">
+              No additional catalog options currently match this accord.
+            </p>
+          )}
+        </div>
+        </div>
+      </section>
+    </div>,
+    document.body
+  );
+}
+
+function DnaPerfumeRow({
+  accord,
+  perfume,
+  actionLabel,
+  supportingAccords,
+  recommendationReason,
+  isDetailOpen,
+  onToggleDetail,
+  onAction,
+  isActionDisabled = false,
+}) {
+  const tierData = getTierData(perfume.id);
+  const detailId = `dna-detail-${perfume.id}`;
+
+  return (
+    <article className={`dna-perfume-row ${isDetailOpen ? "is-detail-open" : ""}`}>
+      <button
+        type="button"
+        className="dna-row-image-button dna-row-detail-trigger"
+        onClick={onToggleDetail}
+        aria-label={`Inspect ${perfume.name} bottle`}
+        aria-expanded={isDetailOpen}
+        aria-controls={isDetailOpen ? detailId : undefined}
+      >
+        <img
+          src={perfume.image || PERFUME_IMAGE_FALLBACK}
+          alt=""
+          aria-hidden="true"
+          onError={(event) => {
+            event.currentTarget.onerror = null;
+            event.currentTarget.src = PERFUME_IMAGE_FALLBACK;
+          }}
+        />
+      </button>
+
+      <div>
+        <button
+          type="button"
+          className="dna-row-name-button dna-row-detail-trigger"
+          onClick={onToggleDetail}
+          aria-label={`Inspect ${perfume.name} details`}
+          aria-expanded={isDetailOpen}
+          aria-controls={isDetailOpen ? detailId : undefined}
+        >
+          {perfume.name}
+        </button>
+        {perfume.subtitle && (
+          <span className="selected-subtitle">
+            {perfume.subtitle
+              .toLowerCase()
+              .replace(/\b\w/g, (char) => char.toUpperCase())}
+          </span>
+        )}
+        <span>{perfume.brand}</span>
+        <p>
+          {tierData.name} · {perfume.points} pt
+          {supportingAccords.length > 0
+            ? ` · ${supportingAccords.map(formatLabel).join(", ")}`
+            : ""}
+        </p>
+      </div>
+
+      <button type="button" onClick={onAction} disabled={isActionDisabled}>
+        {actionLabel}
+      </button>
+
+      {recommendationReason && (
+        <p className="dna-recommendation-reason">{recommendationReason}</p>
+      )}
+
+      {isDetailOpen && (
+        <DnaQuickDetail
+          id={detailId}
+          accord={accord}
+          perfume={perfume}
+          tierName={tierData.name}
+        />
+      )}
+    </article>
+  );
+}
+
+function DnaStrengthMeter({ strength }) {
+  const filledSegments = getStrengthSegmentCount(strength.level);
+
+  return (
+    <span
+      className="dna-strength-meter"
+      aria-label={`${strength.level} accord strength, ${filledSegments} of 5`}
+    >
+      {Array.from({ length: 5 }, (_, index) => (
+        <i
+          aria-hidden="true"
+          className={index < filledSegments ? "is-filled" : ""}
+          key={index}
+        />
+      ))}
+    </span>
+  );
+}
+
+function DnaQuickDetail({ id, accord, perfume, tierName }) {
+  const activeAccord = normalizeAccordLabel(accord);
+  const topNotes = getPerfumeNoteLabels(perfume).slice(0, 5);
+  const occasions = (perfume.occasions || []).slice(0, 3);
+  const seasonsOrVibes = [
+    ...(perfume.seasons || []).slice(0, 3),
+    ...(perfume.vibes || []).slice(0, 3),
+  ].slice(0, 4);
+
+  return (
+    <div className="dna-quick-detail" id={id}>
+      <div>
+        <strong>{perfume.name}</strong>
+        <span>
+          {perfume.brand} · {tierName}
+        </span>
+      </div>
+
+      <div className="dna-quick-detail-tags">
+        {(perfume.accords || []).slice(0, 5).map((item) => {
+          const isActive = normalizeAccordLabel(item) === activeAccord;
+          return (
+            <span className={isActive ? "is-active" : ""} key={item}>
+              {formatLabel(item)}
+            </span>
+          );
+        })}
+      </div>
+
+      {topNotes.length > 0 && (
+        <p>
+          <span>Notes</span> {topNotes.join(", ")}
+        </p>
+      )}
+      {occasions.length > 0 && (
+        <p>
+          <span>Occasions</span> {occasions.map(formatLabel).join(", ")}
+        </p>
+      )}
+      {seasonsOrVibes.length > 0 && (
+        <p>
+          <span>Profile</span> {seasonsOrVibes.map(formatLabel).join(", ")}
+        </p>
+      )}
+    </div>
+  );
+}
+
+function getSelectedPerfumesByAccord(selectedPerfumes, accord) {
+  const normalizedAccord = normalizeAccordLabel(accord);
+
+  return selectedPerfumes
+    .map((perfume, index) => ({
+      perfume,
+      index,
+      contributionScore: getAccordContributionScore(perfume, normalizedAccord),
+    }))
+    .filter(({ perfume }) =>
+      (perfume.accords || []).some(
+        (perfumeAccord) => normalizeAccordLabel(perfumeAccord) === normalizedAccord
+      )
+    )
+    .sort(
+      (a, b) =>
+        b.contributionScore - a.contributionScore ||
+        a.index - b.index
+    );
+}
+
+function buildSimilarAccordPicks({
+  accord,
+  catalogPerfumes,
+  selectedPerfumes,
+  selectedPerfumeIds,
+  recommendations,
+}) {
+  const normalizedAccord = normalizeAccordLabel(accord);
+  const recommendationScores = buildRecommendationScoreMap(recommendations);
+  const selectedSeasonSet = new Set(selectedPerfumes.flatMap((perfume) => perfume.seasons || []));
+  const selectedOccasionSet = new Set(
+    selectedPerfumes.flatMap((perfume) => perfume.occasions || [])
+  );
+  const selectedTierCounts = selectedPerfumes.reduce((counts, perfume) => {
+    const tier = getTierData(perfume.id).name;
+    counts[tier] = (counts[tier] || 0) + 1;
+    return counts;
+  }, {});
+  const dominantTier = Object.entries(selectedTierCounts).sort(
+    (a, b) => b[1] - a[1] || a[0].localeCompare(b[0])
+  )[0]?.[0];
+
+  return (catalogPerfumes || [])
+    .filter(
+      (perfume) =>
+        perfume?.id &&
+        !selectedPerfumeIds.has(perfume.id) &&
+        (perfume.accords || []).some(
+          (perfumeAccord) => normalizeAccordLabel(perfumeAccord) === normalizedAccord
+        )
+    )
+    .map((perfume) => {
+      const recommendationScore = recommendationScores.get(perfume.id) || 0;
+      const contributionScore = getAccordContributionScore(perfume, normalizedAccord);
+      const accordDepth = (perfume.accords || []).filter((perfumeAccord) =>
+        isComplementaryAccord(normalizedAccord, normalizeAccordLabel(perfumeAccord))
+      ).length;
+      const seasonComplement = (perfume.seasons || []).filter(
+        (season) => !selectedSeasonSet.has(season)
+      ).length;
+      const occasionComplement = (perfume.occasions || []).filter(
+        (occasion) => !selectedOccasionSet.has(occasion)
+      ).length;
+      const tier = getTierData(perfume.id).name;
+      const tierAffinity = dominantTier && tier === dominantTier ? 4 : 0;
+
+      return {
+        perfume,
+        reason: getAccordExpansionReason({
+          perfume,
+          selectedSeasonSet,
+          selectedOccasionSet,
+          normalizedAccord,
+          tier,
+        }),
+        score:
+          80 +
+          contributionScore * 14 +
+          accordDepth * 7 +
+          seasonComplement * 6 +
+          occasionComplement * 5 +
+          recommendationScore * 0.35 +
+          tierAffinity -
+          (selectedTierCounts[tier] || 0) * 2,
+      };
+    })
+    .sort((a, b) => b.score - a.score || a.perfume.name.localeCompare(b.perfume.name))
+    .slice(0, 6)
+    .map(({ perfume, reason }) => ({ perfume, reason }));
+}
+
+function buildRecommendationScoreMap(recommendations) {
+  return [
+    ...(recommendations?.basedOnYourPicks || []),
+    ...(recommendations?.toBalanceYourBox || []),
+  ].reduce((scoreMap, recommendation) => {
+    if (recommendation?.perfume?.id) {
+      scoreMap.set(
+        recommendation.perfume.id,
+        Math.max(scoreMap.get(recommendation.perfume.id) || 0, recommendation.score || 0)
+      );
+    }
+
+    return scoreMap;
+  }, new Map());
+}
+
+function getAccordStrength({ accord, matchingCount, selectedCount }) {
+  const ratio = selectedCount > 0 ? matchingCount / selectedCount : 0;
+  let level = "Emerging";
+
+  if (matchingCount >= 7 || ratio >= 0.58) {
+    level = "Defining";
+  } else if (matchingCount >= 4 || ratio >= 0.36) {
+    level = "Strong presence";
+  } else if (matchingCount >= 2 || ratio >= 0.18) {
+    level = "Present";
+  }
+
+  return {
+    level,
+    title: getAccordStrengthTitle(level),
+    description: getAccordStrengthDescription(accord, level),
+  };
+}
+
+function getAccordStrengthTitle(level) {
+  const titles = {
+    Emerging: "A subtle accent",
+    Present: "A supporting role",
+    "Strong presence": "A strong influence",
+    Defining: "A defining pillar",
+  };
+
+  return titles[level] || "A supporting role";
+}
+
+function getStrengthSegmentCount(level) {
+  const segmentCounts = {
+    Emerging: 1,
+    Present: 2,
+    "Strong presence": 4,
+    Defining: 5,
+  };
+
+  return segmentCounts[level] || 2;
+}
+
+function getAccordStrengthDescription(accord, level) {
+  const label = formatLabel(accord).toLowerCase();
+  const descriptions = {
+    aromatic: {
+      Emerging: "Aromatic structure is beginning to add lift and easy versatility.",
+      Present: "Aromatic structure adds freshness and flexibility across the collection.",
+      "Strong presence":
+        "Aromatic structure is a clear pillar, adding freshness and versatility across multiple situations.",
+      Defining:
+        "Aromatic structure defines this collection, giving it a polished, versatile backbone.",
+    },
+    citrus: {
+      Emerging: "Citrus brightness is starting to shape the collection's opening energy.",
+      Present: "Citrus adds clean lift and daytime clarity to the rotation.",
+      "Strong presence":
+        "Citrus is a strong driver here, keeping the collection bright, fresh, and easy to wear.",
+      Defining:
+        "Citrus defines the collection's personality with crisp brightness and warm-weather ease.",
+    },
+    woody: {
+      Emerging: "Woody depth is beginning to ground the collection.",
+      Present: "Woody texture gives the box structure and steady wearability.",
+      "Strong presence":
+        "Woody depth is one of the collection's anchors, adding structure and maturity.",
+      Defining:
+        "Woody depth defines the collection with a grounded, polished signature.",
+    },
+    amber: {
+      Emerging: "Amber warmth is starting to add richness to the box.",
+      Present: "Amber brings warmth and softness without overwhelming the rotation.",
+      "Strong presence":
+        "Amber is a strong contributor, adding warmth, depth, and after-dark texture.",
+      Defining:
+        "Amber defines the collection with rich warmth and a more enveloping character.",
+    },
+  };
+
+  return (
+    descriptions[normalizeAccordLabel(accord)]?.[level] ||
+    `${formatLabel(accord)} gives this collection a ${level.toLowerCase()} ${label} thread without needing extra analysis.`
+  );
+}
+
+function getAccordContributionScore(perfume, normalizedAccord) {
+  const accords = (perfume.accords || []).map(normalizeAccordLabel);
+  const position = accords.indexOf(normalizedAccord);
+  if (position < 0) {
+    return 0;
+  }
+
+  const positionScore = Math.max(1, 5 - position);
+  const familySupport = accords.filter((accord) =>
+    isComplementaryAccord(normalizedAccord, accord)
+  ).length;
+  const profileSupport = [
+    ...(perfume.vibes || []),
+    ...(perfume.occasions || []),
+    ...(perfume.seasons || []),
+  ].filter((item) =>
+    supportsAccordContext(normalizedAccord, normalizeAccordLabel(item))
+  ).length;
+
+  return positionScore * 2 + familySupport + profileSupport * 0.6;
+}
+
+function supportsAccordContext(targetAccord, value) {
+  const supportMap = {
+    aromatic: ["fresh", "clean", "office", "daily", "spring", "summer", "green"],
+    citrus: ["fresh", "bright", "summer", "spring", "daily", "vacation", "clean"],
+    "fresh spicy": ["fresh", "energetic", "office", "daily", "spring"],
+    woody: ["formal", "office", "fall", "winter", "sophisticated", "masculine"],
+    amber: ["evening", "night", "date", "winter", "fall", "warm", "cozy"],
+  };
+
+  return supportMap[targetAccord]?.includes(value) || false;
+}
+
+function getAccordExpansionReason({
+  perfume,
+  selectedSeasonSet,
+  selectedOccasionSet,
+  normalizedAccord,
+  tier,
+}) {
+  const newSeasons = (perfume.seasons || []).filter(
+    (season) => !selectedSeasonSet.has(season)
+  );
+  const newOccasions = (perfume.occasions || []).filter(
+    (occasion) => !selectedOccasionSet.has(occasion)
+  );
+  const accords = (perfume.accords || []).map(normalizeAccordLabel);
+
+  if (accords.includes("marine")) {
+    return "Adds marine freshness";
+  }
+
+  if (accords.includes("green")) {
+    return "Introduces green contrast";
+  }
+
+  if (accords.includes("woody") && normalizedAccord !== "woody") {
+    return "Brings woody depth";
+  }
+
+  if (newOccasions.includes("formal") || newOccasions.includes("office")) {
+    return "Adds formal versatility";
+  }
+
+  if (newSeasons.includes("summer")) {
+    return "Improves summer coverage";
+  }
+
+  if (["Gold", "Platinum", "Diamond", "Mythic"].includes(tier)) {
+    return `Premium ${formatLabel(normalizedAccord).toLowerCase()} option`;
+  }
+
+  return `Reinforces ${formatLabel(normalizedAccord).toLowerCase()} character`;
+}
+
+function getPerfumeNoteLabels(perfume) {
+  return [
+    ...(perfume.topNotes || []),
+    ...(perfume.middleNotes || []),
+    ...(perfume.baseNotes || []),
+  ]
+    .map((note) => formatLabel(note))
+    .filter(Boolean);
+}
+
+function getSupportingAccords(perfume, selectedAccord) {
+  const normalizedSelectedAccord = normalizeAccordLabel(selectedAccord);
+
+  return (perfume.accords || [])
+    .filter((accord) => normalizeAccordLabel(accord) !== normalizedSelectedAccord)
+    .filter((accord, index, accords) => accords.indexOf(accord) === index)
+    .slice(0, 3);
+}
+
+function isComplementaryAccord(targetAccord, candidateAccord) {
+  if (targetAccord === candidateAccord) {
+    return true;
+  }
+
+  const families = {
+    aromatic: ["fresh spicy", "woody", "green", "citrus", "lavender"],
+    citrus: ["fresh", "aromatic", "green", "marine", "fresh spicy"],
+    "fresh spicy": ["citrus", "aromatic", "woody", "green"],
+    woody: ["aromatic", "fresh spicy", "leather", "amber", "citrus"],
+    amber: ["vanilla", "warm spicy", "sweet", "woody", "tobacco"],
+  };
+
+  return families[targetAccord]?.includes(candidateAccord) || false;
+}
+
+function normalizeAccordLabel(value) {
+  return String(value || "").trim().toLowerCase().replace(/\s+/g, " ");
 }
 
 function ProfileSummaryGroup({ label, values }) {
