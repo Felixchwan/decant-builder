@@ -854,8 +854,12 @@ button {
 }
 
 .discovery-bonus-panel {
-  display: grid;
+  display: flex;
+  flex-direction: column;
   gap: 12px;
+  align-self: start;
+  height: auto;
+  min-height: 0;
   margin: 0 0 16px;
   padding: 14px;
   border-radius: 20px;
@@ -867,6 +871,7 @@ button {
 }
 
 .discovery-bonus-panel.unlocked {
+  gap: 9px;
   border-color: rgba(250, 204, 21, 0.36);
   background:
     radial-gradient(circle at 16% 0, rgba(250, 204, 21, 0.16), transparent 38%),
@@ -913,6 +918,11 @@ button {
   border-color: rgba(250, 204, 21, 0.42);
   background: rgba(250, 204, 21, 0.13);
   color: #fde68a !important;
+}
+
+.discovery-bonus-panel.unlocked .discovery-progress-copy {
+  font-size: 0.88rem;
+  font-weight: 900;
 }
 
 .discovery-progress-bar {
@@ -980,6 +990,14 @@ button {
 .curator-bonus-section {
   position: relative;
   overflow: hidden;
+}
+
+.curator-bonus-section.unlocked .curator-lock-visual {
+  position: absolute;
+  left: 14px;
+  right: 14px;
+  top: 72px;
+  height: 0;
 }
 
 .curator-bonus-section.is-unlocking {
@@ -1263,8 +1281,11 @@ button {
 .curator-bonus-card {
   position: relative;
   z-index: 1;
-  display: grid;
+  display: flex;
+  flex-direction: column;
   gap: 10px;
+  height: auto;
+  min-height: 0;
   padding: 12px;
   border-radius: 16px;
   border: 1px dashed rgba(148, 163, 184, 0.22);
@@ -1282,6 +1303,9 @@ button {
 }
 
 .discovery-bonus-panel.unlocked .curator-bonus-card {
+  margin-top: -7px;
+  padding-top: 10px;
+  gap: 8px;
   border-style: solid;
   border-color: rgba(250, 204, 21, 0.32);
   background:
