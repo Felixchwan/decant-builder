@@ -8,14 +8,18 @@ import MetadataPreview from "./components/MetadataPreview";
 import { buildScentDna } from "./utils/buildScentDna";
 import { buildCatalogView } from "./builder/internal/catalog/buildCatalogView.js";
 import { buildCollectionSummary } from "./builder/internal/intelligence/buildCollectionSummary.js";
+import {
+  createBuilderPersistencePayload,
+  hasMeaningfulBuilderPersistence,
+  hydrateBuilderPersistence,
+  serializeBuilderPersistence,
+} from "./builder/internal/persistence/builderPersistence.js";
 import { buildRecommendations } from "./utils/buildRecommendations";
 import { getMetadataAsset } from "./data/metadataAssets";
 import { getBrandAsset } from "./data/brandAssets";
 import {
   addSelectedPerfume,
   canAddPerfume,
-  getSelectedPerfumeIds,
-  hydrateSelectedPerfumes,
   removeSelectedPerfumeAtIndex,
   reorderSelectedPerfumes,
 } from "./builder/internal/selection/selectionState.js";
@@ -42,17 +46,12 @@ function App({ catalog, notes: noteMetadata = EMPTY_NOTES, config }) {
       loadPersistedBuilderState({
         builderConfig,
         perfumes,
-        maxSelectableSlots: MAX_SELECTABLE_SLOTS,
         defaultBuilderState: DEFAULT_BUILDER_STATE,
       }),
-    [builderConfig, perfumes, MAX_SELECTABLE_SLOTS, DEFAULT_BUILDER_STATE]
+    [builderConfig, perfumes, DEFAULT_BUILDER_STATE]
   );
-  const [selectedPerfumes, setSelectedPerfumes] = useState(() =>
-    hydrateSelectedPerfumes({
-      selectedPerfumeIds: persistedBuilderState.selectedPerfumeIds,
-      catalog: perfumes,
-      maxSelectableSlots: MAX_SELECTABLE_SLOTS,
-    })
+  const [selectedPerfumes, setSelectedPerfumes] = useState(
+    persistedBuilderState.selectedPerfumes
   );
   const [curatorBonusPreference, setCuratorBonusPreference] = useState(
     persistedBuilderState.curatorBonusPreference
@@ -136,20 +135,26 @@ const recommendations = useMemo(() => {
 }, [perfumes, selectedPerfumes, boxSummary, coverageSummary, scentDna]);
 
   useEffect(() => {
-    const persistedState = {
-      version: 1,
-      selectedPerfumeIds: collectionSummary.selectedIds,
+    const persistedState = createBuilderPersistencePayload({
+      selectedPerfumes,
       curatorBonusPreference,
       customerInfo: reviewCustomerInfo,
-    };
+    });
 
-    if (!hasMeaningfulPersistedProgress(persistedState, DEFAULT_BUILDER_STATE, DEFAULT_CUSTOMER_INFO)) {
+    if (!hasMeaningfulBuilderPersistence(persistedState, DEFAULT_BUILDER_STATE, DEFAULT_CUSTOMER_INFO)) {
       clearPersistedBuilderState(builderConfig);
       return;
     }
 
-    savePersistedBuilderState(persistedState, builderConfig);
-  }, [collectionSummary.selectedIds, curatorBonusPreference, reviewCustomerInfo, builderConfig, DEFAULT_BUILDER_STATE, DEFAULT_CUSTOMER_INFO]);
+    savePersistedBuilderState(
+      {
+        selectedPerfumes,
+        curatorBonusPreference,
+        customerInfo: reviewCustomerInfo,
+      },
+      builderConfig
+    );
+  }, [selectedPerfumes, curatorBonusPreference, reviewCustomerInfo, builderConfig, DEFAULT_BUILDER_STATE, DEFAULT_CUSTOMER_INFO]);
 
   useEffect(() => {
     if (!restoreMessage) {
@@ -455,31 +460,28 @@ const confirmAddPerfume = () => {
   );
 }
 
-function loadPersistedBuilderState({ builderConfig, perfumes, maxSelectableSlots, defaultBuilderState }) {
+function loadPersistedBuilderState({ builderConfig, perfumes, defaultBuilderState }) {
+  const defaultHydratedState = {
+    ...defaultBuilderState,
+    selectedPerfumes: [],
+    wasRestored: false,
+  };
+
   if (typeof window === "undefined" || !window.localStorage) {
-    return defaultBuilderState;
+    return defaultHydratedState;
   }
 
   try {
     const rawValue = window.localStorage.getItem(builderConfig.persistence.storageKey);
 
-    if (!rawValue) {
-      return defaultBuilderState;
-    }
-
-    const parsedValue = JSON.parse(rawValue);
-    const validatedState = validatePersistedBuilderState(parsedValue, {
-      builderConfig,
-      perfumes,
-      maxSelectableSlots,
-      defaultCustomerInfo: defaultBuilderState.customerInfo,
+    return hydrateBuilderPersistence({
+      rawValue,
+      catalog: perfumes,
+      config: builderConfig,
+      defaultBuilderState,
     });
-
-    return validatedState
-      ? { ...validatedState, wasRestored: validatedState.selectedPerfumeIds.length > 0 }
-      : defaultBuilderState;
   } catch {
-    return defaultBuilderState;
+    return defaultHydratedState;
   }
 }
 
@@ -498,69 +500,19 @@ function markFragranceDetailsHintSeen(builderConfig) {
   }
 }
 
-function validatePersistedBuilderState(value, { builderConfig, perfumes, maxSelectableSlots, defaultCustomerInfo }) {
-  if (!value || typeof value !== "object" || value.version !== builderConfig.persistence.schemaVersion) {
-    return null;
-  }
-
-  const selectedPerfumeIds = getSelectedPerfumeIds(
-    hydrateSelectedPerfumes({
-      selectedPerfumeIds: value.selectedPerfumeIds,
-      catalog: perfumes,
-      maxSelectableSlots,
-    })
-  );
-  const curatorBonusPreference =
-    value.curatorBonusPreference === "similar" ||
-    value.curatorBonusPreference === "complement"
-      ? value.curatorBonusPreference
-      : builderConfig.curatorBonus.defaultPreference;
-  const customerInfo = validatePersistedCustomerInfo(value.customerInfo, defaultCustomerInfo);
-
-  return {
-    selectedPerfumeIds: [...new Set(selectedPerfumeIds)],
-    curatorBonusPreference,
-    customerInfo,
-  };
-}
-
-function validatePersistedCustomerInfo(value, defaultCustomerInfo) {
-  if (!value || typeof value !== "object") {
-    return defaultCustomerInfo;
-  }
-
-  return {
-    name: typeof value.name === "string" ? value.name : "",
-    city: typeof value.city === "string" ? value.city : "",
-    notes: typeof value.notes === "string" ? value.notes : "",
-  };
-}
-
 function savePersistedBuilderState(value, builderConfig) {
   if (typeof window === "undefined" || !window.localStorage) {
     return;
   }
 
   try {
-    window.localStorage.setItem(builderConfig.persistence.storageKey, JSON.stringify(value));
+    window.localStorage.setItem(
+      builderConfig.persistence.storageKey,
+      serializeBuilderPersistence(value)
+    );
   } catch {
     // Persistence is a convenience; storage failures should not block the builder.
   }
-}
-
-function hasMeaningfulPersistedProgress(value, defaultBuilderState, defaultCustomerInfo) {
-  const customerInfo = validatePersistedCustomerInfo(value.customerInfo, defaultCustomerInfo);
-  const selectedPerfumeIds = Array.isArray(value.selectedPerfumeIds)
-    ? value.selectedPerfumeIds
-    : [];
-
-  return (
-    selectedPerfumeIds.length > 0 ||
-    value.curatorBonusPreference !== defaultBuilderState.curatorBonusPreference ||
-    Boolean(customerInfo.name.trim()) ||
-    Boolean(customerInfo.city.trim()) ||
-    Boolean(customerInfo.notes.trim())
-  );
 }
 
 function clearPersistedBuilderState(builderConfig) {
