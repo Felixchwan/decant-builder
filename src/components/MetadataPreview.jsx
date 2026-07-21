@@ -1,4 +1,4 @@
-import { cloneElement, useEffect, useId, useRef, useState } from "react";
+import { cloneElement, useCallback, useEffect, useId, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
 const LONG_PRESS_MS = 450;
@@ -17,14 +17,14 @@ export default function MetadataPreview({ title, image, description, children })
   const [isVisible, setIsVisible] = useState(false);
   const [position, setPosition] = useState(null);
 
-  function clearLongPressTimer() {
+  const clearLongPressTimer = useCallback(() => {
     if (longPressTimeoutRef.current) {
       window.clearTimeout(longPressTimeoutRef.current);
       longPressTimeoutRef.current = null;
     }
-  }
+  }, []);
 
-  function getPreviewPosition() {
+  const getPreviewPosition = useCallback(() => {
     const trigger = triggerRef.current;
 
     if (!trigger) {
@@ -52,9 +52,9 @@ export default function MetadataPreview({ title, image, description, children })
       top: Math.max(VIEWPORT_GUTTER, top),
       placement: hasRoomAbove ? "above" : "below",
     };
-  }
+  }, []);
 
-  function showPreview() {
+  const showPreview = useCallback(() => {
     const nextPosition = getPreviewPosition();
 
     if (!nextPosition) {
@@ -63,12 +63,12 @@ export default function MetadataPreview({ title, image, description, children })
 
     setPosition(nextPosition);
     setIsVisible(true);
-  }
+  }, [getPreviewPosition]);
 
-  function hidePreview() {
+  const hidePreview = useCallback(() => {
     clearLongPressTimer();
     setIsVisible(false);
-  }
+  }, [clearLongPressTimer]);
 
   function handlePointerDown(event) {
     lastPointerTypeRef.current = event.pointerType;
@@ -136,13 +136,13 @@ export default function MetadataPreview({ title, image, description, children })
       window.removeEventListener("resize", updatePosition);
       document.removeEventListener("scroll", dismissPreview, true);
     };
-  }, [isVisible]);
+  }, [getPreviewPosition, hidePreview, isVisible]);
 
   useEffect(() => {
     return () => {
       clearLongPressTimer();
     };
-  }, []);
+  }, [clearLongPressTimer]);
 
   function mergeHandlers(childHandler, previewHandler) {
     return (event) => {
@@ -154,6 +154,7 @@ export default function MetadataPreview({ title, image, description, children })
     };
   }
 
+  /* eslint-disable react-hooks/refs -- MetadataPreview composes a trigger ref through cloneElement; ref.current is only read later in handlers/effects. */
   const trigger = cloneElement(children, {
     ref: triggerRef,
     tabIndex: 0,
@@ -169,6 +170,7 @@ export default function MetadataPreview({ title, image, description, children })
     onPointerCancel: mergeHandlers(children.props.onPointerCancel, handlePointerEnd),
     onPointerLeave: mergeHandlers(children.props.onPointerLeave, handlePointerEnd),
   });
+  /* eslint-enable react-hooks/refs */
 
   return (
     <>

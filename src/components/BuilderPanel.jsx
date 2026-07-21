@@ -8,8 +8,6 @@ import { getTierData } from "../utils/tierUtils";
 import CollectionCard from "./CollectionCard";
 
 const DISCOVERY_BONUS_TARGET_POINTS = 12;
-const SHARE_IMAGE_WIDTH = 1080;
-const SHARE_IMAGE_HEIGHT = 1920;
 const EMPTY_RECOMMENDATIONS = [];
 const PERFUME_IMAGE_FALLBACK =
   "/images/perfumes/placeholders/perfume-placeholder.svg";
@@ -30,7 +28,6 @@ function BuilderPanel({
   maxSelectableSlots,
   totalPoints,
   estimatedValue,
-  upgradeValue,
   selectedPerfumes,
   catalogPerfumes,
   boxSummary,
@@ -38,7 +35,6 @@ function BuilderPanel({
   onRemovePerfume,
   onReorderPerfumes,
   minSlots,
-  minPoints,
   missingSlots,
   missingPoints,
   coverageSummary,
@@ -75,8 +71,9 @@ function BuilderPanel({
     const balanceLaneRef = useRef(null);
     const balanceLaneEmphasisTimeoutRef = useRef(null);
     const sortedNotes = [...boxSummary.notes].sort();
-    const selectedPerfumeIds = new Set(
-      selectedPerfumes.map((perfume) => perfume.id)
+    const selectedPerfumeIds = useMemo(
+      () => new Set(selectedPerfumes.map((perfume) => perfume.id)),
+      [selectedPerfumes]
     );
     const basedOnYourPicks = recommendations?.basedOnYourPicks || EMPTY_RECOMMENDATIONS;
     const toBalanceYourBox = recommendations?.toBalanceYourBox || EMPTY_RECOMMENDATIONS;
@@ -84,7 +81,7 @@ function BuilderPanel({
       curatorBonusPreference === "similar" ? basedOnYourPicks : toBalanceYourBox;
     const hiddenCuratorPicks = useMemo(
       () => buildHiddenCuratorPicks(curatorBonusLane, selectedPerfumeIds),
-      [curatorBonusLane, selectedPerfumes]
+      [curatorBonusLane, selectedPerfumeIds]
     );
     const curatorInsight = useMemo(
       () =>
@@ -95,7 +92,7 @@ function BuilderPanel({
           preference: curatorBonusPreference,
           selectedCount: selectedPerfumes.length,
         }),
-      [boxSummary, coverageSummary, curatorBonusLane, curatorBonusPreference, selectedPerfumes.length]
+      [boxSummary, coverageSummary, curatorBonusLane, curatorBonusPreference, selectedPerfumes]
     );
     const boxIntelligence = useMemo(
       () =>
@@ -151,7 +148,6 @@ function BuilderPanel({
         boxIntelligence,
         selectedPerfumes,
         toBalanceYourBox,
-        selectedPerfumes.length,
         totalSlots,
         maxSelectableSlots,
       ]
@@ -339,7 +335,9 @@ function BuilderPanel({
       }
 
       if (!isCuratorBonusUnlocked) {
-        setIsCuratorBonusAnimating(false);
+        animationTimeout = window.setTimeout(() => {
+          setIsCuratorBonusAnimating(false);
+        }, 0);
       }
 
       previousCuratorBonusUnlockedRef.current = isCuratorBonusUnlocked;
@@ -521,54 +519,6 @@ function BuilderPanel({
         )}
       </div>
 
-{/*
-<div className={`box-status ${isBoxReady ? "ready" : "not-ready"}`}>
-  <strong>
-    {isBoxReady ? "Discovery Box ready" : "Discovery Box requirements"}
-  </strong>
-
-  <p>
-    {totalSlots >= minSlots
-      ? `✓ Minimum ${minSlots} fragrances`
-      : `Need ${missingSlots} more fragrance${missingSlots === 1 ? "" : "s"}`}
-  </p>
-
-  <p>
-    {totalPoints >= minPoints
-      ? `✓ Minimum ${minPoints} points`
-      : `Need ${missingPoints.toFixed(1)} more point${
-          missingPoints === 1 ? "" : "s"
-        }`}
-  </p>
-</div>
-*/}
-
-      {/*
-      <div className="selected-list">
-        {selectedPerfumes.length > 0 &&
-          selectedPerfumes.map((perfume, index) => (
-            <div className="selected-item" key={`${perfume.id}-${index}`}>
-              <div>
-                <strong>{perfume.name}</strong>
-
-                {perfume.subtitle && (
-                <span className="selected-subtitle">
-                    {perfume.subtitle
-                    .toLowerCase()
-                    .replace(/\b\w/g, (char) => char.toUpperCase())}
-                </span>
-                )}
-
-                <span>
-                 {perfume.brand} · {perfume.points} pt
-                </span>
-              </div>
-
-              <button onClick={() => onRemovePerfume(index)}>Remove</button>
-            </div>
-          ))}
-      </div>
-      */}
 
       <CollectionSnapshot
         boxSummary={boxSummary}
@@ -738,35 +688,6 @@ function BuilderPanel({
           notes={sortedNotes}
           onClose={() => setIsNotesModalOpen(false)}
         />
-      )}
-      {false && isNotesModalOpen && (
-  <div
-    className="modal-overlay"
-    onClick={() => setIsNotesModalOpen(false)}
-  >
-    <div
-      className="modal-content"
-      onClick={(event) => event.stopPropagation()}
-    >
-      <div className="modal-header">
-        <h3>Scent Library</h3>
-
-        <button
-          onClick={() => setIsNotesModalOpen(false)}
-        >
-          ✕
-        </button>
-      </div>
-
-      <div className="notes-grid">
-        {sortedNotes.map((note) => (
-          <span key={note} className="note-pill">
-            {note}
-          </span>
-        ))}
-      </div>
-    </div>
-  </div>
       )}
       {isFinalSummaryOpen && (
         <DiscoveryBoxReviewModal
@@ -3339,170 +3260,6 @@ const CuratorBonusModule = forwardRef(function CuratorBonusModule(
   );
 });
 
-function DiscoveryBonusProgress({
-  totalPoints,
-  totalSlots,
-  minSlots,
-  isUnlocked,
-}) {
-  const progressValue = Math.min(totalPoints, DISCOVERY_BONUS_TARGET_POINTS);
-  const progressPercent =
-    (progressValue / DISCOVERY_BONUS_TARGET_POINTS) * 100;
-  const pointsAway = Math.max(
-    DISCOVERY_BONUS_TARGET_POINTS - totalPoints,
-    0
-  );
-  const fragrancesAway = Math.max(minSlots - totalSlots, 0);
-  const hasRequiredPoints = totalPoints >= DISCOVERY_BONUS_TARGET_POINTS;
-  const hasRequiredFragrances = totalSlots >= minSlots;
-  const lockedMessage = !hasRequiredPoints
-    ? `${pointsAway.toFixed(1)} point${
-        pointsAway === 1 ? "" : "s"
-      } away from unlocking your Curator Bonus`
-    : `Need ${fragrancesAway} more fragrance${
-        fragrancesAway === 1 ? "" : "s"
-      } to unlock your Curator Bonus`;
-
-  return (
-    <section
-      className={`discovery-bonus-panel ${isUnlocked ? "unlocked" : "locked"}`}
-    >
-      <div className="discovery-progress-header">
-        <div>
-          <span>Discovery Box Progress</span>
-          <strong>Curator Bonus</strong>
-        </div>
-
-        <span className="discovery-bonus-state">
-          {isUnlocked ? "Unlocked" : "Locked"}
-        </span>
-      </div>
-
-      <div className="discovery-progress-bar" aria-hidden="true">
-        <div style={{ width: `${progressPercent}%` }} />
-      </div>
-
-      <div className="discovery-requirements">
-        <RequirementLine
-          isMet={hasRequiredPoints}
-          value={`${progressValue.toFixed(1)} / ${DISCOVERY_BONUS_TARGET_POINTS} Points`}
-        />
-        <RequirementLine
-          isMet={hasRequiredFragrances}
-          value={`${Math.min(totalSlots, minSlots)} / ${minSlots} Fragrances`}
-        />
-      </div>
-
-      <p className="discovery-progress-copy">
-        {isUnlocked
-          ? "Curator Bonus Unlocked"
-          : lockedMessage}
-      </p>
-
-        <span hidden aria-hidden="true">
-          🎁
-        </span>
-
-    </section>
-  );
-}
-
-function CuratorBonusSection({
-  isUnlocked,
-  isAnimating,
-  preference,
-  onPreferenceChange,
-  hiddenCuratorPicks,
-}) {
-  const preferenceData = CURATOR_BONUS_PREFERENCES[preference];
-  const hiddenPickCount = hiddenCuratorPicks.length;
-
-  return (
-    <section
-      className={`discovery-bonus-panel curator-bonus-section ${
-        isUnlocked ? "unlocked" : "locked"
-      } ${isAnimating ? "is-unlocking" : ""}`}
-    >
-      <div className="curator-bonus-panel-header">
-        <div>
-          <span>Curator Bonus</span>
-        </div>
-
-        <span className="curator-bonus-status">
-          {isUnlocked ? "Unlocked" : "Locked"}
-        </span>
-      </div>
-
-      {isAnimating && (
-        <div className="curator-unlock-confirmation" role="status">
-          Curator Bonus Unlocked
-        </div>
-      )}
-
-      {(!isUnlocked || isAnimating) && (
-        <div className="curator-lock-visual" aria-hidden="true">
-          <span />
-        </div>
-      )}
-
-      <div className="curator-bonus-card">
-        <div className="curator-bonus-copy">
-          {!isUnlocked && <strong>Complete your Discovery Box</strong>}
-          <p>
-            {isUnlocked
-              ? `${preferenceData.label} selected. Your curator pick${
-                  hiddenPickCount === 1 ? "" : "s"
-                } will stay wrapped until reveal.`
-              : "Unlock Curator Bonus and choose your reward strategy."}
-          </p>
-        </div>
-
-        {isUnlocked ? (
-          <div className="curator-preference-control">
-            <label htmlFor="curator-bonus-preference">
-              Curator Bonus Style
-            </label>
-
-            <select
-              id="curator-bonus-preference"
-              value={preference}
-              onChange={(event) => onPreferenceChange(event.target.value)}
-            >
-              {Object.entries(CURATOR_BONUS_PREFERENCES).map(
-                ([value, option]) => (
-                  <option key={value} value={value}>
-                    {option.label}
-                  </option>
-                )
-              )}
-            </select>
-
-            <p>{preferenceData.description}</p>
-          </div>
-        ) : (
-          <div className="curator-style-locked" aria-disabled="true">
-            <span>Curator Bonus Style</span>
-            <strong>Unlock to choose curator style</strong>
-          </div>
-        )}
-
-        <div className={`curator-pick-slot ${isUnlocked ? "active" : ""}`}>
-          <span>Curator Pick</span>
-          <strong>Bonus Fragrance</strong>
-          <p>Equivalent to 2 bonus points.</p>
-          {isUnlocked && (
-            <p>
-              {preference === "similar"
-                ? "Selected based on your fragrance preferences."
-                : "Selected to complement your collection."}
-            </p>
-          )}
-        </div>
-      </div>
-    </section>
-  );
-}
-
 function RequirementLine({ isMet, value }) {
   return (
     <p className={`discovery-requirement ${isMet ? "met" : "missing"}`}>
@@ -4248,9 +4005,6 @@ function rewriteCoverageGap(gap) {
 function buildCuratorNote({
   strengths = [],
   primaryOpportunity = null,
-  freshSignals,
-  warmSignals,
-  polishedSignals,
   eveningSignals,
   dailySignals,
   uniqueOccasionCount,
@@ -4470,387 +4224,6 @@ function isSeasonChartRestatement(value) {
   ) || /\b(spring|summer|fall|winter)\s+(covered|coverage)\b/i.test(safeValue);
 }
 
-function FinalSummaryModal({
-  selectedPerfumes,
-  totalSlots,
-  totalPoints,
-  estimatedValue,
-  upgradeValue,
-  boxSummary,
-  coverageSummary,
-  scentDna,
-  isBoxReady,
-  isCuratorBonusUnlocked,
-  curatorBonusPreference,
-  hiddenCuratorPicks,
-  onClose,
-}) {
-  const collectionIdentity = getCollectionIdentity(boxSummary);
-  const curatorPreferenceLabel =
-    CURATOR_BONUS_PREFERENCES[curatorBonusPreference]?.label;
-  const [customerInfo, setCustomerInfo] = useState({
-    name: "",
-    city: "",
-    notes: "",
-  });
-  const [preparedOrder, setPreparedOrder] = useState(null);
-  const [copyStatus, setCopyStatus] = useState("");
-  const canPrepareOrder =
-    isBoxReady && customerInfo.name.trim() && customerInfo.city.trim();
-  const customerMessage = preparedOrder
-    ? buildCustomerWhatsAppMessage({
-        order: preparedOrder,
-        totalSlots,
-        totalPoints,
-        estimatedValue,
-        isCuratorBonusUnlocked,
-        curatorPreferenceLabel,
-      })
-    : "";
-  const sellerSummary = preparedOrder
-    ? buildSellerOrderSummary({
-        order: preparedOrder,
-        selectedPerfumes,
-        totalPoints,
-        estimatedValue,
-        curatorPreferenceLabel,
-        hiddenCuratorPicks,
-      })
-    : "";
-
-  useEffect(() => {
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-
-    function handleKeyDown(event) {
-      if (event.key === "Escape") {
-        onClose();
-      }
-    }
-
-    window.addEventListener("keydown", handleKeyDown);
-
-    return () => {
-      document.body.style.overflow = previousOverflow;
-      window.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [onClose]);
-
-  function handleCustomerInfoChange(field, value) {
-    setCustomerInfo((currentInfo) => ({
-      ...currentInfo,
-      [field]: value,
-    }));
-  }
-
-  function handlePrepareOrder() {
-    if (!canPrepareOrder) {
-      return;
-    }
-
-    setPreparedOrder({
-      ...customerInfo,
-      name: customerInfo.name.trim(),
-      city: customerInfo.city.trim(),
-      notes: customerInfo.notes.trim(),
-      orderCode: buildOrderCode(),
-      timestamp: new Date(),
-    });
-    setCopyStatus("");
-  }
-
-  async function handleCopy(label, text) {
-    const didCopy = await copyText(text);
-    setCopyStatus(didCopy ? `${label} copied` : `Could not copy ${label.toLowerCase()}`);
-  }
-
-  return createPortal(
-    <div className="modal-overlay final-summary-overlay" onClick={onClose}>
-      <div
-        className="final-summary-modal"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="final-summary-title"
-        onClick={(event) => event.stopPropagation()}
-      >
-        <div className="modal-header">
-          <div>
-            <p className="summary-eyebrow">Discovery Box</p>
-            <h3 id="final-summary-title">Your Completed Box</h3>
-          </div>
-
-          <button onClick={onClose}>Close</button>
-        </div>
-
-        <section className="collection-identity">
-          <span>Collection Identity</span>
-          <strong>{collectionIdentity.name}</strong>
-          <p>{collectionIdentity.description}</p>
-        </section>
-
-        <section className="final-summary-stats">
-          <SummaryStat label="Fragrances Selected" value={totalSlots} />
-          <SummaryStat label="Total Points" value={totalPoints.toFixed(1)} />
-          <SummaryStat label="Estimated Value" value={`$${estimatedValue.toFixed(0)}`} />
-          <SummaryStat label="Upgrade Value" value={`$${upgradeValue.toFixed(0)}`} />
-        </section>
-
-        <section className="final-readiness-grid">
-          <div className={isBoxReady ? "ready" : ""}>
-            <span>Discovery Box</span>
-            <strong>{isBoxReady ? "Ready" : "In Progress"}</strong>
-            <p>
-              {isBoxReady
-                ? "Minimum fragrance and point requirements are met."
-                : "Complete the requirements before checkout prep."}
-            </p>
-          </div>
-
-          <div className={isCuratorBonusUnlocked ? "ready" : ""}>
-            <span>Curator Bonus</span>
-            <strong>{isCuratorBonusUnlocked ? "Unlocked" : "Locked"}</strong>
-            <p>
-              {isCuratorBonusUnlocked
-                ? `${curatorPreferenceLabel} selected. Picks remain wrapped until reveal.`
-                : "Unlocks when the Discovery Box is valid."}
-            </p>
-          </div>
-        </section>
-
-        <section className="final-summary-section order-prep-section">
-          <h4>Order Prep</h4>
-
-          <div className="order-customer-form">
-            <label>
-              <span>Name</span>
-              <input
-                type="text"
-                value={customerInfo.name}
-                onChange={(event) =>
-                  handleCustomerInfoChange("name", event.target.value)
-                }
-                placeholder="Customer name"
-              />
-            </label>
-
-            <label>
-              <span>City</span>
-              <input
-                type="text"
-                value={customerInfo.city}
-                onChange={(event) =>
-                  handleCustomerInfoChange("city", event.target.value)
-                }
-                placeholder="Delivery city"
-              />
-            </label>
-
-            <label className="order-notes-field">
-              <span>Notes / Preferences</span>
-              <textarea
-                value={customerInfo.notes}
-                onChange={(event) =>
-                  handleCustomerInfoChange("notes", event.target.value)
-                }
-                placeholder="Optional customer notes"
-                rows={3}
-              />
-            </label>
-          </div>
-
-          <div className="order-prep-actions">
-            <button
-              type="button"
-              onClick={handlePrepareOrder}
-              disabled={!canPrepareOrder}
-            >
-              Prepare Order
-            </button>
-            {!isBoxReady && (
-              <p>Complete the Discovery Box before preparing the order.</p>
-            )}
-          </div>
-
-          {preparedOrder && (
-            <div className="seller-order-summary">
-              <div>
-                <span>Customer WhatsApp Message</span>
-                <p>Curator Pick identities stay hidden from the customer.</p>
-                <pre>{customerMessage}</pre>
-                <button
-                  type="button"
-                  onClick={() =>
-                    handleCopy("Customer WhatsApp message", customerMessage)
-                  }
-                >
-                  Copy Customer WhatsApp Message
-                </button>
-              </div>
-
-              <div>
-                <span>Seller Order Summary</span>
-                <p>Operational view for fulfillment. Hidden Curator Picks are shown here only.</p>
-                <pre>{sellerSummary}</pre>
-                <button
-                  type="button"
-                  onClick={() =>
-                    handleCopy("Seller order summary", sellerSummary)
-                  }
-                >
-                  Copy Seller Order Summary
-                </button>
-              </div>
-
-              {copyStatus && <p className="copy-status">{copyStatus}</p>}
-            </div>
-          )}
-        </section>
-
-        <ScentDnaPanel scentDna={scentDna} />
-
-        <section className="final-summary-section">
-          <h4>Selected Fragrances</h4>
-
-          <div className="final-fragrance-list">
-            {selectedPerfumes.map((perfume, index) => (
-              <article key={`${perfume.id}-${index}`}>
-                <div>
-                  <strong>{perfume.name}</strong>
-                  {perfume.subtitle && (
-                    <span className="selected-subtitle">
-                      {perfume.subtitle
-                        .toLowerCase()
-                        .replace(/\b\w/g, (char) => char.toUpperCase())}
-                    </span>
-                  )}
-                  <span>{perfume.brand}</span>
-                </div>
-
-                <strong>{perfume.points} pt</strong>
-              </article>
-            ))}
-          </div>
-        </section>
-
-        <section className="final-summary-section">
-          <h4>Box Profile</h4>
-
-          <ProfileGroup label="Occasions" values={boxSummary.occasions} />
-          <ProfileGroup label="Seasons" values={boxSummary.seasons} />
-          <ProfileGroup label="Vibes" values={boxSummary.vibes} />
-        </section>
-
-        <section className="final-summary-section">
-          <h4>Box Analysis</h4>
-
-          <div className="final-analysis-grid">
-            <div>
-              <span>Strengths</span>
-              {coverageSummary.strengths.length > 0 ? (
-                coverageSummary.strengths.slice(0, 8).map((item) => (
-                  <p key={`${item.category}-${item.label}`}>✓ {item.label}</p>
-                ))
-              ) : (
-                <p>Your box is ready, with more profile detail coming as you add variety.</p>
-              )}
-            </div>
-
-            <div>
-              <span>Gaps</span>
-              {coverageSummary.gaps.length > 0 ? (
-                coverageSummary.gaps.map((item) => (
-                  <p key={`${item.category}-${item.target}`}>
-                    {formatLabel(item.target)}: {item.label}
-                  </p>
-                ))
-              ) : (
-                <p>No major seasonal gaps detected. This box has a well-rounded profile.</p>
-              )}
-            </div>
-          </div>
-        </section>
-      </div>
-    </div>,
-    document.body
-  );
-}
-
-function buildOrderCode() {
-  const timestamp = new Date();
-  const datePart = timestamp
-    .toISOString()
-    .slice(2, 10)
-    .replaceAll("-", "");
-  const timePart = String(timestamp.getTime()).slice(-4);
-
-  return `DB-${datePart}-${timePart}`;
-}
-
-function buildCustomerWhatsAppMessage({
-  order,
-  totalSlots,
-  totalPoints,
-  estimatedValue,
-  isCuratorBonusUnlocked,
-  curatorPreferenceLabel,
-}) {
-  return [
-    "Discovery Box Order",
-    `Order Code: ${order.orderCode}`,
-    `Customer: ${order.name}`,
-    `City: ${order.city}`,
-    `Selected Fragrances: ${totalSlots}`,
-    `Selected Points: ${totalPoints.toFixed(1)}`,
-    `Customer Price: $${estimatedValue.toFixed(0)}`,
-    `Curator Bonus: ${isCuratorBonusUnlocked ? "Unlocked" : "Locked"}`,
-    `Curator Bonus Style: ${curatorPreferenceLabel}`,
-    "Curator Picks remain wrapped until delivery.",
-    order.notes ? `Notes: ${order.notes}` : "",
-  ]
-    .filter(Boolean)
-    .join("\n");
-}
-
-function buildSellerOrderSummary({
-  order,
-  selectedPerfumes,
-  totalPoints,
-  estimatedValue,
-  curatorPreferenceLabel,
-  hiddenCuratorPicks,
-}) {
-  return [
-    "SELLER ORDER SUMMARY",
-    `Order Code: ${order.orderCode}`,
-    `Timestamp: ${order.timestamp.toLocaleString()}`,
-    "",
-    "CUSTOMER",
-    `Name: ${order.name}`,
-    `City: ${order.city}`,
-    `Notes / Preferences: ${order.notes || "None"}`,
-    "",
-    "SELECTED FRAGRANCES",
-    ...selectedPerfumes.map(formatOrderPerfumeLine),
-    "",
-    `Total Selected Points: ${totalPoints.toFixed(1)}`,
-    `Customer Price: $${estimatedValue.toFixed(0)}`,
-    `Estimated Collection Value: $${estimatedValue.toFixed(0)}`,
-    "",
-    "CURATOR BONUS",
-    `Style: ${curatorPreferenceLabel}`,
-    "Hidden Curator Picks:",
-    ...(hiddenCuratorPicks.length > 0
-      ? hiddenCuratorPicks.map(formatOrderPerfumeLine)
-      : ["No hidden picks available"]),
-  ].join("\n");
-}
-
-function formatOrderPerfumeLine(perfume) {
-  return `- ${perfume.name}${perfume.subtitle ? ` ${perfume.subtitle}` : ""} | ${
-    perfume.brand
-  } | ${perfume.points} pt`;
-}
-
 async function copyText(text) {
   try {
     if (navigator.clipboard?.writeText) {
@@ -4914,7 +4287,21 @@ function NextImprovementSection({
   );
 }
 
-function RecommendationLane({
+function RecommendationLane(props) {
+  const { recommendations, objectiveKey } = props;
+  const recommendationSignature = recommendations
+    .map((recommendation) => recommendation.perfume.id)
+    .join("-");
+
+  return (
+    <RecommendationLaneContent
+      key={`${objectiveKey || "default"}-${recommendationSignature}`}
+      {...props}
+    />
+  );
+}
+
+function RecommendationLaneContent({
   title,
   recommendations,
   selectedPerfumeIds,
@@ -4925,13 +4312,6 @@ function RecommendationLane({
   objectiveKey,
 }) {
   const [activeIndex, setActiveIndex] = useState(0);
-  const recommendationSignature = recommendations
-    .map((recommendation) => recommendation.perfume.id)
-    .join("-");
-
-  useEffect(() => {
-    setActiveIndex(0);
-  }, [recommendationSignature, objectiveKey]);
 
   if (recommendations.length === 0) {
     return null;
@@ -5545,87 +4925,11 @@ function formatRecommendationLabel(value = "") {
     .replace(/\b\w/g, (letter) => letter.toUpperCase());
 }
 
-function ScentDnaPanel({ scentDna }) {
-  return (
-    <section className="final-summary-section scent-dna-panel">
-      <h4>Scent DNA</h4>
-
-      <div className="scent-dna-scores">
-        <DnaScore label="Versatility" value={scentDna.scores.versatility} />
-        <DnaScore label="Depth" value={scentDna.scores.depth} />
-        <DnaScore label="Season Balance" value={scentDna.scores.seasonBalance} />
-      </div>
-
-      <div className="scent-dna-grid">
-        <DnaMetricGroup title="Dominant Accords" items={scentDna.topAccords} />
-        <DnaMetricGroup title="Top Vibes" items={scentDna.topVibes} />
-        <DnaMetricGroup title="Season Coverage" items={scentDna.seasonCoverage} />
-      </div>
-    </section>
-  );
-}
-
-function DnaScore({ label, value }) {
-  return (
-    <div className="scent-dna-score">
-      <span>{label}</span>
-      <strong>{value}</strong>
-    </div>
-  );
-}
-
-function DnaMetricGroup({ title, items }) {
-  return (
-    <div className="scent-dna-group">
-      <span>{title}</span>
-
-      {items.length > 0 ? (
-        items.map((item) => <DnaBar key={item.label} item={item} />)
-      ) : (
-        <p>No data yet</p>
-      )}
-    </div>
-  );
-}
-
-function DnaBar({ item }) {
-  return (
-    <div className="scent-dna-row">
-      <div className="scent-dna-row-label">
-        <strong>{formatLabel(item.label)}</strong>
-        <span>
-          {item.count} / {item.percent}%
-        </span>
-      </div>
-
-      <div className="scent-dna-bar" aria-hidden="true">
-        <span style={{ width: `${item.percent}%` }} />
-      </div>
-    </div>
-  );
-}
-
 function SummaryStat({ label, value }) {
   return (
     <div className="final-stat-card">
       <span>{label}</span>
       <strong>{value}</strong>
-    </div>
-  );
-}
-
-function ProfileGroup({ label, values }) {
-  return (
-    <div className="final-profile-group">
-      <span>{label}</span>
-
-      <div className="final-summary-tags">
-        {values.length > 0 ? (
-          values.map((value) => <span key={value}>{value}</span>)
-        ) : (
-          <p>No data yet</p>
-        )}
-      </div>
     </div>
   );
 }
@@ -5887,427 +5191,6 @@ function getCollectionCardFilename(title) {
     .replace(/-{2,}/g, "-");
 
   return `discovery-decants-${slug || "collection"}.png`;
-}
-
-function renderDiscoveryBoxShareImage({
-  selectedPerfumes,
-  maxSlots,
-  maxSelectableSlots,
-  isCuratorBonusUnlocked,
-  totalPoints,
-  businessName,
-}) {
-  const canvas = document.createElement("canvas");
-  canvas.width = SHARE_IMAGE_WIDTH;
-  canvas.height = SHARE_IMAGE_HEIGHT;
-  const ctx = canvas.getContext("2d");
-  const rowCount = Math.ceil(maxSlots / 2);
-  const selectedCount = selectedPerfumes.length;
-
-  drawShareBackground(ctx);
-  drawShareHeader(ctx, businessName, selectedCount, maxSelectableSlots, totalPoints);
-  drawShareBox(ctx, {
-    selectedPerfumes,
-    maxSlots,
-    maxSelectableSlots,
-    isCuratorBonusUnlocked,
-    rowCount,
-  });
-  drawShareFooter(ctx, isCuratorBonusUnlocked);
-
-  return new Promise((resolve, reject) => {
-    canvas.toBlob((blob) => {
-      if (blob) {
-        resolve(blob);
-      } else {
-        reject(new Error("Canvas export failed"));
-      }
-    }, "image/png");
-  });
-}
-
-function drawShareBackground(ctx) {
-  const background = ctx.createLinearGradient(0, 0, 0, SHARE_IMAGE_HEIGHT);
-  background.addColorStop(0, "#13110c");
-  background.addColorStop(0.48, "#050605");
-  background.addColorStop(1, "#100d08");
-  ctx.fillStyle = background;
-  ctx.fillRect(0, 0, SHARE_IMAGE_WIDTH, SHARE_IMAGE_HEIGHT);
-
-  const glow = ctx.createRadialGradient(540, 300, 60, 540, 300, 620);
-  glow.addColorStop(0, "rgba(212, 175, 55, 0.20)");
-  glow.addColorStop(0.42, "rgba(212, 175, 55, 0.05)");
-  glow.addColorStop(1, "rgba(212, 175, 55, 0)");
-  ctx.fillStyle = glow;
-  ctx.fillRect(0, 0, SHARE_IMAGE_WIDTH, SHARE_IMAGE_HEIGHT);
-}
-
-function drawShareHeader(ctx, businessName, selectedCount, maxSelectableSlots, totalPoints) {
-  ctx.save();
-  ctx.textAlign = "center";
-  ctx.fillStyle = "#f8f3e5";
-  ctx.font = "700 54px Inter, Arial, sans-serif";
-  ctx.fillText(businessName || "Discovery Decants", SHARE_IMAGE_WIDTH / 2, 126);
-
-  ctx.fillStyle = "rgba(245, 231, 195, 0.72)";
-  ctx.font = "600 26px Inter, Arial, sans-serif";
-  ctx.fillText("My Discovery Box", SHARE_IMAGE_WIDTH / 2, 174);
-
-  ctx.fillStyle = "rgba(203, 213, 225, 0.74)";
-  ctx.font = "500 22px Inter, Arial, sans-serif";
-  ctx.fillText(
-    `${selectedCount}/${maxSelectableSlots} fragrances selected  |  ${formatSharePoints(totalPoints)}`,
-    SHARE_IMAGE_WIDTH / 2,
-    218
-  );
-  ctx.restore();
-}
-
-function drawShareBox(ctx, {
-  selectedPerfumes,
-  maxSlots,
-  maxSelectableSlots,
-  isCuratorBonusUnlocked,
-  rowCount,
-}) {
-  const box = {
-    x: 78,
-    y: 284,
-    width: 924,
-    height: 826,
-  };
-  const paddingX = 38;
-  const paddingY = 46;
-  const gap = 26;
-  const centerWidth = 142;
-  const columnWidth = (box.width - paddingX * 2 - centerWidth - gap * 2) / 2;
-  const slotHeight = 66;
-  const rowGap = 19;
-  const slotsHeight = rowCount * slotHeight + (rowCount - 1) * rowGap;
-  const startY = box.y + (box.height - slotsHeight) / 2;
-  const leftX = box.x + paddingX;
-  const centerX = leftX + columnWidth + gap;
-  const rightX = centerX + centerWidth + gap;
-
-  drawRoundedRect(ctx, box.x, box.y, box.width, box.height, 34);
-  const frameGradient = ctx.createLinearGradient(box.x, box.y, box.x, box.y + box.height);
-  frameGradient.addColorStop(0, "#1d1a13");
-  frameGradient.addColorStop(0.5, "#050505");
-  frameGradient.addColorStop(1, "#14100a");
-  ctx.fillStyle = frameGradient;
-  ctx.fill();
-  ctx.strokeStyle = "rgba(245, 231, 195, 0.20)";
-  ctx.lineWidth = 2;
-  ctx.stroke();
-
-  drawRoundedRect(ctx, box.x + 16, box.y + 16, box.width - 32, box.height - 32, 22);
-  ctx.strokeStyle = "rgba(255, 255, 255, 0.045)";
-  ctx.lineWidth = 2;
-  ctx.stroke();
-
-  drawRoundedRect(ctx, centerX, box.y + paddingY, centerWidth, box.height - paddingY * 2, 18);
-  const centerGradient = ctx.createLinearGradient(centerX, box.y, centerX + centerWidth, box.y);
-  centerGradient.addColorStop(0, "rgba(0, 0, 0, 0.82)");
-  centerGradient.addColorStop(0.5, "rgba(8, 8, 7, 0.95)");
-  centerGradient.addColorStop(1, "rgba(0, 0, 0, 0.82)");
-  ctx.fillStyle = centerGradient;
-  ctx.fill();
-  ctx.strokeStyle = "rgba(255, 255, 255, 0.04)";
-  ctx.stroke();
-
-  for (let rowIndex = 0; rowIndex < rowCount; rowIndex += 1) {
-    const y = startY + rowIndex * (slotHeight + rowGap);
-    const leftIndex = rowIndex * 2;
-    const rightIndex = rowIndex * 2 + 1;
-
-    drawShareSlot(ctx, {
-      x: leftX,
-      y,
-      width: columnWidth,
-      height: slotHeight,
-      perfume: selectedPerfumes[leftIndex],
-      isReserved: leftIndex >= maxSelectableSlots,
-      isCuratorBonusUnlocked,
-    });
-
-    if (rightIndex < maxSlots) {
-      drawShareSlot(ctx, {
-        x: rightX,
-        y,
-        width: columnWidth,
-        height: slotHeight,
-        perfume: selectedPerfumes[rightIndex],
-        isReserved: rightIndex >= maxSelectableSlots,
-        isCuratorBonusUnlocked,
-      });
-    }
-  }
-}
-
-function drawShareSlot(ctx, {
-  x,
-  y,
-  width,
-  height,
-  perfume,
-  isReserved,
-  isCuratorBonusUnlocked,
-}) {
-  const capWidth = 52;
-  const tierColor = perfume ? getTierData(perfume.id).color : "rgba(148, 163, 184, 0.42)";
-  const bodyX = x + capWidth - 2;
-  const bodyWidth = width - capWidth + 2;
-
-  ctx.save();
-  ctx.shadowColor = "rgba(0, 0, 0, 0.45)";
-  ctx.shadowBlur = 10;
-  ctx.shadowOffsetY = 4;
-  drawRoundedRect(ctx, x, y + 5, width, height - 10, 20);
-  ctx.fillStyle = "rgba(0, 0, 0, 0.26)";
-  ctx.fill();
-  ctx.restore();
-
-  drawSlotCap(ctx, x, y + 8, capWidth, height - 16, tierColor, Boolean(perfume), isReserved);
-
-  if (isReserved) {
-    drawBonusShareSlot(ctx, bodyX, y + 6, bodyWidth, height - 12, isCuratorBonusUnlocked);
-    return;
-  }
-
-  if (!perfume) {
-    drawEmptyShareSlot(ctx, bodyX, y + 6, bodyWidth, height - 12);
-    return;
-  }
-
-  drawRoundedRect(ctx, bodyX, y + 6, bodyWidth, height - 12, 18);
-  const bodyGradient = ctx.createLinearGradient(bodyX, y, bodyX, y + height);
-  bodyGradient.addColorStop(0, "#242827");
-  bodyGradient.addColorStop(0.5, "#080b0a");
-  bodyGradient.addColorStop(1, "#171a18");
-  ctx.fillStyle = bodyGradient;
-  ctx.fill();
-  ctx.strokeStyle = tierColor;
-  ctx.lineWidth = 2.5;
-  ctx.stroke();
-
-  ctx.globalAlpha = 0.18;
-  ctx.fillStyle = tierColor;
-  drawRoundedRect(ctx, bodyX + 14, y + 16, bodyWidth - 28, 9, 8);
-  ctx.fill();
-  ctx.globalAlpha = 1;
-
-  const label = perfume.shortName || getShortPerfumeName(perfume.name);
-  ctx.fillStyle = "#f8fafc";
-  ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-  ctx.font = "800 23px Inter, Arial, sans-serif";
-  drawWrappedSlotLabel(ctx, label.toUpperCase(), bodyX + bodyWidth / 2, y + height / 2, bodyWidth - 36);
-}
-
-function drawSlotCap(ctx, x, y, width, height, color, isFilled, isReserved) {
-  drawRoundedRect(ctx, x, y, width, height, 12);
-  const capGradient = ctx.createLinearGradient(x, y, x + width, y);
-  capGradient.addColorStop(0, isFilled || isReserved ? color : "rgba(148, 163, 184, 0.16)");
-  capGradient.addColorStop(0.28, "#222625");
-  capGradient.addColorStop(1, "#050606");
-  ctx.fillStyle = capGradient;
-  ctx.fill();
-  ctx.strokeStyle = isFilled || isReserved ? color : "rgba(148, 163, 184, 0.18)";
-  ctx.lineWidth = 2;
-  ctx.stroke();
-
-  ctx.fillStyle = "rgba(255, 255, 255, 0.12)";
-  drawRoundedRect(ctx, x + 9, y + 8, width - 24, 5, 4);
-  ctx.fill();
-}
-
-function drawEmptyShareSlot(ctx, x, y, width, height) {
-  drawRoundedRect(ctx, x, y, width, height, 18);
-  ctx.fillStyle = "rgba(3, 7, 8, 0.62)";
-  ctx.fill();
-  ctx.strokeStyle = "rgba(148, 163, 184, 0.22)";
-  ctx.setLineDash([10, 12]);
-  ctx.lineWidth = 2;
-  ctx.stroke();
-  ctx.setLineDash([]);
-
-  ctx.strokeStyle = "rgba(245, 231, 195, 0.25)";
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  ctx.arc(x + width / 2, y + height / 2, 12, 0, Math.PI * 2);
-  ctx.stroke();
-
-  ctx.fillStyle = "rgba(245, 231, 195, 0.28)";
-  ctx.font = "600 22px Inter, Arial, sans-serif";
-  ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-  ctx.fillText("+", x + width / 2, y + height / 2 + 1);
-}
-
-function drawBonusShareSlot(ctx, x, y, width, height, isUnlocked) {
-  drawRoundedRect(ctx, x, y, width, height, 18);
-
-  if (isUnlocked) {
-    const wrapGradient = ctx.createLinearGradient(x, y, x, y + height);
-    wrapGradient.addColorStop(0, "#f8dfa0");
-    wrapGradient.addColorStop(0.5, "#d6a12f");
-    wrapGradient.addColorStop(1, "#7c4212");
-    ctx.fillStyle = wrapGradient;
-    ctx.fill();
-    ctx.strokeStyle = "rgba(250, 204, 21, 0.86)";
-    ctx.lineWidth = 2.5;
-    ctx.stroke();
-
-    ctx.fillStyle = "rgba(95, 13, 24, 0.88)";
-    ctx.fillRect(x + width / 2 - 7, y, 14, height);
-    ctx.fillRect(x, y + height / 2 - 5, width, 10);
-
-    const sealX = x + width / 2;
-    const sealY = y + height / 2;
-    const seal = ctx.createRadialGradient(sealX - 4, sealY - 5, 2, sealX, sealY, 18);
-    seal.addColorStop(0, "#b91c1c");
-    seal.addColorStop(0.62, "#7f1d1d");
-    seal.addColorStop(1, "#450a0a");
-    ctx.fillStyle = seal;
-    ctx.beginPath();
-    ctx.arc(sealX, sealY, 17, 0, Math.PI * 2);
-    ctx.fill();
-    return;
-  }
-
-  const lockedGradient = ctx.createLinearGradient(x, y, x, y + height);
-  lockedGradient.addColorStop(0, "#211d10");
-  lockedGradient.addColorStop(1, "#050505");
-  ctx.fillStyle = lockedGradient;
-  ctx.fill();
-  ctx.strokeStyle = "rgba(250, 204, 21, 0.42)";
-  ctx.lineWidth = 2;
-  ctx.stroke();
-
-  ctx.globalAlpha = 0.34;
-  ctx.strokeStyle = "rgba(250, 204, 21, 0.70)";
-  ctx.lineWidth = 4;
-  ctx.beginPath();
-  ctx.moveTo(x + 18, y + height - 12);
-  ctx.lineTo(x + width - 18, y + 12);
-  ctx.moveTo(x + 18, y + 12);
-  ctx.lineTo(x + width - 18, y + height - 12);
-  ctx.stroke();
-  ctx.globalAlpha = 1;
-
-  const lockX = x + width / 2;
-  const lockY = y + height / 2;
-  ctx.strokeStyle = "rgba(250, 204, 21, 0.80)";
-  ctx.lineWidth = 3;
-  ctx.beginPath();
-  ctx.arc(lockX, lockY - 7, 12, Math.PI, 0);
-  ctx.stroke();
-  drawRoundedRect(ctx, lockX - 17, lockY - 4, 34, 25, 6);
-  ctx.fillStyle = "rgba(250, 204, 21, 0.20)";
-  ctx.fill();
-  ctx.stroke();
-}
-
-function drawShareFooter(ctx, isCuratorBonusUnlocked) {
-  ctx.save();
-  ctx.textAlign = "center";
-  ctx.fillStyle = "rgba(245, 231, 195, 0.78)";
-  ctx.font = "700 28px Inter, Arial, sans-serif";
-  ctx.fillText(
-    isCuratorBonusUnlocked ? "Curator Bonus Unlocked" : "Curator Bonus Locked",
-    SHARE_IMAGE_WIDTH / 2,
-    1194
-  );
-  ctx.fillStyle = "rgba(203, 213, 225, 0.66)";
-  ctx.font = "500 22px Inter, Arial, sans-serif";
-  ctx.fillText(
-    isCuratorBonusUnlocked
-      ? "Mystery picks are wrapped inside your box."
-      : "Complete your Discovery Box to unlock wrapped curator picks.",
-    SHARE_IMAGE_WIDTH / 2,
-    1236
-  );
-  ctx.fillStyle = "rgba(245, 231, 195, 0.42)";
-  ctx.font = "600 18px Inter, Arial, sans-serif";
-  ctx.fillText("Build yours with Discovery Decants", SHARE_IMAGE_WIDTH / 2, 1294);
-  ctx.restore();
-}
-
-function drawRoundedRect(ctx, x, y, width, height, radius) {
-  const resolvedRadius = Math.min(radius, width / 2, height / 2);
-
-  ctx.beginPath();
-  ctx.moveTo(x + resolvedRadius, y);
-  ctx.lineTo(x + width - resolvedRadius, y);
-  ctx.quadraticCurveTo(x + width, y, x + width, y + resolvedRadius);
-  ctx.lineTo(x + width, y + height - resolvedRadius);
-  ctx.quadraticCurveTo(x + width, y + height, x + width - resolvedRadius, y + height);
-  ctx.lineTo(x + resolvedRadius, y + height);
-  ctx.quadraticCurveTo(x, y + height, x, y + height - resolvedRadius);
-  ctx.lineTo(x, y + resolvedRadius);
-  ctx.quadraticCurveTo(x, y, x + resolvedRadius, y);
-  ctx.closePath();
-}
-
-function drawWrappedSlotLabel(ctx, text, x, y, maxWidth) {
-  const words = text.split(/\s+/).filter(Boolean);
-
-  if (words.length <= 1 || ctx.measureText(text).width <= maxWidth) {
-    drawFittedLine(ctx, text, x, y, maxWidth);
-    return;
-  }
-
-  const lines = [];
-  let currentLine = "";
-
-  words.forEach((word) => {
-    const nextLine = currentLine ? `${currentLine} ${word}` : word;
-
-    if (ctx.measureText(nextLine).width <= maxWidth || !currentLine) {
-      currentLine = nextLine;
-      return;
-    }
-
-    lines.push(currentLine);
-    currentLine = word;
-  });
-
-  if (currentLine) {
-    lines.push(currentLine);
-  }
-
-  if (lines.length === 1) {
-    drawFittedLine(ctx, lines[0], x, y, maxWidth);
-    return;
-  }
-
-  const firstLine = lines[0];
-  const secondLine = lines.slice(1).join(" ");
-  const lineGap = 22;
-  drawFittedLine(ctx, firstLine, x, y - lineGap / 2, maxWidth);
-  drawFittedLine(ctx, secondLine, x, y + lineGap / 2, maxWidth);
-}
-
-function drawFittedLine(ctx, text, x, y, maxWidth) {
-  if (ctx.measureText(text).width <= maxWidth) {
-    ctx.fillText(text, x, y);
-    return;
-  }
-
-  let fittedText = text;
-  while (fittedText.length > 3 && ctx.measureText(`${fittedText}...`).width > maxWidth) {
-    fittedText = fittedText.slice(0, -1);
-  }
-
-  ctx.fillText(`${fittedText}...`, x, y);
-}
-
-function formatSharePoints(totalPoints) {
-  const formattedPoints = Number.isInteger(totalPoints)
-    ? totalPoints.toFixed(0)
-    : totalPoints.toFixed(1);
-
-  return `${formattedPoints} pts`;
 }
 
 function getNextAvailableSlotIndex(selectedPerfumes, maxSelectableSlots) {

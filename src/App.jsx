@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { perfumes } from "./data/perfumes";
 import { buildFilterOptions } from "./utils/filterUtils";
 import { notes } from "./data/notes";
@@ -20,7 +20,6 @@ import {
   MAX_BOX_SLOTS,
   MAX_SELECTABLE_SLOTS,
   MIN_BOX_POINTS,
-  BASE_DECANTS,
   POINT_VALUE,
 } from "./constants/boxRules";
 
@@ -71,8 +70,6 @@ function App() {
   );
 
   const estimatedValue = totalPoints * POINT_VALUE;
-  const baseValue = BASE_DECANTS * POINT_VALUE;
-  const upgradeValue = Math.max(0, estimatedValue - baseValue);
   const missingSlots = Math.max(0, MIN_BOX_SLOTS - totalSlots);
   const missingPoints = Math.max(0, MIN_BOX_POINTS - totalPoints);
   const isBoxReady = missingSlots === 0 && missingPoints === 0;
@@ -210,11 +207,11 @@ const confirmAddPerfume = () => {
   setPendingPerfume(null);
 };
 
-  function navigateDetailPerfume(direction) {
+  const navigateDetailPerfume = useCallback((direction) => {
     setDetailPerfume((currentPerfume) =>
       getAdjacentVisiblePerfume(currentPerfume, visiblePerfumes, direction)
     );
-  }
+  }, [visiblePerfumes]);
 
   useEffect(() => {
     if (!detailPerfume) {
@@ -241,7 +238,7 @@ const confirmAddPerfume = () => {
     window.addEventListener("keydown", handleKeyDown);
 
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [detailPerfume, visiblePerfumes]);
+  }, [detailPerfume, navigateDetailPerfume]);
 
   function removePerfume(indexToRemove) {
     setSelectedPerfumes((current) =>
@@ -379,7 +376,6 @@ const confirmAddPerfume = () => {
             maxSelectableSlots={MAX_SELECTABLE_SLOTS}
             totalPoints={totalPoints}
             estimatedValue={estimatedValue}
-            upgradeValue={upgradeValue}
             selectedPerfumes={selectedPerfumes}
             catalogPerfumes={perfumes}
             boxSummary={boxSummary}
@@ -387,7 +383,6 @@ const confirmAddPerfume = () => {
             onRemovePerfume={removePerfume}
             onReorderPerfumes={reorderPerfumes}
             minSlots={MIN_BOX_SLOTS}
-            minPoints={MIN_BOX_POINTS}
             missingSlots={missingSlots}
             missingPoints={missingPoints}
             coverageSummary={coverageSummary}
@@ -405,6 +400,7 @@ const confirmAddPerfume = () => {
     </main>
     {detailPerfume && (
       <PerfumeDetailsModal
+        key={detailPerfume.id}
         perfume={detailPerfume}
         notes={notes}
         tierData={getTierData(detailPerfume.id)}
@@ -477,6 +473,14 @@ function loadPersistedBuilderState() {
       : DEFAULT_BUILDER_STATE;
   } catch {
     return DEFAULT_BUILDER_STATE;
+  }
+}
+
+function markFragranceDetailsHintSeen() {
+  try {
+    window.localStorage.setItem(FRAGRANCE_DETAILS_HINT_KEY, "true");
+  } catch {
+    // The hint is decorative; storage failures should not affect browsing.
   }
 }
 
@@ -612,16 +616,12 @@ function PerfumeDetailsModal({
   }, []);
 
   useEffect(() => {
-    setAddFeedback("");
-  }, [perfume.id]);
-
-  useEffect(() => {
     if (!showNavigationHint) {
       return undefined;
     }
 
     const hintSeenTimer = window.setTimeout(() => {
-      markNavigationHintSeen();
+      markFragranceDetailsHintSeen();
     }, 800);
     const hintRemovalTimer = window.setTimeout(() => {
       setShowNavigationHint(false);
@@ -717,20 +717,8 @@ function PerfumeDetailsModal({
     }, 1600);
   }
 
-  function markNavigationHintSeen() {
-    if (!showNavigationHint) {
-      return;
-    }
-
-    try {
-      window.localStorage.setItem(FRAGRANCE_DETAILS_HINT_KEY, "true");
-    } catch {
-      // The hint is decorative; storage failures should not affect browsing.
-    }
-  }
-
   function handleClose() {
-    markNavigationHintSeen();
+    markFragranceDetailsHintSeen();
     onClose();
   }
 
