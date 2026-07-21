@@ -3,6 +3,12 @@ import { createPortal, flushSync } from "react-dom";
 import { createRoot } from "react-dom/client";
 import { toBlob } from "html-to-image";
 import { getCollectionIdentityProfile } from "../utils/collectionIdentityEngine";
+import {
+  buildCollectionCardDnaItems,
+  buildCollectionCardProfileTraits,
+  buildCollectionCardSeasonRows,
+  buildCollectionCardViewModel,
+} from "../builder/internal/collectionCard/buildCollectionCardViewModel.js";
 import { buildFinalizationModel } from "../builder/internal/finalization/buildFinalizationModel.js";
 import { getTierData } from "../utils/tierUtils";
 import CollectionCard from "./CollectionCard";
@@ -97,33 +103,39 @@ function BuilderPanel({
       () => getCollectionIdentityProfile(boxSummary),
       [boxSummary]
     );
-    const collectionCardSeasonRows = useMemo(
+    const isCuratorBonusUnlocked =
+      totalPoints >= builderConfig.curatorBonus.targetPoints && totalSlots >= minSlots;
+    const collectionCardViewModel = useMemo(
       () =>
-        buildSeasonCoverageRows(
-          boxSummary.seasonStrengths || boxSummary.seasonCounts || {},
-          selectedPerfumes.length
-        ),
-      [boxSummary, selectedPerfumes.length]
-    );
-    const collectionCardProfileTraits = useMemo(
-      () =>
-        buildCollectionProfileTraits({
+        buildCollectionCardViewModel({
+          selectedPerfumes,
+          totalPoints,
+          estimatedValue,
           boxSummary,
           coverageSummary,
           scentDna,
-          selectedCount: selectedPerfumes.length,
-          seasonRows: collectionCardSeasonRows,
+          collectionIdentity: collectionIdentityProfile,
+          curatorBonus: {
+            isUnlocked: isCuratorBonusUnlocked,
+          },
+          config: builderConfig,
+          maxSlots,
+          maxSelectableSlots,
         }),
-      [boxSummary, coverageSummary, scentDna, selectedPerfumes.length, collectionCardSeasonRows]
+      [
+        selectedPerfumes,
+        totalPoints,
+        estimatedValue,
+        boxSummary,
+        coverageSummary,
+        scentDna,
+        collectionIdentityProfile,
+        isCuratorBonusUnlocked,
+        builderConfig,
+        maxSlots,
+        maxSelectableSlots,
+      ]
     );
-    const collectionCardDnaDescriptors = useMemo(
-      () =>
-        buildCollectionDnaItems({ boxSummary, scentDna })
-          .slice(0, 3)
-          .map((item) => formatLabel(item.label)),
-      [boxSummary, scentDna]
-    );
-    const primaryDna = collectionCardDnaDescriptors[0] || "";
     const nextImprovementResult = useMemo(
       () =>
         buildNextImprovementResult({
@@ -141,8 +153,6 @@ function BuilderPanel({
         maxSelectableSlots,
       ]
     );
-    const isCuratorBonusUnlocked =
-      totalPoints >= builderConfig.curatorBonus.targetPoints && totalSlots >= minSlots;
     const reviewRequirementText = [
       missingSlots > 0
         ? `${missingSlots} more fragrance${missingSlots === 1 ? "" : "s"}`
@@ -162,7 +172,7 @@ function BuilderPanel({
       typeof navigator.canShare === "function" &&
       typeof window.File !== "undefined" &&
       navigator.canShare({
-        files: [new File([""], getCollectionCardFilename("collection", builderConfig), { type: "image/png" })],
+        files: [new File([""], collectionCardViewModel.export.defaultFilename, { type: "image/png" })],
       });
     const isShareGenerating = Boolean(activeShareAction);
     const nextAvailableSlotIndex = getNextAvailableSlotIndex(
@@ -227,29 +237,7 @@ function BuilderPanel({
       }, 2400);
     };
 
-    const collectionCardExportProps = {
-      heading: builderConfig.collectionCard.brandHeading,
-      ariaLabel: builderConfig.collectionCard.ariaLabel,
-      boxAriaLabel: builderConfig.collectionCard.boxAriaLabel,
-      footer: builderConfig.collectionCard.footer,
-      curatorBonusIncludedLabel: builderConfig.collectionCard.curatorBonusIncludedLabel,
-      curatorBonusAvailableLabel: builderConfig.collectionCard.curatorBonusAvailableLabel,
-      curatorBonusUnlockedCopy: builderConfig.collectionCard.curatorBonusUnlockedCopy,
-      curatorBonusLockedCopy: builderConfig.collectionCard.curatorBonusLockedCopy,
-      perfumes: selectedPerfumes,
-      title: collectionIdentityProfile.title,
-      subtitle: collectionIdentityProfile.subtitle,
-      mood: collectionIdentityProfile.mood,
-      palette: collectionIdentityProfile.palette,
-      fragranceCount: selectedPerfumes.length,
-      collectionPoints: totalPoints,
-      profileTraits: collectionCardProfileTraits.slice(0, 3),
-      dnaDescriptors: collectionCardDnaDescriptors,
-      primaryDna,
-      isCuratorBonusUnlocked,
-      maxSlots,
-      maxSelectableSlots,
-    };
+    const collectionCardExportProps = collectionCardViewModel.cardProps;
 
     const createShareImageBlob = () => renderCollectionCardPng(collectionCardExportProps);
 
@@ -264,7 +252,7 @@ function BuilderPanel({
         const url = URL.createObjectURL(blob);
         const link = document.createElement("a");
         link.href = url;
-        link.download = getCollectionCardFilename(collectionIdentityProfile.title, builderConfig);
+        link.download = collectionCardViewModel.export.filename;
         document.body.appendChild(link);
         link.click();
         link.remove();
@@ -290,7 +278,7 @@ function BuilderPanel({
       setActiveShareAction("share");
       try {
         const blob = await createShareImageBlob();
-        const file = new File([blob], getCollectionCardFilename(collectionIdentityProfile.title, builderConfig), {
+        const file = new File([blob], collectionCardViewModel.export.filename, {
           type: "image/png",
         });
 
@@ -300,8 +288,8 @@ function BuilderPanel({
         }
 
         await navigator.share({
-          title: builderConfig.collectionCard.shareTitle,
-          text: builderConfig.collectionCard.shareText,
+          title: collectionCardViewModel.export.shareTitle,
+          text: collectionCardViewModel.export.shareText,
           files: [file],
         });
         showShareStatus(builderConfig.collectionCard.sharedStatus);
@@ -708,17 +696,7 @@ function BuilderPanel({
       )}
       {isCollectionCardPreviewOpen && (
         <CollectionCardPreviewModal
-          selectedPerfumes={selectedPerfumes}
-          identityProfile={collectionIdentityProfile}
-          fragranceCount={selectedPerfumes.length}
-          collectionPoints={totalPoints}
-          profileTraits={collectionCardProfileTraits.slice(0, 3)}
-          dnaDescriptors={collectionCardDnaDescriptors}
-          primaryDna={primaryDna}
-          isCuratorBonusUnlocked={isCuratorBonusUnlocked}
-          maxSlots={maxSlots}
-          maxSelectableSlots={maxSelectableSlots}
-          cardConfig={builderConfig.collectionCard}
+          cardProps={collectionCardViewModel.cardProps}
           onClose={() => setIsCollectionCardPreviewOpen(false)}
         />
       )}
@@ -727,17 +705,7 @@ function BuilderPanel({
 }
 
 function CollectionCardPreviewModal({
-  selectedPerfumes,
-  identityProfile,
-  fragranceCount,
-  collectionPoints,
-  profileTraits,
-  dnaDescriptors,
-  primaryDna,
-  isCuratorBonusUnlocked,
-  maxSlots,
-  maxSelectableSlots,
-  cardConfig,
+  cardProps,
   onClose,
 }) {
   return createPortal(
@@ -758,29 +726,7 @@ function CollectionCardPreviewModal({
           <button type="button" onClick={onClose}>Close</button>
         </div>
 
-        <CollectionCard
-          heading={cardConfig.brandHeading}
-          ariaLabel={cardConfig.ariaLabel}
-          boxAriaLabel={cardConfig.boxAriaLabel}
-          footer={cardConfig.footer}
-          curatorBonusIncludedLabel={cardConfig.curatorBonusIncludedLabel}
-          curatorBonusAvailableLabel={cardConfig.curatorBonusAvailableLabel}
-          curatorBonusUnlockedCopy={cardConfig.curatorBonusUnlockedCopy}
-          curatorBonusLockedCopy={cardConfig.curatorBonusLockedCopy}
-          perfumes={selectedPerfumes}
-          title={identityProfile.title}
-          subtitle={identityProfile.subtitle}
-          mood={identityProfile.mood}
-          palette={identityProfile.palette}
-          fragranceCount={fragranceCount}
-          collectionPoints={collectionPoints}
-          profileTraits={profileTraits}
-          dnaDescriptors={dnaDescriptors}
-          primaryDna={primaryDna}
-          isCuratorBonusUnlocked={isCuratorBonusUnlocked}
-          maxSlots={maxSlots}
-          maxSelectableSlots={maxSelectableSlots}
-        />
+        <CollectionCard {...cardProps} />
       </div>
     </div>,
     document.body
@@ -830,7 +776,7 @@ function CollectionSnapshot({
   onRemovePerfume,
 }) {
   const dnaTriggerRefs = useRef(new Map());
-  const seasonRows = buildSeasonCoverageRows(
+  const seasonRows = buildCollectionCardSeasonRows(
     boxSummary.seasonStrengths || boxSummary.seasonCounts || {},
     selectedCount
   );
@@ -842,14 +788,14 @@ function CollectionSnapshot({
     boxSummary.notes.length > 0;
   const hasAnalysisData =
     coverageSummary.strengths.length > 0 || coverageSummary.gaps.length > 0;
-  const collectionProfileTraits = buildCollectionProfileTraits({
+  const collectionProfileTraits = buildCollectionCardProfileTraits({
     boxSummary,
     coverageSummary,
     scentDna,
     selectedCount,
     seasonRows,
   });
-  const collectionDna = buildCollectionDnaItems({ boxSummary, scentDna });
+  const collectionDna = buildCollectionCardDnaItems({ boxSummary, scentDna });
   const visibleCollectionDna = collectionDna
     .map((item) => ({
       ...item,
@@ -1877,105 +1823,6 @@ function ProfileSummaryGroup({ label, values }) {
   );
 }
 
-function buildCollectionProfileTraits({
-  boxSummary,
-  coverageSummary,
-  scentDna,
-  selectedCount,
-  seasonRows,
-}) {
-  if (selectedCount === 0) {
-    return [];
-  }
-
-  const traits = [];
-  const occasionCounts = boxSummary.occasionCounts || {};
-  const vibeCounts = boxSummary.vibeCounts || {};
-  const accordCounts = getAccordCounts(boxSummary);
-  const profileSignals = getBoxProfileSignals({
-    occasionCounts,
-    vibeCounts,
-    accordCounts,
-  });
-  const versatilityScore = scentDna?.scores?.versatility || 0;
-  const depthScore = scentDna?.scores?.depth || 0;
-  const seasonBalanceScore = scentDna?.scores?.seasonBalance || 0;
-  const springScore = seasonRows.find((season) => season.id === "spring")?.count || 0;
-  const summerScore = seasonRows.find((season) => season.id === "summer")?.count || 0;
-  const fallScore = seasonRows.find((season) => season.id === "fall")?.count || 0;
-  const winterScore = seasonRows.find((season) => season.id === "winter")?.count || 0;
-  const dailySignals = (occasionCounts.daily || 0) + (occasionCounts.office || 0);
-  const eveningSignals =
-    (occasionCounts.date || 0) +
-    (occasionCounts.night || 0) +
-    (occasionCounts.evening || 0);
-
-  if (versatilityScore >= 78 && seasonBalanceScore >= 62) {
-    traits.push("Balanced Rotation");
-  } else if (versatilityScore >= 72) {
-    traits.push("Highly Versatile");
-  }
-
-  if (dailySignals >= 3 || (occasionCounts.office || 0) >= 2) {
-    traits.push("Office Friendly");
-  }
-
-  if (eveningSignals >= 3 || profileSignals.warmEvening >= profileSignals.fresh + 2) {
-    traits.push("Evening Focused");
-  }
-
-  if (profileSignals.fresh >= profileSignals.warmEvening + 2) {
-    traits.push("Fresh-Leaning");
-  }
-
-  if (profileSignals.warmEvening >= profileSignals.fresh + 2) {
-    traits.push("Warm-Leaning");
-  }
-
-  if ((occasionCounts.date || 0) + (occasionCounts.night || 0) >= 2) {
-    traits.push("Date Night Strong");
-  }
-
-  if (springScore + summerScore >= fallScore + winterScore + 24) {
-    traits.push("Spring/Summer Specialist");
-  }
-
-  if (fallScore >= 55 && winterScore >= 45) {
-    traits.push("Autumn Specialist");
-  }
-
-  if (depthScore >= 70 && selectedCount >= 5) {
-    traits.push("Collector Friendly");
-  }
-
-  if (versatilityScore >= 70 && depthScore >= 58 && selectedCount >= 4) {
-    traits.push("Signature Ready");
-  }
-
-  if (traits.length === 0 && coverageSummary.strengths.length > 0) {
-    traits.push(...coverageSummary.strengths.slice(0, 2).map((item) => item.label));
-  }
-
-  if (traits.length === 0) {
-    traits.push(selectedCount < 3 ? "Taking Shape" : "Casual Heavy");
-  }
-
-  return uniqueStrings(traits).slice(0, 5);
-}
-
-function buildCollectionDnaItems({ boxSummary, scentDna }) {
-  const topAccords = scentDna?.topAccords || [];
-
-  if (topAccords.length > 0) {
-    return topAccords.slice(0, 6);
-  }
-
-  return Object.entries(getAccordCounts(boxSummary))
-    .map(([label, count]) => ({ label, count }))
-    .sort((a, b) => b.count - a.count || a.label.localeCompare(b.label))
-    .slice(0, 6);
-}
-
 function buildCollectionBalanceRows({ boxSummary, scentDna, selectedCount, seasonRows }) {
   const scores = scentDna?.scores || {};
   const accordCounts = getAccordCounts(boxSummary);
@@ -2031,24 +1878,6 @@ function scoreToFiveLevel(score) {
 
 function formatFiveStarRating(level) {
   return `${"★".repeat(level)}${"☆".repeat(5 - level)}`;
-}
-
-function buildSeasonCoverageRows(seasonCounts, selectedCount = 0) {
-  const seasons = ["spring", "summer", "fall", "winter"];
-  const maxSeasonStrength = Math.max(1, selectedCount * 10);
-
-  return seasons.map((season) => {
-    const strength = seasonCounts[season] || 0;
-    const score = Math.round((strength / maxSeasonStrength) * 100);
-
-    return {
-      id: season,
-      label: formatLabel(season),
-      count: score,
-      strength,
-      percent: score,
-    };
-  });
 }
 
 function ScentLibraryModal({ notes, onClose }) {
@@ -2139,7 +1968,7 @@ function buildCuratorInsight({
     };
   }
 
-  const seasonalRows = buildSeasonCoverageRows(
+  const seasonalRows = buildCollectionCardSeasonRows(
     boxSummary.seasonStrengths || boxSummary.seasonCounts || {},
     selectedCount
   );
@@ -2198,7 +2027,7 @@ function buildBoxIntelligence({
     };
   }
 
-  const seasonRows = buildSeasonCoverageRows(
+  const seasonRows = buildCollectionCardSeasonRows(
     boxSummary.seasonStrengths || boxSummary.seasonCounts || {},
     selectedCount
   );
@@ -3328,7 +3157,7 @@ function DiscoveryBoxReviewModal({
   const collectionIdentity = getCollectionIdentity(boxSummary);
   const curatorPreferenceLabel =
     builderConfig.curatorBonus.preferences[curatorBonusPreference]?.label;
-  const seasonRows = buildSeasonCoverageRows(
+  const seasonRows = buildCollectionCardSeasonRows(
     boxSummary.seasonStrengths || boxSummary.seasonCounts || {},
     selectedPerfumes.length
   );
@@ -5185,19 +5014,6 @@ function waitForNextFrames(count = 1) {
 
 function waitForPaintDelay(delayMs = 90) {
   return new Promise((resolve) => window.setTimeout(resolve, delayMs));
-}
-
-function getCollectionCardFilename(title, builderConfig) {
-  const slug = String(title || "")
-    .normalize("NFKD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase()
-    .replace(/['']/g, "")
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "")
-    .replace(/-{2,}/g, "-");
-
-  return `${builderConfig.collectionCard.filenamePrefix}-${slug || "collection"}.png`;
 }
 
 function formatConfigCopy(template, values = {}) {
