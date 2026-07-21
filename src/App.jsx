@@ -1,13 +1,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { buildFilterOptions } from "./utils/filterUtils";
 import "./App.css";
 import { getTierData } from "./utils/tierUtils";
 import PerfumeCard from "./components/PerfumeCard";
 import FilterBar from "./components/FilterBar";
 import BuilderPanel from "./components/BuilderPanel";
 import MetadataPreview from "./components/MetadataPreview";
-import { getPerfumeNoteIds } from "./utils/noteUtils";
 import { buildScentDna } from "./utils/buildScentDna";
+import { buildCatalogView } from "./builder/internal/catalog/buildCatalogView.js";
 import { buildCollectionSummary } from "./builder/internal/intelligence/buildCollectionSummary.js";
 import { buildRecommendations } from "./utils/buildRecommendations";
 import { getMetadataAsset } from "./data/metadataAssets";
@@ -93,31 +92,19 @@ function App({ catalog, notes: noteMetadata = EMPTY_NOTES, config }) {
   const isBoxReady = collectionSummary.readiness.isReady;
   const boxSummary = collectionSummary.boxSummary;
   const coverageSummary = collectionSummary.coverageSummary;
-  const filterOptions = useMemo(() => buildFilterOptions(perfumes), [perfumes]);
-
-  const visiblePerfumes = useMemo(() => {
-    const normalizedSearchQuery = searchQuery.trim().toLowerCase();
-    const matchingPerfumes = perfumes.filter((perfume) => {
-      const matchesSeason =
-        !activeFilters.seasons ||
-        perfume.seasons.includes(activeFilters.seasons);
-
-      const matchesOccasion =
-        !activeFilters.occasions ||
-        perfume.occasions.includes(activeFilters.occasions);
-
-      const matchesVibe =
-        !activeFilters.vibes || perfume.vibes.includes(activeFilters.vibes);
-
-      const matchesSearch =
-        !normalizedSearchQuery ||
-        getSearchText(perfume, notes).includes(normalizedSearchQuery);
-
-      return matchesSeason && matchesOccasion && matchesVibe && matchesSearch;
-    });
-
-    return sortPerfumes(matchingPerfumes, sortOption, normalizedSearchQuery);
-  }, [activeFilters, perfumes, notes, searchQuery, sortOption]);
+  const catalogView = useMemo(
+    () =>
+      buildCatalogView({
+        catalog: perfumes,
+        notes,
+        searchQuery,
+        activeFilters,
+        sortOption,
+      }),
+    [activeFilters, perfumes, notes, searchQuery, sortOption]
+  );
+  const filterOptions = catalogView.filterOptions;
+  const visiblePerfumes = catalogView.visiblePerfumes;
 
   const detailPerfumeIndex = detailPerfume
     ? visiblePerfumes.findIndex((perfume) => perfume.id === detailPerfume.id)
@@ -1003,57 +990,6 @@ function DetailNotePill({ note, noteId }) {
   );
 }
 
-function getSearchText(perfume, notes) {
-  const noteIds = getPerfumeNoteIds(perfume);
-  const noteNames = noteIds
-    .map((noteId) => notes[noteId]?.name)
-    .filter(Boolean);
-
-  return [
-    perfume.name,
-    perfume.brand,
-    ...(perfume.accords || []),
-    ...(perfume.vibes || []),
-    ...noteIds,
-    ...noteNames,
-  ]
-    .join(" ")
-    .toLowerCase();
-}
-
-function sortPerfumes(perfumesToSort, sortOption, searchQuery) {
-  return [...perfumesToSort].sort((a, b) => {
-    if (sortOption === "pointsAsc") {
-      return a.points - b.points || compareNames(a, b);
-    }
-
-    if (sortOption === "pointsDesc") {
-      return b.points - a.points || compareNames(a, b);
-    }
-
-    if (sortOption === "brandAsc") {
-      return (
-        a.brand.localeCompare(b.brand) ||
-        compareNames(a, b)
-      );
-    }
-
-    if (sortOption === "tier") {
-      return getTierRank(a.id) - getTierRank(b.id) || a.points - b.points || compareNames(a, b);
-    }
-
-    if (sortOption === "alphabetical") {
-      return compareNames(a, b);
-    }
-
-    if (searchQuery) {
-      return getBestMatchRank(a, searchQuery) - getBestMatchRank(b, searchQuery) || compareNames(a, b);
-    }
-
-    return 0;
-  });
-}
-
 function getAdjacentVisiblePerfume(currentPerfume, visiblePerfumes, direction) {
   if (!currentPerfume || visiblePerfumes.length === 0) {
     return currentPerfume;
@@ -1074,40 +1010,6 @@ function getAdjacentVisiblePerfume(currentPerfume, visiblePerfumes, direction) {
     visiblePerfumes.length;
 
   return visiblePerfumes[nextIndex];
-}
-
-function getBestMatchRank(perfume, searchQuery) {
-  if (perfume.name.toLowerCase().includes(searchQuery)) {
-    return 0;
-  }
-
-  if (perfume.brand.toLowerCase().includes(searchQuery)) {
-    return 1;
-  }
-
-  const accordOrVibeMatch = [
-    ...(perfume.accords || []),
-    ...(perfume.vibes || []),
-  ].some((item) => item.toLowerCase().includes(searchQuery));
-
-  if (accordOrVibeMatch) {
-    return 2;
-  }
-
-  return 3;
-}
-
-function getTierRank(id) {
-  if (id < 100) return 0;
-  if (id < 200) return 1;
-  if (id < 300) return 2;
-  if (id < 400) return 3;
-  if (id < 500) return 4;
-  return 5;
-}
-
-function compareNames(a, b) {
-  return a.name.localeCompare(b.name);
 }
 
 function formatLabel(value) {
