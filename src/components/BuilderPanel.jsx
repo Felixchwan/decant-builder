@@ -2,18 +2,15 @@ import { forwardRef, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal, flushSync } from "react-dom";
 import { createRoot } from "react-dom/client";
 import { toBlob } from "html-to-image";
-import { discoveryDecantsConfig as builderConfig } from "../builder/config/index.js";
 import { getCollectionIdentityProfile } from "../utils/collectionIdentityEngine";
 import { getTierData } from "../utils/tierUtils";
 import CollectionCard from "./CollectionCard";
 
-const DISCOVERY_BONUS_TARGET_POINTS = builderConfig.curatorBonus.targetPoints;
 const EMPTY_RECOMMENDATIONS = [];
 const PERFUME_IMAGE_FALLBACK =
   "/images/perfumes/placeholders/perfume-placeholder.svg";
-const CURATOR_BONUS_PREFERENCES = builderConfig.curatorBonus.preferences;
-
 function BuilderPanel({
+  builderConfig,
   totalSlots,
   maxSlots,
   maxSelectableSlots,
@@ -144,7 +141,7 @@ function BuilderPanel({
       ]
     );
     const isCuratorBonusUnlocked =
-      totalPoints >= DISCOVERY_BONUS_TARGET_POINTS && totalSlots >= minSlots;
+      totalPoints >= builderConfig.curatorBonus.targetPoints && totalSlots >= minSlots;
     const reviewRequirementText = [
       missingSlots > 0
         ? `${missingSlots} more fragrance${missingSlots === 1 ? "" : "s"}`
@@ -164,7 +161,7 @@ function BuilderPanel({
       typeof navigator.canShare === "function" &&
       typeof window.File !== "undefined" &&
       navigator.canShare({
-        files: [new File([""], getCollectionCardFilename("collection"), { type: "image/png" })],
+        files: [new File([""], getCollectionCardFilename("collection", builderConfig), { type: "image/png" })],
       });
     const isShareGenerating = Boolean(activeShareAction);
     const nextAvailableSlotIndex = getNextAvailableSlotIndex(
@@ -266,7 +263,7 @@ function BuilderPanel({
         const url = URL.createObjectURL(blob);
         const link = document.createElement("a");
         link.href = url;
-        link.download = getCollectionCardFilename(collectionIdentityProfile.title);
+        link.download = getCollectionCardFilename(collectionIdentityProfile.title, builderConfig);
         document.body.appendChild(link);
         link.click();
         link.remove();
@@ -292,7 +289,7 @@ function BuilderPanel({
       setActiveShareAction("share");
       try {
         const blob = await createShareImageBlob();
-        const file = new File([blob], getCollectionCardFilename(collectionIdentityProfile.title), {
+        const file = new File([blob], getCollectionCardFilename(collectionIdentityProfile.title, builderConfig), {
           type: "image/png",
         });
 
@@ -386,7 +383,7 @@ function BuilderPanel({
       </div>
 
       {shouldShowDiscoveryIntro && (
-        <DiscoveryBoxCoachmark onDismiss={dismissDiscoveryIntro} />
+        <DiscoveryBoxCoachmark builderConfig={builderConfig} onDismiss={dismissDiscoveryIntro} />
       )}
 
       <div className="box-summary-card" aria-label="Box summary">
@@ -491,6 +488,7 @@ function BuilderPanel({
 
       <CuratorBonusModule
         ref={curatorBonusModuleRef}
+        builderConfig={builderConfig}
         totalPoints={totalPoints}
         totalSlots={totalSlots}
         minSlots={minSlots}
@@ -520,6 +518,7 @@ function BuilderPanel({
 
 
       <CollectionSnapshot
+        builderConfig={builderConfig}
         boxSummary={boxSummary}
         coverageSummary={coverageSummary}
         scentDna={scentDna}
@@ -690,6 +689,7 @@ function BuilderPanel({
       )}
       {isFinalSummaryOpen && (
         <DiscoveryBoxReviewModal
+          builderConfig={builderConfig}
           selectedPerfumes={selectedPerfumes}
           totalPoints={totalPoints}
           estimatedValue={estimatedValue}
@@ -786,7 +786,7 @@ function CollectionCardPreviewModal({
   );
 }
 
-function DiscoveryBoxCoachmark({ onDismiss }) {
+function DiscoveryBoxCoachmark({ builderConfig, onDismiss }) {
   return (
     <section className="discovery-coachmark" aria-label={builderConfig.copy.introAriaLabel}>
       <span className="coachmark-pointer" aria-hidden="true" />
@@ -809,6 +809,7 @@ function DiscoveryBoxCoachmark({ onDismiss }) {
 }
 
 function CollectionSnapshot({
+  builderConfig,
   boxSummary,
   coverageSummary,
   scentDna,
@@ -3131,6 +3132,7 @@ function uniqueStrings(values) {
 
 const CuratorBonusModule = forwardRef(function CuratorBonusModule(
   {
+    builderConfig,
     totalPoints,
     totalSlots,
     minSlots,
@@ -3142,6 +3144,8 @@ const CuratorBonusModule = forwardRef(function CuratorBonusModule(
   },
   ref
 ) {
+  const DISCOVERY_BONUS_TARGET_POINTS = builderConfig.curatorBonus.targetPoints;
+  const CURATOR_BONUS_PREFERENCES = builderConfig.curatorBonus.preferences;
   const preferenceData = CURATOR_BONUS_PREFERENCES[preference];
   const hiddenPickCount = hiddenCuratorPicks.length;
   const progressValue = Math.min(totalPoints, DISCOVERY_BONUS_TARGET_POINTS);
@@ -3303,6 +3307,7 @@ function BoxIntelligenceSummary({ intelligence }) {
 }
 
 function DiscoveryBoxReviewModal({
+  builderConfig,
   selectedPerfumes,
   totalPoints,
   estimatedValue,
@@ -3321,7 +3326,7 @@ function DiscoveryBoxReviewModal({
   const [fallbackWhatsAppUrl, setFallbackWhatsAppUrl] = useState("");
   const collectionIdentity = getCollectionIdentity(boxSummary);
   const curatorPreferenceLabel =
-    CURATOR_BONUS_PREFERENCES[curatorBonusPreference]?.label;
+    builderConfig.curatorBonus.preferences[curatorBonusPreference]?.label;
   const seasonRows = buildSeasonCoverageRows(
     boxSummary.seasonStrengths || boxSummary.seasonCounts || {},
     selectedPerfumes.length
@@ -3377,6 +3382,7 @@ function DiscoveryBoxReviewModal({
     }
 
     const whatsappMessage = buildDiscoveryBoxWhatsAppMessage({
+      builderConfig,
       customerInfo,
       selectedPerfumes,
       totalPoints,
@@ -3600,6 +3606,7 @@ function DiscoveryBoxReviewModal({
 }
 
 function buildDiscoveryBoxWhatsAppMessage({
+  builderConfig,
   customerInfo,
   selectedPerfumes,
   totalPoints,
@@ -5197,7 +5204,7 @@ function waitForPaintDelay(delayMs = 90) {
   return new Promise((resolve) => window.setTimeout(resolve, delayMs));
 }
 
-function getCollectionCardFilename(title) {
+function getCollectionCardFilename(title, builderConfig) {
   const slug = String(title || "")
     .normalize("NFKD")
     .replace(/[\u0300-\u036f]/g, "")

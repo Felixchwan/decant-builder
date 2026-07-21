@@ -1,13 +1,12 @@
 import { getTierData } from "../utils/tierUtils";
 import { forwardRef } from "react";
-import { discoveryDecantsConfig as builderConfig } from "../builder/config/index.js";
 
 const DEFAULT_PROFILE_TRAITS = [];
 const DEFAULT_DNA_DESCRIPTORS = [];
 const DEFAULT_PERFUMES = [];
 
 const CollectionCard = forwardRef(function CollectionCard({
-  heading = builderConfig.collectionCard.brandHeading,
+  heading = "",
   title,
   subtitle,
   mood = DEFAULT_PROFILE_TRAITS,
@@ -21,15 +20,15 @@ const CollectionCard = forwardRef(function CollectionCard({
   profileTraits = DEFAULT_PROFILE_TRAITS,
   dnaDescriptors = DEFAULT_DNA_DESCRIPTORS,
   isCuratorBonusUnlocked = false,
-  maxSlots = builderConfig.box.totalPhysicalSlots,
-  maxSelectableSlots = builderConfig.box.maxSelectableSlots,
-  ariaLabel = builderConfig.collectionCard.ariaLabel,
-  boxAriaLabel = builderConfig.collectionCard.boxAriaLabel,
-  footer = builderConfig.collectionCard.footer,
-  curatorBonusIncludedLabel = builderConfig.collectionCard.curatorBonusIncludedLabel,
-  curatorBonusAvailableLabel = builderConfig.collectionCard.curatorBonusAvailableLabel,
-  curatorBonusUnlockedCopy = builderConfig.collectionCard.curatorBonusUnlockedCopy,
-  curatorBonusLockedCopy = builderConfig.collectionCard.curatorBonusLockedCopy,
+  maxSlots = 16,
+  maxSelectableSlots = 14,
+  ariaLabel = "collection card",
+  boxAriaLabel = "Rendered Discovery Box",
+  footer = "Curated for discovery.",
+  curatorBonusIncludedLabel = "Curator Bonus Included",
+  curatorBonusAvailableLabel = "Curator Bonus Available",
+  curatorBonusUnlockedCopy = "Mystery selections remain wrapped.",
+  curatorBonusLockedCopy = "Complete your Discovery Box to unlock mystery selections.",
 }, ref) {
   const displayTitle = title || collectionIdentity;
   const displaySubtitle = subtitle || curatorSubtitle;
