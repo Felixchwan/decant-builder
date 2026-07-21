@@ -3,6 +3,7 @@ import { createPortal, flushSync } from "react-dom";
 import { createRoot } from "react-dom/client";
 import { toBlob } from "html-to-image";
 import { getCollectionIdentityProfile } from "../utils/collectionIdentityEngine";
+import { buildFinalizationModel } from "../builder/internal/finalization/buildFinalizationModel.js";
 import { getTierData } from "../utils/tierUtils";
 import CollectionCard from "./CollectionCard";
 
@@ -3347,8 +3348,34 @@ function DiscoveryBoxReviewModal({
     hiddenCuratorPicks.length > 1
       ? builderConfig.curatorBonus.rewardPluralLabel
       : builderConfig.curatorBonus.rewardLabel;
-  const canFinalize =
-    isBoxReady && customerInfo.name.trim() && customerInfo.city.trim();
+  const finalizationModel = useMemo(
+    () =>
+      buildFinalizationModel({
+        selectedPerfumes,
+        totalPoints,
+        estimatedValue,
+        isCollectionReady: isBoxReady,
+        customerInfo,
+        curatorBonus: {
+          isUnlocked: isCuratorBonusUnlocked,
+          preferenceLabel: curatorPreferenceLabel,
+          rewardLabel: curatorRewardLabel,
+        },
+        config: builderConfig,
+      }),
+    [
+      selectedPerfumes,
+      totalPoints,
+      estimatedValue,
+      isBoxReady,
+      customerInfo,
+      isCuratorBonusUnlocked,
+      curatorPreferenceLabel,
+      curatorRewardLabel,
+      builderConfig,
+    ]
+  );
+  const canFinalize = finalizationModel.readiness.isReady;
 
   useEffect(() => {
     const previousOverflow = document.body.style.overflow;
@@ -3381,15 +3408,7 @@ function DiscoveryBoxReviewModal({
       return;
     }
 
-    const whatsappMessage = buildDiscoveryBoxWhatsAppMessage({
-      builderConfig,
-      customerInfo,
-      selectedPerfumes,
-      totalPoints,
-      estimatedValue,
-      isCuratorBonusUnlocked,
-      curatorPreferenceLabel,
-    });
+    const whatsappMessage = finalizationModel.message;
     const whatsappUrl = `https://wa.me/${builderConfig.finalization.whatsappNumber}?text=${encodeURIComponent(
       whatsappMessage
     )}`;
@@ -3525,12 +3544,18 @@ function DiscoveryBoxReviewModal({
           <h4>Order Summary</h4>
 
           <section className="final-summary-stats review-order-stats">
-            <SummaryStat label="Fragrances" value={selectedPerfumes.length} />
-            <SummaryStat label="Total Points" value={totalPoints.toFixed(1)} />
-            <SummaryStat label="Order Total" value={`$${estimatedValue.toFixed(0)}`} />
+            <SummaryStat label="Fragrances" value={finalizationModel.order.totalSlots} />
+            <SummaryStat
+              label="Total Points"
+              value={finalizationModel.order.totalPoints.toFixed(1)}
+            />
+            <SummaryStat
+              label="Order Total"
+              value={`$${finalizationModel.order.monetaryTotal.toFixed(0)}`}
+            />
             <SummaryStat
               label={builderConfig.curatorBonus.label}
-              value={isCuratorBonusUnlocked ? "Unlocked" : "Locked"}
+              value={finalizationModel.order.curatorBonus.isUnlocked ? "Unlocked" : "Locked"}
             />
           </section>
         </section>
@@ -3603,48 +3628,6 @@ function DiscoveryBoxReviewModal({
     </div>,
     document.body
   );
-}
-
-function buildDiscoveryBoxWhatsAppMessage({
-  builderConfig,
-  customerInfo,
-  selectedPerfumes,
-  totalPoints,
-  estimatedValue,
-  isCuratorBonusUnlocked,
-  curatorPreferenceLabel,
-}) {
-  const customerNotes = customerInfo.notes.trim();
-  const perfumeLines = selectedPerfumes.map(
-    (perfume, index) =>
-      `${index + 1}. ${perfume.name} - ${perfume.brand} (${perfume.points} pt)`
-  );
-  const curatorStatus = isCuratorBonusUnlocked
-    ? [
-        "Curator Bonus: Unlocked",
-        `Curator Style: ${curatorPreferenceLabel}`,
-      ].join("\n")
-    : "Curator Bonus: Not unlocked";
-
-  return [
-    formatConfigCopy(builderConfig.finalization.whatsapp.greeting, {
-      businessName: builderConfig.brand.businessName,
-    }),
-    "",
-    `Customer: ${customerInfo.name.trim()}`,
-    `City: ${customerInfo.city.trim()}`,
-    customerNotes ? `Notes: ${customerNotes}` : "",
-    "",
-    "Selected fragrances:",
-    ...perfumeLines,
-    "",
-    `Total slots: ${selectedPerfumes.length}`,
-    `Total points: ${totalPoints.toFixed(1)}`,
-    `Order total: $${estimatedValue.toFixed(0)}`,
-    curatorStatus,
-    "",
-    builderConfig.finalization.whatsapp.closing,
-  ].filter(Boolean).join("\n");
 }
 
 function buildCuratedCollectionReview({
