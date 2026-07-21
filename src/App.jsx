@@ -13,6 +13,14 @@ import { buildScentDna } from "./utils/buildScentDna";
 import { buildRecommendations } from "./utils/buildRecommendations";
 import { getMetadataAsset } from "./data/metadataAssets";
 import { getBrandAsset } from "./data/brandAssets";
+import {
+  addSelectedPerfume,
+  canAddPerfume,
+  getSelectedPerfumeIds,
+  hydrateSelectedPerfumes,
+  removeSelectedPerfumeAtIndex,
+  reorderSelectedPerfumes,
+} from "./builder/internal/selection/selectionState.js";
 
 const PERFUME_IMAGE_FALLBACK =
   "/images/perfumes/placeholders/perfume-placeholder.svg";
@@ -44,7 +52,11 @@ function App({ catalog, notes: noteMetadata = EMPTY_NOTES, config }) {
     [builderConfig, perfumes, MAX_SELECTABLE_SLOTS, DEFAULT_BUILDER_STATE]
   );
   const [selectedPerfumes, setSelectedPerfumes] = useState(() =>
-    hydratePersistedPerfumes(persistedBuilderState.selectedPerfumeIds, perfumes)
+    hydrateSelectedPerfumes({
+      selectedPerfumeIds: persistedBuilderState.selectedPerfumeIds,
+      catalog: perfumes,
+      maxSelectableSlots: MAX_SELECTABLE_SLOTS,
+    })
   );
   const [curatorBonusPreference, setCuratorBonusPreference] = useState(
     persistedBuilderState.curatorBonusPreference
@@ -140,7 +152,7 @@ const recommendations = useMemo(() => {
   useEffect(() => {
     const persistedState = {
       version: 1,
-      selectedPerfumeIds: selectedPerfumes.map((perfume) => perfume.id),
+      selectedPerfumeIds: getSelectedPerfumeIds(selectedPerfumes),
       curatorBonusPreference,
       customerInfo: reviewCustomerInfo,
     };
@@ -173,11 +185,13 @@ const recommendations = useMemo(() => {
   }
 
   const addPerfume = (perfume) => {
-  if (selectedPerfumes.length >= MAX_SELECTABLE_SLOTS) {
-    return;
-  }
+  const eligibility = canAddPerfume({
+    selectedPerfumes,
+    perfume,
+    maxSelectableSlots: MAX_SELECTABLE_SLOTS,
+  });
 
-  if (selectedPerfumes.some((selectedPerfume) => selectedPerfume.id === perfume.id)) {
+  if (!eligibility.allowed) {
     return;
   }
 
@@ -187,9 +201,11 @@ const recommendations = useMemo(() => {
   }
 
   setSelectedPerfumes((prev) =>
-    prev.some((selectedPerfume) => selectedPerfume.id === perfume.id)
-      ? prev
-      : [...prev, perfume]
+    addSelectedPerfume({
+      selectedPerfumes: prev,
+      perfume,
+      maxSelectableSlots: MAX_SELECTABLE_SLOTS,
+    })
   );
 };
 
@@ -197,10 +213,11 @@ const confirmAddPerfume = () => {
   if (!pendingPerfume) return;
 
   setSelectedPerfumes((prev) =>
-    prev.length >= MAX_SELECTABLE_SLOTS ||
-    prev.some((perfume) => perfume.id === pendingPerfume.id)
-      ? prev
-      : [...prev, pendingPerfume]
+    addSelectedPerfume({
+      selectedPerfumes: prev,
+      perfume: pendingPerfume,
+      maxSelectableSlots: MAX_SELECTABLE_SLOTS,
+    })
   );
 
   setPendingPerfume(null);
@@ -245,28 +262,21 @@ const confirmAddPerfume = () => {
 
   function removePerfume(indexToRemove) {
     setSelectedPerfumes((current) =>
-      current.filter((_, index) => index !== indexToRemove)
+      removeSelectedPerfumeAtIndex({
+        selectedPerfumes: current,
+        index: indexToRemove,
+      })
     );
   }
 
   function reorderPerfumes(fromIndex, toIndex) {
-    setSelectedPerfumes((current) => {
-      if (
-        fromIndex === toIndex ||
-        fromIndex < 0 ||
-        toIndex < 0 ||
-        fromIndex >= current.length ||
-        toIndex >= current.length
-      ) {
-        return current;
-      }
-
-      const reordered = [...current];
-      const [movedPerfume] = reordered.splice(fromIndex, 1);
-      reordered.splice(toIndex, 0, movedPerfume);
-
-      return reordered;
-    });
+    setSelectedPerfumes((current) =>
+      reorderSelectedPerfumes({
+        selectedPerfumes: current,
+        fromIndex,
+        toIndex,
+      })
+    );
   }
 
   function clearBox() {
@@ -507,11 +517,13 @@ function validatePersistedBuilderState(value, { builderConfig, perfumes, maxSele
     return null;
   }
 
-  const selectedPerfumeIds = Array.isArray(value.selectedPerfumeIds)
-    ? value.selectedPerfumeIds
-        .filter((id) => Number.isInteger(id) && perfumes.some((perfume) => perfume.id === id))
-        .slice(0, maxSelectableSlots)
-    : [];
+  const selectedPerfumeIds = getSelectedPerfumeIds(
+    hydrateSelectedPerfumes({
+      selectedPerfumeIds: value.selectedPerfumeIds,
+      catalog: perfumes,
+      maxSelectableSlots,
+    })
+  );
   const curatorBonusPreference =
     value.curatorBonusPreference === "similar" ||
     value.curatorBonusPreference === "complement"
@@ -536,12 +548,6 @@ function validatePersistedCustomerInfo(value, defaultCustomerInfo) {
     city: typeof value.city === "string" ? value.city : "",
     notes: typeof value.notes === "string" ? value.notes : "",
   };
-}
-
-function hydratePersistedPerfumes(selectedPerfumeIds, perfumes) {
-  return (selectedPerfumeIds || [])
-    .map((id) => perfumes.find((perfume) => perfume.id === id))
-    .filter(Boolean);
 }
 
 function savePersistedBuilderState(value, builderConfig) {
