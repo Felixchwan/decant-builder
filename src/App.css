@@ -4637,6 +4637,10 @@ button {
   text-align: center;
 }
 
+.collection-dna-helper-mobile {
+  display: none;
+}
+
 .collection-profile-chips span,
 .collection-dna-chips span,
 .collection-dna-chip {
@@ -4661,6 +4665,10 @@ button {
   font: inherit;
   isolation: isolate;
   text-align: left;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-tap-highlight-color: rgba(250, 204, 21, 0.12);
+  -webkit-user-select: none;
   transition:
     border-color 160ms ease,
     background 160ms ease,
@@ -4708,6 +4716,20 @@ button {
   animation-delay: 550ms;
 }
 
+.collection-dna-label,
+.collection-dna-chevron {
+  position: relative;
+  z-index: 1;
+}
+
+.collection-dna-chip .collection-dna-chevron {
+  display: none;
+  color: rgba(253, 230, 138, 0.58);
+  font-size: 0.78em;
+  font-weight: 900;
+  line-height: 1;
+}
+
 .collection-dna-chip:hover,
 .collection-dna-chip:focus-visible {
   border-color: rgba(250, 204, 21, 0.36);
@@ -4745,6 +4767,10 @@ button {
   outline: none;
 }
 
+.collection-dna-chip.is-active .collection-dna-chevron {
+  color: rgba(253, 230, 138, 0.82);
+}
+
 .collection-profile-chips span {
   color: #ecfdf5;
 }
@@ -4771,6 +4797,55 @@ button {
   100% {
     opacity: 0;
     transform: translateX(62%) rotate(0.001deg);
+  }
+}
+
+@media (max-width: 520px) {
+  .collection-dna-helper-desktop {
+    display: none;
+  }
+
+  .collection-dna-helper-mobile {
+    display: inline;
+  }
+
+  .collection-dna-chip {
+    gap: 5px;
+    padding-right: 7px;
+    transition-duration: 110ms;
+  }
+
+  .collection-dna-chip:hover {
+    border-color: rgba(148, 163, 184, 0.13);
+    background: rgba(15, 23, 42, 0.34);
+    box-shadow: none;
+    transform: none;
+  }
+
+  .collection-dna-chip:active {
+    border-color: rgba(250, 204, 21, 0.42);
+    background: rgba(250, 204, 21, 0.16);
+    box-shadow:
+      inset 0 0 0 1px rgba(253, 230, 138, 0.06),
+      0 0 12px rgba(250, 204, 21, 0.06);
+    transform: none;
+  }
+
+  .collection-dna-chip.is-active,
+  .collection-dna-chip.is-active:hover {
+    border-color: rgba(250, 204, 21, 0.46);
+    background: rgba(250, 204, 21, 0.15);
+    box-shadow:
+      inset 0 0 0 1px rgba(253, 230, 138, 0.08),
+      0 0 18px rgba(250, 204, 21, 0.09);
+    color: #f8fafc;
+  }
+
+  .collection-dna-chip .collection-dna-chevron {
+    display: inline-flex;
+    align-items: center;
+    margin-left: 1px;
+    transform: translateY(-0.5px);
   }
 }
 

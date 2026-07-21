@@ -995,7 +995,10 @@ function CollectionSnapshot({
         <span>Collection DNA</span>
 
         {visibleCollectionDna.length > 0 ? (
-          <p className="collection-dna-helper">Select an accord to explore</p>
+          <p className="collection-dna-helper">
+            <span className="collection-dna-helper-desktop">Select an accord to explore</span>
+            <span className="collection-dna-helper-mobile">Tap an accord to explore</span>
+          </p>
         ) : null}
 
         {visibleCollectionDna.length > 0 ? (
@@ -1026,8 +1029,11 @@ function CollectionSnapshot({
                   item.count === 1 ? "" : "s"
                 } in your box`}
               >
-                {formatLabel(item.label)}
+                <span className="collection-dna-label">{formatLabel(item.label)}</span>
                 <strong>{item.count}</strong>
+                <span className="collection-dna-chevron" aria-hidden="true">
+                  ›
+                </span>
               </button>
             ))}
           </div>
