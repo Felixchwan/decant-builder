@@ -1,4 +1,4 @@
-import { getPerfumeNoteIds } from "./noteUtils";
+import { getPerfumeNoteIds } from "./noteUtils.js";
 
 const SEASON_TARGETS = ["spring", "summer", "fall", "winter"];
 const OCCASION_TARGETS = ["daily", "office", "casual", "date", "night", "formal"];

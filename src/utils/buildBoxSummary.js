@@ -1,4 +1,4 @@
-import { getPerfumeNoteIds } from "./noteUtils";
+import { getPerfumeNoteIds } from "./noteUtils.js";
 
 export function buildBoxSummary(selectedPerfumes, notes) {
   const allOccasions = selectedPerfumes.flatMap((p) => p.occasions || []);

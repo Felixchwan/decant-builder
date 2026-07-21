@@ -6,10 +6,9 @@ import PerfumeCard from "./components/PerfumeCard";
 import FilterBar from "./components/FilterBar";
 import BuilderPanel from "./components/BuilderPanel";
 import MetadataPreview from "./components/MetadataPreview";
-import { buildBoxSummary } from "./utils/buildBoxSummary";
 import { getPerfumeNoteIds } from "./utils/noteUtils";
-import { buildCoverageSummary } from "./utils/buildCoverageSummary";
 import { buildScentDna } from "./utils/buildScentDna";
+import { buildCollectionSummary } from "./builder/internal/intelligence/buildCollectionSummary.js";
 import { buildRecommendations } from "./utils/buildRecommendations";
 import { getMetadataAsset } from "./data/metadataAssets";
 import { getBrandAsset } from "./data/brandAssets";
@@ -33,8 +32,6 @@ function App({ catalog, notes: noteMetadata = EMPTY_NOTES, config }) {
   const MIN_BOX_SLOTS = builderConfig.box.minSelectableSlots;
   const MAX_BOX_SLOTS = builderConfig.box.totalPhysicalSlots;
   const MAX_SELECTABLE_SLOTS = builderConfig.box.maxSelectableSlots;
-  const MIN_BOX_POINTS = builderConfig.box.minPoints;
-  const POINT_VALUE = builderConfig.commerce.pointValue;
   const DEFAULT_CUSTOMER_INFO = builderConfig.finalization.customerDefaults;
   const DEFAULT_BUILDER_STATE = useMemo(() => ({
     selectedPerfumeIds: [],
@@ -78,16 +75,24 @@ function App({ catalog, notes: noteMetadata = EMPTY_NOTES, config }) {
   const [pendingPerfume, setPendingPerfume] = useState(null);
   const [detailPerfume, setDetailPerfume] = useState(null);
 
-  const totalSlots = selectedPerfumes.length;
-  const totalPoints = selectedPerfumes.reduce(
-    (sum, perfume) => sum + perfume.points,
-    0
+  const collectionSummary = useMemo(
+    () =>
+      buildCollectionSummary({
+        selectedPerfumes,
+        catalog: perfumes,
+        notes,
+        config: builderConfig,
+      }),
+    [selectedPerfumes, perfumes, notes, builderConfig]
   );
-
-  const estimatedValue = totalPoints * POINT_VALUE;
-  const missingSlots = Math.max(0, MIN_BOX_SLOTS - totalSlots);
-  const missingPoints = Math.max(0, MIN_BOX_POINTS - totalPoints);
-  const isBoxReady = missingSlots === 0 && missingPoints === 0;
+  const totalSlots = collectionSummary.counts.selected;
+  const totalPoints = collectionSummary.points.total;
+  const estimatedValue = collectionSummary.money.total;
+  const missingSlots = collectionSummary.counts.minimumRemaining;
+  const missingPoints = collectionSummary.points.remaining;
+  const isBoxReady = collectionSummary.readiness.isReady;
+  const boxSummary = collectionSummary.boxSummary;
+  const coverageSummary = collectionSummary.coverageSummary;
   const filterOptions = useMemo(() => buildFilterOptions(perfumes), [perfumes]);
 
   const visiblePerfumes = useMemo(() => {
@@ -130,12 +135,6 @@ function App({ catalog, notes: noteMetadata = EMPTY_NOTES, config }) {
       ? visiblePerfumes[(detailPerfumeIndex + 1) % visiblePerfumes.length]
       : null;
 
-const boxSummary = useMemo(() => {
-  return buildBoxSummary(selectedPerfumes, notes);
-}, [selectedPerfumes, notes]);
-const coverageSummary = useMemo(() => {
-  return buildCoverageSummary(boxSummary, perfumes);
-}, [boxSummary, perfumes]);
 const scentDna = useMemo(() => {
   return buildScentDna(selectedPerfumes, boxSummary);
 }, [selectedPerfumes, boxSummary]);
@@ -152,7 +151,7 @@ const recommendations = useMemo(() => {
   useEffect(() => {
     const persistedState = {
       version: 1,
-      selectedPerfumeIds: getSelectedPerfumeIds(selectedPerfumes),
+      selectedPerfumeIds: collectionSummary.selectedIds,
       curatorBonusPreference,
       customerInfo: reviewCustomerInfo,
     };
@@ -163,7 +162,7 @@ const recommendations = useMemo(() => {
     }
 
     savePersistedBuilderState(persistedState, builderConfig);
-  }, [selectedPerfumes, curatorBonusPreference, reviewCustomerInfo, builderConfig, DEFAULT_BUILDER_STATE, DEFAULT_CUSTOMER_INFO]);
+  }, [collectionSummary.selectedIds, curatorBonusPreference, reviewCustomerInfo, builderConfig, DEFAULT_BUILDER_STATE, DEFAULT_CUSTOMER_INFO]);
 
   useEffect(() => {
     if (!restoreMessage) {
