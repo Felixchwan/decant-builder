@@ -1,4 +1,6 @@
+import { discoveryDecantsConfig } from "../builder/config/index.js";
+
 export const businessConfig = {
-  businessName: "Discovery Decants",
-  whatsappNumber: "528129800010",
+  businessName: discoveryDecantsConfig.brand.businessName,
+  whatsappNumber: discoveryDecantsConfig.finalization.whatsappNumber,
 };

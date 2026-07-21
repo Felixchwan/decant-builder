@@ -15,6 +15,7 @@ import { buildScentDna } from "./utils/buildScentDna";
 import { buildRecommendations } from "./utils/buildRecommendations";
 import { getMetadataAsset } from "./data/metadataAssets";
 import { getBrandAsset } from "./data/brandAssets";
+import { discoveryDecantsConfig as builderConfig } from "./builder/config/index.js";
 import {
   MIN_BOX_SLOTS,
   MAX_BOX_SLOTS,
@@ -25,16 +26,12 @@ import {
 
 const PERFUME_IMAGE_FALLBACK =
   "/images/perfumes/placeholders/perfume-placeholder.svg";
-const FRAGRANCE_DETAILS_HINT_KEY = "fragranceDetailsHintSeen";
-const BUILDER_STORAGE_KEY = "decant-builder-v1";
-const DEFAULT_CUSTOMER_INFO = {
-  name: "",
-  city: "",
-  notes: "",
-};
+const FRAGRANCE_DETAILS_HINT_KEY = builderConfig.persistence.fragranceDetailsHintKey;
+const BUILDER_STORAGE_KEY = builderConfig.persistence.storageKey;
+const DEFAULT_CUSTOMER_INFO = builderConfig.finalization.customerDefaults;
 const DEFAULT_BUILDER_STATE = {
   selectedPerfumeIds: [],
-  curatorBonusPreference: "complement",
+  curatorBonusPreference: builderConfig.curatorBonus.defaultPreference,
   customerInfo: DEFAULT_CUSTOMER_INFO,
 };
 
@@ -50,7 +47,7 @@ function App() {
     persistedBuilderState.customerInfo
   );
   const [restoreMessage, setRestoreMessage] = useState(
-    persistedBuilderState.wasRestored ? "Your previous box has been restored." : ""
+    persistedBuilderState.wasRestored ? builderConfig.persistence.restoreMessage : ""
   );
   const [activeMobileTab, setActiveMobileTab] = useState("catalog");
   const [activeFilters, setActiveFilters] = useState({
@@ -268,7 +265,7 @@ const confirmAddPerfume = () => {
 
   function clearBox() {
     setSelectedPerfumes([]);
-    setCuratorBonusPreference("complement");
+    setCuratorBonusPreference(builderConfig.curatorBonus.defaultPreference);
     setReviewCustomerInfo(DEFAULT_CUSTOMER_INFO);
     clearPersistedBuilderState();
     setRestoreMessage("");
@@ -284,10 +281,11 @@ const confirmAddPerfume = () => {
       )}
 
       <section className="hero">
-        <h1>Build your fragrance box</h1>
+        <h1>{builderConfig.copy.heroTitle}</h1>
         <p>
-          Select up to {MAX_SELECTABLE_SLOTS} decants, explore different moods, and see the
-          value of your box update in real time.
+          {formatConfigCopy(builderConfig.copy.heroDescription, {
+            maxSelectableSlots: MAX_SELECTABLE_SLOTS,
+          })}
         </p>
       </section>
 
@@ -476,6 +474,13 @@ function loadPersistedBuilderState() {
   }
 }
 
+function formatConfigCopy(template, values = {}) {
+  return Object.entries(values).reduce(
+    (copy, [key, value]) => copy.replaceAll(`{${key}}`, String(value)),
+    template
+  );
+}
+
 function markFragranceDetailsHintSeen() {
   try {
     window.localStorage.setItem(FRAGRANCE_DETAILS_HINT_KEY, "true");
@@ -498,7 +503,7 @@ function validatePersistedBuilderState(value) {
     value.curatorBonusPreference === "similar" ||
     value.curatorBonusPreference === "complement"
       ? value.curatorBonusPreference
-      : DEFAULT_BUILDER_STATE.curatorBonusPreference;
+      : builderConfig.curatorBonus.defaultPreference;
   const customerInfo = validatePersistedCustomerInfo(value.customerInfo);
 
   return {

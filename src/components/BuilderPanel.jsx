@@ -2,25 +2,16 @@ import { forwardRef, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal, flushSync } from "react-dom";
 import { createRoot } from "react-dom/client";
 import { toBlob } from "html-to-image";
-import { businessConfig } from "../config/business";
+import { discoveryDecantsConfig as builderConfig } from "../builder/config/index.js";
 import { getCollectionIdentityProfile } from "../utils/collectionIdentityEngine";
 import { getTierData } from "../utils/tierUtils";
 import CollectionCard from "./CollectionCard";
 
-const DISCOVERY_BONUS_TARGET_POINTS = 12;
+const DISCOVERY_BONUS_TARGET_POINTS = builderConfig.curatorBonus.targetPoints;
 const EMPTY_RECOMMENDATIONS = [];
 const PERFUME_IMAGE_FALLBACK =
   "/images/perfumes/placeholders/perfume-placeholder.svg";
-const CURATOR_BONUS_PREFERENCES = {
-  complement: {
-    label: "Complement My Collection",
-    description: "Curator picks selected to balance your box.",
-  },
-  similar: {
-    label: "Similar To My Picks",
-    description: "Curator picks inspired by your current taste.",
-  },
-};
+const CURATOR_BONUS_PREFERENCES = builderConfig.curatorBonus.preferences;
 
 function BuilderPanel({
   totalSlots,
@@ -52,7 +43,7 @@ function BuilderPanel({
         return true;
       }
 
-      return window.localStorage.getItem("discoveryBoxIntroSeen") === "true";
+      return window.localStorage.getItem(builderConfig.persistence.discoveryIntroSeenKey) === "true";
     });
     const [isDiscoveryIntroOpen, setIsDiscoveryIntroOpen] = useState(false);
     const [isNotesModalOpen, setIsNotesModalOpen] = useState(false);
@@ -173,7 +164,7 @@ function BuilderPanel({
       typeof navigator.canShare === "function" &&
       typeof window.File !== "undefined" &&
       navigator.canShare({
-        files: [new File([""], "discovery-decants-collection.png", { type: "image/png" })],
+        files: [new File([""], getCollectionCardFilename("collection"), { type: "image/png" })],
       });
     const isShareGenerating = Boolean(activeShareAction);
     const nextAvailableSlotIndex = getNextAvailableSlotIndex(
@@ -219,7 +210,7 @@ function BuilderPanel({
 
     const dismissDiscoveryIntro = () => {
       if (typeof window !== "undefined") {
-        window.localStorage.setItem("discoveryBoxIntroSeen", "true");
+        window.localStorage.setItem(builderConfig.persistence.discoveryIntroSeenKey, "true");
       }
 
       setHasSeenDiscoveryIntro(true);
@@ -239,6 +230,14 @@ function BuilderPanel({
     };
 
     const collectionCardExportProps = {
+      heading: builderConfig.collectionCard.brandHeading,
+      ariaLabel: builderConfig.collectionCard.ariaLabel,
+      boxAriaLabel: builderConfig.collectionCard.boxAriaLabel,
+      footer: builderConfig.collectionCard.footer,
+      curatorBonusIncludedLabel: builderConfig.collectionCard.curatorBonusIncludedLabel,
+      curatorBonusAvailableLabel: builderConfig.collectionCard.curatorBonusAvailableLabel,
+      curatorBonusUnlockedCopy: builderConfig.collectionCard.curatorBonusUnlockedCopy,
+      curatorBonusLockedCopy: builderConfig.collectionCard.curatorBonusLockedCopy,
       perfumes: selectedPerfumes,
       title: collectionIdentityProfile.title,
       subtitle: collectionIdentityProfile.subtitle,
@@ -272,13 +271,13 @@ function BuilderPanel({
         link.click();
         link.remove();
         window.setTimeout(() => URL.revokeObjectURL(url), 1000);
-        showShareStatus("Collection Card downloaded.");
+        showShareStatus(builderConfig.collectionCard.downloadedStatus);
       } catch (error) {
         console.error("Unable to download Collection Card", error);
         showShareStatus(
           error?.message?.startsWith("The Collection Card could not be rendered")
-            ? "The Collection Card could not be rendered. Please try again."
-            : "Could not create the Collection Card PNG."
+            ? builderConfig.collectionCard.renderFailureStatus
+            : builderConfig.collectionCard.createFailureStatus
         );
       } finally {
         setActiveShareAction("");
@@ -298,20 +297,20 @@ function BuilderPanel({
         });
 
         if (!navigator.canShare({ files: [file] })) {
-          showShareStatus("Native image sharing is unavailable. Download the PNG instead.");
+          showShareStatus(builderConfig.collectionCard.unavailableShareStatus);
           return;
         }
 
         await navigator.share({
-          title: "My Discovery Decants Collection",
-          text: "A curated Discovery Decants collection.",
+          title: builderConfig.collectionCard.shareTitle,
+          text: builderConfig.collectionCard.shareText,
           files: [file],
         });
-        showShareStatus("Collection Card shared.");
+        showShareStatus(builderConfig.collectionCard.sharedStatus);
       } catch (error) {
         if (error?.name !== "AbortError") {
           console.error("Unable to share Collection Card", error);
-          showShareStatus("Native sharing is unavailable. Download the PNG instead.");
+          showShareStatus(builderConfig.collectionCard.unavailableShareFallbackStatus);
         }
       } finally {
         setActiveShareAction("");
@@ -366,12 +365,12 @@ function BuilderPanel({
       <div className="panel-header">
         <div>
           <div className="panel-title-row">
-            <h2>My Box</h2>
+            <h2>{builderConfig.copy.boxPanelTitle}</h2>
             <button
               className="info-button"
               type="button"
               onClick={() => setIsDiscoveryIntroOpen(true)}
-              aria-label="Show Discovery Box introduction"
+              aria-label={builderConfig.copy.introButtonAriaLabel}
             >
               i
             </button>
@@ -382,7 +381,7 @@ function BuilderPanel({
         </div>
 
         <button className="ghost-button" onClick={onClearBox}>
-          Clear Builder
+          {builderConfig.copy.clearBuilderLabel}
         </button>
       </div>
 
@@ -441,7 +440,7 @@ function BuilderPanel({
               }`}
               role="tooltip"
             >
-              Export an editorial card for your finished Discovery Box.
+              {builderConfig.collectionCard.tooltip}
             </span>
           </span>
         </div>
@@ -452,7 +451,7 @@ function BuilderPanel({
             onClick={handleDownloadShareImage}
             disabled={isShareGenerating}
           >
-            {activeShareAction === "download" ? "Generating..." : "Download PNG"}
+            {activeShareAction === "download" ? builderConfig.collectionCard.generatingLabel : builderConfig.collectionCard.downloadLabel}
           </button>
           {canNativeShareCard && (
             <button
@@ -460,7 +459,7 @@ function BuilderPanel({
               onClick={handleNativeShareCard}
               disabled={isShareGenerating}
             >
-              {activeShareAction === "share" ? "Generating..." : "Share Card"}
+              {activeShareAction === "share" ? builderConfig.collectionCard.generatingLabel : builderConfig.collectionCard.shareLabel}
             </button>
           )}
           {import.meta.env.DEV && (
@@ -469,7 +468,7 @@ function BuilderPanel({
               onClick={() => setIsCollectionCardPreviewOpen(true)}
               disabled={isShareGenerating}
             >
-              Preview Card
+              {builderConfig.collectionCard.previewLabel}
             </button>
           )}
         </div>
@@ -511,11 +510,11 @@ function BuilderPanel({
           disabled={!isBoxReady}
           onClick={() => setIsFinalSummaryOpen(true)}
         >
-          Review My Box
+          {builderConfig.copy.reviewButtonLabel}
         </button>
 
         {!isBoxReady && (
-          <p>Need {reviewRequirementText || "minimum requirements"} to review.</p>
+          <p>{builderConfig.copy.reviewIncompletePrefix} {reviewRequirementText || builderConfig.copy.reviewIncompleteFallback} to review.</p>
         )}
       </div>
 
@@ -718,6 +717,7 @@ function BuilderPanel({
           isCuratorBonusUnlocked={isCuratorBonusUnlocked}
           maxSlots={maxSlots}
           maxSelectableSlots={maxSelectableSlots}
+          cardConfig={builderConfig.collectionCard}
           onClose={() => setIsCollectionCardPreviewOpen(false)}
         />
       )}
@@ -736,6 +736,7 @@ function CollectionCardPreviewModal({
   isCuratorBonusUnlocked,
   maxSlots,
   maxSelectableSlots,
+  cardConfig,
   onClose,
 }) {
   return createPortal(
@@ -757,6 +758,14 @@ function CollectionCardPreviewModal({
         </div>
 
         <CollectionCard
+          heading={cardConfig.brandHeading}
+          ariaLabel={cardConfig.ariaLabel}
+          boxAriaLabel={cardConfig.boxAriaLabel}
+          footer={cardConfig.footer}
+          curatorBonusIncludedLabel={cardConfig.curatorBonusIncludedLabel}
+          curatorBonusAvailableLabel={cardConfig.curatorBonusAvailableLabel}
+          curatorBonusUnlockedCopy={cardConfig.curatorBonusUnlockedCopy}
+          curatorBonusLockedCopy={cardConfig.curatorBonusLockedCopy}
           perfumes={selectedPerfumes}
           title={identityProfile.title}
           subtitle={identityProfile.subtitle}
@@ -779,13 +788,13 @@ function CollectionCardPreviewModal({
 
 function DiscoveryBoxCoachmark({ onDismiss }) {
   return (
-    <section className="discovery-coachmark" aria-label="Discovery Box introduction">
+    <section className="discovery-coachmark" aria-label={builderConfig.copy.introAriaLabel}>
       <span className="coachmark-pointer" aria-hidden="true" />
 
       <div>
-        <span>Welcome to Discovery Box</span>
+        <span>{builderConfig.copy.introTitle}</span>
         <p>Build your collection by selecting fragrances from the catalog.</p>
-        <p>Reach 12 points to unlock Curator Bonus selections.</p>
+        <p>{builderConfig.copy.introDescription}</p>
         <p>
           As your box grows, we'll analyze your coverage, strengths and
           collection identity.
@@ -1031,7 +1040,7 @@ function CollectionSnapshot({
 
               {boxSummary.notes.length > 0 && (
                 <div>
-                  <span>Notes</span>
+                  <span>{builderConfig.finalization.customerFieldLabels.notes}</span>
 
                   <p>{boxSummary.notes.length} unique notes covered</p>
 
@@ -3162,7 +3171,7 @@ const CuratorBonusModule = forwardRef(function CuratorBonusModule(
     >
       <div className="discovery-progress-header">
         <div>
-          <span>Curator Bonus</span>
+          <span>{builderConfig.curatorBonus.label}</span>
           <strong>Progress & Reward</strong>
         </div>
 
@@ -3187,12 +3196,12 @@ const CuratorBonusModule = forwardRef(function CuratorBonusModule(
       </div>
 
       <p className="discovery-progress-copy">
-        {isUnlocked ? "Curator Bonus Unlocked" : lockedMessage}
+        {isUnlocked ? builderConfig.curatorBonus.progressCopy.unlocked : lockedMessage}
       </p>
 
       {isAnimating && (
         <div className="curator-unlock-confirmation" role="status">
-          Curator Bonus Unlocked
+          {builderConfig.curatorBonus.progressCopy.unlocked}
         </div>
       )}
 
@@ -3204,20 +3213,20 @@ const CuratorBonusModule = forwardRef(function CuratorBonusModule(
 
       <div className="curator-bonus-card">
         <div className="curator-bonus-copy">
-          {!isUnlocked && <strong>Complete your Discovery Box</strong>}
+          {!isUnlocked && <strong>{builderConfig.curatorBonus.progressCopy.lockedCompletion}</strong>}
           <p>
             {isUnlocked
               ? `${preferenceData.label} selected. Your curator pick${
                   hiddenPickCount === 1 ? "" : "s"
                 } will stay wrapped until reveal.`
-              : "Unlock Curator Bonus and choose your reward strategy."}
+              : builderConfig.curatorBonus.progressCopy.lockedStrategy}
           </p>
         </div>
 
         {isUnlocked ? (
           <div className="curator-preference-control">
             <label htmlFor="curator-bonus-preference">
-              Curator Bonus Style
+              {builderConfig.curatorBonus.label} Style
             </label>
 
             <select
@@ -3238,20 +3247,20 @@ const CuratorBonusModule = forwardRef(function CuratorBonusModule(
           </div>
         ) : (
           <div className="curator-style-locked" aria-disabled="true">
-            <span>Curator Bonus Style</span>
+            <span>{builderConfig.curatorBonus.label} Style</span>
             <strong>Unlock to choose curator style</strong>
           </div>
         )}
 
         <div className={`curator-pick-slot ${isUnlocked ? "active" : ""}`}>
           <span>Curator Pick</span>
-          <strong>Bonus Fragrance</strong>
-          <p>Equivalent to 2 bonus points.</p>
+          <strong>{builderConfig.curatorBonus.rewardLabel}</strong>
+          <p>{builderConfig.curatorBonus.progressCopy.pickValue}</p>
           {isUnlocked && (
             <p>
               {preference === "similar"
-                ? "Selected based on your fragrance preferences."
-                : "Selected to complement your collection."}
+                ? builderConfig.curatorBonus.progressCopy.similarSelected
+                : builderConfig.curatorBonus.progressCopy.complementSelected}
             </p>
           )}
         </div>
@@ -3330,7 +3339,9 @@ function DiscoveryBoxReviewModal({
   const assessmentBadge = collectionReview.assessmentBadge;
   const assessmentSummary = collectionReview.assessmentSummary;
   const curatorRewardLabel =
-    hiddenCuratorPicks.length > 1 ? "Bonus Fragrances" : "Bonus Fragrance";
+    hiddenCuratorPicks.length > 1
+      ? builderConfig.curatorBonus.rewardPluralLabel
+      : builderConfig.curatorBonus.rewardLabel;
   const canFinalize =
     isBoxReady && customerInfo.name.trim() && customerInfo.city.trim();
 
@@ -3373,7 +3384,7 @@ function DiscoveryBoxReviewModal({
       isCuratorBonusUnlocked,
       curatorPreferenceLabel,
     });
-    const whatsappUrl = `https://wa.me/${businessConfig.whatsappNumber}?text=${encodeURIComponent(
+    const whatsappUrl = `https://wa.me/${builderConfig.finalization.whatsappNumber}?text=${encodeURIComponent(
       whatsappMessage
     )}`;
     const openedWindow = window.open(whatsappUrl, "_blank");
@@ -3386,8 +3397,8 @@ function DiscoveryBoxReviewModal({
       setFallbackWhatsAppUrl(whatsappUrl);
       setFinalizeStatus(
         didCopy
-          ? "WhatsApp was blocked. The order message was copied; use the button below to open WhatsApp."
-          : "WhatsApp was blocked. Use the button below to open WhatsApp manually."
+          ? builderConfig.finalization.whatsapp.blockedCopied
+          : builderConfig.finalization.whatsapp.blockedManual
       );
       return;
     }
@@ -3395,8 +3406,12 @@ function DiscoveryBoxReviewModal({
     setFallbackWhatsAppUrl("");
     setFinalizeStatus(
       didCopy
-        ? `Opening WhatsApp to message ${businessConfig.businessName}. Order message copied.`
-        : `Opening WhatsApp to message ${businessConfig.businessName}.`
+        ? formatConfigCopy(builderConfig.finalization.whatsapp.openingCopied, {
+            businessName: builderConfig.brand.businessName,
+          })
+        : formatConfigCopy(builderConfig.finalization.whatsapp.opening, {
+            businessName: builderConfig.brand.businessName,
+          })
     );
   }
 
@@ -3480,7 +3495,7 @@ function DiscoveryBoxReviewModal({
         </section>
 
         <section className="final-summary-section review-curator-section">
-          <h4>Curator Bonus</h4>
+          <h4>{builderConfig.curatorBonus.label}</h4>
 
           <div className="review-curator-grid">
             <div>
@@ -3493,8 +3508,8 @@ function DiscoveryBoxReviewModal({
               <strong>{curatorRewardLabel}</strong>
               <p>
                 {isCuratorBonusUnlocked
-                  ? "Your curator pick remains wrapped until reveal."
-                  : "Unlocks when your Discovery Box is complete."}
+                  ? builderConfig.copy.reviewCuratorUnlockedCopy
+                  : builderConfig.copy.reviewCuratorLockedCopy}
               </p>
             </div>
           </div>
@@ -3508,7 +3523,7 @@ function DiscoveryBoxReviewModal({
             <SummaryStat label="Total Points" value={totalPoints.toFixed(1)} />
             <SummaryStat label="Order Total" value={`$${estimatedValue.toFixed(0)}`} />
             <SummaryStat
-              label="Curator Bonus"
+              label={builderConfig.curatorBonus.label}
               value={isCuratorBonusUnlocked ? "Unlocked" : "Locked"}
             />
           </section>
@@ -3519,7 +3534,7 @@ function DiscoveryBoxReviewModal({
 
           <div className="review-customer-form">
             <label>
-              <span>Customer name</span>
+              <span>{builderConfig.finalization.customerFieldLabels.name}</span>
               <input
                 type="text"
                 value={customerInfo.name}
@@ -3531,7 +3546,7 @@ function DiscoveryBoxReviewModal({
             </label>
 
             <label>
-              <span>City</span>
+              <span>{builderConfig.finalization.customerFieldLabels.city}</span>
               <input
                 type="text"
                 value={customerInfo.city}
@@ -3575,7 +3590,7 @@ function DiscoveryBoxReviewModal({
             target="_blank"
             rel="noreferrer"
           >
-            Open WhatsApp manually
+            {builderConfig.finalization.whatsapp.manualOpenLabel}
           </a>
         )}
       </div>
@@ -3605,7 +3620,9 @@ function buildDiscoveryBoxWhatsAppMessage({
     : "Curator Bonus: Not unlocked";
 
   return [
-    `Hello ${businessConfig.businessName}, I would like to finalize my Discovery Box order.`,
+    formatConfigCopy(builderConfig.finalization.whatsapp.greeting, {
+      businessName: builderConfig.brand.businessName,
+    }),
     "",
     `Customer: ${customerInfo.name.trim()}`,
     `City: ${customerInfo.city.trim()}`,
@@ -3619,7 +3636,7 @@ function buildDiscoveryBoxWhatsAppMessage({
     `Order total: $${estimatedValue.toFixed(0)}`,
     curatorStatus,
     "",
-    "Please confirm availability and next steps. Thank you.",
+    builderConfig.finalization.whatsapp.closing,
   ].filter(Boolean).join("\n");
 }
 
@@ -5190,7 +5207,14 @@ function getCollectionCardFilename(title) {
     .replace(/^-+|-+$/g, "")
     .replace(/-{2,}/g, "-");
 
-  return `discovery-decants-${slug || "collection"}.png`;
+  return `${builderConfig.collectionCard.filenamePrefix}-${slug || "collection"}.png`;
+}
+
+function formatConfigCopy(template, values = {}) {
+  return Object.entries(values).reduce(
+    (copy, [key, value]) => copy.replaceAll(`{${key}}`, String(value)),
+    template
+  );
 }
 
 function getNextAvailableSlotIndex(selectedPerfumes, maxSelectableSlots) {

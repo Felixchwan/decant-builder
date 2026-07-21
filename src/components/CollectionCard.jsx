@@ -1,12 +1,13 @@
 import { getTierData } from "../utils/tierUtils";
 import { forwardRef } from "react";
+import { discoveryDecantsConfig as builderConfig } from "../builder/config/index.js";
 
 const DEFAULT_PROFILE_TRAITS = [];
 const DEFAULT_DNA_DESCRIPTORS = [];
 const DEFAULT_PERFUMES = [];
 
 const CollectionCard = forwardRef(function CollectionCard({
-  heading = "Discovery Decants",
+  heading = builderConfig.collectionCard.brandHeading,
   title,
   subtitle,
   mood = DEFAULT_PROFILE_TRAITS,
@@ -20,8 +21,15 @@ const CollectionCard = forwardRef(function CollectionCard({
   profileTraits = DEFAULT_PROFILE_TRAITS,
   dnaDescriptors = DEFAULT_DNA_DESCRIPTORS,
   isCuratorBonusUnlocked = false,
-  maxSlots = 14,
-  maxSelectableSlots = 14,
+  maxSlots = builderConfig.box.totalPhysicalSlots,
+  maxSelectableSlots = builderConfig.box.maxSelectableSlots,
+  ariaLabel = builderConfig.collectionCard.ariaLabel,
+  boxAriaLabel = builderConfig.collectionCard.boxAriaLabel,
+  footer = builderConfig.collectionCard.footer,
+  curatorBonusIncludedLabel = builderConfig.collectionCard.curatorBonusIncludedLabel,
+  curatorBonusAvailableLabel = builderConfig.collectionCard.curatorBonusAvailableLabel,
+  curatorBonusUnlockedCopy = builderConfig.collectionCard.curatorBonusUnlockedCopy,
+  curatorBonusLockedCopy = builderConfig.collectionCard.curatorBonusLockedCopy,
 }, ref) {
   const displayTitle = title || collectionIdentity;
   const displaySubtitle = subtitle || curatorSubtitle;
@@ -42,7 +50,7 @@ const CollectionCard = forwardRef(function CollectionCard({
     <article
       ref={ref}
       className={`collection-card ${exportMode ? "collection-card--export" : ""}`}
-      aria-label="Discovery Decants collection card"
+      aria-label={ariaLabel}
       style={{
         "--collection-card-ambient": lightingComposition.theme.ambient,
         "--collection-card-ambient-soft": lightingComposition.theme.ambientSoft,
@@ -77,7 +85,7 @@ const CollectionCard = forwardRef(function CollectionCard({
         </div>
       )}
 
-      <div className="collection-card-box-wrap" aria-label="Rendered Discovery Box">
+      <div className="collection-card-box-wrap" aria-label={boxAriaLabel}>
         <div className="collection-card-box">
           <div className="collection-card-column">
             {slotRows.map(({ leftIndex }) => (
@@ -147,16 +155,16 @@ const CollectionCard = forwardRef(function CollectionCard({
 
       <section className="collection-card-curator">
         <span>
-          {isCuratorBonusUnlocked ? "Curator Bonus Included" : "Curator Bonus Available"}
+          {isCuratorBonusUnlocked ? curatorBonusIncludedLabel : curatorBonusAvailableLabel}
         </span>
         <p>
           {isCuratorBonusUnlocked
-            ? "Mystery selections remain wrapped."
-            : "Complete your Discovery Box to unlock mystery selections."}
+            ? curatorBonusUnlockedCopy
+            : curatorBonusLockedCopy}
         </p>
       </section>
 
-      <footer>Curated for discovery.</footer>
+      <footer>{footer}</footer>
     </article>
   );
 });
