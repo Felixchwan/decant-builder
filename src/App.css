@@ -4628,6 +4628,15 @@ button {
   gap: 6px;
 }
 
+.collection-dna-helper {
+  margin: -2px 0 0;
+  color: #8fa99a;
+  font-size: 0.68rem;
+  font-weight: 750;
+  line-height: 1.2;
+  text-align: center;
+}
+
 .collection-profile-chips span,
 .collection-dna-chips span,
 .collection-dna-chip {
@@ -4646,21 +4655,66 @@ button {
 }
 
 .collection-dna-chip {
+  position: relative;
+  overflow: hidden;
   cursor: pointer;
   font: inherit;
+  isolation: isolate;
   text-align: left;
   transition:
     border-color 160ms ease,
     background 160ms ease,
+    box-shadow 160ms ease,
     color 160ms ease,
     transform 160ms ease;
 }
 
+.collection-dna-chip::before {
+  content: "";
+  position: absolute;
+  inset: -60% -75%;
+  z-index: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    112deg,
+    transparent 37%,
+    rgba(255, 255, 255, 0.03) 43%,
+    rgba(253, 230, 138, 0.18) 50%,
+    rgba(255, 255, 255, 0.035) 57%,
+    transparent 64%
+  );
+  opacity: 0;
+  transform: translateX(-62%) rotate(0.001deg);
+  animation: collectionDnaChipSheen 1.45s ease-out both;
+}
+
+.collection-dna-chip:nth-child(2)::before {
+  animation-delay: 110ms;
+}
+
+.collection-dna-chip:nth-child(3)::before {
+  animation-delay: 220ms;
+}
+
+.collection-dna-chip:nth-child(4)::before {
+  animation-delay: 330ms;
+}
+
+.collection-dna-chip:nth-child(5)::before {
+  animation-delay: 440ms;
+}
+
+.collection-dna-chip:nth-child(6)::before {
+  animation-delay: 550ms;
+}
+
 .collection-dna-chip:hover,
-.collection-dna-chip:focus-visible,
-.collection-dna-chip.is-active {
-  border-color: rgba(250, 204, 21, 0.28);
-  background: rgba(250, 204, 21, 0.10);
+.collection-dna-chip:focus-visible {
+  border-color: rgba(250, 204, 21, 0.36);
+  background: rgba(250, 204, 21, 0.11);
+  box-shadow:
+    0 8px 18px rgba(0, 0, 0, 0.16),
+    0 0 18px rgba(250, 204, 21, 0.07);
   color: #f8fafc;
   outline: none;
 }
@@ -4670,14 +4724,54 @@ button {
   transform: translateY(-1px);
 }
 
+.collection-dna-chip:focus-visible {
+  outline: 2px solid rgba(250, 204, 21, 0.56);
+  outline-offset: 3px;
+}
+
+.collection-dna-chip:active {
+  border-color: rgba(250, 204, 21, 0.42);
+  background: rgba(250, 204, 21, 0.16);
+  transform: translateY(0);
+}
+
+.collection-dna-chip.is-active {
+  border-color: rgba(250, 204, 21, 0.46);
+  background: rgba(250, 204, 21, 0.15);
+  box-shadow:
+    inset 0 0 0 1px rgba(253, 230, 138, 0.08),
+    0 0 18px rgba(250, 204, 21, 0.09);
+  color: #f8fafc;
+  outline: none;
+}
+
 .collection-profile-chips span {
   color: #ecfdf5;
 }
 
 .collection-dna-chips strong {
+  position: relative;
+  z-index: 1;
   color: #8fa99a;
   font-size: 0.66rem;
   font-weight: 900;
+}
+
+@keyframes collectionDnaChipSheen {
+  0% {
+    opacity: 0;
+    transform: translateX(-62%) rotate(0.001deg);
+  }
+
+  24%,
+  58% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+    transform: translateX(62%) rotate(0.001deg);
+  }
 }
 
 .dna-modal-overlay {
@@ -5195,6 +5289,15 @@ button {
 @media (prefers-reduced-motion: reduce) {
   .dna-accord-content {
     animation: none;
+  }
+
+  .collection-dna-chip {
+    transition-duration: 0ms;
+  }
+
+  .collection-dna-chip::before {
+    animation: none;
+    opacity: 0;
   }
 }
 

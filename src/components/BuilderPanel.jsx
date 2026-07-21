@@ -995,6 +995,10 @@ function CollectionSnapshot({
         <span>Collection DNA</span>
 
         {visibleCollectionDna.length > 0 ? (
+          <p className="collection-dna-helper">Select an accord to explore</p>
+        ) : null}
+
+        {visibleCollectionDna.length > 0 ? (
           <div className="collection-dna-chips">
             {visibleCollectionDna.map((item) => (
               <button
