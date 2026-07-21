@@ -1032,7 +1032,7 @@ function CollectionSnapshot({
                 <span className="collection-dna-label">{formatLabel(item.label)}</span>
                 <strong>{item.count}</strong>
                 <span className="collection-dna-chevron" aria-hidden="true">
-                  ›
+                  &rsaquo;
                 </span>
               </button>
             ))}

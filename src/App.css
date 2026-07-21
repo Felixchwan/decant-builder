@@ -4631,7 +4631,7 @@ button {
 .collection-dna-helper {
   margin: -2px 0 0;
   color: #8fa99a;
-  font-size: 0.68rem;
+  font-size: 0.66rem;
   font-weight: 750;
   line-height: 1.2;
   text-align: center;
@@ -4642,7 +4642,7 @@ button {
 }
 
 .collection-profile-chips span,
-.collection-dna-chips span,
+.collection-dna-chips > span,
 .collection-dna-chip {
   display: inline-flex;
   align-items: center;
@@ -4720,6 +4720,10 @@ button {
 .collection-dna-chevron {
   position: relative;
   z-index: 1;
+}
+
+.collection-dna-label {
+  min-width: 0;
 }
 
 .collection-dna-chip .collection-dna-chevron {
@@ -4801,6 +4805,13 @@ button {
 }
 
 @media (max-width: 520px) {
+  .collection-dna-helper {
+    margin-top: -4px;
+    color: rgba(143, 169, 154, 0.78);
+    font-size: 0.63rem;
+    font-weight: 700;
+  }
+
   .collection-dna-helper-desktop {
     display: none;
   }
@@ -4810,9 +4821,14 @@ button {
   }
 
   .collection-dna-chip {
-    gap: 5px;
-    padding-right: 7px;
+    gap: 4px;
+    padding: 5px 7px;
     transition-duration: 110ms;
+  }
+
+  .collection-dna-chip strong {
+    color: rgba(203, 213, 225, 0.62);
+    font-size: 0.64rem;
   }
 
   .collection-dna-chip:hover {
@@ -4844,7 +4860,7 @@ button {
   .collection-dna-chip .collection-dna-chevron {
     display: inline-flex;
     align-items: center;
-    margin-left: 1px;
+    margin-left: -1px;
     transform: translateY(-0.5px);
   }
 }
