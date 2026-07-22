@@ -1,8 +1,7 @@
 import { evaluateComposerConstraints } from "./evaluateComposerConstraints.js";
+import { COMPOSER_MOVE_TYPES } from "./composerMoveTypes.js";
 
-export const COMPOSER_MOVE_TYPES = Object.freeze({
-  ADD_PERFUME: "ADD_PERFUME",
-});
+export { COMPOSER_MOVE_TYPES };
 
 export function generateCandidateMoves({
   request,

@@ -1,0 +1,4 @@
+export const COMPOSER_MOVE_TYPES = Object.freeze({
+  ADD_PERFUME: "ADD_PERFUME",
+  SWAP_PERFUME: "SWAP_PERFUME",
+});
