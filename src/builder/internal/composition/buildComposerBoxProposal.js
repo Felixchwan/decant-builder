@@ -18,6 +18,7 @@ export function buildComposerBoxProposal({
   selectedPerfumes = [],
   excludedPerfumeIds = [],
   strategy = "balanced",
+  collectionStyle = "balanced_mix",
   budget = null,
   targetSlots,
   minSlots,
@@ -50,6 +51,7 @@ export function buildComposerBoxProposal({
     selectedPerfumes: safeSelectedPerfumes,
     excludedPerfumeIds: safeExcludedPerfumeIds,
     strategy,
+    collectionStyle,
     budget,
     targetSlots: customerTargetSlots,
     minSlots: minCustomerSlots,
@@ -153,6 +155,7 @@ export function buildComposerBoxProposal({
     limit: customerTargetSlots - safeSelectedPerfumes.length,
     budget,
     strategy,
+    collectionStyle,
     preferences,
     excludedPerfumeIds: safeExcludedPerfumeIds,
   });
@@ -225,6 +228,7 @@ export function buildComposerProposalInputKey({
   selectedPerfumes = [],
   excludedPerfumeIds = [],
   strategy = "balanced",
+  collectionStyle = "balanced_mix",
   budget = null,
   targetSlots,
   minSlots,
@@ -241,6 +245,7 @@ export function buildComposerProposalInputKey({
     ),
     excludedPerfumeIds: normalizeIdList(excludedPerfumeIds),
     strategy: typeof strategy === "string" ? strategy : "balanced",
+    collectionStyle: typeof collectionStyle === "string" ? collectionStyle : "balanced_mix",
     budget: normalizeBudgetValue(budget),
     targetSlots: normalizeNullableNumber(targetSlots),
     minSlots: normalizeNullableNumber(minSlots),
@@ -271,6 +276,7 @@ function successfulProposal({
   minSlots,
   maxSlots,
   budget,
+  collectionStyle,
   pointValue,
   compositionResult,
   reasoningFacts,
@@ -281,6 +287,11 @@ function successfulProposal({
   const selectedIds = new Set(selectedPerfumes.map((perfume) => perfume.id));
   const preservedPerfumes = collection.filter((perfume) => selectedIds.has(perfume.id));
   const addedPerfumes = collection.filter((perfume) => !selectedIds.has(perfume.id));
+  const proposalItems = buildProposalItems({
+    collection,
+    selectedIds,
+    compositionResult,
+  });
   const totalPoints = roundNumber(
     collection.reduce((sum, perfume) => sum + normalizePoints(perfume.points), 0)
   );
@@ -291,6 +302,8 @@ function successfulProposal({
   const minimumReached = collection.length >= minSlots;
   const targetReached = collection.length >= targetSlots;
   const applyAvailable = minimumReached && collection.length <= maxSlots;
+  const normalizedCollectionStyle =
+    collectionStyle || compositionResult?.normalizedRequest?.collectionStyle?.id || "balanced_mix";
 
   return sanitizeSerializable({
     proposalAvailable: applyAvailable,
@@ -300,6 +313,7 @@ function successfulProposal({
     collectionIds: collection.map((perfume) => perfume.id),
     addedPerfumes,
     preservedPerfumes,
+    proposalItems,
     totalPoints,
     orderTotal,
     targetSlots,
@@ -323,6 +337,7 @@ function successfulProposal({
     diagnostics: {
       ...diagnostics,
       budget: normalizeBudgetValue(budget),
+      collectionStyle: normalizedCollectionStyle,
       applyAvailable,
       noDuplicateIds: collection.length === new Set(collection.map((perfume) => perfume.id)).size,
       selectedIdsPreserved: selectedPerfumes.every((perfume) =>
@@ -344,6 +359,7 @@ function unavailableProposal({
   minSlots,
   maxSlots,
   budget,
+  collectionStyle,
   pointValue,
   compositionResult = null,
   reasoningFacts = null,
@@ -353,6 +369,8 @@ function unavailableProposal({
   const totalPoints = roundNumber(
     selectedPerfumes.reduce((sum, perfume) => sum + normalizePoints(perfume.points), 0)
   );
+  const normalizedCollectionStyle =
+    collectionStyle || compositionResult?.normalizedRequest?.collectionStyle?.id || "balanced_mix";
 
   return sanitizeSerializable({
     proposalAvailable: false,
@@ -362,6 +380,13 @@ function unavailableProposal({
     collectionIds: selectedPerfumes.map((perfume) => perfume.id),
     addedPerfumes: [],
     preservedPerfumes: selectedPerfumes,
+    proposalItems: selectedPerfumes.map((perfume) => ({
+      id: perfume.id,
+      perfume,
+      preserved: true,
+      newlyAdded: false,
+      reasons: [buildReason("preserved_selection", "preserved", {})],
+    })),
     totalPoints,
     orderTotal: roundNumber(
       totalPoints * normalizePoints(compositionResult?.normalizedRequest?.pointValue || pointValue)
@@ -387,12 +412,107 @@ function unavailableProposal({
     diagnostics: {
       ...diagnostics,
       budget: normalizeBudgetValue(budget),
+      collectionStyle: normalizedCollectionStyle,
       applyAvailable: false,
     },
     apply: {
       available: false,
       collectionIds: [],
     },
+  });
+}
+
+function buildProposalItems({ collection, selectedIds, compositionResult }) {
+  const request = compositionResult?.normalizedRequest || {};
+
+  return collection.map((perfume) => {
+    const preserved = selectedIds.has(perfume.id);
+    const reasons = uniqueReasons([
+      preserved ? buildReason("preserved_selection", "preserved", {}) : null,
+      ...buildPreferenceReasons({
+        perfume,
+        preferenceType: "season",
+        preferenceValues: request.preferredSeasons,
+        perfumeValues: perfume.seasons,
+      }),
+      ...buildPreferenceReasons({
+        perfume,
+        preferenceType: "occasion",
+        preferenceValues: request.preferredOccasions,
+        perfumeValues: perfume.occasions,
+      }),
+      ...buildPreferenceReasons({
+        perfume,
+        preferenceType: "vibe",
+        preferenceValues: request.preferredVibes,
+        perfumeValues: perfume.vibes,
+      }),
+      buildStrategyReason(request.strategy?.id),
+    ]).slice(0, 4);
+
+    return {
+      id: perfume.id,
+      perfume,
+      preserved,
+      newlyAdded: !preserved,
+      reasons,
+    };
+  });
+}
+
+function buildPreferenceReasons({
+  preferenceType,
+  preferenceValues,
+  perfumeValues,
+}) {
+  const perfumeValueSet = new Set(normalizeStringList(perfumeValues));
+
+  return normalizeStringList(preferenceValues)
+    .filter((preferenceValue) => perfumeValueSet.has(preferenceValue))
+    .map((preferenceValue) =>
+      buildReason(`${preferenceType}_preference_match`, "preference_match", {
+        preferenceType,
+        preferenceValue,
+      })
+    );
+}
+
+function buildStrategyReason(strategyId) {
+  if (!strategyId) {
+    return null;
+  }
+
+  return buildReason(`strategy_${strategyId}`, "strategy_contribution", {
+    strategyId,
+  });
+}
+
+function buildReason(code, type, evidence) {
+  return {
+    type,
+    code,
+    labelKey: code,
+    preferenceType: evidence.preferenceType || null,
+    preferenceValue: evidence.preferenceValue || null,
+    evidence,
+  };
+}
+
+function uniqueReasons(reasons) {
+  const seen = new Set();
+
+  return reasons.filter((reason) => {
+    if (!reason) {
+      return false;
+    }
+
+    const key = `${reason.code}:${reason.preferenceValue || ""}`;
+    if (seen.has(key)) {
+      return false;
+    }
+
+    seen.add(key);
+    return true;
   });
 }
 

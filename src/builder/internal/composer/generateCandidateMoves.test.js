@@ -65,7 +65,7 @@ describe("generateCandidateMoves", () => {
   it("respects excluded, selected, max-slot, and budget constraints through the constraint evaluator", () => {
     const moves = generateCandidateMoves({
       request: request({
-        budget: 300,
+        budget: 450,
         minSlots: 0,
         maxSlots: 2,
         excludedPerfumeIds: [2],
@@ -88,6 +88,25 @@ describe("generateCandidateMoves", () => {
         config: testConfig,
       })
     ).toEqual([]);
+  });
+
+  it("filters moves that would make the construction minimum unreachable under budget", () => {
+    const moves = generateCandidateMoves({
+      request: {
+        ...request({
+          budget: 450,
+          minSlots: 0,
+          maxSlots: 3,
+          targetSlots: 3,
+        }),
+        constructionMinSlots: 3,
+      },
+      currentPerfumes: [],
+      catalog,
+      config: testConfig,
+    });
+
+    expect(moves.map((move) => move.perfumeId)).toEqual([1, 2, 3]);
   });
 
   it("does not mutate frozen inputs", () => {

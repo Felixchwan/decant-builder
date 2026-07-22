@@ -197,6 +197,7 @@ describe("buildComposerRecommendations", () => {
       preferredOccasions: ["office"],
       preferredVibes: ["fresh"],
       strategy: "signature",
+      collectionStyle: "balanced_mix",
     });
   });
 

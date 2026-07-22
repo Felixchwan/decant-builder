@@ -41,6 +41,15 @@ function App({ catalog, notes: noteMetadata = EMPTY_NOTES, config }) {
   const MAX_BOX_SLOTS = builderConfig.box.totalPhysicalSlots;
   const MAX_SELECTABLE_SLOTS = builderConfig.box.maxSelectableSlots;
   const DEFAULT_CUSTOMER_INFO = builderConfig.finalization.customerDefaults;
+  const minimumComposerBudget = useMemo(
+    () =>
+      deriveMinimumComposerBudget({
+        catalog: perfumes,
+        minSlots: MIN_BOX_SLOTS,
+        pointValue: builderConfig.commerce.pointValue,
+      }),
+    [perfumes, MIN_BOX_SLOTS, builderConfig]
+  );
   const DEFAULT_BUILDER_STATE = useMemo(() => ({
     selectedPerfumeIds: [],
     curatorBonusPreference: builderConfig.curatorBonus.defaultPreference,
@@ -75,10 +84,11 @@ function App({ catalog, notes: noteMetadata = EMPTY_NOTES, config }) {
   });
   const [composerSettings, setComposerSettings] = useState({
     strategy: "balanced",
-    budget: "",
-    seasons: "",
-    occasions: "",
-    vibes: "",
+    collectionStyle: "balanced_mix",
+    budget: String(minimumComposerBudget),
+    seasons: [],
+    occasions: [],
+    vibes: [],
   });
   const [composerProposal, setComposerProposal] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -152,13 +162,14 @@ const composerInputKey = useMemo(
       selectedPerfumes,
       excludedPerfumeIds: [],
       strategy: composerSettings.strategy,
+      collectionStyle: composerSettings.collectionStyle,
       budget: composerBudget,
       targetSlots: MAX_SELECTABLE_SLOTS,
       minSlots: MIN_BOX_SLOTS,
       maxSlots: MAX_SELECTABLE_SLOTS,
-      seasons: composerSettings.seasons ? [composerSettings.seasons] : [],
-      occasions: composerSettings.occasions ? [composerSettings.occasions] : [],
-      vibes: composerSettings.vibes ? [composerSettings.vibes] : [],
+      seasons: composerSettings.seasons,
+      occasions: composerSettings.occasions,
+      vibes: composerSettings.vibes,
       catalog: perfumes,
       config: builderConfig,
     }),
@@ -219,25 +230,56 @@ const isComposerProposalStale = isComposerBoxProposalStale(
   }
 
   function handleComposerSettingChange(field, value) {
+    const nextValue =
+      field === "budget" && value !== "" && Number(value) < 0 ? "0" : value;
+
     setComposerSettings((currentSettings) => ({
       ...currentSettings,
-      [field]: value,
+      [field]: nextValue,
+    }));
+  }
+
+  function handleComposerPreferenceToggle(field, value) {
+    setComposerSettings((currentSettings) => {
+      const currentValues = Array.isArray(currentSettings[field])
+        ? currentSettings[field]
+        : [];
+      const nextValues = currentValues.includes(value)
+        ? currentValues.filter((item) => item !== value)
+        : [...currentValues, value];
+
+      return {
+        ...currentSettings,
+        [field]: nextValues,
+      };
+    });
+  }
+
+  function handleComposerPreferenceClear(field) {
+    setComposerSettings((currentSettings) => ({
+      ...currentSettings,
+      [field]: [],
     }));
   }
 
   function handleComposeMyBox() {
+    if (isComposerBudgetBelowMinimum(composerBudget, minimumComposerBudget)) {
+      return;
+    }
+
     setComposerProposal(
       buildComposerBoxProposal({
         selectedPerfumes,
         excludedPerfumeIds: [],
         strategy: composerSettings.strategy,
+        collectionStyle: composerSettings.collectionStyle,
         budget: composerBudget,
         targetSlots: MAX_SELECTABLE_SLOTS,
         minSlots: MIN_BOX_SLOTS,
         maxSlots: MAX_SELECTABLE_SLOTS,
-        seasons: composerSettings.seasons ? [composerSettings.seasons] : [],
-        occasions: composerSettings.occasions ? [composerSettings.occasions] : [],
-        vibes: composerSettings.vibes ? [composerSettings.vibes] : [],
+        seasons: composerSettings.seasons,
+        occasions: composerSettings.occasions,
+        vibes: composerSettings.vibes,
         catalog: perfumes,
         notes,
         config: builderConfig,
@@ -494,9 +536,12 @@ const confirmAddPerfume = () => {
             onAddPerfume={addPerfume}
             composerSettings={composerSettings}
             composerOptions={filterOptions}
+            minimumComposerBudget={minimumComposerBudget}
             composerProposal={composerProposal}
             isComposerProposalStale={isComposerProposalStale}
             onComposerSettingChange={handleComposerSettingChange}
+            onComposerPreferenceToggle={handleComposerPreferenceToggle}
+            onComposerPreferenceClear={handleComposerPreferenceClear}
             onComposeMyBox={handleComposeMyBox}
             onApplyComposerProposal={handleApplyComposerProposal}
             onCancelComposerProposal={handleCancelComposerProposal}
@@ -603,6 +648,31 @@ function parseComposerBudget(value) {
 
   const parsedValue = Number(value);
   return Number.isFinite(parsedValue) ? parsedValue : null;
+}
+
+function deriveMinimumComposerBudget({ catalog, minSlots, pointValue }) {
+  const minimumPerfumePoints = (Array.isArray(catalog) ? catalog : [])
+    .map((perfume) => perfume?.points)
+    .filter((points) => Number.isFinite(points) && points > 0)
+    .sort((first, second) => first - second)[0];
+
+  if (
+    !Number.isFinite(minimumPerfumePoints) ||
+    !Number.isFinite(minSlots) ||
+    !Number.isFinite(pointValue)
+  ) {
+    return "";
+  }
+
+  return Math.round(minimumPerfumePoints * minSlots * pointValue);
+}
+
+function isComposerBudgetBelowMinimum(budget, minimumBudget) {
+  return (
+    Number.isFinite(budget) &&
+    Number.isFinite(minimumBudget) &&
+    budget < minimumBudget
+  );
 }
 
 function markFragranceDetailsHintSeen(builderConfig) {

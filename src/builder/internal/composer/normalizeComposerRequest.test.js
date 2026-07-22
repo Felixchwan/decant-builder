@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 
+import { getComposerCollectionStyle } from "./composerCollectionStyles.js";
 import { getComposerStrategy } from "./composerStrategies.js";
 import { normalizeComposerRequest } from "./normalizeComposerRequest.js";
 
@@ -42,6 +43,7 @@ describe("normalizeComposerRequest", () => {
       preferredOccasions: [],
       preferredVibes: [],
       strategy: getComposerStrategy("balanced"),
+      collectionStyle: getComposerCollectionStyle("balanced_mix"),
       inputIssues: [],
       lockedExcludedConflicts: [],
     };
@@ -84,6 +86,7 @@ describe("normalizeComposerRequest", () => {
       preferredOccasions: ["office", "date night"],
       preferredVibes: ["fresh", "warm spicy"],
       strategy: getComposerStrategy("explorer"),
+      collectionStyle: getComposerCollectionStyle("balanced_mix"),
       inputIssues: [],
       lockedExcludedConflicts: [3, -2],
     });
@@ -198,6 +201,7 @@ describe("normalizeComposerRequest", () => {
         preferredOccasions: ["Date", "Formal"],
         preferredVibes: ["Warm", "Elegant"],
         strategy: "signature",
+        collectionStyle: "more_variety",
       })
     ).toEqual({
       budget: 1225,
@@ -213,6 +217,7 @@ describe("normalizeComposerRequest", () => {
       preferredOccasions: ["date", "formal"],
       preferredVibes: ["warm", "elegant"],
       strategy: getComposerStrategy("signature"),
+      collectionStyle: getComposerCollectionStyle("more_variety"),
       inputIssues: [],
       lockedExcludedConflicts: [205],
     });

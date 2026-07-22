@@ -194,6 +194,7 @@ function toEngineRequest(request) {
   return {
     ...request,
     strategy: request.strategy.id,
+    collectionStyle: request.collectionStyle.id,
   };
 }
 

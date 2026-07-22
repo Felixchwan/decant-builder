@@ -1,4 +1,5 @@
 import { discoveryDecantsConfig } from "../../config/index.js";
+import { getComposerCollectionStyle } from "./composerCollectionStyles.js";
 import { getComposerStrategy } from "./composerStrategies.js";
 
 const EMPTY_ARRAY = [];
@@ -63,6 +64,7 @@ export function normalizeComposerRequest(input = {}, context = {}) {
     preferredOccasions: normalizePreferenceList(source.preferredOccasions),
     preferredVibes: normalizePreferenceList(source.preferredVibes),
     strategy: getComposerStrategy(source.strategy),
+    collectionStyle: getComposerCollectionStyle(source.collectionStyle),
     inputIssues,
     lockedExcludedConflicts,
   };

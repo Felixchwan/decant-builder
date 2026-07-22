@@ -1,4 +1,7 @@
 import { describe, expect, it } from "vitest";
+import { perfumes as realCatalog } from "../../../data/perfumes.js";
+import { notes as realNotes } from "../../../data/notes.js";
+import { discoveryDecantsConfig } from "../../config/discoveryDecantsConfig.js";
 import { createBuilderConfig } from "../../config/createBuilderConfig.js";
 import {
   buildComposerBoxProposal,
@@ -205,6 +208,39 @@ describe("buildComposerBoxProposal", () => {
     });
   });
 
+  it("treats UI budget as money and lets Composer convert it once to max points", () => {
+    const nineHundred = build({ budget: 900 });
+    const thirteenFifty = build({ budget: 1350 });
+    const unlimited = build({ budget: null });
+
+    expect(nineHundred.compositionResult.normalizedRequest).toMatchObject({
+      budget: 900,
+      pointValue: 100,
+      maxPoints: 9,
+    });
+    expect(thirteenFifty.compositionResult.normalizedRequest).toMatchObject({
+      budget: 1350,
+      pointValue: 100,
+      maxPoints: 13.5,
+    });
+    expect(unlimited.compositionResult.normalizedRequest).toMatchObject({
+      budget: null,
+      maxPoints: null,
+    });
+    expect(thirteenFifty.orderTotal).toBe(thirteenFifty.totalPoints * 100);
+  });
+
+  it("includes selected perfume points in the total budget", () => {
+    const proposal = build({
+      selectedPerfumes: [formal, amber],
+      budget: 500,
+    });
+
+    expect(proposal.totalPoints).toBeLessThanOrEqual(5);
+    expect(proposal.orderTotal).toBeLessThanOrEqual(500);
+    expect(proposal.collectionIds).toEqual(expect.arrayContaining([formal.id, amber.id]));
+  });
+
   it("keeps Curator Bonus separate by targeting only customer-selectable slots", () => {
     const physicalConfig = createBuilderConfig({
       ...config,
@@ -301,5 +337,167 @@ describe("buildComposerBoxProposal", () => {
 
     expect(isComposerBoxProposalStale(proposal, matchingKey)).toBe(false);
     expect(isComposerBoxProposalStale(proposal, changedKey)).toBe(true);
+  });
+
+  it("regresses the real 1500 MXN unrestricted empty-box proposal", () => {
+    const proposal = buildComposerBoxProposal({
+      selectedPerfumes: [],
+      excludedPerfumeIds: [],
+      strategy: "balanced",
+      budget: 1500,
+      targetSlots: discoveryDecantsConfig.box.defaultTargetSlots,
+      minSlots: discoveryDecantsConfig.box.minSelectableSlots,
+      maxSlots: discoveryDecantsConfig.box.maxSelectableSlots,
+      seasons: [],
+      occasions: [],
+      vibes: [],
+      catalog: realCatalog,
+      notes: realNotes,
+      config: discoveryDecantsConfig,
+    });
+
+    expect(proposal.proposalAvailable).toBe(true);
+    expect(proposal.apply.available).toBe(true);
+    expect(proposal.collection.length).toBeGreaterThanOrEqual(
+      discoveryDecantsConfig.box.minSelectableSlots
+    );
+    expect(proposal.compositionResult.status).not.toBe("impossible");
+    expect(proposal.compositionResult.normalizedRequest).toMatchObject({
+      budget: 1500,
+      maxPoints: 15,
+      preferredSeasons: [],
+      preferredOccasions: [],
+      preferredVibes: [],
+      lockedPerfumeIds: [],
+      excludedPerfumeIds: [],
+    });
+    expect(proposal.totalPoints).toBeLessThanOrEqual(15);
+    expect(proposal.orderTotal).toBeLessThanOrEqual(1500);
+    expect(new Set(proposal.collectionIds).size).toBe(proposal.collectionIds.length);
+  });
+
+  it("lets More Variety prioritize feasible slot count for the real 1500 MXN box", () => {
+    const premiumFocus = buildComposerBoxProposal({
+      selectedPerfumes: [],
+      excludedPerfumeIds: [],
+      strategy: "balanced",
+      collectionStyle: "premium_focus",
+      budget: 1500,
+      targetSlots: discoveryDecantsConfig.box.defaultTargetSlots,
+      minSlots: discoveryDecantsConfig.box.minSelectableSlots,
+      maxSlots: discoveryDecantsConfig.box.maxSelectableSlots,
+      seasons: [],
+      occasions: [],
+      vibes: [],
+      catalog: realCatalog,
+      notes: realNotes,
+      config: discoveryDecantsConfig,
+    });
+    const moreVariety = buildComposerBoxProposal({
+      selectedPerfumes: [],
+      excludedPerfumeIds: [],
+      strategy: "balanced",
+      collectionStyle: "more_variety",
+      budget: 1500,
+      targetSlots: discoveryDecantsConfig.box.defaultTargetSlots,
+      minSlots: discoveryDecantsConfig.box.minSelectableSlots,
+      maxSlots: discoveryDecantsConfig.box.maxSelectableSlots,
+      seasons: [],
+      occasions: [],
+      vibes: [],
+      catalog: realCatalog,
+      notes: realNotes,
+      config: discoveryDecantsConfig,
+    });
+
+    expect(premiumFocus.proposalAvailable).toBe(true);
+    expect(moreVariety.proposalAvailable).toBe(true);
+    expect(moreVariety.collection.length).toBeGreaterThan(premiumFocus.collection.length);
+    expect(moreVariety.collection.length).toBe(discoveryDecantsConfig.box.defaultTargetSlots);
+    expect(moreVariety.totalPoints).toBeLessThanOrEqual(15);
+    expect(moreVariety.compositionResult.normalizedRequest.collectionStyle.id).toBe("more_variety");
+    expect(new Set(moreVariety.collectionIds).size).toBe(moreVariety.collectionIds.length);
+    expect(moreVariety.compositionResult.constraintResult.valid).toBe(true);
+  });
+
+  it("attaches deterministic per-fragrance preference and preserved reasons", () => {
+    const proposal = build({
+      selectedPerfumes: [fresh],
+      seasons: ["summer"],
+      occasions: ["office"],
+      vibes: ["fresh"],
+    });
+    const preservedItem = proposal.proposalItems.find((item) => item.id === fresh.id);
+    const reasonKeys = preservedItem.reasons.map((reason) => [
+      reason.type,
+      reason.preferenceType,
+      reason.preferenceValue,
+    ]);
+
+    expect(preservedItem).toMatchObject({
+      preserved: true,
+      newlyAdded: false,
+    });
+    expect(reasonKeys).toEqual([
+      ["preserved", null, null],
+      ["preference_match", "season", "summer"],
+      ["preference_match", "occasion", "office"],
+      ["preference_match", "vibe", "fresh"],
+    ]);
+    expect(new Set(preservedItem.reasons.map((reason) => reason.code)).size).toBe(
+      preservedItem.reasons.length
+    );
+  });
+
+  it("normalizes multi-preference stale keys with order independence and no literal Any", () => {
+    const firstKey = buildComposerProposalInputKey({
+      selectedPerfumes: [fresh],
+      excludedPerfumeIds: [],
+      strategy: "balanced",
+      collectionStyle: "balanced_mix",
+      budget: 900,
+      targetSlots: 4,
+      minSlots: 3,
+      maxSlots: 4,
+      seasons: ["summer", "spring", "spring"],
+      occasions: ["date", "office"],
+      vibes: ["fresh", "elegant"],
+      catalog,
+      config,
+    });
+    const secondKey = buildComposerProposalInputKey({
+      selectedPerfumes: [fresh],
+      excludedPerfumeIds: [],
+      strategy: "balanced",
+      collectionStyle: "balanced_mix",
+      budget: 900,
+      targetSlots: 4,
+      minSlots: 3,
+      maxSlots: 4,
+      seasons: ["spring", "summer"],
+      occasions: ["office", "date"],
+      vibes: ["elegant", "fresh"],
+      catalog,
+      config,
+    });
+    const clearedKey = buildComposerProposalInputKey({
+      selectedPerfumes: [fresh],
+      excludedPerfumeIds: [],
+      strategy: "balanced",
+      collectionStyle: "more_variety",
+      budget: 900,
+      targetSlots: 4,
+      minSlots: 3,
+      maxSlots: 4,
+      seasons: [],
+      occasions: [],
+      vibes: [],
+      catalog,
+      config,
+    });
+
+    expect(firstKey).toBe(secondKey);
+    expect(firstKey).not.toContain("Any");
+    expect(firstKey).not.toBe(clearedKey);
   });
 });

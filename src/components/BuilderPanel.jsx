@@ -55,9 +55,12 @@ function BuilderPanel({
   onAddPerfume,
   composerSettings,
   composerOptions,
+  minimumComposerBudget,
   composerProposal,
   isComposerProposalStale,
   onComposerSettingChange,
+  onComposerPreferenceToggle,
+  onComposerPreferenceClear,
   onComposeMyBox,
   onApplyComposerProposal,
   onCancelComposerProposal,
@@ -77,6 +80,7 @@ function BuilderPanel({
     const [isNotesModalOpen, setIsNotesModalOpen] = useState(false);
     const [isFinalSummaryOpen, setIsFinalSummaryOpen] = useState(false);
     const [isCollectionCardPreviewOpen, setIsCollectionCardPreviewOpen] = useState(false);
+    const [isComposerSetupOpen, setIsComposerSetupOpen] = useState(false);
     const [isCollectionSnapshotOpen, setIsCollectionSnapshotOpen] = useState(false);
     const [selectedDnaAccord, setSelectedDnaAccord] = useState(null);
     const previousCuratorBonusUnlockedRef = useRef(false);
@@ -422,14 +426,6 @@ function BuilderPanel({
         onReorderPerfumes={onReorderPerfumes}
       />
 
-      <ComposeMyBoxPanel
-        settings={composerSettings}
-        options={composerOptions}
-        isBoxFull={totalSlots >= maxSelectableSlots}
-        onSettingChange={onComposerSettingChange}
-        onCompose={onComposeMyBox}
-      />
-
       <div className="share-box-actions">
         <div className="share-box-toolbar">
           <span className="share-box-label">Collection Card</span>
@@ -492,6 +488,11 @@ function BuilderPanel({
           </p>
         )}
       </div>
+
+      <ComposeMyBoxPanel
+        isBoxFull={totalSlots >= maxSelectableSlots}
+        onOpenSetup={() => setIsComposerSetupOpen(true)}
+      />
 
       <div className="slot-bar">
         <div
@@ -723,6 +724,25 @@ function BuilderPanel({
           isStale={isComposerProposalStale}
           onApply={onApplyComposerProposal}
           onCancel={onCancelComposerProposal}
+          onBack={() => {
+            setIsComposerSetupOpen(true);
+            onCancelComposerProposal();
+          }}
+        />
+      )}
+      {isComposerSetupOpen && (
+        <ComposerSetupModal
+          settings={composerSettings}
+          options={composerOptions}
+          minimumComposerBudget={minimumComposerBudget}
+          onSettingChange={onComposerSettingChange}
+          onPreferenceToggle={onComposerPreferenceToggle}
+          onPreferenceClear={onComposerPreferenceClear}
+          onCancel={() => setIsComposerSetupOpen(false)}
+          onGenerate={() => {
+            onComposeMyBox();
+            setIsComposerSetupOpen(false);
+          }}
         />
       )}
       {isCollectionCardPreviewOpen && (
@@ -771,102 +791,232 @@ const COMPOSER_STRATEGY_OPTIONS = [
   { value: "signature", label: "Signature" },
 ];
 
-function ComposeMyBoxPanel({
-  settings,
-  options,
-  isBoxFull,
-  onSettingChange,
-  onCompose,
-}) {
-  const safeSettings = settings || {};
-  const safeOptions = options || {};
+const COMPOSER_COLLECTION_STYLE_OPTIONS = [
+  { value: "premium_focus", label: "Premium Focus" },
+  { value: "balanced_mix", label: "Balanced Mix" },
+  { value: "more_variety", label: "More Variety" },
+];
 
+function ComposeMyBoxPanel({
+  isBoxFull,
+  onOpenSetup,
+}) {
   return (
-    <section className="compose-box-panel" aria-label="Compose My Box">
+    <section className="compose-box-panel compose-box-panel-compact" aria-label="Composer">
       <div className="compose-box-header">
         <div>
           <span>Composer</span>
-          <h3>Compose My Box</h3>
+          <h3>Build a box from your preferences.</h3>
         </div>
 
-        <button type="button" onClick={onCompose}>
+        <button type="button" onClick={onOpenSetup}>
           {isBoxFull ? "Review Proposal" : "Compose My Box"}
         </button>
       </div>
-
-      <div className="compose-box-controls">
-        <label>
-          <span>Strategy</span>
-          <select
-            value={safeSettings.strategy || "balanced"}
-            onChange={(event) => onSettingChange("strategy", event.target.value)}
-          >
-            {COMPOSER_STRATEGY_OPTIONS.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-        </label>
-
-        <label>
-          <span>Budget</span>
-          <input
-            type="number"
-            min="0"
-            inputMode="decimal"
-            value={safeSettings.budget || ""}
-            onChange={(event) => onSettingChange("budget", event.target.value)}
-            placeholder="No limit"
-          />
-        </label>
-
-        <label>
-          <span>Season</span>
-          <select
-            value={safeSettings.seasons || ""}
-            onChange={(event) => onSettingChange("seasons", event.target.value)}
-          >
-            <option value="">Any</option>
-            {(safeOptions.seasons || []).map((option) => (
-              <option key={option} value={option}>
-                {option}
-              </option>
-            ))}
-          </select>
-        </label>
-
-        <label>
-          <span>Occasion</span>
-          <select
-            value={safeSettings.occasions || ""}
-            onChange={(event) => onSettingChange("occasions", event.target.value)}
-          >
-            <option value="">Any</option>
-            {(safeOptions.occasions || []).map((option) => (
-              <option key={option} value={option}>
-                {option}
-              </option>
-            ))}
-          </select>
-        </label>
-
-        <label>
-          <span>Vibe</span>
-          <select
-            value={safeSettings.vibes || ""}
-            onChange={(event) => onSettingChange("vibes", event.target.value)}
-          >
-            <option value="">Any</option>
-            {(safeOptions.vibes || []).map((option) => (
-              <option key={option} value={option}>
-                {option}
-              </option>
-            ))}
-          </select>
-        </label>
-      </div>
     </section>
+  );
+}
+
+function ComposerSetupModal({
+  settings,
+  options,
+  minimumComposerBudget,
+  onSettingChange,
+  onPreferenceToggle,
+  onPreferenceClear,
+  onCancel,
+  onGenerate,
+}) {
+  const safeSettings = settings || {};
+  const safeOptions = options || {};
+  const budgetValue = safeSettings.budget || "";
+  const numericBudget = budgetValue === "" ? null : Number(budgetValue);
+  const isBudgetBelowMinimum =
+    Number.isFinite(numericBudget) &&
+    Number.isFinite(minimumComposerBudget) &&
+    numericBudget < minimumComposerBudget;
+
+  useEffect(() => {
+    function handleKeyDown(event) {
+      if (event.key === "Escape") {
+        onCancel();
+      }
+    }
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [onCancel]);
+
+  return createPortal(
+    <div className="modal-overlay final-summary-overlay" onClick={onCancel}>
+      <div
+        className="final-summary-modal composer-setup-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="composer-setup-title"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <div className="modal-header">
+          <div>
+            <span>Composer</span>
+            <h3 id="composer-setup-title">Compose My Box</h3>
+          </div>
+
+          <button type="button" onClick={onCancel}>Close</button>
+        </div>
+
+        <div className="composer-setup-body">
+          <p className="composer-setup-intro">
+            Choose the preferences Composer should use.
+          </p>
+
+          <div className="compose-box-controls composer-setup-controls">
+            <label>
+              <span>Strategy</span>
+              <select
+                value={safeSettings.strategy || "balanced"}
+                onChange={(event) => onSettingChange("strategy", event.target.value)}
+              >
+                {COMPOSER_STRATEGY_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label>
+              <span>Budget</span>
+              <input
+                type="number"
+                min={Number.isFinite(minimumComposerBudget) ? minimumComposerBudget : 0}
+                step="100"
+                inputMode="decimal"
+                value={budgetValue}
+                onChange={(event) => onSettingChange("budget", event.target.value)}
+                placeholder="No limit"
+              />
+              {isBudgetBelowMinimum && (
+                <small className="composer-budget-warning">
+                  Minimum budget is ${minimumComposerBudget}.
+                </small>
+              )}
+            </label>
+
+            <div className="compose-preference-group composer-style-control">
+              <div className="compose-preference-heading">
+                <span>Collection Style</span>
+              </div>
+
+              <div className="compose-preference-chips" role="radiogroup" aria-label="Collection Style">
+                {COMPOSER_COLLECTION_STYLE_OPTIONS.map((option) => {
+                  const isSelected =
+                    (safeSettings.collectionStyle || "balanced_mix") === option.value;
+
+                  return (
+                    <button
+                      key={option.value}
+                      type="button"
+                      className={isSelected ? "is-selected" : ""}
+                      role="radio"
+                      aria-checked={isSelected}
+                      onClick={() => onSettingChange("collectionStyle", option.value)}
+                    >
+                      {option.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <ComposePreferenceGroup
+              label="Season"
+              field="seasons"
+              values={safeSettings.seasons}
+              options={safeOptions.seasons}
+              onToggle={onPreferenceToggle}
+              onClear={onPreferenceClear}
+            />
+
+            <ComposePreferenceGroup
+              label="Occasion"
+              field="occasions"
+              values={safeSettings.occasions}
+              options={safeOptions.occasions}
+              onToggle={onPreferenceToggle}
+              onClear={onPreferenceClear}
+            />
+
+            <ComposePreferenceGroup
+              label="Vibe"
+              field="vibes"
+              values={safeSettings.vibes}
+              options={safeOptions.vibes}
+              onToggle={onPreferenceToggle}
+              onClear={onPreferenceClear}
+            />
+          </div>
+        </div>
+
+        <div className="review-modal-footer composer-setup-footer">
+          <button type="button" className="secondary" onClick={onCancel}>
+            Cancel
+          </button>
+          <button type="button" onClick={onGenerate} disabled={isBudgetBelowMinimum}>
+            Generate Proposal
+          </button>
+        </div>
+      </div>
+    </div>,
+    document.body
+  );
+}
+
+function ComposePreferenceGroup({
+  label,
+  field,
+  values,
+  options,
+  onToggle,
+  onClear,
+  density = "wrap",
+}) {
+  const selectedValues = Array.isArray(values) ? values : [];
+  const availableOptions = Array.isArray(options) ? options : [];
+  const selectedSummary =
+    selectedValues.length > 0 ? `${selectedValues.length} selected` : "Any";
+
+  return (
+    <div className={`compose-preference-group compose-preference-${density}`}>
+      <div className="compose-preference-heading">
+        <span>
+          {label} <em>{selectedSummary}</em>
+        </span>
+        {selectedValues.length > 0 && (
+          <button type="button" onClick={() => onClear(field)}>
+            Clear
+          </button>
+        )}
+      </div>
+
+      <div className="compose-preference-chips">
+        {availableOptions.map((option) => {
+          const isSelected = selectedValues.includes(option);
+
+          return (
+            <button
+              key={option}
+              type="button"
+              className={isSelected ? "is-selected" : ""}
+              aria-pressed={isSelected}
+              onClick={() => onToggle(field, option)}
+            >
+              {option}
+            </button>
+          );
+        })}
+      </div>
+    </div>
   );
 }
 
@@ -875,6 +1025,7 @@ function ComposerProposalModal({
   isStale,
   onApply,
   onCancel,
+  onBack,
 }) {
   useEffect(() => {
     function handleKeyDown(event) {
@@ -888,6 +1039,7 @@ function ComposerProposalModal({
   }, [onCancel]);
 
   const statusLabel = getComposerProposalStatusLabel(proposal.status);
+  const isProposalAvailable = Boolean(proposal.proposalAvailable);
   const explanationLabels = [
     proposal.preview?.headline,
     ...(proposal.preview?.strengths || []),
@@ -898,6 +1050,25 @@ function ComposerProposalModal({
     .filter(Boolean)
     .slice(0, 4);
   const canApply = proposal.apply.available && !isStale;
+  const failureMessage =
+    "Composer could not create a box with the current settings.";
+  const failureRecommendation =
+    "Try increasing the budget or removing one or more preferences.";
+  const budgetLimitedPartial =
+    isProposalAvailable &&
+    !proposal.targetReached &&
+    proposal.diagnostics?.collectionStyle === "more_variety" &&
+    Number.isFinite(proposal.diagnostics?.budget) &&
+    proposal.compositionResult?.constraintResult?.metrics?.remainingBudget === 0;
+  const proposalItems =
+    proposal.proposalItems ||
+    proposal.collection.map((perfume) => ({
+      id: perfume.id,
+      perfume,
+      preserved: proposal.preservedPerfumes.some((item) => item.id === perfume.id),
+      newlyAdded: proposal.addedPerfumes.some((item) => item.id === perfume.id),
+      reasons: [],
+    }));
 
   return createPortal(
     <div className="modal-overlay final-summary-overlay" onClick={onCancel}>
@@ -914,7 +1085,12 @@ function ComposerProposalModal({
             <h3 id="composer-proposal-title">Composer Proposal</h3>
           </div>
 
-          <button type="button" onClick={onCancel}>Close</button>
+          <div className="composer-proposal-header-actions">
+            <button type="button" className="secondary" onClick={onBack}>
+              Back
+            </button>
+            <button type="button" onClick={onCancel}>Close</button>
+          </div>
         </div>
 
         {isStale && (
@@ -923,39 +1099,62 @@ function ComposerProposalModal({
           </p>
         )}
 
-        <section className="final-summary-section composer-proposal-summary">
-          <h4>Proposal Summary</h4>
-          <div className="summary-grid">
-            <SummaryStat label="Slots" value={`${proposal.collection.length} / ${proposal.targetSlots}`} />
-            <SummaryStat label="Points" value={proposal.totalPoints.toFixed(1)} />
-            <SummaryStat label="Order Total" value={`$${proposal.orderTotal.toFixed(0)}`} />
-            <SummaryStat label="New Picks" value={proposal.addedPerfumes.length} />
-          </div>
-        </section>
+        {budgetLimitedPartial && (
+          <p className="composer-proposal-alert" role="status">
+            Composer built the largest valid box available within this budget.
+          </p>
+        )}
 
-        <section className="final-summary-section">
-          <h4>Proposed Fragrances</h4>
+        {isProposalAvailable ? (
+          <>
+            <section className="final-summary-section composer-proposal-summary">
+              <h4>Proposal Summary</h4>
+              <div className="summary-grid">
+                <SummaryStat label="Slots" value={`${proposal.collection.length} / ${proposal.targetSlots}`} />
+                <SummaryStat label="Points" value={proposal.totalPoints.toFixed(1)} />
+                <SummaryStat label="Order Total" value={`$${proposal.orderTotal.toFixed(0)}`} />
+                <SummaryStat label="New Picks" value={proposal.addedPerfumes.length} />
+              </div>
+            </section>
 
-          <div className="composer-proposal-list">
-            {proposal.collection.map((perfume) => {
-              const isPreserved = proposal.preservedPerfumes.some(
-                (item) => item.id === perfume.id
-              );
+            <section className="final-summary-section">
+              <h4>Proposed Fragrances</h4>
 
-              return (
-                <div key={perfume.id} className="composer-proposal-item">
-                  <div>
-                    <strong>{perfume.name}</strong>
-                    <span>{perfume.brand} - {perfume.points} pt</span>
-                  </div>
-                  <span>{isPreserved ? "Preserved" : "New"}</span>
-                </div>
-              );
-            })}
-          </div>
-        </section>
+              <div className="composer-proposal-list">
+                {proposalItems.map((item) => {
+                  const perfume = item.perfume;
 
-        {explanationLabels.length > 0 && (
+                  return (
+                    <div key={perfume.id} className="composer-proposal-item">
+                      <div>
+                        <strong>{perfume.name}</strong>
+                        <span>{perfume.brand} - {perfume.points} pt</span>
+                        {item.reasons.length > 0 && (
+                          <div className="composer-proposal-item-reasons">
+                            {item.reasons.map((reason) => (
+                              <span key={`${perfume.id}-${reason.code}-${reason.preferenceValue || ""}`}>
+                                {getProposalItemReasonLabel(reason)}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                      <span>{item.preserved ? "Preserved" : "New"}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </section>
+          </>
+        ) : (
+          <section className="final-summary-section composer-proposal-failure">
+            <h4>{statusLabel}</h4>
+            <p>{failureMessage}</p>
+            <p>{failureRecommendation}</p>
+          </section>
+        )}
+
+        {isProposalAvailable && explanationLabels.length > 0 && (
           <section className="final-summary-section">
             <h4>Why This Box</h4>
             <div className="composer-proposal-reasons">
@@ -966,24 +1165,44 @@ function ComposerProposalModal({
           </section>
         )}
 
-        {!proposal.apply.available && (
-          <p className="composer-proposal-alert" role="status">
-            Composer could not create an applicable box from the current inputs.
-          </p>
-        )}
-
         <div className="review-modal-footer">
           <button type="button" className="secondary" onClick={onCancel}>
             Keep Current Box
           </button>
-          <button type="button" onClick={onApply} disabled={!canApply}>
-            Apply Proposal
-          </button>
+          {isProposalAvailable && (
+            <button type="button" onClick={onApply} disabled={!canApply}>
+              Apply Proposal
+            </button>
+          )}
         </div>
       </div>
     </div>,
     document.body
   );
+}
+
+function getProposalItemReasonLabel(reason) {
+  if (reason.type === "preserved") {
+    return "Already in your box";
+  }
+
+  if (reason.type === "preference_match" && reason.preferenceValue) {
+    return formatReasonValue(reason.preferenceValue);
+  }
+
+  if (reason.type === "strategy_contribution") {
+    return "Supports strategy";
+  }
+
+  return null;
+}
+
+function formatReasonValue(value) {
+  return String(value)
+    .split(/(?=[A-Z])|[-_\s]/)
+    .filter(Boolean)
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
 }
 
 function DiscoveryBoxCoachmark({ builderConfig, onDismiss }) {

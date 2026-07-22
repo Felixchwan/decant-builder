@@ -43,7 +43,99 @@ export function generateCandidateMoves({
       };
     })
     .filter((move) => move.constraintResult.valid)
+    .filter((move) =>
+      canStillReachConstructionMinimum({
+        request,
+        move,
+        currentPerfumes: selectedPerfumes,
+        catalogPerfumes,
+        excludedIds,
+      })
+    )
     .sort((a, b) => a.perfumeId - b.perfumeId);
+}
+
+function canStillReachConstructionMinimum({
+  request,
+  move,
+  currentPerfumes,
+  catalogPerfumes,
+  excludedIds,
+}) {
+  const constructionMinSlots = request?.constructionMinSlots;
+
+  if (
+    !Number.isFinite(constructionMinSlots) ||
+    move.candidatePerfumes.length >= constructionMinSlots
+  ) {
+    return true;
+  }
+
+  if (
+    !canReachConstructionMinimum({
+      request,
+      currentPerfumes,
+      catalogPerfumes,
+      excludedIds,
+      constructionMinSlots,
+    })
+  ) {
+    return true;
+  }
+
+  return canReachConstructionMinimum({
+    request,
+    currentPerfumes: move.candidatePerfumes,
+    catalogPerfumes,
+    excludedIds,
+    constructionMinSlots,
+  });
+}
+
+function canReachConstructionMinimum({
+  request,
+  currentPerfumes,
+  catalogPerfumes,
+  excludedIds,
+  constructionMinSlots,
+}) {
+  if (currentPerfumes.length >= constructionMinSlots) {
+    return true;
+  }
+
+  const remainingSlotCount = constructionMinSlots - currentPerfumes.length;
+  const selectedIds = new Set(currentPerfumes.map((perfume) => perfume.id));
+  const remainingPointBudget =
+    request.maxPoints -
+    currentPerfumes.reduce((sum, perfume) => sum + normalizePoints(perfume.points), 0);
+
+  if (!Number.isFinite(remainingPointBudget)) {
+    return true;
+  }
+
+  const cheapestRemainingPoints = catalogPerfumes
+    .filter((perfume) => Number.isInteger(perfume?.id))
+    .filter((perfume) => !selectedIds.has(perfume.id))
+    .filter((perfume) => !excludedIds.has(perfume.id))
+    .map((perfume) => normalizePoints(perfume.points))
+    .filter((points) => points >= 0)
+    .sort((first, second) => first - second)
+    .slice(0, remainingSlotCount);
+
+  if (cheapestRemainingPoints.length < remainingSlotCount) {
+    return false;
+  }
+
+  const minimumRemainingPoints = cheapestRemainingPoints.reduce(
+    (sum, points) => sum + points,
+    0
+  );
+
+  return minimumRemainingPoints <= remainingPointBudget;
+}
+
+function normalizePoints(value) {
+  return Number.isFinite(value) ? value : 0;
 }
 
 function stablePerfumes(perfumes) {

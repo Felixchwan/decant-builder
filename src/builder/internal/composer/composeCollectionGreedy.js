@@ -1,4 +1,5 @@
 import { discoveryDecantsConfig } from "../../config/index.js";
+import { COMPOSER_COLLECTION_STYLE_IDS } from "./composerCollectionStyles.js";
 import { evaluateComposerConstraints } from "./evaluateComposerConstraints.js";
 import { evaluateCompositionQuality } from "./evaluateCompositionQuality.js";
 import { generateCandidateMoves } from "./generateCandidateMoves.js";
@@ -34,6 +35,7 @@ export function composeCollectionGreedy({
   const searchRequest = {
     ...normalizedRequest,
     minSlots: 0,
+    constructionMinSlots: normalizedRequest.minSlots,
   };
   const requestConstraintResult = evaluateComposerConstraints({
     request: normalizedRequest,
@@ -83,6 +85,11 @@ export function composeCollectionGreedy({
     const evaluatedMoves = moves
       .map((move) => ({
         ...move,
+        feasibleFinalSlotCount: getFeasibleFinalSlotCount({
+          request: searchRequest,
+          candidatePerfumes: move.candidatePerfumes,
+          catalog: catalogPerfumes,
+        }),
         qualityResult: getSearchQuality({
           request: searchRequest,
           candidatePerfumes: move.candidatePerfumes,
@@ -93,7 +100,9 @@ export function composeCollectionGreedy({
         }),
       }))
       .filter((move) => move.qualityResult.evaluable)
-      .sort(compareEvaluatedMoves);
+      .sort((firstMove, secondMove) =>
+        compareEvaluatedMoves(firstMove, secondMove, searchRequest)
+      );
     const bestMove = evaluatedMoves[0];
 
     if (!bestMove) {
@@ -103,6 +112,7 @@ export function composeCollectionGreedy({
 
     if (
       selectedPerfumes.length >= normalizedRequest.minSlots &&
+      searchRequest.collectionStyle.id !== COMPOSER_COLLECTION_STYLE_IDS.MORE_VARIETY &&
       currentQuality.evaluable &&
       bestMove.qualityResult.overallScore <= currentQuality.overallScore + QUALITY_EPSILON
     ) {
@@ -142,7 +152,19 @@ export function composeCollectionGreedy({
   });
 }
 
-function compareEvaluatedMoves(firstMove, secondMove) {
+function compareEvaluatedMoves(firstMove, secondMove, request) {
+  if (request.collectionStyle.id === COMPOSER_COLLECTION_STYLE_IDS.MORE_VARIETY) {
+    return (
+      secondMove.feasibleFinalSlotCount - firstMove.feasibleFinalSlotCount ||
+      secondMove.candidatePerfumes.length - firstMove.candidatePerfumes.length ||
+      secondMove.qualityResult.overallScore - firstMove.qualityResult.overallScore ||
+      secondMove.qualityResult.dimensions.preferenceFit.score -
+        firstMove.qualityResult.dimensions.preferenceFit.score ||
+      firstMove.perfume.points - secondMove.perfume.points ||
+      firstMove.perfumeId - secondMove.perfumeId
+    );
+  }
+
   return (
     secondMove.qualityResult.overallScore - firstMove.qualityResult.overallScore ||
     secondMove.qualityResult.dimensions.preferenceFit.score -
@@ -150,6 +172,53 @@ function compareEvaluatedMoves(firstMove, secondMove) {
     firstMove.perfume.points - secondMove.perfume.points ||
     firstMove.perfumeId - secondMove.perfumeId
   );
+}
+
+function getFeasibleFinalSlotCount({ request, candidatePerfumes, catalog }) {
+  const currentPerfumes = Array.isArray(candidatePerfumes) ? candidatePerfumes : [];
+  const selectedIds = new Set(currentPerfumes.map((perfume) => perfume.id));
+  const excludedIds = new Set(request.excludedPerfumeIds || []);
+  const remainingPointBudget =
+    request.maxPoints -
+    currentPerfumes.reduce((sum, perfume) => sum + normalizePoints(perfume.points), 0);
+
+  if (!Number.isFinite(remainingPointBudget)) {
+    return Math.min(
+      request.targetSlots,
+      currentPerfumes.length +
+        catalog.filter(
+          (perfume) =>
+            Number.isInteger(perfume?.id) &&
+            !selectedIds.has(perfume.id) &&
+            !excludedIds.has(perfume.id)
+        ).length
+    );
+  }
+
+  let usedPoints = 0;
+  let fillCount = 0;
+  const remainingPoints = catalog
+    .filter((perfume) => Number.isInteger(perfume?.id))
+    .filter((perfume) => !selectedIds.has(perfume.id))
+    .filter((perfume) => !excludedIds.has(perfume.id))
+    .map((perfume) => normalizePoints(perfume.points))
+    .filter((points) => points >= 0)
+    .sort((first, second) => first - second);
+
+  for (const points of remainingPoints) {
+    if (currentPerfumes.length + fillCount >= request.targetSlots) {
+      break;
+    }
+
+    if (usedPoints + points > remainingPointBudget) {
+      break;
+    }
+
+    usedPoints += points;
+    fillCount += 1;
+  }
+
+  return currentPerfumes.length + fillCount;
 }
 
 function getSearchQuality({
@@ -271,6 +340,10 @@ function hasRequestInfeasibility(violations) {
       "INSUFFICIENT_CATALOG_CANDIDATES",
     ].includes(violation.code)
   );
+}
+
+function normalizePoints(value) {
+  return Number.isFinite(value) ? value : 0;
 }
 
 function stablePerfumes(perfumes) {

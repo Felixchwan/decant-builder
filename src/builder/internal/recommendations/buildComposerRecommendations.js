@@ -137,6 +137,7 @@ export function buildComposerRequestFromBuilderState({
   limit = DEFAULT_LIMIT,
   budget = null,
   strategy = "balanced",
+  collectionStyle = "balanced_mix",
   preferences = {},
   excludedPerfumeIds = [],
 } = {}) {
@@ -159,6 +160,7 @@ export function buildComposerRequestFromBuilderState({
     preferredOccasions: preferences.preferredOccasions || [],
     preferredVibes: preferences.preferredVibes || [],
     strategy,
+    collectionStyle,
   };
 }
 
