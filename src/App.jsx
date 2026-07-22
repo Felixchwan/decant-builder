@@ -14,6 +14,11 @@ import {
   hydrateBuilderPersistence,
   serializeBuilderPersistence,
 } from "./builder/internal/persistence/builderPersistence.js";
+import {
+  buildComposerBoxProposal,
+  buildComposerProposalInputKey,
+  isComposerBoxProposalStale,
+} from "./builder/internal/composition/buildComposerBoxProposal.js";
 import { buildComposerRecommendations } from "./builder/internal/recommendations/buildComposerRecommendations.js";
 import { getMetadataAsset } from "./data/metadataAssets";
 import { getBrandAsset } from "./data/brandAssets";
@@ -68,6 +73,14 @@ function App({ catalog, notes: noteMetadata = EMPTY_NOTES, config }) {
     occasions: "",
     vibes: "",
   });
+  const [composerSettings, setComposerSettings] = useState({
+    strategy: "balanced",
+    budget: "",
+    seasons: "",
+    occasions: "",
+    vibes: "",
+  });
+  const [composerProposal, setComposerProposal] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [sortOption, setSortOption] = useState("bestMatch");
   const [pendingPerfume, setPendingPerfume] = useState(null);
@@ -132,6 +145,37 @@ const recommendations = useMemo(() => {
     config: builderConfig,
   });
 }, [perfumes, selectedPerfumes, notes, builderConfig]);
+const composerBudget = parseComposerBudget(composerSettings.budget);
+const composerInputKey = useMemo(
+  () =>
+    buildComposerProposalInputKey({
+      selectedPerfumes,
+      excludedPerfumeIds: [],
+      strategy: composerSettings.strategy,
+      budget: composerBudget,
+      targetSlots: MAX_SELECTABLE_SLOTS,
+      minSlots: MIN_BOX_SLOTS,
+      maxSlots: MAX_SELECTABLE_SLOTS,
+      seasons: composerSettings.seasons ? [composerSettings.seasons] : [],
+      occasions: composerSettings.occasions ? [composerSettings.occasions] : [],
+      vibes: composerSettings.vibes ? [composerSettings.vibes] : [],
+      catalog: perfumes,
+      config: builderConfig,
+    }),
+  [
+    selectedPerfumes,
+    composerSettings,
+    composerBudget,
+    MAX_SELECTABLE_SLOTS,
+    MIN_BOX_SLOTS,
+    perfumes,
+    builderConfig,
+  ]
+);
+const isComposerProposalStale = isComposerBoxProposalStale(
+  composerProposal,
+  composerInputKey
+);
 
   useEffect(() => {
     const persistedState = createBuilderPersistencePayload({
@@ -172,6 +216,59 @@ const recommendations = useMemo(() => {
       ...currentFilters,
       [category]: value,
     }));
+  }
+
+  function handleComposerSettingChange(field, value) {
+    setComposerSettings((currentSettings) => ({
+      ...currentSettings,
+      [field]: value,
+    }));
+  }
+
+  function handleComposeMyBox() {
+    setComposerProposal(
+      buildComposerBoxProposal({
+        selectedPerfumes,
+        excludedPerfumeIds: [],
+        strategy: composerSettings.strategy,
+        budget: composerBudget,
+        targetSlots: MAX_SELECTABLE_SLOTS,
+        minSlots: MIN_BOX_SLOTS,
+        maxSlots: MAX_SELECTABLE_SLOTS,
+        seasons: composerSettings.seasons ? [composerSettings.seasons] : [],
+        occasions: composerSettings.occasions ? [composerSettings.occasions] : [],
+        vibes: composerSettings.vibes ? [composerSettings.vibes] : [],
+        catalog: perfumes,
+        notes,
+        config: builderConfig,
+      })
+    );
+  }
+
+  function handleCancelComposerProposal() {
+    setComposerProposal(null);
+  }
+
+  function handleApplyComposerProposal() {
+    if (
+      !composerProposal?.apply?.available ||
+      isComposerBoxProposalStale(composerProposal, composerInputKey)
+    ) {
+      return;
+    }
+
+    const catalogById = new Map(perfumes.map((perfume) => [perfume.id, perfume]));
+    const nextSelectedPerfumes = composerProposal.apply.collectionIds
+      .map((perfumeId) => catalogById.get(perfumeId))
+      .filter(Boolean);
+
+    if (nextSelectedPerfumes.length !== composerProposal.apply.collectionIds.length) {
+      return;
+    }
+
+    setSelectedPerfumes(nextSelectedPerfumes);
+    setComposerProposal(null);
+    setActiveMobileTab("box");
   }
 
   const addPerfume = (perfume) => {
@@ -395,6 +492,14 @@ const confirmAddPerfume = () => {
             scentDna={scentDna}
             isBoxReady={isBoxReady}
             onAddPerfume={addPerfume}
+            composerSettings={composerSettings}
+            composerOptions={filterOptions}
+            composerProposal={composerProposal}
+            isComposerProposalStale={isComposerProposalStale}
+            onComposerSettingChange={handleComposerSettingChange}
+            onComposeMyBox={handleComposeMyBox}
+            onApplyComposerProposal={handleApplyComposerProposal}
+            onCancelComposerProposal={handleCancelComposerProposal}
             curatorBonusPreference={curatorBonusPreference}
             onCuratorBonusPreferenceChange={setCuratorBonusPreference}
             reviewCustomerInfo={reviewCustomerInfo}
@@ -489,6 +594,15 @@ function formatConfigCopy(template, values = {}) {
     (copy, [key, value]) => copy.replaceAll(`{${key}}`, String(value)),
     template
   );
+}
+
+function parseComposerBudget(value) {
+  if (value === "" || value === null || value === undefined) {
+    return null;
+  }
+
+  const parsedValue = Number(value);
+  return Number.isFinite(parsedValue) ? parsedValue : null;
 }
 
 function markFragranceDetailsHintSeen(builderConfig) {

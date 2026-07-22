@@ -21,6 +21,10 @@ import {
   getRecommendationConfidence,
   getRecommendationDisplayReasons,
 } from "../builder/presentation/recommendationExplanationLabels.js";
+import {
+  getComposerProposalExplanationLabel,
+  getComposerProposalStatusLabel,
+} from "../builder/presentation/composerProposalLabels.js";
 import { buildFinalizationModel } from "../builder/internal/finalization/buildFinalizationModel.js";
 import { getTierData } from "../utils/tierUtils";
 import CollectionCard from "./CollectionCard";
@@ -49,6 +53,14 @@ function BuilderPanel({
   scentDna,
   isBoxReady,
   onAddPerfume,
+  composerSettings,
+  composerOptions,
+  composerProposal,
+  isComposerProposalStale,
+  onComposerSettingChange,
+  onComposeMyBox,
+  onApplyComposerProposal,
+  onCancelComposerProposal,
   curatorBonusPreference,
   onCuratorBonusPreferenceChange,
   reviewCustomerInfo,
@@ -410,6 +422,14 @@ function BuilderPanel({
         onReorderPerfumes={onReorderPerfumes}
       />
 
+      <ComposeMyBoxPanel
+        settings={composerSettings}
+        options={composerOptions}
+        isBoxFull={totalSlots >= maxSelectableSlots}
+        onSettingChange={onComposerSettingChange}
+        onCompose={onComposeMyBox}
+      />
+
       <div className="share-box-actions">
         <div className="share-box-toolbar">
           <span className="share-box-label">Collection Card</span>
@@ -697,6 +717,14 @@ function BuilderPanel({
           onClose={() => setIsFinalSummaryOpen(false)}
         />
       )}
+      {composerProposal && (
+        <ComposerProposalModal
+          proposal={composerProposal}
+          isStale={isComposerProposalStale}
+          onApply={onApplyComposerProposal}
+          onCancel={onCancelComposerProposal}
+        />
+      )}
       {isCollectionCardPreviewOpen && (
         <CollectionCardPreviewModal
           cardProps={collectionCardViewModel.cardProps}
@@ -730,6 +758,228 @@ function CollectionCardPreviewModal({
         </div>
 
         <CollectionCard {...cardProps} />
+      </div>
+    </div>,
+    document.body
+  );
+}
+
+const COMPOSER_STRATEGY_OPTIONS = [
+  { value: "balanced", label: "Balanced" },
+  { value: "versatile", label: "Versatile" },
+  { value: "explorer", label: "Explorer" },
+  { value: "signature", label: "Signature" },
+];
+
+function ComposeMyBoxPanel({
+  settings,
+  options,
+  isBoxFull,
+  onSettingChange,
+  onCompose,
+}) {
+  const safeSettings = settings || {};
+  const safeOptions = options || {};
+
+  return (
+    <section className="compose-box-panel" aria-label="Compose My Box">
+      <div className="compose-box-header">
+        <div>
+          <span>Composer</span>
+          <h3>Compose My Box</h3>
+        </div>
+
+        <button type="button" onClick={onCompose}>
+          {isBoxFull ? "Review Proposal" : "Compose My Box"}
+        </button>
+      </div>
+
+      <div className="compose-box-controls">
+        <label>
+          <span>Strategy</span>
+          <select
+            value={safeSettings.strategy || "balanced"}
+            onChange={(event) => onSettingChange("strategy", event.target.value)}
+          >
+            {COMPOSER_STRATEGY_OPTIONS.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <label>
+          <span>Budget</span>
+          <input
+            type="number"
+            min="0"
+            inputMode="decimal"
+            value={safeSettings.budget || ""}
+            onChange={(event) => onSettingChange("budget", event.target.value)}
+            placeholder="No limit"
+          />
+        </label>
+
+        <label>
+          <span>Season</span>
+          <select
+            value={safeSettings.seasons || ""}
+            onChange={(event) => onSettingChange("seasons", event.target.value)}
+          >
+            <option value="">Any</option>
+            {(safeOptions.seasons || []).map((option) => (
+              <option key={option} value={option}>
+                {option}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <label>
+          <span>Occasion</span>
+          <select
+            value={safeSettings.occasions || ""}
+            onChange={(event) => onSettingChange("occasions", event.target.value)}
+          >
+            <option value="">Any</option>
+            {(safeOptions.occasions || []).map((option) => (
+              <option key={option} value={option}>
+                {option}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <label>
+          <span>Vibe</span>
+          <select
+            value={safeSettings.vibes || ""}
+            onChange={(event) => onSettingChange("vibes", event.target.value)}
+          >
+            <option value="">Any</option>
+            {(safeOptions.vibes || []).map((option) => (
+              <option key={option} value={option}>
+                {option}
+              </option>
+            ))}
+          </select>
+        </label>
+      </div>
+    </section>
+  );
+}
+
+function ComposerProposalModal({
+  proposal,
+  isStale,
+  onApply,
+  onCancel,
+}) {
+  useEffect(() => {
+    function handleKeyDown(event) {
+      if (event.key === "Escape") {
+        onCancel();
+      }
+    }
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [onCancel]);
+
+  const statusLabel = getComposerProposalStatusLabel(proposal.status);
+  const explanationLabels = [
+    proposal.preview?.headline,
+    ...(proposal.preview?.strengths || []),
+    ...(proposal.preview?.weaknesses || []),
+    ...(proposal.preview?.recommendations || []),
+  ]
+    .map((explanation) => getComposerProposalExplanationLabel(explanation))
+    .filter(Boolean)
+    .slice(0, 4);
+  const canApply = proposal.apply.available && !isStale;
+
+  return createPortal(
+    <div className="modal-overlay final-summary-overlay" onClick={onCancel}>
+      <div
+        className="final-summary-modal composer-proposal-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="composer-proposal-title"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <div className="modal-header">
+          <div>
+            <span>{statusLabel}</span>
+            <h3 id="composer-proposal-title">Composer Proposal</h3>
+          </div>
+
+          <button type="button" onClick={onCancel}>Close</button>
+        </div>
+
+        {isStale && (
+          <p className="composer-proposal-alert" role="status">
+            This proposal is out of date. Regenerate it before applying.
+          </p>
+        )}
+
+        <section className="final-summary-section composer-proposal-summary">
+          <h4>Proposal Summary</h4>
+          <div className="summary-grid">
+            <SummaryStat label="Slots" value={`${proposal.collection.length} / ${proposal.targetSlots}`} />
+            <SummaryStat label="Points" value={proposal.totalPoints.toFixed(1)} />
+            <SummaryStat label="Order Total" value={`$${proposal.orderTotal.toFixed(0)}`} />
+            <SummaryStat label="New Picks" value={proposal.addedPerfumes.length} />
+          </div>
+        </section>
+
+        <section className="final-summary-section">
+          <h4>Proposed Fragrances</h4>
+
+          <div className="composer-proposal-list">
+            {proposal.collection.map((perfume) => {
+              const isPreserved = proposal.preservedPerfumes.some(
+                (item) => item.id === perfume.id
+              );
+
+              return (
+                <div key={perfume.id} className="composer-proposal-item">
+                  <div>
+                    <strong>{perfume.name}</strong>
+                    <span>{perfume.brand} - {perfume.points} pt</span>
+                  </div>
+                  <span>{isPreserved ? "Preserved" : "New"}</span>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+
+        {explanationLabels.length > 0 && (
+          <section className="final-summary-section">
+            <h4>Why This Box</h4>
+            <div className="composer-proposal-reasons">
+              {explanationLabels.map((label) => (
+                <p key={label}>{label}</p>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {!proposal.apply.available && (
+          <p className="composer-proposal-alert" role="status">
+            Composer could not create an applicable box from the current inputs.
+          </p>
+        )}
+
+        <div className="review-modal-footer">
+          <button type="button" className="secondary" onClick={onCancel}>
+            Keep Current Box
+          </button>
+          <button type="button" onClick={onApply} disabled={!canApply}>
+            Apply Proposal
+          </button>
+        </div>
       </div>
     </div>,
     document.body

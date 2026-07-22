@@ -8,6 +8,7 @@ const projectRoot = dirname(
 );
 const srcRoot = join(projectRoot, "src");
 const builderRecommendationEntry = "src\\builder\\internal\\recommendations\\buildComposerRecommendations.js";
+const builderCompositionEntry = "src\\builder\\internal\\composition\\buildComposerBoxProposal.js";
 
 function getSourceFiles(directory) {
   return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
@@ -44,7 +45,7 @@ describe("recommendation architecture", () => {
     expect(references).toEqual([]);
   });
 
-  it("routes Builder recommendations through one Composer-facing adapter", () => {
+  it("routes Builder Composer usage through the approved Builder-facing adapters", () => {
     const sourceFiles = getSourceFiles(srcRoot).map((filePath) => ({
       filePath: toProjectPath(filePath),
       source: readFileSync(filePath, "utf8"),
@@ -59,7 +60,10 @@ describe("recommendation architecture", () => {
       )
       .map(({ filePath }) => filePath);
 
-    expect(composerCoreImports).toEqual([builderRecommendationEntry]);
+    expect(composerCoreImports.sort()).toEqual([
+      builderCompositionEntry,
+      builderRecommendationEntry,
+    ]);
 
     const appSource = readFileSync(join(projectRoot, "src", "App.jsx"), "utf8");
     expect(appSource).toMatch(/buildComposerRecommendations/);
