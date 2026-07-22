@@ -14,7 +14,7 @@ import {
   hydrateBuilderPersistence,
   serializeBuilderPersistence,
 } from "./builder/internal/persistence/builderPersistence.js";
-import { buildRecommendations } from "./utils/buildRecommendations";
+import { buildComposerRecommendations } from "./builder/internal/recommendations/buildComposerRecommendations.js";
 import { getMetadataAsset } from "./data/metadataAssets";
 import { getBrandAsset } from "./data/brandAssets";
 import {
@@ -125,14 +125,13 @@ const scentDna = useMemo(() => {
   return buildScentDna(selectedPerfumes, boxSummary);
 }, [selectedPerfumes, boxSummary]);
 const recommendations = useMemo(() => {
-  return buildRecommendations({
+  return buildComposerRecommendations({
     perfumes,
     selectedPerfumes,
-    boxSummary,
-    coverageSummary,
-    scentDna,
+    notes,
+    config: builderConfig,
   });
-}, [perfumes, selectedPerfumes, boxSummary, coverageSummary, scentDna]);
+}, [perfumes, selectedPerfumes, notes, builderConfig]);
 
   useEffect(() => {
     const persistedState = createBuilderPersistencePayload({

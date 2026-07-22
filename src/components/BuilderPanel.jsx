@@ -2901,6 +2901,11 @@ const RECOMMENDATION_REASON_REWRITES = {
 };
 
 function getRecommendationExplanations(recommendation, objectiveKey) {
+  const explanationReasons = Array.isArray(recommendation.explanations)
+    ? recommendation.explanations
+        .map((explanation) => createRecommendationExplanationOption(explanation))
+        .filter(Boolean)
+    : [];
   const reasons = Array.isArray(recommendation.reasons)
     ? recommendation.reasons
     : [];
@@ -2909,6 +2914,7 @@ function getRecommendationExplanations(recommendation, objectiveKey) {
     : [];
   const reasonOptions = [
     ...objectiveReasons,
+    ...explanationReasons,
     ...reasons.map((reason) => createRecommendationReasonOption(reason)),
     ...getFallbackRecommendationReasonOptions(recommendation),
   ]
@@ -2972,6 +2978,83 @@ function getRecommendationExplanations(recommendation, objectiveKey) {
   return selectedReasons.length > 0
     ? selectedReasons
     : [];
+}
+
+function createRecommendationExplanationOption(explanation) {
+  const label = getRecommendationExplanationLabel(explanation);
+
+  if (!label) {
+    return null;
+  }
+
+  const category = getRecommendationReasonCategory(label);
+
+  return {
+    label,
+    category,
+    priority: getRecommendationReasonPriority(category),
+    topic: getRecommendationReasonTopic(label),
+  };
+}
+
+function getRecommendationExplanationLabel(explanation = {}) {
+  const evidence = explanation.evidence || {};
+
+  if (explanation.code?.startsWith("expand_") && explanation.code?.endsWith("_coverage")) {
+    const season = evidence.missingSeason || explanation.code
+      .replace(/^expand_/, "")
+      .replace(/_coverage$/, "");
+
+    return getSeasonRecommendationCopy(season);
+  }
+
+  if (explanation.code === "expand_occasion_coverage" && evidence.missingOccasion) {
+    return getOccasionRecommendationCopy(evidence.missingOccasion);
+  }
+
+  if (explanation.code === "support_requested_preferences") {
+    const firstPreference = evidence.unmatched?.[0];
+
+    if (firstPreference?.domain === "seasons") {
+      return getSeasonRecommendationCopy(firstPreference.preference);
+    }
+
+    if (firstPreference?.domain === "occasions") {
+      return getOccasionRecommendationCopy(firstPreference.preference);
+    }
+
+    if (firstPreference?.domain === "vibes") {
+      return getVibeRecommendationCopy(firstPreference.preference);
+    }
+
+    return "Supports requested preferences";
+  }
+
+  if (explanation.code === "coverage_anchor") {
+    return "Improves multiple coverage gaps";
+  }
+
+  if (explanation.code === "preference_anchor" || explanation.code === "composer_affinity_pick") {
+    return "Complements your current scent direction";
+  }
+
+  if (explanation.code === "versatility_anchor") {
+    return "Adds practical versatility";
+  }
+
+  if (explanation.code === "signature_anchor") {
+    return "Adds signature potential";
+  }
+
+  if (explanation.code === "diversity_anchor") {
+    return "Adds a distinct scent direction";
+  }
+
+  if (explanation.code === "composer_balance_pick") {
+    return "Improves collection balance";
+  }
+
+  return "";
 }
 
 function getObjectiveReasonOptions(recommendation, objectiveKey) {
