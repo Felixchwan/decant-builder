@@ -10,6 +10,7 @@ export function buildComposerRecommendations({
   notes = {},
   config,
   limit = DEFAULT_LIMIT,
+  budget = null,
 } = {}) {
   const safePerfumes = Array.isArray(perfumes) ? perfumes : [];
   const safeSelectedPerfumes = Array.isArray(selectedPerfumes) ? selectedPerfumes : [];
@@ -31,6 +32,7 @@ export function buildComposerRecommendations({
           notes,
           config,
           limit,
+          budget,
           lane: "basedOnYourPicks",
           strategy: "signature",
           preferences: deriveSelectedPreferences(safeSelectedPerfumes),
@@ -47,6 +49,7 @@ export function buildComposerRecommendations({
     notes,
     config,
     limit,
+    budget,
     lane: "toBalanceYourBox",
     strategy: "balanced",
     preferences: {},
@@ -66,30 +69,23 @@ function buildComposerRecommendationLane({
   notes,
   config,
   limit,
+  budget,
   lane,
   strategy,
   preferences,
   excludedPerfumeIds,
 }) {
-  const maxSelectableSlots = config?.box?.maxSelectableSlots || 14;
-  const minSlots = config?.box?.minSelectableSlots || 6;
-  const targetSlots = Math.min(
-    maxSelectableSlots,
-    Math.max(minSlots, selectedPerfumes.length + limit)
-  );
+  const request = buildComposerRequestFromBuilderState({
+    selectedPerfumes,
+    config,
+    limit,
+    budget,
+    strategy,
+    preferences,
+    excludedPerfumeIds,
+  });
   const compositionResult = composeCollection({
-    request: {
-      budget: null,
-      minSlots,
-      maxSlots: maxSelectableSlots,
-      targetSlots,
-      lockedPerfumeIds: selectedPerfumes.map((perfume) => perfume.id),
-      excludedPerfumeIds,
-      preferredSeasons: preferences.preferredSeasons || [],
-      preferredOccasions: preferences.preferredOccasions || [],
-      preferredVibes: preferences.preferredVibes || [],
-      strategy,
-    },
+    request,
     catalog: perfumes,
     notes,
     config,
@@ -133,6 +129,37 @@ function buildComposerRecommendationLane({
     .filter((recommendation) => recommendation.explanations.length > 0)
     .sort(compareRecommendations)
     .slice(0, limit);
+}
+
+export function buildComposerRequestFromBuilderState({
+  selectedPerfumes = [],
+  config,
+  limit = DEFAULT_LIMIT,
+  budget = null,
+  strategy = "balanced",
+  preferences = {},
+  excludedPerfumeIds = [],
+} = {}) {
+  const safeSelectedPerfumes = Array.isArray(selectedPerfumes) ? selectedPerfumes : [];
+  const maxSelectableSlots = config?.box?.maxSelectableSlots || 14;
+  const minSlots = config?.box?.minSelectableSlots || 6;
+  const targetSlots = Math.min(
+    maxSelectableSlots,
+    Math.max(minSlots, safeSelectedPerfumes.length + limit)
+  );
+
+  return {
+    budget,
+    minSlots,
+    maxSlots: maxSelectableSlots,
+    targetSlots,
+    lockedPerfumeIds: uniqueSortedNumbers(safeSelectedPerfumes.map((perfume) => perfume.id)),
+    excludedPerfumeIds: uniqueSortedNumbers(excludedPerfumeIds),
+    preferredSeasons: preferences.preferredSeasons || [],
+    preferredOccasions: preferences.preferredOccasions || [],
+    preferredVibes: preferences.preferredVibes || [],
+    strategy,
+  };
 }
 
 function buildRecommendation({
@@ -318,6 +345,10 @@ function topValues(values, limit) {
     )
     .slice(0, limit)
     .map(([value]) => value);
+}
+
+function uniqueSortedNumbers(values) {
+  return [...new Set((values || []).filter(Number.isInteger))].sort((first, second) => first - second);
 }
 
 function getPreferenceValues(perfume, domain) {

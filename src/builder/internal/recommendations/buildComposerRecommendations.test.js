@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { createBuilderConfig } from "../../config/createBuilderConfig.js";
-import { buildComposerRecommendations } from "./buildComposerRecommendations.js";
+import {
+  buildComposerRecommendations,
+  buildComposerRequestFromBuilderState,
+} from "./buildComposerRecommendations.js";
 
 const config = createBuilderConfig({
   brand: {
@@ -166,6 +169,47 @@ describe("buildComposerRecommendations", () => {
 
     expect(result.basedOnYourPicks).toEqual([]);
     expect(result.toBalanceYourBox).toEqual(expect.any(Array));
+  });
+
+  it("maps Builder state into a canonical Composer request", () => {
+    const request = buildComposerRequestFromBuilderState({
+      selectedPerfumes: [green, fresh, fresh],
+      config,
+      limit: 2,
+      budget: 5,
+      strategy: "signature",
+      preferences: {
+        preferredSeasons: ["summer", "spring"],
+        preferredOccasions: ["office"],
+        preferredVibes: ["fresh"],
+      },
+      excludedPerfumeIds: [6, 4, 6],
+    });
+
+    expect(request).toEqual({
+      budget: 5,
+      minSlots: 3,
+      maxSlots: 4,
+      targetSlots: 4,
+      lockedPerfumeIds: [1, 2],
+      excludedPerfumeIds: [4, 6],
+      preferredSeasons: ["summer", "spring"],
+      preferredOccasions: ["office"],
+      preferredVibes: ["fresh"],
+      strategy: "signature",
+    });
+  });
+
+  it("uses selected perfumes as locked Composer inputs without mutating frozen data", () => {
+    const frozenCatalog = Object.freeze(catalog.map((item) => Object.freeze({ ...item })));
+    const frozenSelected = Object.freeze([Object.freeze({ ...fresh }), Object.freeze({ ...green })]);
+
+    expect(() =>
+      build({
+        perfumes: frozenCatalog,
+        selectedPerfumes: frozenSelected,
+      })
+    ).not.toThrow();
   });
 
   it("returns empty lanes when Composer cannot produce a sellable composition", () => {
