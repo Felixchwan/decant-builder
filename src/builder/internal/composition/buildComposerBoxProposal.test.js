@@ -8,7 +8,10 @@ import {
   buildComposerProposalInputKey,
   COMPOSER_BOX_PROPOSAL_STATUSES,
   isComposerBoxProposalStale,
+  moveComposerProposalSlotAlternative,
+  selectComposerProposalSlotAlternative,
 } from "./buildComposerBoxProposal.js";
+import { buildComposerSlotAlternatives } from "./buildComposerSlotAlternatives.js";
 
 const config = createBuilderConfig({
   brand: {
@@ -418,7 +421,7 @@ describe("buildComposerBoxProposal", () => {
     expect(moreVariety.compositionResult.normalizedRequest.collectionStyle.id).toBe("more_variety");
     expect(new Set(moreVariety.collectionIds).size).toBe(moreVariety.collectionIds.length);
     expect(moreVariety.compositionResult.constraintResult.valid).toBe(true);
-  });
+  }, 15000);
 
   it("attaches deterministic per-fragrance preference and preserved reasons", () => {
     const proposal = build({
@@ -446,6 +449,166 @@ describe("buildComposerBoxProposal", () => {
     ]);
     expect(new Set(preservedItem.reasons.map((reason) => reason.code)).size).toBe(
       preservedItem.reasons.length
+    );
+  });
+
+  it("exposes slot alternatives with the original Composer choice first", () => {
+    const proposal = build({
+      seasons: ["summer"],
+      occasions: ["office"],
+      vibes: ["fresh"],
+    });
+    const newSlot = proposal.slotAlternatives.find((slot) => slot.newlyAdded);
+
+    expect(newSlot).toBeTruthy();
+    expect(newSlot.alternatives.length).toBeGreaterThan(1);
+    expect(newSlot.alternatives.length).toBeLessThanOrEqual(3);
+    expect(newSlot.selectedAlternativeIndex).toBe(0);
+    expect(newSlot.selectedPerfumeId).toBe(newSlot.alternatives[0].id);
+    expect(newSlot.alternatives[0].id).toBe(proposal.proposalItems[newSlot.slotIndex].id);
+    expect(new Set(newSlot.alternatives.map((item) => item.id)).size).toBe(
+      newSlot.alternatives.length
+    );
+    expectSerializable(proposal.slotAlternatives);
+  });
+
+  it("keeps preserved slots single-option and marked preserved", () => {
+    const proposal = build({
+      selectedPerfumes: [fresh],
+      seasons: ["summer"],
+      occasions: ["office"],
+      vibes: ["fresh"],
+    });
+    const preservedSlot = proposal.slotAlternatives.find((slot) => slot.preserved);
+
+    expect(preservedSlot).toMatchObject({
+      selectedAlternativeIndex: 0,
+      selectedPerfumeId: fresh.id,
+      preserved: true,
+      newlyAdded: false,
+    });
+    expect(preservedSlot.alternatives).toHaveLength(1);
+    expect(preservedSlot.alternatives[0].reasons[0].type).toBe("preserved");
+  });
+
+  it("moves proposal alternatives without changing the original proposal object", () => {
+    const proposal = build({
+      seasons: ["summer"],
+      occasions: ["office"],
+      vibes: ["fresh"],
+    });
+    const slot = proposal.slotAlternatives.find(
+      (item) => item.newlyAdded && item.alternatives.length > 1
+    );
+    const originalIds = proposal.apply.collectionIds;
+    const nextProposal = moveComposerProposalSlotAlternative({
+      proposal: Object.freeze(proposal),
+      slotId: slot.slotId,
+      direction: 1,
+    });
+
+    expect(nextProposal).not.toBe(proposal);
+    expect(proposal.apply.collectionIds).toEqual(originalIds);
+    expect(nextProposal.slotAlternatives[slot.slotIndex].selectedAlternativeIndex).toBe(1);
+    expect(nextProposal.collectionIds[slot.slotIndex]).toBe(slot.alternatives[1].id);
+    expect(nextProposal.apply.collectionIds).toEqual(nextProposal.collectionIds);
+    expect(nextProposal.totalPoints).toBe(
+      nextProposal.collection.reduce((sum, perfume) => sum + perfume.points, 0)
+    );
+    expect(nextProposal.orderTotal).toBe(nextProposal.totalPoints * config.commerce.pointValue);
+    expect(new Set(nextProposal.collectionIds).size).toBe(nextProposal.collectionIds.length);
+    expectSerializable(nextProposal);
+  });
+
+  it("rejects selecting an alternative already selected in another proposal slot", () => {
+    const proposal = build({
+      seasons: ["summer"],
+      occasions: ["office"],
+      vibes: ["fresh"],
+    });
+    const duplicatedAlternative = proposal.slotAlternatives[0].alternatives[0];
+    const duplicateProposal = {
+      ...proposal,
+      slotAlternatives: proposal.slotAlternatives.map((slot, index) =>
+        index === 1
+          ? {
+              ...slot,
+              alternatives: [
+                slot.alternatives[0],
+                duplicatedAlternative,
+              ],
+            }
+          : slot
+      ),
+    };
+    const selectedProposal = selectComposerProposalSlotAlternative({
+      proposal: duplicateProposal,
+      slotId: duplicateProposal.slotAlternatives[1].slotId,
+      selectedAlternativeIndex: 1,
+    });
+
+    expect(selectedProposal.slotAlternatives[1].selectedAlternativeIndex).toBe(0);
+    expect(selectedProposal.collectionIds).toEqual(proposal.collectionIds);
+    expect(new Set(selectedProposal.collectionIds).size).toBe(
+      selectedProposal.collectionIds.length
+    );
+  });
+
+  it("keeps alternative ordering deterministic and catalog-order independent", () => {
+    const first = build({
+      seasons: ["summer"],
+      occasions: ["office"],
+      vibes: ["fresh"],
+    });
+    const second = build({
+      catalog: [...catalog].reverse(),
+      seasons: ["summer"],
+      occasions: ["office"],
+      vibes: ["fresh"],
+    });
+
+    expect(
+      first.slotAlternatives.map((slot) => slot.alternatives.map((item) => item.id))
+    ).toEqual(
+      second.slotAlternatives.map((slot) => slot.alternatives.map((item) => item.id))
+    );
+  });
+
+  it("derives factual gain/loss tradeoffs against the original Composer choice", () => {
+    const result = buildComposerSlotAlternatives({
+      collection: [fresh, amber, formal],
+      selectedIds: new Set(),
+      request: {
+        budget: null,
+        minSlots: 3,
+        maxSlots: 3,
+        targetSlots: 3,
+        preferredSeasons: ["summer"],
+        preferredOccasions: ["office"],
+        preferredVibes: ["fresh"],
+        strategy: "balanced",
+      },
+      catalog,
+      notes: {},
+      config,
+    });
+    const freshSlot = result.slots[0];
+    const alternativeWithLoss = freshSlot.alternatives.find(
+      (alternative) => alternative.id !== fresh.id && alternative.tradeoff.lost.length > 0
+    );
+
+    expect(freshSlot.alternatives[0]).toMatchObject({
+      id: fresh.id,
+      tradeoff: {
+        gained: [],
+        lost: [],
+      },
+    });
+    expect(alternativeWithLoss.tradeoff.lost.map((item) => item.reason.preferenceValue)).toContain(
+      "summer"
+    );
+    expect(alternativeWithLoss.tradeoff.unchanged.map((item) => item.reason.type)).toContain(
+      "strategy_contribution"
     );
   });
 

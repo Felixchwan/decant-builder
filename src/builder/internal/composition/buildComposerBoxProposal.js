@@ -2,6 +2,11 @@ import { composeCollection } from "../composer/composeCollection.js";
 import { deriveComposerExplanations } from "../composer/deriveComposerExplanations.js";
 import { deriveComposerReasoningFacts } from "../composer/deriveComposerReasoningFacts.js";
 import { buildComposerRequestFromBuilderState } from "../recommendations/buildComposerRecommendations.js";
+import { buildComposerSlotAlternatives } from "./buildComposerSlotAlternatives.js";
+import {
+  buildComposerProposalReason,
+  buildComposerProposalReasons,
+} from "./composerProposalReasons.js";
 
 export const COMPOSER_BOX_PROPOSAL_STATUSES = Object.freeze({
   COMPLETED: "completed",
@@ -110,6 +115,9 @@ export function buildComposerBoxProposal({
       maxSlots: maxCustomerSlots,
       budget,
       pointValue: config.commerce.pointValue,
+      catalog: safeCatalog,
+      notes,
+      config,
       compositionResult: null,
       reasoningFacts: null,
       explanations: null,
@@ -131,6 +139,9 @@ export function buildComposerBoxProposal({
       maxSlots: maxCustomerSlots,
       budget,
       pointValue: config.commerce.pointValue,
+      catalog: safeCatalog,
+      notes,
+      config,
       compositionResult: null,
       reasoningFacts: null,
       explanations: null,
@@ -214,6 +225,9 @@ export function buildComposerBoxProposal({
     maxSlots: maxCustomerSlots,
     budget,
     pointValue: config.commerce.pointValue,
+    catalog: safeCatalog,
+    notes,
+    config,
     compositionResult,
     reasoningFacts,
     explanations,
@@ -267,6 +281,87 @@ export function isComposerBoxProposalStale(proposal, inputKey) {
   return !proposal || !proposal.inputKey || proposal.inputKey !== inputKey;
 }
 
+export function moveComposerProposalSlotAlternative({
+  proposal,
+  slotId,
+  direction = 1,
+} = {}) {
+  const slot = (proposal?.slotAlternatives || []).find((item) => item.slotId === slotId);
+
+  if (!proposal || !slot || slot.alternatives.length <= 1) {
+    return proposal;
+  }
+
+  const currentIndex = normalizeAlternativeIndex(
+    slot.selectedAlternativeIndex,
+    slot.alternatives.length
+  );
+  const selectedIdsOutsideSlot = getSelectedIdsOutsideSlot(proposal.slotAlternatives, slotId);
+  let nextIndex = currentIndex;
+
+  for (let attempt = 0; attempt < slot.alternatives.length; attempt += 1) {
+    nextIndex =
+      (nextIndex + direction + slot.alternatives.length) % slot.alternatives.length;
+
+    if (!selectedIdsOutsideSlot.has(slot.alternatives[nextIndex].id)) {
+      break;
+    }
+  }
+
+  return selectComposerProposalSlotAlternative({
+    proposal,
+    slotId,
+    selectedAlternativeIndex: nextIndex,
+  });
+}
+
+export function selectComposerProposalSlotAlternative({
+  proposal,
+  slotId,
+  selectedAlternativeIndex,
+} = {}) {
+  if (!proposal || !Array.isArray(proposal.slotAlternatives)) {
+    return proposal;
+  }
+
+  const nextSlots = proposal.slotAlternatives.map((slot) => {
+    if (slot.slotId !== slotId || slot.alternatives.length <= 1) {
+      return slot;
+    }
+
+    const safeIndex = normalizeAlternativeIndex(
+      selectedAlternativeIndex,
+      slot.alternatives.length
+    );
+    const selectedAlternative = slot.alternatives[safeIndex];
+    const selectedIdsOutsideSlot = getSelectedIdsOutsideSlot(
+      proposal.slotAlternatives,
+      slotId
+    );
+
+    if (selectedIdsOutsideSlot.has(selectedAlternative.id)) {
+      return slot;
+    }
+
+    return {
+      ...slot,
+      selectedAlternativeIndex: safeIndex,
+      selectedPerfumeId: selectedAlternative.id,
+    };
+  });
+
+  return rebuildProposalWithSelectedAlternatives(proposal, nextSlots);
+}
+
+function getSelectedIdsOutsideSlot(slotAlternatives, slotId) {
+  return new Set(
+    (Array.isArray(slotAlternatives) ? slotAlternatives : [])
+      .filter((slot) => slot.slotId !== slotId)
+      .map((slot) => slot.alternatives?.[slot.selectedAlternativeIndex]?.id)
+      .filter(Number.isInteger)
+  );
+}
+
 function successfulProposal({
   status,
   inputKey,
@@ -278,6 +373,9 @@ function successfulProposal({
   budget,
   collectionStyle,
   pointValue,
+  catalog,
+  notes,
+  config,
   compositionResult,
   reasoningFacts,
   explanations,
@@ -292,6 +390,17 @@ function successfulProposal({
     selectedIds,
     compositionResult,
   });
+  const slotAlternativeResult = buildComposerSlotAlternatives({
+    collection,
+    selectedIds,
+    request: compositionResult?.normalizedRequest || null,
+    catalog,
+    notes,
+    config,
+  });
+  const slotAlternatives = slotAlternativeResult.slots.length > 0
+    ? slotAlternativeResult.slots
+    : buildSingleAlternativeSlots(proposalItems);
   const totalPoints = roundNumber(
     collection.reduce((sum, perfume) => sum + normalizePoints(perfume.points), 0)
   );
@@ -314,6 +423,7 @@ function successfulProposal({
     addedPerfumes,
     preservedPerfumes,
     proposalItems,
+    slotAlternatives,
     totalPoints,
     orderTotal,
     targetSlots,
@@ -337,16 +447,88 @@ function successfulProposal({
     diagnostics: {
       ...diagnostics,
       budget: normalizeBudgetValue(budget),
+      pointValue: computedPointValue,
       collectionStyle: normalizedCollectionStyle,
       applyAvailable,
       noDuplicateIds: collection.length === new Set(collection.map((perfume) => perfume.id)).size,
       selectedIdsPreserved: selectedPerfumes.every((perfume) =>
         collection.some((item) => item.id === perfume.id)
       ),
+      alternativeDiagnostics: slotAlternativeResult.diagnostics,
     },
     apply: {
       available: applyAvailable,
       collectionIds: collection.map((perfume) => perfume.id),
+    },
+  });
+}
+
+function rebuildProposalWithSelectedAlternatives(proposal, slotAlternatives) {
+  const collection = slotAlternatives
+    .map((slot) => slot.alternatives[slot.selectedAlternativeIndex]?.perfume)
+    .filter(Boolean);
+  const collectionIds = collection.map((perfume) => perfume.id);
+  const duplicateFree = collectionIds.length === new Set(collectionIds).size;
+  const preservedPerfumes = slotAlternatives
+    .filter((slot) => slot.preserved)
+    .map((slot) => slot.alternatives[slot.selectedAlternativeIndex]?.perfume)
+    .filter(Boolean);
+  const addedPerfumes = slotAlternatives
+    .filter((slot) => !slot.preserved)
+    .map((slot) => slot.alternatives[slot.selectedAlternativeIndex]?.perfume)
+    .filter(Boolean);
+  const proposalItems = slotAlternatives.map((slot) => {
+    const alternative = slot.alternatives[slot.selectedAlternativeIndex];
+
+    return {
+      slotId: slot.slotId,
+      id: alternative.id,
+      perfume: alternative.perfume,
+      preserved: slot.preserved,
+      newlyAdded: !slot.preserved,
+      reasons: alternative.reasons || [],
+    };
+  });
+  const totalPoints = roundNumber(
+    collection.reduce((sum, perfume) => sum + normalizePoints(perfume.points), 0)
+  );
+  const pointValue = normalizePoints(proposal.diagnostics?.pointValue);
+  const orderTotal = roundNumber(totalPoints * pointValue);
+  const minimumReached = collection.length >= proposal.minSlots;
+  const targetReached = collection.length >= proposal.targetSlots;
+  const withinSlots = collection.length <= proposal.maxSlots;
+  const withinBudget =
+    proposal.diagnostics?.budget === null ||
+    !Number.isFinite(proposal.diagnostics?.budget) ||
+    orderTotal <= proposal.diagnostics.budget;
+  const applyAvailable =
+    Boolean(proposal.proposalAvailable) &&
+    minimumReached &&
+    withinSlots &&
+    withinBudget &&
+    duplicateFree;
+
+  return sanitizeSerializable({
+    ...proposal,
+    collection,
+    collectionIds,
+    addedPerfumes,
+    preservedPerfumes,
+    proposalItems,
+    slotAlternatives,
+    totalPoints,
+    orderTotal,
+    minimumReached,
+    targetReached,
+    diagnostics: {
+      ...proposal.diagnostics,
+      applyAvailable,
+      noDuplicateIds: duplicateFree,
+      selectedAlternativeIds: collectionIds,
+    },
+    apply: {
+      available: applyAvailable,
+      collectionIds: applyAvailable ? collectionIds : [],
     },
   });
 }
@@ -385,8 +567,18 @@ function unavailableProposal({
       perfume,
       preserved: true,
       newlyAdded: false,
-      reasons: [buildReason("preserved_selection", "preserved", {})],
+      reasons: [buildComposerProposalReason("preserved_selection", "preserved", {})],
     })),
+    slotAlternatives: buildSingleAlternativeSlots(
+      selectedPerfumes.map((perfume, index) => ({
+        id: perfume.id,
+        perfume,
+        preserved: true,
+        newlyAdded: false,
+        reasons: [buildComposerProposalReason("preserved_selection", "preserved", {})],
+        slotId: `slot-${index + 1}`,
+      }))
+    ),
     totalPoints,
     orderTotal: roundNumber(
       totalPoints * normalizePoints(compositionResult?.normalizedRequest?.pointValue || pointValue)
@@ -425,32 +617,16 @@ function unavailableProposal({
 function buildProposalItems({ collection, selectedIds, compositionResult }) {
   const request = compositionResult?.normalizedRequest || {};
 
-  return collection.map((perfume) => {
+  return collection.map((perfume, index) => {
     const preserved = selectedIds.has(perfume.id);
-    const reasons = uniqueReasons([
-      preserved ? buildReason("preserved_selection", "preserved", {}) : null,
-      ...buildPreferenceReasons({
-        perfume,
-        preferenceType: "season",
-        preferenceValues: request.preferredSeasons,
-        perfumeValues: perfume.seasons,
-      }),
-      ...buildPreferenceReasons({
-        perfume,
-        preferenceType: "occasion",
-        preferenceValues: request.preferredOccasions,
-        perfumeValues: perfume.occasions,
-      }),
-      ...buildPreferenceReasons({
-        perfume,
-        preferenceType: "vibe",
-        preferenceValues: request.preferredVibes,
-        perfumeValues: perfume.vibes,
-      }),
-      buildStrategyReason(request.strategy?.id),
-    ]).slice(0, 4);
+    const reasons = buildComposerProposalReasons({
+      perfume,
+      preserved,
+      request,
+    });
 
     return {
+      slotId: `slot-${index + 1}`,
       id: perfume.id,
       perfume,
       preserved,
@@ -460,60 +636,37 @@ function buildProposalItems({ collection, selectedIds, compositionResult }) {
   });
 }
 
-function buildPreferenceReasons({
-  preferenceType,
-  preferenceValues,
-  perfumeValues,
-}) {
-  const perfumeValueSet = new Set(normalizeStringList(perfumeValues));
-
-  return normalizeStringList(preferenceValues)
-    .filter((preferenceValue) => perfumeValueSet.has(preferenceValue))
-    .map((preferenceValue) =>
-      buildReason(`${preferenceType}_preference_match`, "preference_match", {
-        preferenceType,
-        preferenceValue,
-      })
-    );
+function buildSingleAlternativeSlots(proposalItems) {
+  return (Array.isArray(proposalItems) ? proposalItems : []).map((item, index) => ({
+    slotId: item.slotId || `slot-${index + 1}`,
+    slotIndex: index,
+    selectedAlternativeIndex: 0,
+    selectedPerfumeId: item.perfume.id,
+    preserved: Boolean(item.preserved),
+    newlyAdded: Boolean(item.newlyAdded),
+    alternatives: [
+      {
+        id: item.perfume.id,
+        perfume: item.perfume,
+        points: normalizePoints(item.perfume.points),
+        reasons: item.reasons || [],
+        qualityDelta: null,
+        applicable: true,
+        diagnostics: {
+          roleScore: null,
+          overallScore: null,
+        },
+      },
+    ],
+  }));
 }
 
-function buildStrategyReason(strategyId) {
-  if (!strategyId) {
-    return null;
+function normalizeAlternativeIndex(index, length) {
+  if (!Number.isInteger(index) || length <= 0) {
+    return 0;
   }
 
-  return buildReason(`strategy_${strategyId}`, "strategy_contribution", {
-    strategyId,
-  });
-}
-
-function buildReason(code, type, evidence) {
-  return {
-    type,
-    code,
-    labelKey: code,
-    preferenceType: evidence.preferenceType || null,
-    preferenceValue: evidence.preferenceValue || null,
-    evidence,
-  };
-}
-
-function uniqueReasons(reasons) {
-  const seen = new Set();
-
-  return reasons.filter((reason) => {
-    if (!reason) {
-      return false;
-    }
-
-    const key = `${reason.code}:${reason.preferenceValue || ""}`;
-    if (seen.has(key)) {
-      return false;
-    }
-
-    seen.add(key);
-    return true;
-  });
+  return Math.max(0, Math.min(index, length - 1));
 }
 
 function validateCurrentSelections({ selectedPerfumes, catalog, maxSlots }) {

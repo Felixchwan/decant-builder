@@ -25,6 +25,14 @@ import {
   getComposerProposalExplanationLabel,
   getComposerProposalStatusLabel,
 } from "../builder/presentation/composerProposalLabels.js";
+import {
+  getComposerProposalItemReasonLabels,
+  getComposerTradeoffLabel,
+} from "../builder/presentation/composerAlternativeTradeoffLabels.js";
+import {
+  buildComposerBudgetBonusFeedback,
+  buildComposerProposalBonusStatus,
+} from "../builder/presentation/composerBonusStatus.js";
 import { buildFinalizationModel } from "../builder/internal/finalization/buildFinalizationModel.js";
 import { getTierData } from "../utils/tierUtils";
 import CollectionCard from "./CollectionCard";
@@ -63,6 +71,7 @@ function BuilderPanel({
   onComposerPreferenceClear,
   onComposeMyBox,
   onApplyComposerProposal,
+  onMoveComposerProposalAlternative,
   onCancelComposerProposal,
   curatorBonusPreference,
   onCuratorBonusPreferenceChange,
@@ -720,9 +729,11 @@ function BuilderPanel({
       )}
       {composerProposal && (
         <ComposerProposalModal
+          builderConfig={builderConfig}
           proposal={composerProposal}
           isStale={isComposerProposalStale}
           onApply={onApplyComposerProposal}
+          onMoveAlternative={onMoveComposerProposalAlternative}
           onCancel={onCancelComposerProposal}
           onBack={() => {
             setIsComposerSetupOpen(true);
@@ -732,6 +743,7 @@ function BuilderPanel({
       )}
       {isComposerSetupOpen && (
         <ComposerSetupModal
+          builderConfig={builderConfig}
           settings={composerSettings}
           options={composerOptions}
           minimumComposerBudget={minimumComposerBudget}
@@ -818,6 +830,7 @@ function ComposeMyBoxPanel({
 }
 
 function ComposerSetupModal({
+  builderConfig,
   settings,
   options,
   minimumComposerBudget,
@@ -835,6 +848,10 @@ function ComposerSetupModal({
     Number.isFinite(numericBudget) &&
     Number.isFinite(minimumComposerBudget) &&
     numericBudget < minimumComposerBudget;
+  const budgetBonusFeedback = buildComposerBudgetBonusFeedback({
+    budget: numericBudget,
+    config: builderConfig,
+  });
 
   useEffect(() => {
     function handleKeyDown(event) {
@@ -871,37 +888,47 @@ function ComposerSetupModal({
           </p>
 
           <div className="compose-box-controls composer-setup-controls">
-            <label>
-              <span>Strategy</span>
-              <select
-                value={safeSettings.strategy || "balanced"}
-                onChange={(event) => onSettingChange("strategy", event.target.value)}
-              >
-                {COMPOSER_STRATEGY_OPTIONS.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-            </label>
+            <div className="composer-setup-field-row">
+              <label className="composer-setup-field">
+                <span>Strategy</span>
+                <select
+                  value={safeSettings.strategy || "balanced"}
+                  onChange={(event) => onSettingChange("strategy", event.target.value)}
+                >
+                  {COMPOSER_STRATEGY_OPTIONS.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+                <small className="composer-field-helper" aria-hidden="true">&nbsp;</small>
+              </label>
 
-            <label>
-              <span>Budget</span>
-              <input
-                type="number"
-                min={Number.isFinite(minimumComposerBudget) ? minimumComposerBudget : 0}
-                step="100"
-                inputMode="decimal"
-                value={budgetValue}
-                onChange={(event) => onSettingChange("budget", event.target.value)}
-                placeholder="No limit"
-              />
-              {isBudgetBelowMinimum && (
-                <small className="composer-budget-warning">
-                  Minimum budget is ${minimumComposerBudget}.
-                </small>
-              )}
-            </label>
+              <label className="composer-setup-field">
+                <span>Budget</span>
+                <input
+                  type="number"
+                  min={Number.isFinite(minimumComposerBudget) ? minimumComposerBudget : 0}
+                  step="100"
+                  inputMode="decimal"
+                  value={budgetValue}
+                  onChange={(event) => onSettingChange("budget", event.target.value)}
+                  placeholder="No limit"
+                />
+                <span className="composer-field-helper">
+                  {isBudgetBelowMinimum && (
+                    <small className="composer-budget-warning">
+                      Minimum budget is ${minimumComposerBudget}.
+                    </small>
+                  )}
+                  {budgetBonusFeedback.label && (
+                    <small className={`composer-budget-bonus composer-budget-bonus-${budgetBonusFeedback.state}`}>
+                      {budgetBonusFeedback.label}
+                    </small>
+                  )}
+                </span>
+              </label>
+            </div>
 
             <div className="compose-preference-group composer-style-control">
               <div className="compose-preference-heading">
@@ -1021,9 +1048,11 @@ function ComposePreferenceGroup({
 }
 
 function ComposerProposalModal({
+  builderConfig,
   proposal,
   isStale,
   onApply,
+  onMoveAlternative,
   onCancel,
   onBack,
 }) {
@@ -1060,9 +1089,14 @@ function ComposerProposalModal({
     proposal.diagnostics?.collectionStyle === "more_variety" &&
     Number.isFinite(proposal.diagnostics?.budget) &&
     proposal.compositionResult?.constraintResult?.metrics?.remainingBudget === 0;
+  const proposalBonusStatus = buildComposerProposalBonusStatus({
+    totalPoints: proposal.totalPoints,
+    config: builderConfig,
+  });
   const proposalItems =
-    proposal.proposalItems ||
+    buildVisibleProposalItems(proposal) ||
     proposal.collection.map((perfume) => ({
+      slotId: `slot-${perfume.id}`,
       id: perfume.id,
       perfume,
       preserved: proposal.preservedPerfumes.some((item) => item.id === perfume.id),
@@ -1114,7 +1148,13 @@ function ComposerProposalModal({
                 <SummaryStat label="Points" value={proposal.totalPoints.toFixed(1)} />
                 <SummaryStat label="Order Total" value={`$${proposal.orderTotal.toFixed(0)}`} />
                 <SummaryStat label="New Picks" value={proposal.addedPerfumes.length} />
+                <SummaryStat label="Curator Bonus" value={proposalBonusStatus.value} />
               </div>
+              {proposalBonusStatus.label && (
+                <p className={`composer-proposal-bonus composer-proposal-bonus-${proposalBonusStatus.state}`}>
+                  {proposalBonusStatus.label}
+                </p>
+              )}
             </section>
 
             <section className="final-summary-section">
@@ -1123,23 +1163,97 @@ function ComposerProposalModal({
               <div className="composer-proposal-list">
                 {proposalItems.map((item) => {
                   const perfume = item.perfume;
+                  const reasonLabels = getComposerProposalItemReasonLabels(item.reasons, {
+                    max: 3,
+                  });
+                  const hasAlternatives =
+                    item.newlyAdded && item.alternatives && item.alternatives.length > 1;
+                  const currentPosition = item.selectedAlternativeIndex + 1;
+                  const alternativeCount = item.alternatives?.length || 1;
+                  const slotNumber = item.slotIndex + 1;
+                  const isComposerPick = item.selectedAlternativeIndex === 0;
+                  const tradeoff = item.alternatives?.[item.selectedAlternativeIndex]?.tradeoff;
+                  const gainedLabels = (tradeoff?.gained || [])
+                    .map(getComposerTradeoffLabel)
+                    .filter(Boolean)
+                    .slice(0, 3);
+                  const lostLabels = (tradeoff?.lost || [])
+                    .map(getComposerTradeoffLabel)
+                    .filter(Boolean)
+                    .slice(0, 3);
+                  const hasTradeoff =
+                    !isComposerPick && (gainedLabels.length > 0 || lostLabels.length > 0);
 
                   return (
-                    <div key={perfume.id} className="composer-proposal-item">
-                      <div>
+                    <div key={item.slotId || perfume.id} className="composer-proposal-item">
+                      {hasAlternatives && (
+                        <button
+                          type="button"
+                          className="composer-proposal-alt-button"
+                          aria-label={`Previous alternative for Slot ${slotNumber}`}
+                          onClick={() => onMoveAlternative?.(item.slotId, -1)}
+                        >
+                          ‹
+                        </button>
+                      )}
+
+                      <div className="composer-proposal-item-body">
                         <strong>{perfume.name}</strong>
                         <span>{perfume.brand} - {perfume.points} pt</span>
-                        {item.reasons.length > 0 && (
+                        {reasonLabels.length > 0 && (
                           <div className="composer-proposal-item-reasons">
-                            {item.reasons.map((reason) => (
-                              <span key={`${perfume.id}-${reason.code}-${reason.preferenceValue || ""}`}>
-                                {getProposalItemReasonLabel(reason)}
+                            {reasonLabels.map((label) => (
+                              <span key={`${item.slotId}-${label}`}>
+                                {label}
                               </span>
                             ))}
                           </div>
                         )}
+                        {hasAlternatives && (
+                          <span className="composer-proposal-alt-position">
+                            Alternative fragrance {currentPosition} of {alternativeCount}
+                          </span>
+                        )}
+                        {hasTradeoff && (
+                          <div className="composer-proposal-tradeoff">
+                            {gainedLabels.length > 0 && (
+                              <div>
+                                <span>You gain</span>
+                                <div>
+                                  {gainedLabels.map((label) => (
+                                    <em key={`gain-${item.slotId}-${label}`}>{label}</em>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                            {lostLabels.length > 0 && (
+                              <div>
+                                <span>You lose</span>
+                                <div>
+                                  {lostLabels.map((label) => (
+                                    <em key={`loss-${item.slotId}-${label}`}>{label}</em>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        )}
                       </div>
-                      <span>{item.preserved ? "Preserved" : "New"}</span>
+
+                      {hasAlternatives && (
+                        <button
+                          type="button"
+                          className="composer-proposal-alt-button"
+                          aria-label={`Next alternative for Slot ${slotNumber}`}
+                          onClick={() => onMoveAlternative?.(item.slotId, 1)}
+                        >
+                          ›
+                        </button>
+                      )}
+
+                      <span className="composer-proposal-item-state">
+                        {item.preserved ? "Preserved" : isComposerPick ? "New · Composer Pick" : "New · Alternative"}
+                      </span>
                     </div>
                   );
                 })}
@@ -1181,28 +1295,35 @@ function ComposerProposalModal({
   );
 }
 
-function getProposalItemReasonLabel(reason) {
-  if (reason.type === "preserved") {
-    return "Already in your box";
+function buildVisibleProposalItems(proposal) {
+  if (!Array.isArray(proposal?.slotAlternatives) || proposal.slotAlternatives.length === 0) {
+    return null;
   }
 
-  if (reason.type === "preference_match" && reason.preferenceValue) {
-    return formatReasonValue(reason.preferenceValue);
-  }
+  return proposal.slotAlternatives
+    .map((slot) => {
+      const selectedIndex = Number.isInteger(slot.selectedAlternativeIndex)
+        ? slot.selectedAlternativeIndex
+        : 0;
+      const selectedAlternative = slot.alternatives?.[selectedIndex];
 
-  if (reason.type === "strategy_contribution") {
-    return "Supports strategy";
-  }
+      if (!selectedAlternative?.perfume) {
+        return null;
+      }
 
-  return null;
-}
-
-function formatReasonValue(value) {
-  return String(value)
-    .split(/(?=[A-Z])|[-_\s]/)
-    .filter(Boolean)
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(" ");
+      return {
+        slotId: slot.slotId,
+        slotIndex: slot.slotIndex,
+        id: selectedAlternative.id,
+        perfume: selectedAlternative.perfume,
+        preserved: Boolean(slot.preserved),
+        newlyAdded: !slot.preserved,
+        reasons: (selectedAlternative.reasons || []).slice(0, 3),
+        alternatives: slot.alternatives || [],
+        selectedAlternativeIndex: selectedIndex,
+      };
+    })
+    .filter(Boolean);
 }
 
 function DiscoveryBoxCoachmark({ builderConfig, onDismiss }) {

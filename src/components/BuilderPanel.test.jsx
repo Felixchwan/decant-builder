@@ -67,6 +67,7 @@ function renderBuilderPanel(overrides = {}) {
       onComposerPreferenceClear={() => {}}
       onComposeMyBox={() => {}}
       onApplyComposerProposal={() => {}}
+      onMoveComposerProposalAlternative={() => {}}
       onCancelComposerProposal={() => {}}
       curatorBonusPreference={discoveryDecantsConfig.curatorBonus.defaultPreference}
       onCuratorBonusPreferenceChange={() => {}}

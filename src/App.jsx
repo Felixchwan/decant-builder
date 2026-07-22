@@ -18,6 +18,7 @@ import {
   buildComposerBoxProposal,
   buildComposerProposalInputKey,
   isComposerBoxProposalStale,
+  moveComposerProposalSlotAlternative,
 } from "./builder/internal/composition/buildComposerBoxProposal.js";
 import { buildComposerRecommendations } from "./builder/internal/recommendations/buildComposerRecommendations.js";
 import { getMetadataAsset } from "./data/metadataAssets";
@@ -291,6 +292,16 @@ const isComposerProposalStale = isComposerBoxProposalStale(
     setComposerProposal(null);
   }
 
+  function handleMoveComposerProposalAlternative(slotId, direction) {
+    setComposerProposal((currentProposal) =>
+      moveComposerProposalSlotAlternative({
+        proposal: currentProposal,
+        slotId,
+        direction,
+      })
+    );
+  }
+
   function handleApplyComposerProposal() {
     if (
       !composerProposal?.apply?.available ||
@@ -544,6 +555,7 @@ const confirmAddPerfume = () => {
             onComposerPreferenceClear={handleComposerPreferenceClear}
             onComposeMyBox={handleComposeMyBox}
             onApplyComposerProposal={handleApplyComposerProposal}
+            onMoveComposerProposalAlternative={handleMoveComposerProposalAlternative}
             onCancelComposerProposal={handleCancelComposerProposal}
             curatorBonusPreference={curatorBonusPreference}
             onCuratorBonusPreferenceChange={setCuratorBonusPreference}
