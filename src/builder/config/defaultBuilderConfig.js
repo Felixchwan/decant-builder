@@ -1,4 +1,5 @@
 export const defaultBuilderConfig = {
+  locale: "en-US",
   software: {
     name: "Decant Builder",
   },
@@ -99,6 +100,19 @@ export const defaultBuilderConfig = {
       openingCopied: "Opening WhatsApp to message {businessName}. Order message copied.",
       opening: "Opening WhatsApp to message {businessName}.",
       manualOpenLabel: "Open WhatsApp manually",
+    },
+    messageLabels: {
+      customer: "Customer",
+      city: "City",
+      notes: "Notes",
+      selectedFragrances: "Selected fragrances:",
+      totalSlots: "Total slots",
+      totalPoints: "Total points",
+      orderTotal: "Order total",
+      curatorBonus: "Curator Bonus",
+      curatorStyle: "Curator Style",
+      unlocked: "Unlocked",
+      notUnlocked: "Not unlocked",
     },
   },
   persistence: {

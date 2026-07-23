@@ -1,0 +1,106 @@
+import { createTranslator } from "./createTranslator.js";
+
+export function buildLocalizedConfigOverrides(locale) {
+  const { t } = createTranslator(locale);
+
+  return {
+    locale,
+    copy: {
+      heroTitle: t("app.heroTitle"),
+      heroDescription: t("app.heroDescription"),
+      boxPanelTitle: t("builder.boxPanelTitle"),
+      clearBuilderLabel: t("builder.clearBuilder"),
+      introAriaLabel: t("builder.introAria"),
+      introButtonAriaLabel: t("builder.introButtonAria"),
+      introTitle: t("builder.introTitle"),
+      introDescription: t("builder.introLine2"),
+      introLine1: t("builder.introLine1"),
+      introLine3: t("builder.introLine3"),
+      introDismissLabel: t("builder.gotIt"),
+      reviewButtonLabel: t("builder.reviewMyBox"),
+      reviewIncompletePrefix: t("builder.reviewNeed"),
+      reviewIncompleteFallback: t("builder.reviewFallback"),
+      reviewIncompleteSuffix: t("builder.reviewToReview"),
+      reviewCuratorUnlockedCopy: t("review.reviewCuratorUnlocked"),
+      reviewCuratorLockedCopy: t("review.reviewCuratorLocked"),
+    },
+    commerce: {
+      locale,
+      totalLabel: t("general.orderTotal"),
+    },
+    curatorBonus: {
+      label: t("curator.label"),
+      rewardLabel: t("curator.rewardLabel"),
+      rewardPluralLabel: t("curator.rewardPluralLabel"),
+      progressCopy: {
+        unlocked: t("curator.unlocked"),
+        lockedCompletion: t("curator.lockedCompletion"),
+        lockedStrategy: t("curator.lockedStrategy"),
+        pickValue: t("curator.pickValue"),
+        similarSelected: t("curator.similarSelected"),
+        complementSelected: t("curator.complementSelected"),
+      },
+      preferences: {
+        complement: {
+          label: t("curator.complementLabel"),
+          description: t("curator.complementDescription"),
+        },
+        similar: {
+          label: t("curator.similarLabel"),
+          description: t("curator.similarDescription"),
+        },
+      },
+    },
+    collectionCard: {
+      ariaLabel: t("collectionCard.aria"),
+      boxAriaLabel: t("collectionCard.boxAria"),
+      downloadLabel: t("collectionCard.download"),
+      shareLabel: t("collectionCard.share"),
+      previewLabel: t("collectionCard.preview"),
+      generatingLabel: t("collectionCard.generating"),
+      downloadedStatus: t("collectionCard.downloaded"),
+      sharedStatus: t("collectionCard.shared"),
+      unavailableShareStatus: t("collectionCard.nativeUnavailable"),
+      unavailableShareFallbackStatus: t("collectionCard.nativeUnavailable"),
+      renderFailureStatus: t("collectionCard.renderFailure"),
+      createFailureStatus: t("collectionCard.createFailure"),
+      shareTitle: t("collectionCard.shareTitle"),
+      shareText: t("collectionCard.shareText"),
+      tooltip: t("collectionCard.tooltip"),
+      footer: t("collectionCard.footer"),
+      curatorBonusIncludedLabel: t("collectionCard.bonusIncluded"),
+      curatorBonusAvailableLabel: t("collectionCard.bonusAvailable"),
+      curatorBonusUnlockedCopy: t("collectionCard.bonusUnlocked"),
+      curatorBonusLockedCopy: t("collectionCard.bonusLocked"),
+    },
+    finalization: {
+      customerFieldLabels: {
+        name: t("review.customerName"),
+        city: t("review.city"),
+        notes: t("review.notes"),
+      },
+      whatsapp: {
+        greeting: t("finalization.greeting"),
+        closing: t("finalization.closing"),
+        blockedCopied: t("finalization.blockedCopied"),
+        blockedManual: t("finalization.blockedManual"),
+        openingCopied: t("finalization.openingCopied"),
+        opening: t("finalization.opening"),
+        manualOpenLabel: t("finalization.manualOpen"),
+      },
+      messageLabels: {
+        customer: t("finalization.customer"),
+        city: t("finalization.city"),
+        notes: t("finalization.notes"),
+        selectedFragrances: t("finalization.selectedFragrances"),
+        totalSlots: t("finalization.totalSlots"),
+        totalPoints: t("finalization.totalPoints"),
+        orderTotal: t("finalization.orderTotal"),
+        curatorBonus: t("finalization.curatorBonus"),
+        curatorStyle: t("finalization.curatorStyle"),
+        unlocked: t("finalization.unlocked"),
+        notUnlocked: t("finalization.notUnlocked"),
+      },
+    },
+  };
+}

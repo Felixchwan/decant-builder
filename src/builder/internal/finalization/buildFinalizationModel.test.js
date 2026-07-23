@@ -4,6 +4,7 @@ import {
   buildFinalizationModel,
   normalizeCustomerInfo,
 } from "./buildFinalizationModel.js";
+import { aurelianConfig } from "../../../merchants/aurelian/config.js";
 
 const config = {
   brand: {
@@ -383,6 +384,33 @@ describe("buildFinalizationModel", () => {
     expect(result.message).toContain("1. undefined - undefined (undefined pt)");
     expect(result.message).toContain("2. Missing Brand - undefined (1 pt)");
     expect(() => model({ selectedPerfumes: [null] })).toThrow();
+  });
+
+  it("uses localized order labels from merchant config without changing item structure", () => {
+    const result = model({
+      curatorBonus: {
+        isUnlocked: true,
+        preferenceLabel: aurelianConfig.curatorBonus.preferences.complement.label,
+        rewardLabel: aurelianConfig.curatorBonus.rewardLabel,
+      },
+      config: aurelianConfig,
+    });
+
+    expect(result.order.items).toEqual([
+      { id: 7, name: "Azure Office", brand: "Maison Test", points: 1 },
+      { id: 3, name: "Amber Date", brand: "Atelier Warm", points: 1.5 },
+      { id: 9, name: "Nocturne Leather", brand: "Maison Test", points: 2 },
+    ]);
+    expect(result.message).toContain("Hola Aurelian, quiero finalizar mi pedido de Discovery Box.");
+    expect(result.message).toContain("Cliente: Alex");
+    expect(result.message).toContain("Ciudad: Monterrey");
+    expect(result.message).toContain("Fragancias seleccionadas:");
+    expect(result.message).toContain("Total de espacios: 3");
+    expect(result.message).toContain("Puntos totales: 4.5");
+    expect(result.message).toContain("Total del pedido: $450");
+    expect(result.message).toContain("Curator Bonus: Desbloqueado");
+    expect(result.message).toContain("Estilo curator: Complementar mi colección");
+    expect(result.message).not.toContain("Discovery Decants");
   });
 
   it("treats non-array selected perfume input as an empty order", () => {

@@ -101,32 +101,33 @@ function buildOrderModel({
 }
 
 function buildFinalizationMessage({ customer, order, config }) {
+  const labels = config.finalization.messageLabels || {};
   const perfumeLines = order.items.map(
     (perfume, index) =>
       `${index + 1}. ${perfume.name} - ${perfume.brand} (${perfume.points} pt)`
   );
   const curatorStatus = order.curatorBonus.isUnlocked
     ? [
-        "Curator Bonus: Unlocked",
-        `Curator Style: ${order.curatorBonus.preferenceLabel}`,
+        `${labels.curatorBonus || "Curator Bonus"}: ${labels.unlocked || "Unlocked"}`,
+        `${labels.curatorStyle || "Curator Style"}: ${order.curatorBonus.preferenceLabel}`,
       ].join("\n")
-    : "Curator Bonus: Not unlocked";
+    : `${labels.curatorBonus || "Curator Bonus"}: ${labels.notUnlocked || "Not unlocked"}`;
 
   return [
     formatConfigCopy(config.finalization.whatsapp.greeting, {
       businessName: config.brand.businessName,
     }),
     "",
-    `Customer: ${customer.name}`,
-    `City: ${customer.city}`,
-    customer.notes ? `Notes: ${customer.notes}` : "",
+    `${labels.customer || "Customer"}: ${customer.name}`,
+    `${labels.city || "City"}: ${customer.city}`,
+    customer.notes ? `${labels.notes || "Notes"}: ${customer.notes}` : "",
     "",
-    "Selected fragrances:",
+    labels.selectedFragrances || "Selected fragrances:",
     ...perfumeLines,
     "",
-    `Total slots: ${order.totalSlots}`,
-    `Total points: ${order.totalPoints.toFixed(1)}`,
-    `Order total: $${order.monetaryTotal.toFixed(0)}`,
+    `${labels.totalSlots || "Total slots"}: ${order.totalSlots}`,
+    `${labels.totalPoints || "Total points"}: ${order.totalPoints.toFixed(1)}`,
+    `${labels.orderTotal || "Order total"}: $${order.monetaryTotal.toFixed(0)}`,
     curatorStatus,
     "",
     config.finalization.whatsapp.closing,

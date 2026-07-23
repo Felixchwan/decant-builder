@@ -1,7 +1,8 @@
-import { DiscoveryBoxBuilder, discoveryDecantsConfig } from "../builder/index.js";
+import { DiscoveryBoxBuilder } from "../builder/index.js";
 import AppErrorBoundary from "../components/AppErrorBoundary.jsx";
 import { perfumes } from "../data/perfumes";
 import { notes } from "../data/notes";
+import { discoveryDecantsConfig } from "../merchants/discoveryDecants/config.js";
 
 export default function DiscoveryDecantsApp() {
   return (

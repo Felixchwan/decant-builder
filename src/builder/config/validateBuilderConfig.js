@@ -1,3 +1,5 @@
+import { SUPPORTED_LOCALES } from "../../i18n/createTranslator.js";
+
 function assertPath(condition, path, message) {
   if (!condition) {
     throw new Error(`Invalid builder config at ${path}: ${message}`);
@@ -17,11 +19,12 @@ function isNonEmptyString(value) {
 }
 
 export function validateBuilderConfig(config) {
+  assertPath(SUPPORTED_LOCALES.includes(config.locale), "locale", "must be a supported locale");
   assertPath(isNonEmptyString(config.software.name), "software.name", "must be a non-empty string");
   assertPath(isNonEmptyString(config.brand.businessName), "brand.businessName", "must be a non-empty string");
   assertPath(isPositiveNumber(config.commerce.pointValue), "commerce.pointValue", "must be a positive number");
   assertPath(isNonEmptyString(config.commerce.currency), "commerce.currency", "must be a non-empty string");
-  assertPath(isNonEmptyString(config.commerce.locale), "commerce.locale", "must be a non-empty string");
+  assertPath(SUPPORTED_LOCALES.includes(config.commerce.locale), "commerce.locale", "must be a supported locale");
   assertPath(isNonEmptyString(config.commerce.currencySymbol), "commerce.currencySymbol", "must be a non-empty string");
 
   assertPath(isPositiveNumber(config.box.minSelectableSlots), "box.minSelectableSlots", "must be a positive number");

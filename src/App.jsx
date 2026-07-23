@@ -24,6 +24,7 @@ import {
 import { buildComposerRecommendations } from "./builder/internal/recommendations/buildComposerRecommendations.js";
 import { getMetadataAsset } from "./data/metadataAssets";
 import { getBrandAsset } from "./data/brandAssets";
+import { createTranslator } from "./i18n/createTranslator.js";
 import {
   addSelectedPerfume,
   canAddPerfume,
@@ -37,6 +38,11 @@ const EMPTY_NOTES = {};
 
 function App({ catalog, notes: noteMetadata = EMPTY_NOTES, config }) {
   const builderConfig = config;
+  const translator = useMemo(
+    () => createTranslator(builderConfig.locale),
+    [builderConfig.locale]
+  );
+  const { t } = translator;
   const perfumes = catalog;
   const notes = useMemo(() => noteMetadata || EMPTY_NOTES, [noteMetadata]);
   const MIN_BOX_SLOTS = builderConfig.box.minSelectableSlots;
@@ -322,7 +328,7 @@ const isComposerProposalStale = isComposerBoxProposalStale(
         }
 
         setComposerProposal(null);
-        setComposerStatusMessage("We couldn't complete that action. Please try again.");
+        setComposerStatusMessage(t("app.recoverableActionError"));
       } finally {
         if (composerGenerationIdRef.current === generationId) {
           setIsComposerGenerating(false);
@@ -514,7 +520,7 @@ const confirmAddPerfume = () => {
         </p>
       </section>
 
-      <nav className="mobile-builder-tabs" aria-label="Builder sections">
+      <nav className="mobile-builder-tabs" aria-label={t("app.mobileTabs")}>
         <button
           type="button"
           className={activeMobileTab === "catalog" ? "is-active" : ""}
@@ -522,7 +528,7 @@ const confirmAddPerfume = () => {
           aria-controls="catalog-panel"
           aria-selected={activeMobileTab === "catalog"}
         >
-          Catalog
+          {t("general.catalog")}
         </button>
 
         <button
@@ -532,7 +538,7 @@ const confirmAddPerfume = () => {
           aria-controls="my-box-panel"
           aria-selected={activeMobileTab === "box"}
         >
-          My Box <span>{totalSlots}</span>
+          {t("general.myBox")} <span>{totalSlots}</span>
         </button>
       </nav>
 
@@ -546,8 +552,8 @@ const confirmAddPerfume = () => {
           <section className="catalog-section">
             <div className="panel-header">
               <div className="catalog-title-group">
-                <h2>Catalog</h2>
-                <p>{visiblePerfumes.length} perfumes available</p>
+                <h2>{t("general.catalog")}</h2>
+                <p>{t("general.perfumesAvailable", { count: visiblePerfumes.length })}</p>
               </div>
             </div>
 
@@ -556,11 +562,12 @@ const confirmAddPerfume = () => {
                 type="search"
                 value={searchQuery}
                 onChange={(event) => setSearchQuery(event.target.value)}
-                placeholder="Search name, brand, accord, note, vibe"
+                placeholder={t("app.searchPlaceholder")}
               />
             </div>
 
             <FilterBar
+              translator={translator}
               filterOptions={filterOptions}
               activeFilters={activeFilters}
               handleFilterChange={handleFilterChange}
@@ -580,6 +587,11 @@ const confirmAddPerfume = () => {
                     onAddToBox={addPerfume}
                     onOpenDetails={setDetailPerfume}
                     isDisabled={totalSlots >= MAX_SELECTABLE_SLOTS}
+                    labels={{
+                      add: t("general.add"),
+                      addToBox: t("general.addToBox"),
+                      viewDetails: t("details.view"),
+                    }}
                   />
                 );
               })}
@@ -649,11 +661,12 @@ const confirmAddPerfume = () => {
         }
         addButtonLabel={
           selectedPerfumes.some((perfume) => perfume.id === detailPerfume.id)
-            ? "Added"
+            ? t("general.added")
             : totalSlots >= MAX_SELECTABLE_SLOTS
-              ? "Box full"
-              : "Add to Box"
+              ? t("general.boxFull")
+              : t("general.addToBox")
         }
+        translator={translator}
         onAddToBox={addPerfume}
         onPrevious={() => navigateDetailPerfume(-1)}
         onNext={() => navigateDetailPerfume(1)}
@@ -684,11 +697,11 @@ const confirmAddPerfume = () => {
 
       <div className="modal-actions">
         <button type="button" onClick={confirmAddPerfume}>
-          Add to Box
+          {t("general.addToBox")}
         </button>
 
         <button type="button" onClick={cancelAddPerfume}>
-          Cancel
+          {t("general.cancel")}
         </button>
       </div>
     </div>
@@ -786,6 +799,7 @@ function getBuilderStorage() {
 
 function PerfumeDetailsModal({
   builderConfig,
+  translator,
   perfume,
   notes,
   tierData,
@@ -799,6 +813,7 @@ function PerfumeDetailsModal({
   canNavigate,
   onClose,
 }) {
+  const t = translator?.t || ((key) => key);
   const touchStartRef = useRef(null);
   const touchCurrentRef = useRef(null);
   const swipeFeedbackTimeoutRef = useRef(null);
@@ -931,7 +946,7 @@ function PerfumeDetailsModal({
       window.clearTimeout(addFeedbackTimeoutRef.current);
     }
 
-    setAddFeedback("Added to Box");
+    setAddFeedback(t("details.addedFeedback"));
     addFeedbackTimeoutRef.current = window.setTimeout(() => {
       setAddFeedback("");
     }, 1600);
@@ -962,7 +977,7 @@ function PerfumeDetailsModal({
             type="button"
             className="perfume-details-close"
             onClick={handleClose}
-            aria-label="Close fragrance details"
+            aria-label={t("details.close")}
           >
             X
           </button>
@@ -1026,16 +1041,16 @@ function PerfumeDetailsModal({
                   disabled={!canNavigate}
                   title={
                     previousPerfume
-                      ? `Previous: ${previousPerfume.name}`
-                      : "Previous perfume"
+                      ? t("details.previousTitle", { name: previousPerfume.name })
+                      : t("details.previousFallback")
                   }
-                  aria-label="Previous fragrance"
+                  aria-label={t("details.previous")}
                 >
                   &lt;
                 </button>
                 <img
                   src={perfume.image}
-                  alt={`${perfume.name} bottle`}
+                  alt={t("details.bottleAlt", { name: perfume.name })}
                   onError={(event) => {
                     event.currentTarget.onerror = null;
                     event.currentTarget.src = PERFUME_IMAGE_FALLBACK;
@@ -1046,8 +1061,8 @@ function PerfumeDetailsModal({
                   className="perfume-image-nav next"
                   onClick={onNext}
                   disabled={!canNavigate}
-                  title={nextPerfume ? `Next: ${nextPerfume.name}` : "Next perfume"}
-                  aria-label="Next fragrance"
+                  title={nextPerfume ? t("details.nextTitle", { name: nextPerfume.name }) : t("details.nextFallback")}
+                  aria-label={t("details.next")}
                 >
                   &gt;
                 </button>
@@ -1055,9 +1070,9 @@ function PerfumeDetailsModal({
                 {showNavigationHint && (
                   <p className="perfume-details-nav-hint">
                     <span className="nav-hint-desktop">
-                      Use &larr; &rarr; arrow keys to browse
+                      {t("details.navHintDesktop")}
                     </span>
-                    <span className="nav-hint-mobile">Swipe sideways to browse</span>
+                    <span className="nav-hint-mobile">{t("details.navHintMobile")}</span>
                   </p>
                 )}
               </div>
@@ -1066,47 +1081,47 @@ function PerfumeDetailsModal({
         )}
 
         <section className="perfume-details-section">
-          <h4>Profile</h4>
+          <h4>{t("details.profile")}</h4>
 
-          <DetailTagGroup label="Seasons" values={perfume.seasons || []} assetType="seasons" />
-          <DetailTagGroup label="Occasions" values={perfume.occasions || []} assetType="occasions" />
-          <DetailTagGroup label="Vibes" values={perfume.vibes || []} assetType="vibes" />
+          <DetailTagGroup translator={translator} label={t("details.seasons")} values={perfume.seasons || []} assetType="seasons" />
+          <DetailTagGroup translator={translator} label={t("details.occasions")} values={perfume.occasions || []} assetType="occasions" />
+          <DetailTagGroup translator={translator} label={t("details.vibes")} values={perfume.vibes || []} assetType="vibes" />
         </section>
 
         <section className="perfume-details-section">
-          <h4>Accords</h4>
-          <DetailTagGroup label="Accords" values={perfume.accords || []} assetType="accords" />
+          <h4>{t("details.accords")}</h4>
+          <DetailTagGroup translator={translator} label={t("details.accords")} values={perfume.accords || []} assetType="accords" />
         </section>
 
         <section className="perfume-details-section">
-          <h4>Notes</h4>
+          <h4>{t("details.notes")}</h4>
 
           {usesGeneralNotes ? (
             <DetailNoteGroup
-              title="General Notes"
+              title={t("details.generalNotes")}
               noteIds={perfume.generalNotes || []}
               notes={notes}
             />
           ) : hasPyramidNotes ? (
             <>
               <DetailNoteGroup
-                title="Top Notes"
+                title={t("details.topNotes")}
                 noteIds={perfume.topNotes || []}
                 notes={notes}
               />
               <DetailNoteGroup
-                title="Middle Notes"
+                title={t("details.middleNotes")}
                 noteIds={perfume.middleNotes || []}
                 notes={notes}
               />
               <DetailNoteGroup
-                title="Base Notes"
+                title={t("details.baseNotes")}
                 noteIds={perfume.baseNotes || []}
                 notes={notes}
               />
             </>
           ) : (
-            <p className="details-empty">No notes listed yet.</p>
+            <p className="details-empty">{t("details.noNotes")}</p>
           )}
         </section>
 
@@ -1115,7 +1130,8 @@ function PerfumeDetailsModal({
   );
 }
 
-function DetailTagGroup({ label, values, assetType }) {
+function DetailTagGroup({ translator, label, values, assetType }) {
+  const t = translator?.t || ((key) => key);
   return (
     <div className="detail-profile-group">
       <span>{label}</span>
@@ -1123,21 +1139,22 @@ function DetailTagGroup({ label, values, assetType }) {
       <div className="details-tag-row">
         {values.length > 0 ? (
           values.map((value) => (
-            <DetailMetadataChip key={value} value={value} assetType={assetType} />
+            <DetailMetadataChip key={value} translator={translator} value={value} assetType={assetType} />
           ))
         ) : (
-          <p>No data yet</p>
+          <p>{t("details.noData")}</p>
         )}
       </div>
     </div>
   );
 }
 
-function DetailMetadataChip({ value, assetType }) {
+function DetailMetadataChip({ translator, value, assetType }) {
   const asset = assetType ? getMetadataAsset(assetType, value) : null;
+  const displayValue = translator?.label?.(assetType, value) || value;
 
   if (!asset) {
-    return <span>{value}</span>;
+    return <span>{displayValue}</span>;
   }
 
   return (
@@ -1151,7 +1168,7 @@ function DetailMetadataChip({ value, assetType }) {
           event.currentTarget.parentElement?.classList.remove("detail-asset-chip");
         }}
       />
-      <span>{value}</span>
+      <span>{displayValue}</span>
     </span>
   );
 }

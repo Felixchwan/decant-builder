@@ -37,6 +37,7 @@ import {
 import { buildFinalizationModel } from "../builder/internal/finalization/buildFinalizationModel.js";
 import { getTierData } from "../utils/tierUtils";
 import CollectionCard from "./CollectionCard";
+import { createTranslator } from "../i18n/createTranslator.js";
 
 const EMPTY_RECOMMENDATIONS = [];
 const PERFUME_IMAGE_FALLBACK =
@@ -81,6 +82,11 @@ function BuilderPanel({
   reviewCustomerInfo,
   onReviewCustomerInfoChange,
 }) {
+    const translator = useMemo(
+      () => createTranslator(builderConfig.locale),
+      [builderConfig.locale]
+    );
+    const { t } = translator;
     const [hasSeenDiscoveryIntro, setHasSeenDiscoveryIntro] = useState(() => {
       if (typeof window === "undefined") {
         return true;
@@ -194,10 +200,16 @@ function BuilderPanel({
     );
     const reviewRequirementText = [
       missingSlots > 0
-        ? `${missingSlots} more fragrance${missingSlots === 1 ? "" : "s"}`
+        ? t("builder.moreFragrances", {
+            count: missingSlots,
+            plural: missingSlots === 1 ? "" : "s",
+          })
         : null,
       missingPoints > 0
-        ? `${missingPoints.toFixed(1)} more point${missingPoints === 1 ? "" : "s"}`
+        ? t("builder.morePoints", {
+            count: missingPoints.toFixed(1),
+            plural: missingPoints === 1 ? "" : "s",
+          })
         : null,
     ]
       .filter(Boolean)
@@ -398,7 +410,10 @@ function BuilderPanel({
             </button>
           </div>
           <p>
-            {totalSlots}/{maxSelectableSlots} selected slots used
+            {t("builder.selectedSlotsUsed", {
+              total: totalSlots,
+              max: maxSelectableSlots,
+            })}
           </p>
         </div>
 
@@ -411,15 +426,15 @@ function BuilderPanel({
         <DiscoveryBoxCoachmark builderConfig={builderConfig} onDismiss={dismissDiscoveryIntro} />
       )}
 
-      <div className="box-summary-card" aria-label="Box summary">
+      <div className="box-summary-card" aria-label={t("builder.boxSummary")}>
         <div className="box-summary-metric">
           <strong>{totalSlots} / {maxSelectableSlots}</strong>
-          <span>Slots</span>
+          <span>{t("general.slots")}</span>
         </div>
 
         <div className="box-summary-metric">
           <strong>{totalPoints.toFixed(1)}</strong>
-          <span>Points</span>
+          <span>{t("general.points")}</span>
         </div>
 
         <div className="box-summary-metric box-summary-total">
@@ -441,13 +456,13 @@ function BuilderPanel({
 
       <div className="share-box-actions">
         <div className="share-box-toolbar">
-          <span className="share-box-label">Collection Card</span>
+          <span className="share-box-label">{t("collectionCard.label")}</span>
 
           <span className="share-info-wrap">
             <button
               type="button"
               className="share-info-button"
-              aria-label="About Collection Card"
+              aria-label={t("collectionCard.tooltip")}
               aria-describedby="share-box-tooltip"
               aria-expanded={isShareTooltipOpen}
               onClick={() => setIsShareTooltipOpen((isOpen) => !isOpen)}
@@ -503,6 +518,7 @@ function BuilderPanel({
       </div>
 
       <ComposeMyBoxPanel
+        builderConfig={builderConfig}
         isBoxFull={totalSlots >= maxSelectableSlots}
         isGenerating={isComposerGenerating}
         statusMessage={composerStatusMessage}
@@ -544,7 +560,7 @@ function BuilderPanel({
         </button>
 
         {!isBoxReady && (
-          <p>{builderConfig.copy.reviewIncompletePrefix} {reviewRequirementText || builderConfig.copy.reviewIncompleteFallback} to review.</p>
+          <p>{builderConfig.copy.reviewIncompletePrefix} {reviewRequirementText || builderConfig.copy.reviewIncompleteFallback} {builderConfig.copy.reviewIncompleteSuffix || "to review."}</p>
         )}
       </div>
 
@@ -566,7 +582,7 @@ function BuilderPanel({
         onRemovePerfume={onRemovePerfume}
       />
 
-      <BoxIntelligenceSummary intelligence={boxIntelligence} />
+      <BoxIntelligenceSummary intelligence={boxIntelligence} translator={translator} />
 
       <div className="coverage-panel">
     <h3>Box Analysis</h3>
@@ -717,6 +733,7 @@ function BuilderPanel({
       )}
       {isFinalSummaryOpen && (
         <DiscoveryBoxReviewModal
+          translator={translator}
           builderConfig={builderConfig}
           selectedPerfumes={selectedPerfumes}
           totalPoints={totalPoints}
@@ -804,43 +821,46 @@ function CollectionCardPreviewModal({
 }
 
 const COMPOSER_STRATEGY_OPTIONS = [
-  { value: "balanced", label: "Balanced" },
-  { value: "versatile", label: "Versatile" },
-  { value: "explorer", label: "Explorer" },
-  { value: "signature", label: "Signature" },
+  { value: "balanced", labelKey: "composer.strategy.balanced" },
+  { value: "versatile", labelKey: "composer.strategy.versatile" },
+  { value: "explorer", labelKey: "composer.strategy.explorer" },
+  { value: "signature", labelKey: "composer.strategy.signature" },
 ];
 
 const COMPOSER_COLLECTION_STYLE_OPTIONS = [
-  { value: "premium_focus", label: "Premium Focus" },
-  { value: "balanced_mix", label: "Balanced Mix" },
-  { value: "more_variety", label: "More Variety" },
+  { value: "premium_focus", labelKey: "composer.style.premium_focus" },
+  { value: "balanced_mix", labelKey: "composer.style.balanced_mix" },
+  { value: "more_variety", labelKey: "composer.style.more_variety" },
 ];
 
 function ComposeMyBoxPanel({
+  builderConfig,
   isBoxFull,
   isGenerating,
   statusMessage,
   onOpenSetup,
 }) {
+  const { t } = createTranslator(builderConfig.locale);
+
   return (
     <section
       className="compose-box-panel compose-box-panel-compact"
       aria-busy={isGenerating}
-      aria-label="Composer"
+      aria-label={t("composer.eyebrow")}
     >
       <div className="compose-box-header">
         <div>
-          <span>Composer</span>
-          <h3>Build a box from your preferences.</h3>
+          <span>{t("composer.eyebrow")}</span>
+          <h3>{t("composer.panelTitle")}</h3>
         </div>
 
         <button type="button" onClick={onOpenSetup} disabled={isGenerating}>
-          {isGenerating ? "Composing..." : isBoxFull ? "Review Proposal" : "Compose My Box"}
+          {isGenerating ? t("composer.composing") : isBoxFull ? t("composer.reviewProposal") : t("composer.composeMyBox")}
         </button>
       </div>
       {isGenerating && (
         <p className="composer-busy-status" role="status">
-          Building your Discovery Box proposal.
+          {t("composer.busy")}
         </p>
       )}
       {statusMessage && !isGenerating && (
@@ -864,6 +884,7 @@ function ComposerSetupModal({
   onCancel,
   onGenerate,
 }) {
+  const { t } = createTranslator(builderConfig.locale);
   const safeSettings = settings || {};
   const safeOptions = options || {};
   const budgetValue = safeSettings.budget || "";
@@ -899,29 +920,29 @@ function ComposerSetupModal({
       >
         <div className="modal-header">
           <div>
-            <span>Composer</span>
-            <h3 id="composer-setup-title">Compose My Box</h3>
+            <span>{t("composer.eyebrow")}</span>
+            <h3 id="composer-setup-title">{t("composer.setupTitle")}</h3>
           </div>
 
-          <button type="button" onClick={onCancel}>Close</button>
+          <button type="button" onClick={onCancel}>{t("general.close")}</button>
         </div>
 
         <div className="composer-setup-body">
           <p className="composer-setup-intro">
-            Choose the preferences Composer should use.
+            {t("composer.setupIntro")}
           </p>
 
           <div className="compose-box-controls composer-setup-controls">
             <div className="composer-setup-field-row">
               <label className="composer-setup-field">
-                <span>Strategy</span>
+                <span>{t("composer.strategy")}</span>
                 <select
                   value={safeSettings.strategy || "balanced"}
                   onChange={(event) => onSettingChange("strategy", event.target.value)}
                 >
                   {COMPOSER_STRATEGY_OPTIONS.map((option) => (
                     <option key={option.value} value={option.value}>
-                      {option.label}
+                      {t(option.labelKey)}
                     </option>
                   ))}
                 </select>
@@ -929,7 +950,7 @@ function ComposerSetupModal({
               </label>
 
               <label className="composer-setup-field">
-                <span>Budget</span>
+                <span>{t("composer.budget")}</span>
                 <input
                   type="number"
                   min={Number.isFinite(minimumComposerBudget) ? minimumComposerBudget : 0}
@@ -937,12 +958,12 @@ function ComposerSetupModal({
                   inputMode="decimal"
                   value={budgetValue}
                   onChange={(event) => onSettingChange("budget", event.target.value)}
-                  placeholder="No limit"
+                  placeholder={t("composer.noLimit")}
                 />
                 <span className="composer-field-helper">
                   {isBudgetBelowMinimum && (
                     <small className="composer-budget-warning">
-                      Minimum budget is ${minimumComposerBudget}.
+                      {t("composer.minimumBudget", { amount: minimumComposerBudget })}
                     </small>
                   )}
                   {budgetBonusFeedback.label && (
@@ -956,10 +977,10 @@ function ComposerSetupModal({
 
             <div className="compose-preference-group composer-style-control">
               <div className="compose-preference-heading">
-                <span>Collection Style</span>
+                <span>{t("composer.collectionStyle")}</span>
               </div>
 
-              <div className="compose-preference-chips" role="radiogroup" aria-label="Collection Style">
+              <div className="compose-preference-chips" role="radiogroup" aria-label={t("composer.collectionStyle")}>
                 {COMPOSER_COLLECTION_STYLE_OPTIONS.map((option) => {
                   const isSelected =
                     (safeSettings.collectionStyle || "balanced_mix") === option.value;
@@ -973,7 +994,7 @@ function ComposerSetupModal({
                       aria-checked={isSelected}
                       onClick={() => onSettingChange("collectionStyle", option.value)}
                     >
-                      {option.label}
+                      {t(option.labelKey)}
                     </button>
                   );
                 })}
@@ -981,7 +1002,8 @@ function ComposerSetupModal({
             </div>
 
             <ComposePreferenceGroup
-              label="Season"
+              translator={createTranslator(builderConfig.locale)}
+              label={t("composer.season")}
               field="seasons"
               values={safeSettings.seasons}
               options={safeOptions.seasons}
@@ -990,7 +1012,8 @@ function ComposerSetupModal({
             />
 
             <ComposePreferenceGroup
-              label="Occasion"
+              translator={createTranslator(builderConfig.locale)}
+              label={t("composer.occasion")}
               field="occasions"
               values={safeSettings.occasions}
               options={safeOptions.occasions}
@@ -999,7 +1022,8 @@ function ComposerSetupModal({
             />
 
             <ComposePreferenceGroup
-              label="Vibe"
+              translator={createTranslator(builderConfig.locale)}
+              label={t("composer.vibe")}
               field="vibes"
               values={safeSettings.vibes}
               options={safeOptions.vibes}
@@ -1011,10 +1035,10 @@ function ComposerSetupModal({
 
         <div className="review-modal-footer composer-setup-footer">
           <button type="button" className="secondary" onClick={onCancel}>
-            Cancel
+            {t("general.cancel")}
           </button>
           <button type="button" onClick={onGenerate} disabled={isBudgetBelowMinimum || isGenerating}>
-            {isGenerating ? "Composing..." : "Generate Proposal"}
+            {isGenerating ? t("composer.composing") : t("composer.generateProposal")}
           </button>
         </div>
       </div>
@@ -1024,6 +1048,7 @@ function ComposerSetupModal({
 }
 
 function ComposePreferenceGroup({
+  translator,
   label,
   field,
   values,
@@ -1032,10 +1057,11 @@ function ComposePreferenceGroup({
   onClear,
   density = "wrap",
 }) {
+  const t = translator?.t || ((key) => key);
   const selectedValues = Array.isArray(values) ? values : [];
   const availableOptions = Array.isArray(options) ? options : [];
   const selectedSummary =
-    selectedValues.length > 0 ? `${selectedValues.length} selected` : "Any";
+    selectedValues.length > 0 ? t("composer.selectedCount", { count: selectedValues.length }) : t("composer.any");
 
   return (
     <div className={`compose-preference-group compose-preference-${density}`}>
@@ -1045,7 +1071,7 @@ function ComposePreferenceGroup({
         </span>
         {selectedValues.length > 0 && (
           <button type="button" onClick={() => onClear(field)}>
-            Clear
+            {t("composer.clear")}
           </button>
         )}
       </div>
@@ -1062,7 +1088,7 @@ function ComposePreferenceGroup({
               aria-pressed={isSelected}
               onClick={() => onToggle(field, option)}
             >
-              {option}
+              {translator?.label?.(field, option) || option}
             </button>
           );
         })}
@@ -1080,6 +1106,7 @@ function ComposerProposalModal({
   onCancel,
   onBack,
 }) {
+  const { t } = createTranslator(builderConfig.locale);
   useEffect(() => {
     function handleKeyDown(event) {
       if (event.key === "Escape") {
@@ -1103,10 +1130,9 @@ function ComposerProposalModal({
     .filter(Boolean)
     .slice(0, 4);
   const canApply = proposal.apply.available && !isStale;
-  const failureMessage =
-    "Composer could not create a box with the current settings.";
+  const failureMessage = t("composer.failure");
   const failureRecommendation =
-    "Try increasing the budget or removing one or more preferences.";
+    t("composer.failureHelp");
   const budgetLimitedPartial =
     isProposalAvailable &&
     !proposal.targetReached &&
@@ -1140,39 +1166,39 @@ function ComposerProposalModal({
         <div className="modal-header">
           <div>
             <span>{statusLabel}</span>
-            <h3 id="composer-proposal-title">Discovery Box Proposal</h3>
+            <h3 id="composer-proposal-title">{t("composer.proposalTitle")}</h3>
           </div>
 
           <div className="composer-proposal-header-actions">
             <button type="button" className="secondary" onClick={onBack}>
-              Back
+              {t("general.back")}
             </button>
-            <button type="button" onClick={onCancel}>Close</button>
+            <button type="button" onClick={onCancel}>{t("general.close")}</button>
           </div>
         </div>
 
         {isStale && (
           <p className="composer-proposal-alert" role="status">
-            This proposal is out of date. Regenerate it before applying.
+            {t("composer.proposalStale")}
           </p>
         )}
 
         {budgetLimitedPartial && (
           <p className="composer-proposal-alert" role="status">
-            Composer built the largest valid box available within this budget.
+            {t("composer.budgetLimitedPartial")}
           </p>
         )}
 
         {isProposalAvailable ? (
           <>
             <section className="final-summary-section composer-proposal-summary">
-              <h4>Proposal Summary</h4>
+              <h4>{t("composer.proposalSummary")}</h4>
               <div className="summary-grid">
-                <SummaryStat label="Slots" value={`${proposal.collection.length} / ${proposal.targetSlots}`} />
-                <SummaryStat label="Points" value={proposal.totalPoints.toFixed(1)} />
-                <SummaryStat label="Order Total" value={`$${proposal.orderTotal.toFixed(0)}`} />
-                <SummaryStat label="New Picks" value={proposal.addedPerfumes.length} />
-                <SummaryStat label="Curator Bonus" value={proposalBonusStatus.value} />
+                <SummaryStat label={t("general.slots")} value={`${proposal.collection.length} / ${proposal.targetSlots}`} />
+                <SummaryStat label={t("general.points")} value={proposal.totalPoints.toFixed(1)} />
+                <SummaryStat label={builderConfig.commerce.totalLabel} value={`$${proposal.orderTotal.toFixed(0)}`} />
+                <SummaryStat label={t("composer.newPicks")} value={proposal.addedPerfumes.length} />
+                <SummaryStat label={builderConfig.curatorBonus.label} value={proposalBonusStatus.value} />
               </div>
               {proposalBonusStatus.label && (
                 <p className={`composer-proposal-bonus composer-proposal-bonus-${proposalBonusStatus.state}`}>
@@ -1182,7 +1208,7 @@ function ComposerProposalModal({
             </section>
 
             <section className="final-summary-section">
-              <h4>Proposed Fragrances</h4>
+              <h4>{t("composer.proposedFragrances")}</h4>
 
               <div className="composer-proposal-list">
                 {proposalItems.map((item) => {
@@ -1214,7 +1240,7 @@ function ComposerProposalModal({
                         <button
                           type="button"
                           className="composer-proposal-alt-button"
-                          aria-label={`Previous alternative for Slot ${slotNumber}`}
+                          aria-label={t("composer.previousAlternative", { slot: slotNumber })}
                           onClick={() => onMoveAlternative?.(item.slotId, -1)}
                         >
                           ‹
@@ -1242,7 +1268,7 @@ function ComposerProposalModal({
                           <div className="composer-proposal-tradeoff">
                             {gainedLabels.length > 0 && (
                               <div>
-                                <span>Gain</span>
+                                <span>{t("composer.gain")}</span>
                                 <div>
                                   {gainedLabels.map((label) => (
                                     <em key={`gain-${item.slotId}-${label}`}>{label}</em>
@@ -1252,7 +1278,7 @@ function ComposerProposalModal({
                             )}
                             {lostLabels.length > 0 && (
                               <div>
-                                <span>Lose</span>
+                                <span>{t("composer.lose")}</span>
                                 <div>
                                   {lostLabels.map((label) => (
                                     <em key={`loss-${item.slotId}-${label}`}>{label}</em>
@@ -1268,7 +1294,7 @@ function ComposerProposalModal({
                         <button
                           type="button"
                           className="composer-proposal-alt-button"
-                          aria-label={`Next alternative for Slot ${slotNumber}`}
+                          aria-label={t("composer.nextAlternative", { slot: slotNumber })}
                           onClick={() => onMoveAlternative?.(item.slotId, 1)}
                         >
                           ›
@@ -1276,7 +1302,7 @@ function ComposerProposalModal({
                       )}
 
                       <span className="composer-proposal-item-state">
-                        {item.preserved ? "Preserved" : isComposerPick ? "New · Composer Pick" : "New · Alternative"}
+                        {item.preserved ? t("composer.preserved") : isComposerPick ? t("composer.newComposerPick") : t("composer.newAlternative")}
                       </span>
                     </div>
                   );
@@ -1294,7 +1320,7 @@ function ComposerProposalModal({
 
         {isProposalAvailable && explanationLabels.length > 0 && (
           <section className="final-summary-section">
-            <h4>Why This Box</h4>
+            <h4>{t("composer.whyThisBox")}</h4>
             <div className="composer-proposal-reasons">
               {explanationLabels.map((label) => (
                 <p key={label}>{label}</p>
@@ -1305,11 +1331,11 @@ function ComposerProposalModal({
 
         <div className="review-modal-footer">
           <button type="button" className="secondary" onClick={onCancel}>
-            Keep Current Box
+            {t("composer.keepCurrentBox")}
           </button>
           {isProposalAvailable && (
             <button type="button" onClick={onApply} disabled={!canApply}>
-              Apply Proposal
+              {t("composer.applyProposal")}
             </button>
           )}
         </div>
@@ -2174,6 +2200,7 @@ const CuratorBonusModule = forwardRef(function CuratorBonusModule(
   },
   ref
 ) {
+  const { t } = createTranslator(builderConfig.locale);
   const DISCOVERY_BONUS_TARGET_POINTS = builderConfig.curatorBonus.targetPoints;
   const CURATOR_BONUS_PREFERENCES = builderConfig.curatorBonus.preferences;
   const preferenceData = CURATOR_BONUS_PREFERENCES[preference];
@@ -2189,12 +2216,14 @@ const CuratorBonusModule = forwardRef(function CuratorBonusModule(
   const hasRequiredPoints = totalPoints >= DISCOVERY_BONUS_TARGET_POINTS;
   const hasRequiredFragrances = totalSlots >= minSlots;
   const lockedMessage = !hasRequiredPoints
-    ? `${pointsAway.toFixed(1)} point${
-        pointsAway === 1 ? "" : "s"
-      } away from unlocking your Curator Bonus`
-    : `Need ${fragrancesAway} more fragrance${
-        fragrancesAway === 1 ? "" : "s"
-      } to unlock your Curator Bonus`;
+    ? t("curator.pointsAway", {
+        count: pointsAway.toFixed(1),
+        plural: pointsAway === 1 ? "" : "s",
+      })
+    : t("curator.fragrancesAway", {
+        count: fragrancesAway,
+        plural: fragrancesAway === 1 ? "" : "s",
+      });
 
   return (
     <section
@@ -2206,11 +2235,11 @@ const CuratorBonusModule = forwardRef(function CuratorBonusModule(
       <div className="discovery-progress-header">
         <div>
           <span>{builderConfig.curatorBonus.label}</span>
-          <strong>Progress & Reward</strong>
+          <strong>{t("curator.progressReward")}</strong>
         </div>
 
         <span className="discovery-bonus-state">
-          {isUnlocked ? "Unlocked" : "Locked"}
+          {isUnlocked ? t("general.unlocked") : t("general.locked")}
         </span>
       </div>
 
@@ -2221,11 +2250,11 @@ const CuratorBonusModule = forwardRef(function CuratorBonusModule(
       <div className="discovery-requirements">
         <RequirementLine
           isMet={hasRequiredPoints}
-          value={`${progressValue.toFixed(1)} / ${DISCOVERY_BONUS_TARGET_POINTS} Points`}
+          value={`${progressValue.toFixed(1)} / ${DISCOVERY_BONUS_TARGET_POINTS} ${t("general.points")}`}
         />
         <RequirementLine
           isMet={hasRequiredFragrances}
-          value={`${Math.min(totalSlots, minSlots)} / ${minSlots} Fragrances`}
+          value={`${Math.min(totalSlots, minSlots)} / ${minSlots} ${t("general.fragrances")}`}
         />
       </div>
 
@@ -2250,9 +2279,10 @@ const CuratorBonusModule = forwardRef(function CuratorBonusModule(
           {!isUnlocked && <strong>{builderConfig.curatorBonus.progressCopy.lockedCompletion}</strong>}
           <p>
             {isUnlocked
-              ? `${preferenceData.label} selected. Your curator pick${
-                  hiddenPickCount === 1 ? "" : "s"
-                } will stay wrapped until reveal.`
+              ? t("curator.selectedWrapped", {
+                  style: preferenceData.label,
+                  plural: hiddenPickCount === 1 ? "" : "s",
+                })
               : builderConfig.curatorBonus.progressCopy.lockedStrategy}
           </p>
         </div>
@@ -2260,7 +2290,7 @@ const CuratorBonusModule = forwardRef(function CuratorBonusModule(
         {isUnlocked ? (
           <div className="curator-preference-control">
             <label htmlFor="curator-bonus-preference">
-              {builderConfig.curatorBonus.label} Style
+              {t("curator.style")}
             </label>
 
             <select
@@ -2281,13 +2311,13 @@ const CuratorBonusModule = forwardRef(function CuratorBonusModule(
           </div>
         ) : (
           <div className="curator-style-locked" aria-disabled="true">
-            <span>{builderConfig.curatorBonus.label} Style</span>
-            <strong>Unlock to choose curator style</strong>
+            <span>{t("curator.style")}</span>
+            <strong>{t("curator.unlockStyle")}</strong>
           </div>
         )}
 
         <div className={`curator-pick-slot ${isUnlocked ? "active" : ""}`}>
-          <span>Curator Pick</span>
+          <span>{t("curator.pick")}</span>
           <strong>{builderConfig.curatorBonus.rewardLabel}</strong>
           <p>{builderConfig.curatorBonus.progressCopy.pickValue}</p>
           {isUnlocked && (
@@ -2337,6 +2367,7 @@ function BoxIntelligenceSummary({ intelligence }) {
 }
 
 function DiscoveryBoxReviewModal({
+  translator,
   builderConfig,
   selectedPerfumes,
   totalPoints,
@@ -2352,6 +2383,7 @@ function DiscoveryBoxReviewModal({
   onCustomerInfoChange,
   onClose,
 }) {
+  const t = translator?.t || ((key) => key);
   const [finalizeStatus, setFinalizeStatus] = useState("");
   const [fallbackWhatsAppUrl, setFallbackWhatsAppUrl] = useState("");
   const collectionIdentity = getCollectionIdentity(boxSummary);
@@ -2433,7 +2465,7 @@ function DiscoveryBoxReviewModal({
 
   async function handleFinalizeBox() {
     if (!canFinalize) {
-      setFinalizeStatus("Enter customer name and city before finalizing.");
+      setFinalizeStatus(t("review.requireCustomer"));
       return;
     }
 
@@ -2480,21 +2512,21 @@ function DiscoveryBoxReviewModal({
       >
         <div className="modal-header">
           <div>
-            <h3 id="discovery-review-title">Your personalized fragrance collection is ready.</h3>
+            <h3 id="discovery-review-title">{t("review.title")}</h3>
           </div>
 
-          <button type="button" onClick={onClose}>Close</button>
+          <button type="button" onClick={onClose}>{t("general.close")}</button>
         </div>
 
         <section className="final-summary-section review-overview-section">
           <div className="review-section-heading">
-            <span>Curator Assessment</span>
+            <span>{t("review.curatorAssessment")}</span>
             <h4>{collectionIdentity.name}</h4>
             <strong className="review-assessment-badge">{assessmentBadge}</strong>
             <p>{assessmentSummary}</p>
           </div>
 
-          <h5>Season Coverage</h5>
+          <h5>{t("review.seasonCoverage")}</h5>
 
           <div className="season-coverage-bars">
             {seasonRows.map((season) => (
@@ -2511,7 +2543,7 @@ function DiscoveryBoxReviewModal({
 
         <section className="final-summary-section review-insight-section">
           <div>
-            <h4>Collection Strengths</h4>
+            <h4>{t("review.collectionStrengths")}</h4>
 
             {strengths.length > 0 ? (
               <ul className="review-list review-list-check">
@@ -2520,12 +2552,12 @@ function DiscoveryBoxReviewModal({
                 ))}
               </ul>
             ) : (
-              <p>Your collection is ready, with more detail appearing as it gains variety.</p>
+              <p>{t("review.noStrengths")}</p>
             )}
           </div>
 
           <div>
-            <h4>Opportunities</h4>
+            <h4>{t("review.opportunities")}</h4>
 
             {opportunities.length > 0 ? (
               <ul className="review-list review-list-bullet">
@@ -2534,15 +2566,15 @@ function DiscoveryBoxReviewModal({
                 ))}
               </ul>
             ) : (
-              <p>No major opportunities detected. This box has a well-rounded profile.</p>
+              <p>{t("review.noOpportunities")}</p>
             )}
           </div>
         </section>
 
         <section className="final-summary-section review-curator-note-section">
           <div className="review-section-heading">
-            <span>Curator Notes</span>
-            <h4>Closing Notes</h4>
+            <span>{t("review.curatorNotes")}</span>
+            <h4>{t("review.closingNotes")}</h4>
           </div>
 
           <p>{collectionReview.curatorNote}</p>
@@ -2553,12 +2585,12 @@ function DiscoveryBoxReviewModal({
 
           <div className="review-curator-grid">
             <div>
-              <span>Curator Style</span>
+              <span>{t("review.curatorStyle")}</span>
               <strong>{curatorPreferenceLabel}</strong>
             </div>
 
             <div>
-              <span>Curator Reward</span>
+              <span>{t("review.curatorReward")}</span>
               <strong>{curatorRewardLabel}</strong>
               <p>
                 {isCuratorBonusUnlocked
@@ -2570,27 +2602,27 @@ function DiscoveryBoxReviewModal({
         </section>
 
         <section className="final-summary-section review-order-section">
-          <h4>Order Summary</h4>
+          <h4>{t("review.orderSummary")}</h4>
 
           <section className="final-summary-stats review-order-stats">
-            <SummaryStat label="Fragrances" value={finalizationModel.order.totalSlots} />
+            <SummaryStat label={t("general.fragrances")} value={finalizationModel.order.totalSlots} />
             <SummaryStat
-              label="Total Points"
+              label={t("review.totalPoints")}
               value={finalizationModel.order.totalPoints.toFixed(1)}
             />
             <SummaryStat
-              label="Order Total"
+              label={builderConfig.commerce.totalLabel}
               value={`$${finalizationModel.order.monetaryTotal.toFixed(0)}`}
             />
             <SummaryStat
               label={builderConfig.curatorBonus.label}
-              value={finalizationModel.order.curatorBonus.isUnlocked ? "Unlocked" : "Locked"}
+              value={finalizationModel.order.curatorBonus.isUnlocked ? t("general.unlocked") : t("general.locked")}
             />
           </section>
         </section>
 
         <section className="final-summary-section review-customer-section">
-          <h4>Finalize Details</h4>
+          <h4>{t("review.finalizeDetails")}</h4>
 
           <div className="review-customer-form">
             <label>
@@ -2601,7 +2633,7 @@ function DiscoveryBoxReviewModal({
                 onChange={(event) =>
                   handleCustomerInfoChange("name", event.target.value)
                 }
-                placeholder="Required"
+                placeholder={t("review.requiredPlaceholder")}
               />
             </label>
 
@@ -2613,18 +2645,18 @@ function DiscoveryBoxReviewModal({
                 onChange={(event) =>
                   handleCustomerInfoChange("city", event.target.value)
                 }
-                placeholder="Required"
+                placeholder={t("review.requiredPlaceholder")}
               />
             </label>
 
             <label className="review-notes-field">
-              <span>Notes</span>
+              <span>{builderConfig.finalization.customerFieldLabels.notes}</span>
               <textarea
                 value={customerInfo.notes}
                 onChange={(event) =>
                   handleCustomerInfoChange("notes", event.target.value)
                 }
-                placeholder="Optional preferences or delivery notes"
+                placeholder={t("general.optionalNotes")}
                 rows={2}
               />
             </label>
@@ -2633,11 +2665,11 @@ function DiscoveryBoxReviewModal({
 
         <div className="review-modal-footer">
           <button type="button" className="secondary" onClick={onClose}>
-            Continue Editing
+            {t("review.continueEditing")}
           </button>
 
           <button type="button" onClick={handleFinalizeBox} disabled={!canFinalize}>
-            Finalize Box
+            {t("review.finalizeBox")}
           </button>
         </div>
 

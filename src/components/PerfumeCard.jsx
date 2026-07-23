@@ -6,9 +6,13 @@ function PerfumeCard({
   onAddToBox,
   onOpenDetails,
   isDisabled,
+  labels = {},
 }) {
   const imageFallback = "/images/perfumes/placeholders/perfume-placeholder.svg";
   const brandAsset = getBrandAsset(perfume.brand);
+  const addLabel = labels.add || "Add";
+  const addToBoxLabel = labels.addToBox || "Add to box";
+  const viewDetailsLabel = labels.viewDetails || "View notes & details";
 
   return (
     <article className="perfume-card">
@@ -88,8 +92,8 @@ function PerfumeCard({
       <button
         type="button"
         className="perfume-card-info-icon"
-        data-tooltip="View notes & details"
-        aria-label="View notes & details"
+        data-tooltip={viewDetailsLabel}
+        aria-label={viewDetailsLabel}
         onClick={() => onOpenDetails(perfume)}
       >
         i
@@ -111,7 +115,7 @@ function PerfumeCard({
         <span className="compact-points">{perfume.points} pt</span>
 
         <button onClick={() => onAddToBox(perfume)} disabled={isDisabled}>
-          Add
+          {addLabel}
         </button>
       </div>
 
@@ -120,7 +124,7 @@ function PerfumeCard({
         onClick={() => onAddToBox(perfume)}
         disabled={isDisabled}
       >
-        Add to box
+        {addToBoxLabel}
       </button>
     </article>
   );
