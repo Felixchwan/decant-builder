@@ -390,20 +390,50 @@ button {
   transition: filter 180ms ease, opacity 180ms ease;
 }
 
-.perfume-card-brand-logo-mobile {
-  display: none;
-}
-
-.perfume-card-brand-logo-mobile img,
 .perfume-details-brand-badge img {
   filter: brightness(0.92) contrast(0.92) saturate(0.9);
+  transition: filter 180ms ease, opacity 180ms ease;
+}
+
+.perfume-brand-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-width: 0;
+}
+
+.perfume-brand-name {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.perfume-card-brand-logo {
+  display: inline-flex;
+  flex: 0 1 auto;
+  align-items: center;
+  justify-content: flex-end;
+  min-width: 0;
+  height: 24px;
+  max-width: 96px;
+  margin-left: auto;
+  opacity: 0.72;
+  pointer-events: none;
+}
+
+.perfume-card-brand-logo img {
+  display: block;
+  width: auto;
+  max-width: 96px;
+  max-height: 22px;
+  object-fit: contain;
+  filter: grayscale(1) saturate(0) brightness(0.96) contrast(0.9);
   transition: filter 180ms ease, opacity 180ms ease;
 }
 
 .perfume-card-tier-row {
   display: flex;
   align-items: center;
-  gap: 16px;
   width: 100%;
   margin-top: 10px;
 }
@@ -412,35 +442,13 @@ button {
   margin: 0;
 }
 
-.perfume-card-brand-logo-desktop {
-  display: inline-flex;
-  flex: 0 1 auto;
-  align-items: center;
-  justify-content: flex-end;
-  height: 28px;
-  max-width: 100px;
-  margin-left: auto;
-  opacity: 0.72;
-  pointer-events: none;
-}
-
-.perfume-card-brand-logo-desktop img {
-  display: block;
-  width: auto;
-  max-width: 100px;
-  max-height: 24px;
-  object-fit: contain;
-  filter: grayscale(1) saturate(0) brightness(0.96) contrast(0.9);
-  transition: filter 180ms ease, opacity 180ms ease;
-}
-
-.perfume-card:hover .perfume-card-brand-logo-desktop,
-.perfume-card:focus-within .perfume-card-brand-logo-desktop {
+.perfume-card:hover .perfume-card-brand-logo,
+.perfume-card:focus-within .perfume-card-brand-logo {
   opacity: 0.9;
 }
 
-.perfume-card:hover .perfume-card-brand-logo-desktop img,
-.perfume-card:focus-within .perfume-card-brand-logo-desktop img {
+.perfume-card:hover .perfume-card-brand-logo img,
+.perfume-card:focus-within .perfume-card-brand-logo img {
   filter: grayscale(0) saturate(1) brightness(0.98) contrast(0.96);
 }
 
@@ -2509,7 +2517,7 @@ button {
     min-width: 0;
   }
 
-  .perfume-card-brand-logo-mobile {
+  .perfume-card-brand-logo {
     display: inline-flex;
     flex: 0 1 72px;
     justify-content: flex-end;
@@ -2520,17 +2528,13 @@ button {
     pointer-events: none;
   }
 
-  .perfume-card-brand-logo-mobile img {
+  .perfume-card-brand-logo img {
     display: block;
     width: auto;
     max-width: 72px;
     height: auto;
     max-height: 30px;
     object-fit: contain;
-  }
-
-  .perfume-card-brand-logo-desktop {
-    display: none;
   }
 
   .perfume-card-tier-row {

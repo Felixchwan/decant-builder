@@ -26,6 +26,7 @@ import {
   getComposerProposalStatusLabel,
 } from "../builder/presentation/composerProposalLabels.js";
 import {
+  getComposerOptionPositionLabel,
   getComposerProposalItemReasonLabels,
   getComposerTradeoffLabel,
 } from "../builder/presentation/composerAlternativeTradeoffLabels.js";
@@ -1211,7 +1212,7 @@ function ComposerProposalModal({
                         )}
                         {hasAlternatives && (
                           <span className="composer-proposal-alt-position">
-                            Alternative fragrance {currentPosition} of {alternativeCount}
+                            {getComposerOptionPositionLabel(currentPosition, alternativeCount)}
                           </span>
                         )}
                         {hasTradeoff && (

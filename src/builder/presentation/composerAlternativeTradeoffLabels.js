@@ -95,6 +95,10 @@ export function getComposerTradeoffLabel(tradeoff = {}) {
   return getComposerProposalItemReasonLabel(tradeoff.reason || tradeoff);
 }
 
+export function getComposerOptionPositionLabel(position, count) {
+  return `Option ${position} of ${count}`;
+}
+
 function formatReasonValue(value) {
   return String(value)
     .split(/(?=[A-Z])|[-_\s]/)

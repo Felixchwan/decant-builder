@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  getComposerOptionPositionLabel,
   getComposerProposalItemReasonLabel,
   getComposerProposalItemReasonLabels,
   getComposerTradeoffLabel,
@@ -91,5 +92,11 @@ describe("composerAlternativeTradeoffLabels", () => {
     expect(getComposerTradeoffLabel({ reason: strategyReason })).toBe(
       "Supports Balanced strategy"
     );
+  });
+
+  it("labels proposal carousel alternatives as options for customers", () => {
+    expect(getComposerOptionPositionLabel(1, 3)).toBe("Option 1 of 3");
+    expect(getComposerOptionPositionLabel(2, 3)).toBe("Option 2 of 3");
+    expect(getComposerOptionPositionLabel(1, 3)).not.toBe("Alternative Fragrance 1 of 3");
   });
 });

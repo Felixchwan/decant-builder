@@ -45,7 +45,21 @@ function PerfumeCard({
                   {perfume.subtitle}
                 </p>
               )}
-              <p>{perfume.brand}</p>
+              <div className="perfume-brand-row">
+                <p className="perfume-brand-name">{perfume.brand}</p>
+                {brandAsset && (
+                  <span className="perfume-card-brand-logo" aria-hidden="true">
+                    <img
+                      src={brandAsset}
+                      alt=""
+                      loading="lazy"
+                      onError={(event) => {
+                        event.currentTarget.closest(".perfume-card-brand-logo")?.remove();
+                      }}
+                    />
+                  </span>
+                )}
+              </div>
 
               <div className="perfume-card-tier-row">
                 <div
@@ -59,38 +73,8 @@ function PerfumeCard({
                   <span>{tierData.emoji}</span>
                   {tierData.name} - {perfume.points} pt
                 </div>
-
-                {brandAsset && (
-                  <span className="perfume-card-brand-logo-desktop" aria-hidden="true">
-                    <img
-                      src={brandAsset}
-                      alt=""
-                      loading="lazy"
-                      onError={(event) => {
-                        event.currentTarget
-                          .closest(".perfume-card-brand-logo-desktop")
-                          ?.remove();
-                      }}
-                    />
-                  </span>
-                )}
               </div>
             </div>
-
-            {brandAsset && (
-              <span className="perfume-card-brand-logo-mobile" aria-hidden="true">
-                <img
-                  src={brandAsset}
-                  alt=""
-                  loading="lazy"
-                  onError={(event) => {
-                    event.currentTarget
-                      .closest(".perfume-card-brand-logo-mobile")
-                      ?.remove();
-                  }}
-                />
-              </span>
-            )}
           </div>
         </div>
 
