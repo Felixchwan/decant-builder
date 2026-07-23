@@ -56,50 +56,54 @@ const VIBE_LABELS = {
   warm: "Warm feel",
 };
 
-export function getComposerContributionLabel(reason = {}) {
+export function getComposerContributionLabel(reason = {}, translator) {
   if (reason.type !== "contribution") {
     return "";
   }
 
   if (reason.contributionType === "coverage_contribution") {
-    return getCoverageLabel(reason);
+    return getCoverageLabel(reason, translator);
   }
 
   if (reason.contributionType === "accord_contribution") {
-    return getAccordLabel(reason.contributionValue);
+    return getAccordLabel(reason.contributionValue, translator);
   }
 
   if (reason.contributionType === "diversity_contribution") {
-    return "Adds contrast";
+    return translator?.t?.("recommendation.currentContrast") || "Adds contrast";
   }
 
   if (reason.contributionType === "budget_contribution") {
-    return "Supports full-box variety";
+    return translator?.t?.("composer.explanation.fill_remaining_slots") || "Supports full-box variety";
   }
 
   return "";
 }
 
-function getCoverageLabel(reason) {
+function getCoverageLabel(reason, translator) {
   const value = formatValue(reason.contributionValue);
 
   if (reason.contributionCategory === "season") {
-    return `Adds ${value} versatility`;
+    return translator?.t?.(`recommendation.season.${reason.contributionValue}`) || `Adds ${value} versatility`;
   }
 
   if (reason.contributionCategory === "occasion") {
-    return OCCASION_LABELS[reason.contributionValue] || `Great for ${value}`;
+    return translator?.t?.(`recommendation.occasion.${reason.contributionValue}`) || OCCASION_LABELS[reason.contributionValue] || `Great for ${value}`;
   }
 
   if (reason.contributionCategory === "vibe") {
-    return VIBE_LABELS[reason.contributionValue] || `${value} profile`;
+    return translator?.t?.(`recommendation.vibe.${reason.contributionValue}`) || VIBE_LABELS[reason.contributionValue] || `${value} profile`;
   }
 
   return `Adds ${value}`;
 }
 
-function getAccordLabel(value) {
-  return ACCORD_LABELS[value] || `Adds ${formatValue(value)}`;
+function getAccordLabel(value, translator) {
+  return translator?.t?.(`recommendation.accord.${toTranslationKey(value)}`) || ACCORD_LABELS[value] || `Adds ${formatValue(value)}`;
+}
+
+function toTranslationKey(value = "") {
+  return String(value).replace(/\s+/g, "_");
 }
 
 function formatValue(value) {

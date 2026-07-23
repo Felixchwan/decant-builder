@@ -45,6 +45,10 @@ export function getComposerProposalStatusLabel(status) {
   return STATUS_LABELS[status] || "Discovery Box Proposal";
 }
 
-export function getComposerProposalExplanationLabel(explanation = {}) {
-  return EXPLANATION_LABELS[explanation.code] || "";
+export function getLocalizedComposerProposalStatusLabel(status, translator) {
+  return translator?.t?.(`composer.status.${status}`) || getComposerProposalStatusLabel(status);
+}
+
+export function getComposerProposalExplanationLabel(explanation = {}, translator) {
+  return translator?.t?.(`composer.explanation.${explanation.code}`) || EXPLANATION_LABELS[explanation.code] || "";
 }

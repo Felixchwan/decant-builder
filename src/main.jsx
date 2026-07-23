@@ -1,10 +1,12 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
-import DiscoveryDecantsApp from './app/DiscoveryDecantsApp.jsx'
+import { selectMerchantApp } from './app/selectMerchantApp.js'
+
+const MerchantApp = selectMerchantApp(import.meta.env.VITE_MERCHANT)
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <DiscoveryDecantsApp />
+    <MerchantApp />
   </StrictMode>,
 )

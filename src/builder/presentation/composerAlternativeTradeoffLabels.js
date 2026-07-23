@@ -12,32 +12,35 @@ const REASON_DISPLAY_PRIORITY = {
   strategy_contribution: 5,
 };
 
-export function getComposerProposalItemReasonLabel(reason = {}) {
+export function getComposerProposalItemReasonLabel(reason = {}, translator) {
   if (reason.type === "preserved") {
-    return "Already in your box";
+    return translator?.t?.("composer.reason.alreadyInBox") || "Already in your box";
   }
 
   if (reason.type === "preference_match" && reason.preferenceValue) {
-    return formatReasonValue(reason.preferenceValue);
+    return translator?.label?.(reason.preferenceType, reason.preferenceValue) || formatReasonValue(reason.preferenceValue);
   }
 
   if (reason.type === "contribution") {
-    return getComposerContributionLabel(reason);
+    return getComposerContributionLabel(reason, translator);
   }
 
   if (reason.type === "strategy_contribution") {
     const strategyId = reason.evidence?.strategyId;
-    const strategyLabel = STRATEGY_LABELS[strategyId] || formatReasonValue(strategyId || "");
+    const strategyLabel =
+      translator?.t?.(`composer.strategy.${strategyId}`) ||
+      STRATEGY_LABELS[strategyId] ||
+      formatReasonValue(strategyId || "");
 
     return strategyLabel
-      ? `Supports ${strategyLabel} strategy`
-      : "Supports strategy";
+      ? translator?.t?.("composer.reason.supportsStrategy", { strategy: strategyLabel }) || `Supports ${strategyLabel} strategy`
+      : translator?.t?.("composer.reason.supportsStrategyFallback") || "Supports strategy";
   }
 
   return "";
 }
 
-export function getComposerProposalItemReasonLabels(reasons = [], { max = 3 } = {}) {
+export function getComposerProposalItemReasonLabels(reasons = [], { max = 3, translator } = {}) {
   const safeReasons = Array.isArray(reasons) ? reasons : [];
   const concreteReasons = safeReasons
     .filter((reason) => reason.type !== "strategy_contribution")
@@ -46,7 +49,7 @@ export function getComposerProposalItemReasonLabels(reasons = [], { max = 3 } = 
   const seen = new Set();
 
   return displayReasons
-    .map(getComposerProposalItemReasonLabel)
+    .map((reason) => getComposerProposalItemReasonLabel(reason, translator))
     .filter(Boolean)
     .filter((label) => {
       if (seen.has(label)) {
@@ -91,12 +94,12 @@ function getContributionReasonPriority(reason) {
   return 4;
 }
 
-export function getComposerTradeoffLabel(tradeoff = {}) {
-  return getComposerProposalItemReasonLabel(tradeoff.reason || tradeoff);
+export function getComposerTradeoffLabel(tradeoff = {}, translator) {
+  return getComposerProposalItemReasonLabel(tradeoff.reason || tradeoff, translator);
 }
 
-export function getComposerOptionPositionLabel(position, count) {
-  return `Option ${position} of ${count}`;
+export function getComposerOptionPositionLabel(position, count, translator) {
+  return translator?.t?.("composer.optionPosition", { position, count }) || `Option ${position} of ${count}`;
 }
 
 function formatReasonValue(value) {

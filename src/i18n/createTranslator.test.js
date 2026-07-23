@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 
 import { createTranslator, normalizeLocale } from "./createTranslator.js";
+import { enUS } from "./locales/en-US.js";
+import { esMX } from "./locales/es-MX.js";
 
 describe("createTranslator", () => {
   it("resolves English copy for en-US", () => {
@@ -25,16 +27,20 @@ describe("createTranslator", () => {
     expect(createTranslator("es-MX").t("future.missing.key")).toBe("future.missing.key");
   });
 
-  it("falls back to English when a supported locale is missing a translation", () => {
-    const translator = createTranslator("es-MX");
-
-    expect(translator.t("test.englishOnly")).toBe("English fallback");
-  });
-
   it("keeps canonical taxonomy values separate from display labels", () => {
     const translator = createTranslator("es-MX");
 
     expect(translator.label("seasons", "winter")).toBe("Invierno");
     expect("winter").toBe("winter");
+  });
+
+  it("keeps locale dictionaries in key parity", () => {
+    expect(Object.keys(esMX).sort()).toEqual(Object.keys(enUS).sort());
+  });
+
+  it("keeps merchant names out of shared dictionaries", () => {
+    const dictionaryValues = Object.values({ ...enUS, ...esMX }).join("\n");
+
+    expect(dictionaryValues).not.toMatch(/Discovery Decants|Aurelian/);
   });
 });

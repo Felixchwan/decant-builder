@@ -26,10 +26,10 @@ const RECOMMENDATION_REASON_REWRITES = {
   "Adds contrast without changing the mood too much": "Adds contrast within your current style",
 };
 
-export function getRecommendationDisplayReasons({ recommendation, objectiveKey } = {}) {
+export function getRecommendationDisplayReasons({ recommendation, objectiveKey, translator } = {}) {
   const explanationReasons = Array.isArray(recommendation?.explanations)
     ? recommendation.explanations
-        .map((explanation) => createRecommendationExplanationOption(explanation))
+        .map((explanation) => createRecommendationExplanationOption(explanation, translator))
         .filter(Boolean)
     : [];
   const reasons = Array.isArray(recommendation?.reasons) ? recommendation.reasons : [];
@@ -39,8 +39,8 @@ export function getRecommendationDisplayReasons({ recommendation, objectiveKey }
   const reasonOptions = [
     ...objectiveReasons,
     ...explanationReasons,
-    ...reasons.map((reason) => createRecommendationReasonOption(reason)),
-    ...getFallbackRecommendationReasonOptions(recommendation),
+    ...reasons.map((reason) => createRecommendationReasonOption(reason, translator)),
+    ...getFallbackRecommendationReasonOptions(recommendation, translator),
   ]
     .filter(Boolean)
     .filter(
@@ -116,8 +116,13 @@ export function getRecommendationConfidence(recommendation) {
   return "Situational";
 }
 
-function createRecommendationExplanationOption(explanation) {
-  const label = getRecommendationExplanationLabel(explanation);
+export function getRecommendationConfidenceLabel(recommendation, translator) {
+  const confidence = getRecommendationConfidence(recommendation);
+  return translator?.t?.(`recommendation.confidence.${confidence.toLowerCase()}`) || confidence;
+}
+
+function createRecommendationExplanationOption(explanation, translator) {
+  const label = getRecommendationExplanationLabel(explanation, translator);
 
   if (!label) {
     return null;
@@ -133,61 +138,61 @@ function createRecommendationExplanationOption(explanation) {
   };
 }
 
-export function getRecommendationExplanationLabel(explanation = {}) {
+export function getRecommendationExplanationLabel(explanation = {}, translator) {
   const evidence = explanation.evidence || {};
+
+  if (explanation.code === "expand_occasion_coverage" && evidence.missingOccasion) {
+    return getOccasionRecommendationCopy(evidence.missingOccasion, translator);
+  }
 
   if (explanation.code?.startsWith("expand_") && explanation.code?.endsWith("_coverage")) {
     const season =
       evidence.missingSeason ||
       explanation.code.replace(/^expand_/, "").replace(/_coverage$/, "");
 
-    return getSeasonRecommendationCopy(season);
-  }
-
-  if (explanation.code === "expand_occasion_coverage" && evidence.missingOccasion) {
-    return getOccasionRecommendationCopy(evidence.missingOccasion);
+    return getSeasonRecommendationCopy(season, translator);
   }
 
   if (explanation.code === "support_requested_preferences") {
     const firstPreference = evidence.unmatched?.[0];
 
     if (firstPreference?.domain === "seasons") {
-      return getSeasonRecommendationCopy(firstPreference.preference);
+      return getSeasonRecommendationCopy(firstPreference.preference, translator);
     }
 
     if (firstPreference?.domain === "occasions") {
-      return getOccasionRecommendationCopy(firstPreference.preference);
+      return getOccasionRecommendationCopy(firstPreference.preference, translator);
     }
 
     if (firstPreference?.domain === "vibes") {
-      return getVibeRecommendationCopy(firstPreference.preference);
+      return getVibeRecommendationCopy(firstPreference.preference, translator);
     }
 
-    return "Supports requested preferences";
+    return translator?.t?.("recommendation.supportsPreferences") || "Supports requested preferences";
   }
 
   if (explanation.code === "coverage_anchor") {
-    return "Improves multiple coverage gaps";
+    return translator?.t?.("recommendation.coverageAnchor") || "Improves multiple coverage gaps";
   }
 
   if (explanation.code === "preference_anchor" || explanation.code === "composer_affinity_pick") {
-    return "Complements your current scent direction";
+    return translator?.t?.("recommendation.affinityAnchor") || "Complements your current scent direction";
   }
 
   if (explanation.code === "versatility_anchor") {
-    return "Adds practical versatility";
+    return translator?.t?.("recommendation.versatilityAnchor") || "Adds practical versatility";
   }
 
   if (explanation.code === "signature_anchor") {
-    return "Adds signature potential";
+    return translator?.t?.("recommendation.signatureAnchor") || "Adds signature potential";
   }
 
   if (explanation.code === "diversity_anchor") {
-    return "Adds a distinct scent direction";
+    return translator?.t?.("recommendation.diversityAnchor") || "Adds a distinct scent direction";
   }
 
   if (explanation.code === "composer_balance_pick") {
-    return "Improves collection balance";
+    return translator?.t?.("recommendation.balancePick") || "Improves collection balance";
   }
 
   return "";
@@ -215,9 +220,10 @@ function getObjectiveReasonOptions(recommendation, objectiveKey) {
   );
 }
 
-function createRecommendationReasonOption(reason) {
+function createRecommendationReasonOption(reason, translator) {
   const label = polishRecommendationReasonLabel(
-    RECOMMENDATION_REASON_REWRITES[reason] || reason
+    RECOMMENDATION_REASON_REWRITES[reason] || reason,
+    translator
   );
 
   if (!label) {
@@ -234,17 +240,17 @@ function createRecommendationReasonOption(reason) {
   };
 }
 
-function polishRecommendationReasonLabel(reason) {
+function polishRecommendationReasonLabel(reason, translator) {
   const missingDepthMatch = reason.match(/^Adds (.+) depth currently missing$/);
 
   if (missingDepthMatch) {
-    return getAccordRecommendationCopy(missingDepthMatch[1].toLowerCase());
+    return getAccordRecommendationCopy(missingDepthMatch[1].toLowerCase(), translator);
   }
 
-  return reason;
+  return getRewriteTranslation(reason, translator) || reason;
 }
 
-function getFallbackRecommendationReasonOptions(recommendation) {
+function getFallbackRecommendationReasonOptions(recommendation, translator) {
   const breakdown = recommendation?.scoreBreakdown || {};
   const perfume = recommendation?.perfume || {};
   const fallbackReasons = [];
@@ -253,8 +259,8 @@ function getFallbackRecommendationReasonOptions(recommendation) {
     const strongestSeason = getStrongestRecommendationSeason(perfume);
     fallbackReasons.push({
       label: strongestSeason
-        ? getSeasonRecommendationCopy(strongestSeason)
-        : "Improves seasonal balance",
+        ? getSeasonRecommendationCopy(strongestSeason, translator)
+        : translator?.t?.("recommendation.balancePick") || "Improves seasonal balance",
       category: "coverage",
       priority: 1,
       topic: "season",
@@ -265,8 +271,8 @@ function getFallbackRecommendationReasonOptions(recommendation) {
     const occasion = getPreferredRecommendationOccasion(perfume);
     fallbackReasons.push({
       label: occasion
-        ? getOccasionRecommendationCopy(occasion)
-        : "Improves occasion coverage",
+        ? getOccasionRecommendationCopy(occasion, translator)
+        : translator?.t?.("recommendation.occasionFallback", { value: "occasion" }) || "Improves occasion coverage",
       category: "coverage",
       priority: 1,
       topic: "occasion",
@@ -276,7 +282,7 @@ function getFallbackRecommendationReasonOptions(recommendation) {
   if (breakdown.vibes > 0) {
     const vibe = getPreferredRecommendationVibe(perfume);
     fallbackReasons.push({
-      label: vibe ? getVibeRecommendationCopy(vibe) : "Adds a distinct scent mood",
+      label: vibe ? getVibeRecommendationCopy(vibe, translator) : translator?.t?.("recommendation.diversityAnchor") || "Adds a distinct scent mood",
       category: "balance",
       priority: 2,
       topic: "vibe",
@@ -286,7 +292,7 @@ function getFallbackRecommendationReasonOptions(recommendation) {
   if (breakdown.accordDiversity > 0 || breakdown.sharedAccords > 0) {
     const accord = perfume.accords?.[0];
     fallbackReasons.push({
-      label: accord ? getAccordRecommendationCopy(accord) : "Adds a new scent profile",
+      label: accord ? getAccordRecommendationCopy(accord, translator) : translator?.t?.("recommendation.newProfile") || "Adds a new scent profile",
       category: "balance",
       priority: 2,
       topic: "accord",
@@ -297,8 +303,8 @@ function getFallbackRecommendationReasonOptions(recommendation) {
     const occasion = getPreferredRecommendationOccasion(perfume);
     fallbackReasons.push({
       label: occasion
-        ? getOccasionRecommendationCopy(occasion)
-        : "Adds another wearable option",
+        ? getOccasionRecommendationCopy(occasion, translator)
+        : translator?.t?.("recommendation.wearableOption") || "Adds another wearable option",
       category: "support",
       priority: 3,
       topic: "occasion",
@@ -308,7 +314,7 @@ function getFallbackRecommendationReasonOptions(recommendation) {
   if (breakdown.sharedVibes > 0 || breakdown.sharedSeasons > 0) {
     const vibe = getPreferredRecommendationVibe(perfume);
     fallbackReasons.push({
-      label: vibe ? getVibeRecommendationCopy(vibe) : "Adds a compatible scent profile",
+      label: vibe ? getVibeRecommendationCopy(vibe, translator) : translator?.t?.("recommendation.compatibleProfile") || "Adds a compatible scent profile",
       category: "affinity",
       priority: 4,
       topic: "vibe",
@@ -317,7 +323,7 @@ function getFallbackRecommendationReasonOptions(recommendation) {
 
   if (breakdown.noteDiversity > 0) {
     fallbackReasons.push({
-      label: "Expands the note palette",
+      label: translator?.t?.("recommendation.notePalette") || "Expands the note palette",
       category: "balance",
       priority: 2,
       topic: "note",
@@ -362,7 +368,7 @@ function getPreferredRecommendationVibe(perfume) {
   return priority.find((vibe) => perfume.vibes?.includes(vibe)) || perfume.vibes?.[0] || "";
 }
 
-function getSeasonRecommendationCopy(season) {
+function getSeasonRecommendationCopy(season, translator) {
   const copy = {
     spring: "Expands spring versatility",
     summer: "Expands warm-weather options",
@@ -370,10 +376,10 @@ function getSeasonRecommendationCopy(season) {
     winter: "Strengthens cold-weather coverage",
   };
 
-  return copy[season] || `Expands ${formatRecommendationLabel(season)} coverage`;
+  return translator?.t?.(`recommendation.season.${season}`) || copy[season] || translator?.t?.("recommendation.seasonFallback", { value: formatRecommendationLabel(season) }) || `Expands ${formatRecommendationLabel(season)} coverage`;
 }
 
-function getOccasionRecommendationCopy(occasion) {
+function getOccasionRecommendationCopy(occasion, translator) {
   const copy = {
     office: "Broadens office rotation",
     formal: "Strengthens formal versatility",
@@ -387,10 +393,10 @@ function getOccasionRecommendationCopy(occasion) {
     special: "Adds special-occasion polish",
   };
 
-  return copy[occasion] || `Improves ${formatRecommendationLabel(occasion)} coverage`;
+  return translator?.t?.(`recommendation.occasion.${occasion}`) || copy[occasion] || translator?.t?.("recommendation.occasionFallback", { value: formatRecommendationLabel(occasion) }) || `Improves ${formatRecommendationLabel(occasion)} coverage`;
 }
 
-function getVibeRecommendationCopy(vibe) {
+function getVibeRecommendationCopy(vibe, translator) {
   const copy = {
     fresh: "Adds fresh brightness",
     clean: "Adds clean versatility",
@@ -408,10 +414,10 @@ function getVibeRecommendationCopy(vibe) {
     romantic: "Adds romantic softness",
   };
 
-  return copy[vibe] || `Adds ${formatRecommendationLabel(vibe)} character`;
+  return translator?.t?.(`recommendation.vibe.${vibe}`) || copy[vibe] || translator?.t?.("recommendation.vibeFallback", { value: formatRecommendationLabel(vibe) }) || `Adds ${formatRecommendationLabel(vibe)} character`;
 }
 
-function getAccordRecommendationCopy(accord) {
+function getAccordRecommendationCopy(accord, translator) {
   const copy = {
     citrus: "Adds citrus brightness",
     fresh: "Adds fresh brightness",
@@ -441,7 +447,21 @@ function getAccordRecommendationCopy(accord) {
     salty: "Adds salty freshness",
   };
 
-  return copy[accord] || `Adds ${formatRecommendationLabel(accord)} character`;
+  return translator?.t?.(`recommendation.accord.${toTranslationKey(accord)}`) || copy[accord] || translator?.t?.("recommendation.accordFallback", { value: formatRecommendationLabel(accord) }) || `Adds ${formatRecommendationLabel(accord)} character`;
+}
+
+function getRewriteTranslation(reason, translator) {
+  const translations = {
+    "Improves multiple coverage gaps": "recommendation.addsHighImpactCoverage",
+    "Adds contrast to your current collection": "recommendation.currentContrast",
+  };
+
+  const key = translations[reason];
+  return key ? translator?.t?.(key) : "";
+}
+
+function toTranslationKey(value = "") {
+  return String(value).replace(/\s+/g, "_");
 }
 
 function getRecommendationReasonCategory(reason) {

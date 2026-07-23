@@ -1,9 +1,11 @@
 import { describe, expect, it } from "vitest";
 import {
   getRecommendationConfidence,
+  getRecommendationConfidenceLabel,
   getRecommendationDisplayReasons,
   getRecommendationExplanationLabel,
 } from "./recommendationExplanationLabels.js";
+import { createTranslator } from "../../i18n/createTranslator.js";
 
 const winterPerfume = {
   id: 10,
@@ -32,7 +34,7 @@ describe("recommendationExplanationLabels", () => {
         severity: "positive",
         evidence: { missingOccasion: "formal" },
       })
-    ).toBe("Expands Occasion coverage");
+    ).toBe("Strengthens formal versatility");
     expect(
       getRecommendationExplanationLabel({
         code: "composer_balance_pick",
@@ -110,5 +112,21 @@ describe("recommendationExplanationLabels", () => {
     expect(getRecommendationConfidence({ finalScore: 90 })).toBe("High");
     expect(getRecommendationConfidence({ finalScore: 60 })).toBe("Medium");
     expect(getRecommendationConfidence({ finalScore: 30 })).toBe("Situational");
+  });
+
+  it("localizes recommendation explanations without changing confidence thresholds", () => {
+    const translator = createTranslator("es-MX");
+
+    expect(
+      getRecommendationExplanationLabel(
+        {
+          code: "expand_winter_coverage",
+          severity: "positive",
+          evidence: { missingSeason: "winter" },
+        },
+        translator
+      )
+    ).toBe("Fortalece la cobertura para clima frío");
+    expect(getRecommendationConfidenceLabel({ finalScore: 90 }, translator)).toBe("Alta");
   });
 });

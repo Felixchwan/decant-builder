@@ -6,6 +6,7 @@ import {
   AppErrorFallback,
 } from "./AppErrorBoundary.jsx";
 import { clearSavedBuilderState } from "../utils/appRecovery.js";
+import { buildLocalizedConfigOverrides } from "../i18n/buildLocalizedConfig.js";
 
 describe("AppErrorBoundary", () => {
   it("shows customer-facing fallback UI after a child render failure state", () => {
@@ -43,6 +44,23 @@ describe("AppErrorBoundary", () => {
     expect(markup).toContain("Decant Builder");
     expect(markup).not.toContain("Error:");
     expect(markup).not.toContain("undefined");
+  });
+
+  it("localizes runtime recovery copy through merchant config", () => {
+    const localized = buildLocalizedConfigOverrides("es-MX");
+    const markup = renderToStaticMarkup(
+      <AppErrorFallback
+        platformName="Decant Builder"
+        productName="Decant Builder"
+        recoveryCopy={localized.recovery}
+        onReload={() => {}}
+        onClearSavedBox={() => {}}
+      />
+    );
+
+    expect(markup).toContain("Ocurrió un error inesperado.");
+    expect(markup).toContain("Recargar builder");
+    expect(markup).toContain("Borrar caja guardada y recargar");
   });
 
   it("clears only the configured Builder storage key", () => {

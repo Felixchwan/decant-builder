@@ -28,6 +28,12 @@ export function buildLocalizedConfigOverrides(locale) {
       locale,
       totalLabel: t("general.orderTotal"),
     },
+    recovery: {
+      title: t("recovery.title"),
+      description: t("recovery.description"),
+      reloadLabel: t("recovery.reload"),
+      clearSavedLabel: t("recovery.clearSaved"),
+    },
     curatorBonus: {
       label: t("curator.label"),
       rewardLabel: t("curator.rewardLabel"),

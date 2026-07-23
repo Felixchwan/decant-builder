@@ -16,6 +16,12 @@ export const defaultBuilderConfig = {
     pointValue: 100,
     totalLabel: "Order Total",
   },
+  recovery: {
+    title: "Something unexpected happened.",
+    description: "{productName} could not finish loading. Your saved box may still be available.",
+    reloadLabel: "Reload Builder",
+    clearSavedLabel: "Clear Saved Box and Reload",
+  },
   box: {
     minSelectableSlots: 6,
     maxSelectableSlots: 14,

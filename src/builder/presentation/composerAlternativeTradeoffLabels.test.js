@@ -5,6 +5,7 @@ import {
   getComposerProposalItemReasonLabels,
   getComposerTradeoffLabel,
 } from "./composerAlternativeTradeoffLabels.js";
+import { createTranslator } from "../../i18n/createTranslator.js";
 
 function reason(type, evidence = {}) {
   return {
@@ -98,5 +99,28 @@ describe("composerAlternativeTradeoffLabels", () => {
     expect(getComposerOptionPositionLabel(1, 3)).toBe("Option 1 of 3");
     expect(getComposerOptionPositionLabel(2, 3)).toBe("Option 2 of 3");
     expect(getComposerOptionPositionLabel(1, 3)).not.toBe("Alternative Fragrance 1 of 3");
+  });
+
+  it("localizes proposal reasons and option labels through injected translator", () => {
+    const translator = createTranslator("es-MX");
+
+    expect(
+      getComposerProposalItemReasonLabels(
+        [
+          reason("preference_match", {
+            preferenceType: "season",
+            preferenceValue: "winter",
+          }),
+        ],
+        { translator }
+      )
+    ).toEqual(["Invierno"]);
+    expect(
+      getComposerTradeoffLabel(
+        { reason: reason("strategy_contribution", { strategyId: "balanced" }) },
+        translator
+      )
+    ).toBe("Apoya la estrategia Equilibrada");
+    expect(getComposerOptionPositionLabel(2, 4, translator)).toBe("Opción 2 de 4");
   });
 });

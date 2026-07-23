@@ -13,6 +13,7 @@ export function deriveCuratorBonusThreshold(config = {}) {
 
 export function buildComposerBudgetBonusFeedback({ budget, config } = {}) {
   const threshold = deriveCuratorBonusThreshold(config);
+  const t = config?.translator?.t;
 
   if (!threshold.targetPoints || !threshold.pointValue) {
     return {
@@ -25,7 +26,9 @@ export function buildComposerBudgetBonusFeedback({ budget, config } = {}) {
   if (budget === null || budget === undefined || budget === "") {
     return {
       state: "no_limit",
-      label: `Bonus unlocks at ${formatPoints(threshold.targetPoints)} points.`,
+      label:
+        t?.("composer.bonus.noLimit", { points: formatPoints(threshold.targetPoints) }) ||
+        `Bonus unlocks at ${formatPoints(threshold.targetPoints)} points.`,
       threshold,
     };
   }
@@ -41,14 +44,18 @@ export function buildComposerBudgetBonusFeedback({ budget, config } = {}) {
   if (budget >= threshold.monetaryThreshold) {
     return {
       state: "eligible",
-      label: "Bonus-eligible budget.",
+      label: t?.("composer.bonus.eligible") || "Bonus-eligible budget.",
       threshold,
     };
   }
 
   return {
     state: "below_threshold",
-    label: `${formatMoney(threshold.monetaryThreshold - budget, threshold)} to Bonus eligibility.`,
+    label:
+      t?.("composer.bonus.below", {
+        amount: formatMoney(threshold.monetaryThreshold - budget, threshold),
+      }) ||
+      `${formatMoney(threshold.monetaryThreshold - budget, threshold)} to Bonus eligibility.`,
     threshold,
   };
 }
@@ -56,6 +63,7 @@ export function buildComposerBudgetBonusFeedback({ budget, config } = {}) {
 export function buildComposerProposalBonusStatus({ totalPoints, config } = {}) {
   const threshold = deriveCuratorBonusThreshold(config);
   const safePoints = normalizeNumber(totalPoints, 0);
+  const t = config?.translator?.t;
 
   if (!threshold.targetPoints) {
     return {
@@ -69,16 +77,26 @@ export function buildComposerProposalBonusStatus({ totalPoints, config } = {}) {
   if (safePoints >= threshold.targetPoints) {
     return {
       state: "unlocked",
-      label: "Curator Bonus unlocked.",
-      value: "Unlocked",
+      label: t?.("composer.bonus.unlocked") || "Curator Bonus unlocked.",
+      value: t?.("general.unlocked") || "Unlocked",
       threshold,
     };
   }
 
   return {
     state: "progress",
-    label: `${formatPoints(safePoints)} / ${formatPoints(threshold.targetPoints)} points toward Curator Bonus.`,
-    value: `${formatPoints(safePoints)} / ${formatPoints(threshold.targetPoints)} pts`,
+    label:
+      t?.("composer.bonus.progress", {
+        current: formatPoints(safePoints),
+        target: formatPoints(threshold.targetPoints),
+      }) ||
+      `${formatPoints(safePoints)} / ${formatPoints(threshold.targetPoints)} points toward Curator Bonus.`,
+    value:
+      t?.("composer.bonus.valueProgress", {
+        current: formatPoints(safePoints),
+        target: formatPoints(threshold.targetPoints),
+      }) ||
+      `${formatPoints(safePoints)} / ${formatPoints(threshold.targetPoints)} pts`,
     threshold,
   };
 }

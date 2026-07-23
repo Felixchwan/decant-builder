@@ -9,6 +9,7 @@ export default function DiscoveryDecantsApp() {
     <AppErrorBoundary
       platformName={discoveryDecantsConfig.software.name}
       productName={discoveryDecantsConfig.software.name}
+      recoveryCopy={discoveryDecantsConfig.recovery}
       storageKey={discoveryDecantsConfig.persistence.storageKey}
     >
       <DiscoveryBoxBuilder

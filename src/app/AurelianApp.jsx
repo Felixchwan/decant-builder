@@ -10,6 +10,7 @@ export default function AurelianApp() {
     <AppErrorBoundary
       platformName={aurelianConfig.software.name}
       productName={aurelianConfig.software.name}
+      recoveryCopy={aurelianConfig.recovery}
       storageKey={aurelianConfig.persistence.storageKey}
     >
       <DiscoveryBoxBuilder

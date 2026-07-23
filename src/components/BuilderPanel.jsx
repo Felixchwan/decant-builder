@@ -19,11 +19,12 @@ import {
 } from "../builder/internal/intelligence/buildCollectionIntelligenceViewModel.js";
 import {
   getRecommendationConfidence,
+  getRecommendationConfidenceLabel,
   getRecommendationDisplayReasons,
 } from "../builder/presentation/recommendationExplanationLabels.js";
 import {
   getComposerProposalExplanationLabel,
-  getComposerProposalStatusLabel,
+  getLocalizedComposerProposalStatusLabel,
 } from "../builder/presentation/composerProposalLabels.js";
 import {
   getComposerOptionPositionLabel,
@@ -630,6 +631,7 @@ function BuilderPanel({
       selectedPerfumeIds={selectedPerfumeIds}
       isBoxFull={totalSlots >= maxSelectableSlots}
       onAddPerfume={onAddPerfume}
+      translator={translator}
     />
 
     <NextImprovementSection
@@ -639,6 +641,7 @@ function BuilderPanel({
       onAddPerfume={onAddPerfume}
       sectionRef={balanceLaneRef}
       isEmphasized={isBalanceLaneEmphasized}
+      translator={translator}
     />
     </div>
     )}
@@ -840,7 +843,8 @@ function ComposeMyBoxPanel({
   statusMessage,
   onOpenSetup,
 }) {
-  const { t } = createTranslator(builderConfig.locale);
+  const translator = createTranslator(builderConfig.locale);
+  const { t } = translator;
 
   return (
     <section
@@ -884,7 +888,8 @@ function ComposerSetupModal({
   onCancel,
   onGenerate,
 }) {
-  const { t } = createTranslator(builderConfig.locale);
+  const translator = createTranslator(builderConfig.locale);
+  const { t } = translator;
   const safeSettings = settings || {};
   const safeOptions = options || {};
   const budgetValue = safeSettings.budget || "";
@@ -895,7 +900,7 @@ function ComposerSetupModal({
     numericBudget < minimumComposerBudget;
   const budgetBonusFeedback = buildComposerBudgetBonusFeedback({
     budget: numericBudget,
-    config: builderConfig,
+    config: { ...builderConfig, translator },
   });
 
   useEffect(() => {
@@ -1106,7 +1111,8 @@ function ComposerProposalModal({
   onCancel,
   onBack,
 }) {
-  const { t } = createTranslator(builderConfig.locale);
+  const translator = createTranslator(builderConfig.locale);
+  const { t } = translator;
   useEffect(() => {
     function handleKeyDown(event) {
       if (event.key === "Escape") {
@@ -1118,7 +1124,7 @@ function ComposerProposalModal({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [onCancel]);
 
-  const statusLabel = getComposerProposalStatusLabel(proposal.status);
+  const statusLabel = getLocalizedComposerProposalStatusLabel(proposal.status, translator);
   const isProposalAvailable = Boolean(proposal.proposalAvailable);
   const explanationLabels = [
     proposal.preview?.headline,
@@ -1126,7 +1132,7 @@ function ComposerProposalModal({
     ...(proposal.preview?.weaknesses || []),
     ...(proposal.preview?.recommendations || []),
   ]
-    .map((explanation) => getComposerProposalExplanationLabel(explanation))
+    .map((explanation) => getComposerProposalExplanationLabel(explanation, translator))
     .filter(Boolean)
     .slice(0, 4);
   const canApply = proposal.apply.available && !isStale;
@@ -1141,7 +1147,7 @@ function ComposerProposalModal({
     proposal.compositionResult?.constraintResult?.metrics?.remainingBudget === 0;
   const proposalBonusStatus = buildComposerProposalBonusStatus({
     totalPoints: proposal.totalPoints,
-    config: builderConfig,
+    config: { ...builderConfig, translator },
   });
   const proposalItems =
     buildVisibleProposalItems(proposal) ||
@@ -1215,6 +1221,7 @@ function ComposerProposalModal({
                   const perfume = item.perfume;
                   const reasonLabels = getComposerProposalItemReasonLabels(item.reasons, {
                     max: 3,
+                    translator,
                   });
                   const hasAlternatives =
                     item.newlyAdded && item.alternatives && item.alternatives.length > 1;
@@ -1224,11 +1231,11 @@ function ComposerProposalModal({
                   const isComposerPick = item.selectedAlternativeIndex === 0;
                   const tradeoff = item.alternatives?.[item.selectedAlternativeIndex]?.tradeoff;
                   const gainedLabels = (tradeoff?.gained || [])
-                    .map(getComposerTradeoffLabel)
+                    .map((item) => getComposerTradeoffLabel(item, translator))
                     .filter(Boolean)
                     .slice(0, 3);
                   const lostLabels = (tradeoff?.lost || [])
-                    .map(getComposerTradeoffLabel)
+                    .map((item) => getComposerTradeoffLabel(item, translator))
                     .filter(Boolean)
                     .slice(0, 3);
                   const hasTradeoff =
@@ -1261,7 +1268,7 @@ function ComposerProposalModal({
                         )}
                         {hasAlternatives && (
                           <span className="composer-proposal-alt-position">
-                            {getComposerOptionPositionLabel(currentPosition, alternativeCount)}
+                            {getComposerOptionPositionLabel(currentPosition, alternativeCount, translator)}
                           </span>
                         )}
                         {hasTradeoff && (
@@ -3347,6 +3354,7 @@ function NextImprovementSection({
   onAddPerfume,
   sectionRef,
   isEmphasized = false,
+  translator,
 }) {
   if (!result || result.recommendations.length === 0) {
     return null;
@@ -3371,6 +3379,7 @@ function NextImprovementSection({
         isBoxFull={isBoxFull}
         onAddPerfume={onAddPerfume}
         objectiveKey={result.objectiveKey}
+        translator={translator}
       />
     </section>
   );
@@ -3399,6 +3408,7 @@ function RecommendationLaneContent({
   sectionRef,
   isEmphasized = false,
   objectiveKey,
+  translator,
 }) {
   const [activeIndex, setActiveIndex] = useState(0);
 
@@ -3462,6 +3472,7 @@ function RecommendationLaneContent({
           onAddPerfume={onAddPerfume}
           isFocusable
           objectiveKey={objectiveKey}
+          translator={translator}
         />
       </div>
     </section>
@@ -3476,13 +3487,19 @@ function RecommendationCard({
   onAddPerfume,
   isFocusable = false,
   objectiveKey,
+  translator,
 }) {
   const { perfume, score } = recommendation;
-  const explanations = getRecommendationDisplayReasons({ recommendation, objectiveKey });
+  const explanations = getRecommendationDisplayReasons({ recommendation, objectiveKey, translator });
   const confidence = getRecommendationConfidence(recommendation);
+  const confidenceLabel = getRecommendationConfidenceLabel(recommendation, translator);
   const imageFallback = "/images/perfumes/placeholders/perfume-placeholder.svg";
   const isAddDisabled = isAdded || isBoxFull;
-  const addButtonLabel = isAdded ? "Added" : isBoxFull ? "Box full" : "Add to Box";
+  const addButtonLabel = isAdded
+    ? translator?.t?.("general.added") || "Added"
+    : isBoxFull
+      ? translator?.t?.("general.boxFull") || "Box full"
+      : translator?.t?.("general.addToBox") || "Add to Box";
 
   return (
     <article className="recommendation-card" tabIndex={isFocusable ? -1 : undefined}>
@@ -3514,13 +3531,13 @@ function RecommendationCard({
 
       <div className="recommendation-intelligence">
         <div className="recommendation-intelligence-header">
-          <span>Why this fits</span>
+          <span>{translator?.t?.("recommendation.whyThisFits") || "Why this fits"}</span>
           <span
             className={`recommendation-confidence recommendation-confidence-${confidence
               .toLowerCase()
               .replace(/\s+/g, "-")}`}
           >
-            {confidence}
+            {confidenceLabel}
           </span>
         </div>
 
