@@ -39,6 +39,8 @@ import { buildFinalizationModel } from "../builder/internal/finalization/buildFi
 import { getTierData } from "../utils/tierUtils";
 import CollectionCard from "./CollectionCard";
 import { createTranslator } from "../i18n/createTranslator.js";
+import { ANALYTICS_EVENTS } from "../analytics/events.js";
+import { noopAnalytics } from "../analytics/noopAnalytics.js";
 
 const EMPTY_RECOMMENDATIONS = [];
 const PERFUME_IMAGE_FALLBACK =
@@ -82,6 +84,7 @@ function BuilderPanel({
   onCuratorBonusPreferenceChange,
   reviewCustomerInfo,
   onReviewCustomerInfoChange,
+  analytics = noopAnalytics,
 }) {
     const translator = useMemo(
       () => createTranslator(builderConfig.locale),
@@ -259,6 +262,28 @@ function BuilderPanel({
       });
       showBalanceLaneEmphasis();
       window.setTimeout(focusBalanceLane, 420);
+    };
+
+    const handleOpenComposerSetup = () => {
+      analytics.track(ANALYTICS_EVENTS.COMPOSER_OPENED, {
+        slotCount: totalSlots,
+        totalPoints,
+        requestedBudgetPoints: parseNumericAnalyticsValue(composerSettings.budget),
+        requestedStyle: composerSettings.collectionStyle,
+        source: "composer",
+      });
+      setIsComposerSetupOpen(true);
+    };
+
+    const handleOpenReview = () => {
+      analytics.track(ANALYTICS_EVENTS.REVIEW_OPENED, {
+        slotCount: totalSlots,
+        totalPoints,
+        orderTotal: estimatedValue,
+        curatorBonusUnlocked: isCuratorBonusUnlocked,
+        source: "manual",
+      });
+      setIsFinalSummaryOpen(true);
     };
 
     const dismissDiscoveryIntro = () => {
@@ -523,7 +548,7 @@ function BuilderPanel({
         isBoxFull={totalSlots >= maxSelectableSlots}
         isGenerating={isComposerGenerating}
         statusMessage={composerStatusMessage}
-        onOpenSetup={() => setIsComposerSetupOpen(true)}
+        onOpenSetup={handleOpenComposerSetup}
       />
 
       <div className="slot-bar">
@@ -555,7 +580,7 @@ function BuilderPanel({
             isCuratorBonusUnlocked ? "is-unlocked" : ""
           }`}
           disabled={!isBoxReady}
-          onClick={() => setIsFinalSummaryOpen(true)}
+          onClick={handleOpenReview}
         >
           {builderConfig.copy.reviewButtonLabel}
         </button>
@@ -751,6 +776,7 @@ function BuilderPanel({
           customerInfo={reviewCustomerInfo}
           onCustomerInfoChange={onReviewCustomerInfoChange}
           onClose={() => setIsFinalSummaryOpen(false)}
+          analytics={analytics}
         />
       )}
       {composerProposal && (
@@ -762,7 +788,7 @@ function BuilderPanel({
           onMoveAlternative={onMoveComposerProposalAlternative}
           onCancel={onCancelComposerProposal}
           onBack={() => {
-            setIsComposerSetupOpen(true);
+            handleOpenComposerSetup();
             onCancelComposerProposal();
           }}
         />
@@ -2389,6 +2415,7 @@ function DiscoveryBoxReviewModal({
   customerInfo,
   onCustomerInfoChange,
   onClose,
+  analytics = noopAnalytics,
 }) {
   const t = translator?.t || ((key) => key);
   const [finalizeStatus, setFinalizeStatus] = useState("");
@@ -2473,6 +2500,25 @@ function DiscoveryBoxReviewModal({
   async function handleFinalizeBox() {
     if (!canFinalize) {
       setFinalizeStatus(t("review.requireCustomer"));
+      analytics.track(ANALYTICS_EVENTS.REVIEW_VALIDATION_FAILED, {
+        failedFields: finalizationModel.readiness.blockers,
+        source: "manual",
+      });
+      return;
+    }
+
+    if (!builderConfig.features.whatsappFinalization) {
+      setFinalizeStatus(t("app.recoverableActionError"));
+      analytics.track(ANALYTICS_EVENTS.ORDER_FINALIZATION_FAILED, {
+        slotCount: finalizationModel.order.totalSlots,
+        totalPoints: finalizationModel.order.totalPoints,
+        orderTotal: finalizationModel.order.monetaryTotal,
+        curatorBonusUnlocked: finalizationModel.order.curatorBonus.isUnlocked,
+        channel: "whatsapp",
+        errorCategory: "channel_unavailable",
+        copiedToClipboard: false,
+        source: "manual",
+      });
       return;
     }
 
@@ -2480,6 +2526,14 @@ function DiscoveryBoxReviewModal({
     const whatsappUrl = `https://wa.me/${builderConfig.finalization.whatsappNumber}?text=${encodeURIComponent(
       whatsappMessage
     )}`;
+    analytics.track(ANALYTICS_EVENTS.ORDER_FINALIZATION_STARTED, {
+      slotCount: finalizationModel.order.totalSlots,
+      totalPoints: finalizationModel.order.totalPoints,
+      orderTotal: finalizationModel.order.monetaryTotal,
+      curatorBonusUnlocked: finalizationModel.order.curatorBonus.isUnlocked,
+      channel: "whatsapp",
+      source: "manual",
+    });
     const openedWindow = window.open(whatsappUrl, "_blank");
     if (openedWindow) {
       openedWindow.opener = null;
@@ -2493,6 +2547,16 @@ function DiscoveryBoxReviewModal({
           ? builderConfig.finalization.whatsapp.blockedCopied
           : builderConfig.finalization.whatsapp.blockedManual
       );
+      analytics.track(ANALYTICS_EVENTS.ORDER_FINALIZATION_FAILED, {
+        slotCount: finalizationModel.order.totalSlots,
+        totalPoints: finalizationModel.order.totalPoints,
+        orderTotal: finalizationModel.order.monetaryTotal,
+        curatorBonusUnlocked: finalizationModel.order.curatorBonus.isUnlocked,
+        channel: "whatsapp",
+        errorCategory: "popup_blocked",
+        copiedToClipboard: didCopy,
+        source: "manual",
+      });
       return;
     }
 
@@ -2504,8 +2568,17 @@ function DiscoveryBoxReviewModal({
           })
         : formatConfigCopy(builderConfig.finalization.whatsapp.opening, {
             businessName: builderConfig.brand.businessName,
-          })
+        })
     );
+    analytics.track(ANALYTICS_EVENTS.ORDER_FINALIZATION_SUCCEEDED, {
+      slotCount: finalizationModel.order.totalSlots,
+      totalPoints: finalizationModel.order.totalPoints,
+      orderTotal: finalizationModel.order.monetaryTotal,
+      curatorBonusUnlocked: finalizationModel.order.curatorBonus.isUnlocked,
+      channel: "whatsapp",
+      copiedToClipboard: didCopy,
+      source: "manual",
+    });
   }
 
   return createPortal(
@@ -3821,6 +3894,15 @@ function formatConfigCopy(template, values = {}) {
     (copy, [key, value]) => copy.replaceAll(`{${key}}`, String(value)),
     template
   );
+}
+
+function parseNumericAnalyticsValue(value) {
+  if (value === "" || value === null || value === undefined) {
+    return null;
+  }
+
+  const parsedValue = Number(value);
+  return Number.isFinite(parsedValue) ? parsedValue : null;
 }
 
 function getNextAvailableSlotIndex(selectedPerfumes, maxSelectableSlots) {

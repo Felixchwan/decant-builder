@@ -1,6 +1,7 @@
 import { Component } from "react";
 
 import { clearSavedBuilderState } from "../utils/appRecovery.js";
+import { ANALYTICS_EVENTS } from "../analytics/events.js";
 
 export class AppErrorBoundary extends Component {
   constructor(props) {
@@ -13,6 +14,15 @@ export class AppErrorBoundary extends Component {
   }
 
   componentDidCatch(error, errorInfo) {
+    try {
+      this.props.analytics?.track?.(ANALYTICS_EVENTS.RUNTIME_ERROR_BOUNDARY_SHOWN, {
+        errorCategory: "render_error",
+        source: "system",
+      });
+    } catch {
+      // Runtime recovery must never depend on analytics availability.
+    }
+
     if (import.meta.env.DEV) {
       console.error(error, errorInfo);
     }

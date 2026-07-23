@@ -1,10 +1,11 @@
 import { renderToStaticMarkup } from "react-dom/server";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import {
   AppErrorBoundary,
   AppErrorFallback,
 } from "./AppErrorBoundary.jsx";
+import { ANALYTICS_EVENTS } from "../analytics/events.js";
 import { clearSavedBuilderState } from "../utils/appRecovery.js";
 import { buildLocalizedConfigOverrides } from "../i18n/buildLocalizedConfig.js";
 
@@ -61,6 +62,57 @@ describe("AppErrorBoundary", () => {
     expect(markup).toContain("Ocurrió un error inesperado.");
     expect(markup).toContain("Recargar builder");
     expect(markup).toContain("Borrar caja guardada y recargar");
+  });
+
+  it("tracks runtime recovery without exposing technical details", () => {
+    const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    const trackedEvents = [];
+    const boundary = new AppErrorBoundary({
+      analytics: {
+        track(eventName, payload) {
+          trackedEvents.push({ eventName, payload });
+        },
+      },
+    });
+
+    try {
+      boundary.componentDidCatch(new Error("secret failure"), {
+        componentStack: "private stack",
+      });
+
+      expect(trackedEvents).toEqual([
+        {
+          eventName: ANALYTICS_EVENTS.RUNTIME_ERROR_BOUNDARY_SHOWN,
+          payload: {
+            errorCategory: "render_error",
+            source: "system",
+          },
+        },
+      ]);
+      expect(JSON.stringify(trackedEvents)).not.toContain("secret failure");
+      expect(JSON.stringify(trackedEvents)).not.toContain("private stack");
+    } finally {
+      consoleErrorSpy.mockRestore();
+    }
+  });
+
+  it("keeps recovery safe if analytics tracking fails", () => {
+    const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    const boundary = new AppErrorBoundary({
+      analytics: {
+        track() {
+          throw new Error("provider unavailable");
+        },
+      },
+    });
+
+    try {
+      expect(() =>
+        boundary.componentDidCatch(new Error("render failure"), {})
+      ).not.toThrow();
+    } finally {
+      consoleErrorSpy.mockRestore();
+    }
   });
 
   it("clears only the configured Builder storage key", () => {

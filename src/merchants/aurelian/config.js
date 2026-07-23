@@ -15,6 +15,9 @@ export const aurelianConfig = createBuilderConfig({
     shortName: "Aurelian",
     heading: "Aurelian",
   },
+  analytics: {
+    merchantId: "aurelian",
+  },
   commerce: {
     ...localized.commerce,
     locale,

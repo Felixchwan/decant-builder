@@ -15,6 +15,9 @@ export const discoveryDecantsConfig = createBuilderConfig({
     shortName: "Discovery",
     heading: "Discovery Decants",
   },
+  analytics: {
+    merchantId: "discovery-decants",
+  },
   commerce: {
     ...localized.commerce,
     currency: "MXN",

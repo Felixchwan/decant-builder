@@ -25,6 +25,8 @@ import { buildComposerRecommendations } from "./builder/internal/recommendations
 import { getMetadataAsset } from "./data/metadataAssets";
 import { getBrandAsset } from "./data/brandAssets";
 import { createTranslator } from "./i18n/createTranslator.js";
+import { ANALYTICS_EVENTS } from "./analytics/events.js";
+import { noopAnalytics } from "./analytics/noopAnalytics.js";
 import {
   addSelectedPerfume,
   canAddPerfume,
@@ -36,7 +38,7 @@ const PERFUME_IMAGE_FALLBACK =
   "/images/perfumes/placeholders/perfume-placeholder.svg";
 const EMPTY_NOTES = {};
 
-function App({ catalog, notes: noteMetadata = EMPTY_NOTES, config }) {
+function App({ catalog, notes: noteMetadata = EMPTY_NOTES, config, analytics = noopAnalytics }) {
   const builderConfig = config;
   const translator = useMemo(
     () => createTranslator(builderConfig.locale),
@@ -107,6 +109,8 @@ function App({ catalog, notes: noteMetadata = EMPTY_NOTES, config }) {
   const [detailPerfume, setDetailPerfume] = useState(null);
   const composerGenerationTimeoutRef = useRef(null);
   const composerGenerationIdRef = useRef(0);
+  const hasTrackedAppLoadRef = useRef(false);
+  const hasTrackedCuratorBonusUnlockedRef = useRef(false);
 
   const collectionSummary = useMemo(
     () =>
@@ -201,6 +205,49 @@ const isComposerProposalStale = isComposerBoxProposalStale(
 );
 
   useEffect(() => {
+    if (hasTrackedAppLoadRef.current) {
+      return;
+    }
+
+    hasTrackedAppLoadRef.current = true;
+    analytics.track(ANALYTICS_EVENTS.APP_LOADED, {
+      selectedSlotCount: selectedPerfumes.length,
+      source: "system",
+    });
+    analytics.track(ANALYTICS_EVENTS.MERCHANT_EXPERIENCE_LOADED, {
+      source: "system",
+    });
+
+    if (persistedBuilderState.wasRestored) {
+      analytics.track(ANALYTICS_EVENTS.PERSISTENCE_RECOVERY_USED, {
+        slotCount: selectedPerfumes.length,
+        curatorBonusPreference,
+        source: "system",
+      });
+    }
+  }, [analytics, curatorBonusPreference, persistedBuilderState.wasRestored, selectedPerfumes.length]);
+
+  useEffect(() => {
+    const isCuratorBonusUnlocked =
+      totalPoints >= builderConfig.curatorBonus.targetPoints &&
+      totalSlots >= MIN_BOX_SLOTS;
+
+    if (isCuratorBonusUnlocked && !hasTrackedCuratorBonusUnlockedRef.current) {
+      hasTrackedCuratorBonusUnlockedRef.current = true;
+      analytics.track(ANALYTICS_EVENTS.CURATOR_BONUS_UNLOCKED, {
+        slotCount: totalSlots,
+        totalPoints,
+        preference: curatorBonusPreference,
+        source: "system",
+      });
+    }
+
+    if (!isCuratorBonusUnlocked) {
+      hasTrackedCuratorBonusUnlockedRef.current = false;
+    }
+  }, [analytics, builderConfig, curatorBonusPreference, MIN_BOX_SLOTS, totalPoints, totalSlots]);
+
+  useEffect(() => {
     const persistedState = createBuilderPersistencePayload({
       selectedPerfumes,
       curatorBonusPreference,
@@ -243,10 +290,69 @@ const isComposerProposalStale = isComposerBoxProposalStale(
   }, []);
 
   function handleFilterChange(category, value) {
+    const nextFilters = {
+      ...activeFilters,
+      [category]: value,
+    };
     setActiveFilters((currentFilters) => ({
       ...currentFilters,
       [category]: value,
     }));
+    analytics.track(ANALYTICS_EVENTS.FILTER_CHANGED, {
+      category,
+      value,
+      isCleared: !value,
+      resultsCount: getCatalogResultsCount({
+        catalog: perfumes,
+        notes,
+        searchQuery,
+        activeFilters: nextFilters,
+        sortOption,
+      }),
+      source: "manual",
+    });
+  }
+
+  function handleSearchChange(value) {
+    setSearchQuery(value);
+    analytics.track(ANALYTICS_EVENTS.SEARCH_PERFORMED, {
+      queryLength: value.length,
+      resultsCount: getCatalogResultsCount({
+        catalog: perfumes,
+        notes,
+        searchQuery: value,
+        activeFilters,
+        sortOption,
+      }),
+      activeFilterCount: Object.values(activeFilters).filter(Boolean).length,
+      sortOption,
+      source: "manual",
+    });
+  }
+
+  function handleSortChange(value) {
+    setSortOption(value);
+    analytics.track(ANALYTICS_EVENTS.SORT_CHANGED, {
+      sortOption: value,
+      resultsCount: getCatalogResultsCount({
+        catalog: perfumes,
+        notes,
+        searchQuery,
+        activeFilters,
+        sortOption: value,
+      }),
+      source: "manual",
+    });
+  }
+
+  function openPerfumeDetails(perfume, source) {
+    setDetailPerfume(perfume);
+    analytics.track(ANALYTICS_EVENTS.FRAGRANCE_DETAILS_OPENED, {
+      perfumeId: perfume.id,
+      visibleIndex: visiblePerfumes.findIndex((item) => item.id === perfume.id),
+      visibleCount: visiblePerfumes.length,
+      source,
+    });
   }
 
   function handleComposerSettingChange(field, value) {
@@ -291,9 +397,20 @@ const isComposerProposalStale = isComposerBoxProposalStale(
     }
 
     const generationId = composerGenerationIdRef.current + 1;
+    const generationStartedAt = nowMs();
     composerGenerationIdRef.current = generationId;
     setComposerStatusMessage("");
     setIsComposerGenerating(true);
+    analytics.track(ANALYTICS_EVENTS.COMPOSER_GENERATION_STARTED, {
+      requestedBudgetPoints: composerBudget,
+      requestedStyle: composerSettings.collectionStyle,
+      selectedSeasons: composerSettings.seasons,
+      selectedOccasions: composerSettings.occasions,
+      selectedVibes: composerSettings.vibes,
+      slotCountBefore: selectedPerfumes.length,
+      totalPointsBefore: totalPoints,
+      source: "composer",
+    });
     composerGenerationTimeoutRef.current = window.setTimeout(() => {
       try {
         const nextProposal = buildComposerBoxProposal({
@@ -318,6 +435,20 @@ const isComposerProposalStale = isComposerBoxProposalStale(
         }
 
         setComposerProposal(nextProposal);
+        analytics.track(ANALYTICS_EVENTS.COMPOSER_PROPOSAL_GENERATED, {
+          requestedBudgetPoints: composerBudget,
+          requestedStyle: composerSettings.collectionStyle,
+          selectedSeasons: composerSettings.seasons,
+          selectedOccasions: composerSettings.occasions,
+          selectedVibes: composerSettings.vibes,
+          proposalPerfumeIds: nextProposal.collection.map((perfume) => perfume.id),
+          proposalSlotCount: nextProposal.collection.length,
+          proposalPoints: nextProposal.totalPoints,
+          isPartial: !nextProposal.targetReached,
+          alternativeCount: getProposalAlternativeCount(nextProposal),
+          durationMs: Math.round(nowMs() - generationStartedAt),
+          source: "composer",
+        });
       } catch (error) {
         if (composerGenerationIdRef.current !== generationId) {
           return;
@@ -329,6 +460,11 @@ const isComposerProposalStale = isComposerBoxProposalStale(
 
         setComposerProposal(null);
         setComposerStatusMessage(t("app.recoverableActionError"));
+        analytics.track(ANALYTICS_EVENTS.COMPOSER_GENERATION_FAILED, {
+          errorCategory: "proposal_generation_failed",
+          durationMs: Math.round(nowMs() - generationStartedAt),
+          source: "composer",
+        });
       } finally {
         if (composerGenerationIdRef.current === generationId) {
           setIsComposerGenerating(false);
@@ -339,17 +475,38 @@ const isComposerProposalStale = isComposerBoxProposalStale(
   }
 
   function handleCancelComposerProposal() {
+    if (composerProposal) {
+      analytics.track(ANALYTICS_EVENTS.PROPOSAL_DISMISSED, {
+        proposalPerfumeIds: composerProposal.collection.map((perfume) => perfume.id),
+        proposalSlotCount: composerProposal.collection.length,
+        source: "composer",
+      });
+    }
+
     setComposerProposal(null);
   }
 
   function handleMoveComposerProposalAlternative(slotId, direction) {
-    setComposerProposal((currentProposal) =>
-      moveComposerProposalSlotAlternative({
-        proposal: currentProposal,
+    const nextProposal = moveComposerProposalSlotAlternative({
+      proposal: composerProposal,
+      slotId,
+      direction,
+    });
+    const viewedAlternative = getViewedProposalAlternative(nextProposal, slotId);
+
+    if (viewedAlternative) {
+      analytics.track(ANALYTICS_EVENTS.PROPOSAL_ALTERNATIVE_VIEWED, {
         slotId,
+        slotIndex: viewedAlternative.slotIndex,
         direction,
-      })
-    );
+        alternativeIndex: viewedAlternative.alternativeIndex,
+        alternativeCount: viewedAlternative.alternativeCount,
+        perfumeId: viewedAlternative.perfumeId,
+        source: "composer",
+      });
+    }
+
+    setComposerProposal(nextProposal);
   }
 
   function handleApplyComposerProposal() {
@@ -372,6 +529,15 @@ const isComposerProposalStale = isComposerBoxProposalStale(
     setSelectedPerfumes(nextSelectedPerfumes);
     setComposerProposal(null);
     setActiveMobileTab("box");
+    analytics.track(ANALYTICS_EVENTS.PROPOSAL_APPLIED, {
+      proposalPerfumeIds: nextSelectedPerfumes.map((perfume) => perfume.id),
+      replacedPerfumeIds: selectedPerfumes
+        .filter((perfume) => !nextSelectedPerfumes.some((item) => item.id === perfume.id))
+        .map((perfume) => perfume.id),
+      slotCountAfter: nextSelectedPerfumes.length,
+      totalPointsAfter: getTotalPoints(nextSelectedPerfumes),
+      source: "composer",
+    });
   }
 
   const addPerfume = (perfume) => {
@@ -390,25 +556,39 @@ const isComposerProposalStale = isComposerBoxProposalStale(
     return;
   }
 
-  setSelectedPerfumes((prev) =>
-    addSelectedPerfume({
-      selectedPerfumes: prev,
-      perfume,
-      maxSelectableSlots: MAX_SELECTABLE_SLOTS,
-    })
-  );
+  const nextSelectedPerfumes = addSelectedPerfume({
+    selectedPerfumes,
+    perfume,
+    maxSelectableSlots: MAX_SELECTABLE_SLOTS,
+  });
+
+  setSelectedPerfumes(nextSelectedPerfumes);
+  analytics.track(ANALYTICS_EVENTS.PERFUME_ADDED, {
+    perfumeId: perfume.id,
+    points: perfume.points,
+    source: "manual",
+    slotCountAfter: nextSelectedPerfumes.length,
+    totalPointsAfter: getTotalPoints(nextSelectedPerfumes),
+  });
 };
 
 const confirmAddPerfume = () => {
   if (!pendingPerfume) return;
 
-  setSelectedPerfumes((prev) =>
-    addSelectedPerfume({
-      selectedPerfumes: prev,
-      perfume: pendingPerfume,
-      maxSelectableSlots: MAX_SELECTABLE_SLOTS,
-    })
-  );
+  const nextSelectedPerfumes = addSelectedPerfume({
+    selectedPerfumes,
+    perfume: pendingPerfume,
+    maxSelectableSlots: MAX_SELECTABLE_SLOTS,
+  });
+
+  setSelectedPerfumes(nextSelectedPerfumes);
+  analytics.track(ANALYTICS_EVENTS.PERFUME_ADDED, {
+    perfumeId: pendingPerfume.id,
+    points: pendingPerfume.points,
+    source: "manual",
+    slotCountAfter: nextSelectedPerfumes.length,
+    totalPointsAfter: getTotalPoints(nextSelectedPerfumes),
+  });
 
   setPendingPerfume(null);
 };
@@ -467,12 +647,22 @@ const confirmAddPerfume = () => {
   }, [pendingPerfume]);
 
   function removePerfume(indexToRemove) {
-    setSelectedPerfumes((current) =>
-      removeSelectedPerfumeAtIndex({
-        selectedPerfumes: current,
-        index: indexToRemove,
-      })
-    );
+    const perfume = selectedPerfumes[indexToRemove];
+    const nextSelectedPerfumes = removeSelectedPerfumeAtIndex({
+      selectedPerfumes,
+      index: indexToRemove,
+    });
+
+    setSelectedPerfumes(nextSelectedPerfumes);
+
+    if (perfume) {
+      analytics.track(ANALYTICS_EVENTS.PERFUME_REMOVED, {
+        perfumeId: perfume.id,
+        source: "manual",
+        slotCountAfter: nextSelectedPerfumes.length,
+        totalPointsAfter: getTotalPoints(nextSelectedPerfumes),
+      });
+    }
   }
 
   function reorderPerfumes(fromIndex, toIndex) {
@@ -500,6 +690,14 @@ const confirmAddPerfume = () => {
     setReviewCustomerInfo(DEFAULT_CUSTOMER_INFO);
     clearStoredBuilderState(builderConfig);
     setRestoreMessage("");
+    analytics.track(ANALYTICS_EVENTS.BOX_CLEARED, {
+      slotCountBefore: selectedPerfumes.length,
+      totalPointsBefore: totalPoints,
+      curatorBonusUnlockedBefore:
+        totalPoints >= builderConfig.curatorBonus.targetPoints &&
+        totalSlots >= MIN_BOX_SLOTS,
+      source: "manual",
+    });
   }
 
   return (
@@ -561,7 +759,7 @@ const confirmAddPerfume = () => {
               <input
                 type="search"
                 value={searchQuery}
-                onChange={(event) => setSearchQuery(event.target.value)}
+                onChange={(event) => handleSearchChange(event.target.value)}
                 placeholder={t("app.searchPlaceholder")}
               />
             </div>
@@ -572,7 +770,7 @@ const confirmAddPerfume = () => {
               activeFilters={activeFilters}
               handleFilterChange={handleFilterChange}
               sortOption={sortOption}
-              setSortOption={setSortOption}
+              setSortOption={handleSortChange}
             />
 
             <div className="catalog-grid">
@@ -585,7 +783,7 @@ const confirmAddPerfume = () => {
                     perfume={perfume}
                     tierData={tierData}
                     onAddToBox={addPerfume}
-                    onOpenDetails={setDetailPerfume}
+                    onOpenDetails={(perfume) => openPerfumeDetails(perfume, "manual")}
                     isDisabled={totalSlots >= MAX_SELECTABLE_SLOTS}
                     labels={{
                       add: t("general.add"),
@@ -640,6 +838,7 @@ const confirmAddPerfume = () => {
             onApplyComposerProposal={handleApplyComposerProposal}
             onMoveComposerProposalAlternative={handleMoveComposerProposalAlternative}
             onCancelComposerProposal={handleCancelComposerProposal}
+            analytics={analytics}
             curatorBonusPreference={curatorBonusPreference}
             onCuratorBonusPreferenceChange={setCuratorBonusPreference}
             reviewCustomerInfo={reviewCustomerInfo}
@@ -752,6 +951,53 @@ function deriveMinimumComposerBudget({ catalog, minSlots, pointValue }) {
   }
 
   return Math.round(minimumPerfumePoints * minSlots * pointValue);
+}
+
+function getCatalogResultsCount({ catalog, notes, searchQuery, activeFilters, sortOption }) {
+  return buildCatalogView({
+    catalog,
+    notes,
+    searchQuery,
+    activeFilters,
+    sortOption,
+  }).visiblePerfumes.length;
+}
+
+function getTotalPoints(perfumes) {
+  return perfumes.reduce((sum, perfume) => sum + perfume.points, 0);
+}
+
+function getProposalAlternativeCount(proposal) {
+  return (proposal.slotAlternatives || []).reduce(
+    (count, slot) => count + Math.max(0, (slot.alternatives || []).length - 1),
+    0
+  );
+}
+
+function getViewedProposalAlternative(proposal, slotId) {
+  const slot = (proposal?.slotAlternatives || []).find((item) => item.slotId === slotId);
+
+  if (!slot) {
+    return null;
+  }
+
+  const alternativeIndex = slot.selectedAlternativeIndex || 0;
+  const alternative = slot.alternatives?.[alternativeIndex];
+
+  return {
+    slotIndex: slot.slotIndex,
+    alternativeIndex,
+    alternativeCount: slot.alternatives?.length || 0,
+    perfumeId: alternative?.perfume?.id,
+  };
+}
+
+function nowMs() {
+  if (typeof performance !== "undefined" && typeof performance.now === "function") {
+    return performance.now();
+  }
+
+  return Date.now();
 }
 
 function isComposerBudgetBelowMinimum(budget, minimumBudget) {

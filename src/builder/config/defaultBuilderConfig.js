@@ -9,6 +9,9 @@ export const defaultBuilderConfig = {
     shortName: "",
     heading: "",
   },
+  analytics: {
+    merchantId: "default",
+  },
   commerce: {
     currency: "MXN",
     locale: "en-US",
