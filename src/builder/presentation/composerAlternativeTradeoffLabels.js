@@ -21,6 +21,10 @@ export function getComposerProposalItemReasonLabel(reason = {}) {
     return formatReasonValue(reason.preferenceValue);
   }
 
+  if (reason.type === "contribution") {
+    return getComposerContributionLabel(reason);
+  }
+
   if (reason.type === "strategy_contribution") {
     const strategyId = reason.evidence?.strategyId;
     const strategyLabel = STRATEGY_LABELS[strategyId] || formatReasonValue(strategyId || "");
@@ -38,9 +42,7 @@ export function getComposerProposalItemReasonLabels(reasons = [], { max = 3 } = 
   const concreteReasons = safeReasons
     .filter((reason) => reason.type !== "strategy_contribution")
     .sort(compareReasons);
-  const strategyReasons = safeReasons.filter((reason) => reason.type === "strategy_contribution");
-  const displayReasons =
-    concreteReasons.length > 0 ? [...concreteReasons, ...strategyReasons] : concreteReasons;
+  const displayReasons = concreteReasons;
   const seen = new Set();
 
   return displayReasons
@@ -62,11 +64,31 @@ function compareReasons(first, second) {
 }
 
 function getReasonPriority(reason) {
+  if (reason.type === "contribution") {
+    return getContributionReasonPriority(reason);
+  }
+
   if (reason.type === "strategy_contribution") {
     return REASON_DISPLAY_PRIORITY.strategy_contribution;
   }
 
   return REASON_DISPLAY_PRIORITY[reason.preferenceType] || 4;
+}
+
+function getContributionReasonPriority(reason) {
+  if (reason.contributionStrength === "unique") {
+    return 0;
+  }
+
+  if (reason.contributionStrength === "strong") {
+    return 0.5;
+  }
+
+  if (reason.contributionType === "accord_contribution") {
+    return 2.5;
+  }
+
+  return 4;
 }
 
 export function getComposerTradeoffLabel(tradeoff = {}) {
@@ -80,3 +102,4 @@ function formatReasonValue(value) {
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
     .join(" ");
 }
+import { getComposerContributionLabel } from "./composerContributionLabels.js";

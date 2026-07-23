@@ -38,6 +38,23 @@ export function buildComposerProposalReason(code, type, evidence = {}) {
   };
 }
 
+export function buildComposerContributionReasons(facts = []) {
+  return (Array.isArray(facts) ? facts : [])
+    .map((fact) => ({
+      type: "contribution",
+      code: getContributionCode(fact),
+      labelKey: getContributionCode(fact),
+      preferenceType: null,
+      preferenceValue: null,
+      contributionType: fact.type,
+      contributionCategory: fact.category,
+      contributionValue: fact.value,
+      contributionStrength: fact.strength,
+      evidence: fact.evidence || {},
+    }))
+    .sort(compareContributionReasons);
+}
+
 export function uniqueComposerProposalReasons(reasons) {
   const seen = new Set();
 
@@ -92,4 +109,46 @@ function normalizeStringList(values) {
         .filter(Boolean)
     ),
   ].sort();
+}
+
+function compareContributionReasons(first, second) {
+  return getContributionPriority(first) - getContributionPriority(second);
+}
+
+function getContributionPriority(reason) {
+  const strengthOffset = getStrengthPriority(reason.contributionStrength);
+
+  if (reason.contributionType === "coverage_contribution") {
+    return 10 + strengthOffset;
+  }
+
+  if (reason.contributionType === "accord_contribution") {
+    return 20 + strengthOffset;
+  }
+
+  if (reason.contributionType === "diversity_contribution") {
+    return 30 + strengthOffset;
+  }
+
+  if (reason.contributionType === "budget_contribution") {
+    return 60 + strengthOffset;
+  }
+
+  return 90 + strengthOffset;
+}
+
+function getStrengthPriority(strength) {
+  if (strength === "unique") {
+    return 0;
+  }
+
+  if (strength === "strong") {
+    return 1;
+  }
+
+  return 2;
+}
+
+function getContributionCode(fact) {
+  return `${fact.type}_${fact.category}_${fact.value}_${fact.strength}`;
 }

@@ -2,7 +2,12 @@ import { discoveryDecantsConfig } from "../../config/index.js";
 import { evaluateComposerConstraints } from "../composer/evaluateComposerConstraints.js";
 import { evaluateCompositionQuality } from "../composer/evaluateCompositionQuality.js";
 import { normalizeComposerRequest } from "../composer/normalizeComposerRequest.js";
-import { buildComposerProposalReasons } from "./composerProposalReasons.js";
+import { deriveProposalItemContributions } from "./deriveProposalItemContributions.js";
+import {
+  buildComposerContributionReasons,
+  buildComposerProposalReasons,
+  uniqueComposerProposalReasons,
+} from "./composerProposalReasons.js";
 
 export const MAX_COMPOSER_SLOT_ALTERNATIVES = 3;
 
@@ -43,14 +48,21 @@ export function buildComposerSlotAlternatives({
     constraintResult: originalConstraintResult,
   });
   const originalScore = originalQualityResult?.overallScore;
+  const originalContributionResult = deriveProposalItemContributions({
+    collection: safeCollection,
+    selectedPreferences: normalizedRequest,
+    collectionStyle: normalizedRequest.collectionStyle?.id,
+    targetSlots: normalizedRequest.targetSlots,
+  });
 
   const slots = safeCollection.map((perfume, slotIndex) => {
     const preserved = preservedIds.has(perfume.id);
     const slotId = `slot-${slotIndex + 1}`;
-    const originalReasons = buildComposerProposalReasons({
+    const originalReasons = buildReasonsWithContributions({
       perfume,
       preserved,
       request: normalizedRequest,
+      facts: originalContributionResult.byPerfumeId[perfume.id]?.facts,
     });
 
     if (preserved || lockedIds.has(perfume.id)) {
@@ -123,10 +135,17 @@ export function buildComposerSlotAlternatives({
         return;
       }
 
-      const reasons = buildComposerProposalReasons({
+      const contributionResult = deriveProposalItemContributions({
+        collection: candidateCollection,
+        selectedPreferences: normalizedRequest,
+        collectionStyle: normalizedRequest.collectionStyle?.id,
+        targetSlots: normalizedRequest.targetSlots,
+      });
+      const reasons = buildReasonsWithContributions({
         perfume: candidate,
         preserved: false,
         request: normalizedRequest,
+        facts: contributionResult.byPerfumeId[candidate.id]?.facts,
       });
 
       evaluatedAlternatives.push(
@@ -165,6 +184,22 @@ export function buildComposerSlotAlternatives({
     slots,
     diagnostics,
   });
+}
+
+function buildReasonsWithContributions({
+  perfume,
+  preserved,
+  request,
+  facts,
+}) {
+  return uniqueComposerProposalReasons([
+    ...buildComposerContributionReasons(facts),
+    ...buildComposerProposalReasons({
+      perfume,
+      preserved,
+      request,
+    }),
+  ]);
 }
 
 function buildSlot({

@@ -488,7 +488,9 @@ describe("buildComposerBoxProposal", () => {
       newlyAdded: false,
     });
     expect(preservedSlot.alternatives).toHaveLength(1);
-    expect(preservedSlot.alternatives[0].reasons[0].type).toBe("preserved");
+    expect(preservedSlot.alternatives[0].reasons.map((reason) => reason.type)).toContain(
+      "preserved"
+    );
   });
 
   it("moves proposal alternatives without changing the original proposal object", () => {

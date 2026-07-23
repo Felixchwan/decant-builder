@@ -43,7 +43,7 @@ describe("composerAlternativeTradeoffLabels", () => {
     ).toEqual(["Summer", "Office", "Fresh"]);
   });
 
-  it("allows strategy support when concrete evidence is present and space remains", () => {
+  it("suppresses strategy support from normal card chips even with concrete evidence", () => {
     expect(
       getComposerProposalItemReasonLabels(
         [
@@ -55,7 +55,7 @@ describe("composerAlternativeTradeoffLabels", () => {
         ],
         { max: 3 }
       )
-    ).toEqual(["Fall", "Supports Signature strategy"]);
+    ).toEqual(["Fall"]);
   });
 
   it("deduplicates labels and enforces max reason count", () => {

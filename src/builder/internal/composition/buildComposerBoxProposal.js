@@ -3,9 +3,12 @@ import { deriveComposerExplanations } from "../composer/deriveComposerExplanatio
 import { deriveComposerReasoningFacts } from "../composer/deriveComposerReasoningFacts.js";
 import { buildComposerRequestFromBuilderState } from "../recommendations/buildComposerRecommendations.js";
 import { buildComposerSlotAlternatives } from "./buildComposerSlotAlternatives.js";
+import { deriveProposalItemContributions } from "./deriveProposalItemContributions.js";
 import {
+  buildComposerContributionReasons,
   buildComposerProposalReason,
   buildComposerProposalReasons,
+  uniqueComposerProposalReasons,
 } from "./composerProposalReasons.js";
 
 export const COMPOSER_BOX_PROPOSAL_STATUSES = Object.freeze({
@@ -464,20 +467,28 @@ function successfulProposal({
 }
 
 function rebuildProposalWithSelectedAlternatives(proposal, slotAlternatives) {
-  const collection = slotAlternatives
+  const initialCollection = slotAlternatives
+    .map((slot) => slot.alternatives[slot.selectedAlternativeIndex]?.perfume)
+    .filter(Boolean);
+  const refreshedSlotAlternatives = refreshSelectedSlotReasons({
+    slotAlternatives,
+    proposal,
+    collection: initialCollection,
+  });
+  const collection = refreshedSlotAlternatives
     .map((slot) => slot.alternatives[slot.selectedAlternativeIndex]?.perfume)
     .filter(Boolean);
   const collectionIds = collection.map((perfume) => perfume.id);
   const duplicateFree = collectionIds.length === new Set(collectionIds).size;
-  const preservedPerfumes = slotAlternatives
+  const preservedPerfumes = refreshedSlotAlternatives
     .filter((slot) => slot.preserved)
     .map((slot) => slot.alternatives[slot.selectedAlternativeIndex]?.perfume)
     .filter(Boolean);
-  const addedPerfumes = slotAlternatives
+  const addedPerfumes = refreshedSlotAlternatives
     .filter((slot) => !slot.preserved)
     .map((slot) => slot.alternatives[slot.selectedAlternativeIndex]?.perfume)
     .filter(Boolean);
-  const proposalItems = slotAlternatives.map((slot) => {
+  const proposalItems = refreshedSlotAlternatives.map((slot) => {
     const alternative = slot.alternatives[slot.selectedAlternativeIndex];
 
     return {
@@ -515,7 +526,7 @@ function rebuildProposalWithSelectedAlternatives(proposal, slotAlternatives) {
     addedPerfumes,
     preservedPerfumes,
     proposalItems,
-    slotAlternatives,
+    slotAlternatives: refreshedSlotAlternatives,
     totalPoints,
     orderTotal,
     minimumReached,
@@ -531,6 +542,150 @@ function rebuildProposalWithSelectedAlternatives(proposal, slotAlternatives) {
       collectionIds: applyAvailable ? collectionIds : [],
     },
   });
+}
+
+function refreshSelectedSlotReasons({ slotAlternatives, proposal, collection }) {
+  const request = proposal.compositionResult?.normalizedRequest;
+
+  if (!request) {
+    return slotAlternatives;
+  }
+
+  const contributionResult = deriveProposalItemContributions({
+    collection,
+    selectedPreferences: request,
+    collectionStyle: request.collectionStyle?.id,
+    targetSlots: request.targetSlots,
+  });
+
+  return slotAlternatives.map((slot) => {
+    const selectedAlternative = slot.alternatives[slot.selectedAlternativeIndex];
+    const selectedReasons = buildReasonsWithContributions({
+      perfume: selectedAlternative.perfume,
+      preserved: slot.preserved,
+      request,
+      facts: contributionResult.byPerfumeId[selectedAlternative.id]?.facts,
+    });
+    const originalAlternative = slot.alternatives[0];
+    const originalReasons =
+      slot.selectedAlternativeIndex === 0
+        ? selectedReasons
+        : getOriginalAlternativeReasons({
+            collection,
+            slot,
+            request,
+            originalAlternative,
+          });
+
+    return {
+      ...slot,
+      alternatives: slot.alternatives.map((alternative, index) => {
+        if (index !== slot.selectedAlternativeIndex) {
+          return alternative;
+        }
+
+        return {
+          ...alternative,
+          reasons: selectedReasons,
+          tradeoff: buildAlternativeTradeoff({
+            selectedReasons,
+            originalReasons,
+            isOriginal: index === 0,
+          }),
+        };
+      }),
+    };
+  });
+}
+
+function getOriginalAlternativeReasons({
+  collection,
+  slot,
+  request,
+  originalAlternative,
+}) {
+  const originalCollection = collection.map((perfume, index) =>
+    index === slot.slotIndex ? originalAlternative.perfume : perfume
+  );
+  const contributionResult = deriveProposalItemContributions({
+    collection: originalCollection,
+    selectedPreferences: request,
+    collectionStyle: request.collectionStyle?.id,
+    targetSlots: request.targetSlots,
+  });
+
+  return buildReasonsWithContributions({
+    perfume: originalAlternative.perfume,
+    preserved: slot.preserved,
+    request,
+    facts: contributionResult.byPerfumeId[originalAlternative.id]?.facts,
+  });
+}
+
+function buildReasonsWithContributions({
+  perfume,
+  preserved,
+  request,
+  facts,
+}) {
+  return uniqueComposerProposalReasons([
+    ...buildComposerContributionReasons(facts),
+    ...buildComposerProposalReasons({
+      perfume,
+      preserved,
+      request,
+    }),
+  ]);
+}
+
+function buildAlternativeTradeoff({ selectedReasons, originalReasons, isOriginal }) {
+  if (isOriginal) {
+    return {
+      gained: [],
+      lost: [],
+      unchanged: [],
+    };
+  }
+
+  const selectedComparableReasons = getComparableTradeoffReasons(selectedReasons);
+  const originalComparableReasons = getComparableTradeoffReasons(originalReasons);
+  const selectedKeys = new Set(selectedComparableReasons.map(getReasonKey));
+  const originalKeys = new Set(originalComparableReasons.map(getReasonKey));
+
+  return {
+    gained: selectedComparableReasons
+      .filter((reason) => !originalKeys.has(getReasonKey(reason)))
+      .map((reason) => buildTradeoffItem("gained", reason)),
+    lost: originalComparableReasons
+      .filter((reason) => !selectedKeys.has(getReasonKey(reason)))
+      .map((reason) => buildTradeoffItem("lost", reason)),
+    unchanged: selectedComparableReasons
+      .filter((reason) => originalKeys.has(getReasonKey(reason)))
+      .map((reason) => buildTradeoffItem("unchanged", reason)),
+  };
+}
+
+function getComparableTradeoffReasons(reasons) {
+  return (Array.isArray(reasons) ? reasons : []).filter((reason) =>
+    ["preference_match", "strategy_contribution", "contribution"].includes(reason.type)
+  );
+}
+
+function buildTradeoffItem(type, reason) {
+  return {
+    type,
+    code: `${type}_${reason.code}`,
+    reason,
+    evidence: reason.evidence || {},
+  };
+}
+
+function getReasonKey(reason) {
+  if (reason.type === "contribution") {
+    return `${reason.type}:${reason.contributionType}:${reason.contributionCategory}:${reason.contributionValue}:${reason.contributionStrength}`;
+  }
+
+  return `${reason.type}:${reason.preferenceType || ""}:${reason.preferenceValue || reason.evidence?.strategyId || ""}`;
 }
 
 function unavailableProposal({
