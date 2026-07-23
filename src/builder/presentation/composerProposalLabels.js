@@ -1,6 +1,6 @@
 const STATUS_LABELS = {
-  completed: "Proposal Ready",
-  partial: "Partial Proposal",
+  completed: "Discovery Box Proposal",
+  partial: "Partial Discovery Box",
   already_complete: "Box Already Complete",
   at_max: "Box Full",
   invalid_selection: "Current Box Needs Attention",
@@ -42,7 +42,7 @@ const EXPLANATION_LABELS = {
 };
 
 export function getComposerProposalStatusLabel(status) {
-  return STATUS_LABELS[status] || "Composer Proposal";
+  return STATUS_LABELS[status] || "Discovery Box Proposal";
 }
 
 export function getComposerProposalExplanationLabel(explanation = {}) {

@@ -6,8 +6,8 @@ import {
 
 describe("composerProposalLabels", () => {
   it("maps supported proposal statuses and explanation codes", () => {
-    expect(getComposerProposalStatusLabel("completed")).toBe("Proposal Ready");
-    expect(getComposerProposalStatusLabel("partial")).toBe("Partial Proposal");
+    expect(getComposerProposalStatusLabel("completed")).toBe("Discovery Box Proposal");
+    expect(getComposerProposalStatusLabel("partial")).toBe("Partial Discovery Box");
     expect(
       getComposerProposalExplanationLabel({
         code: "excellent_preference_match",
@@ -18,7 +18,7 @@ describe("composerProposalLabels", () => {
   });
 
   it("fails gracefully for unknown status and explanation codes", () => {
-    expect(getComposerProposalStatusLabel("future_status")).toBe("Composer Proposal");
+    expect(getComposerProposalStatusLabel("future_status")).toBe("Discovery Box Proposal");
     expect(getComposerProposalExplanationLabel({ code: "future_code" })).toBe("");
   });
 });

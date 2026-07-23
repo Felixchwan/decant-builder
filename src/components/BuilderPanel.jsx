@@ -1116,7 +1116,7 @@ function ComposerProposalModal({
         <div className="modal-header">
           <div>
             <span>{statusLabel}</span>
-            <h3 id="composer-proposal-title">Composer Proposal</h3>
+            <h3 id="composer-proposal-title">Discovery Box Proposal</h3>
           </div>
 
           <div className="composer-proposal-header-actions">
@@ -1218,7 +1218,7 @@ function ComposerProposalModal({
                           <div className="composer-proposal-tradeoff">
                             {gainedLabels.length > 0 && (
                               <div>
-                                <span>You gain</span>
+                                <span>Gain</span>
                                 <div>
                                   {gainedLabels.map((label) => (
                                     <em key={`gain-${item.slotId}-${label}`}>{label}</em>
@@ -1228,7 +1228,7 @@ function ComposerProposalModal({
                             )}
                             {lostLabels.length > 0 && (
                               <div>
-                                <span>You lose</span>
+                                <span>Lose</span>
                                 <div>
                                   {lostLabels.map((label) => (
                                     <em key={`loss-${item.slotId}-${label}`}>{label}</em>
