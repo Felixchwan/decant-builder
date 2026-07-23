@@ -67,6 +67,7 @@ function BuilderPanel({
   minimumComposerBudget,
   composerProposal,
   isComposerGenerating = false,
+  composerStatusMessage = "",
   isComposerProposalStale,
   onComposerSettingChange,
   onComposerPreferenceToggle,
@@ -85,7 +86,11 @@ function BuilderPanel({
         return true;
       }
 
-      return window.localStorage.getItem(builderConfig.persistence.discoveryIntroSeenKey) === "true";
+      try {
+        return window.localStorage.getItem(builderConfig.persistence.discoveryIntroSeenKey) === "true";
+      } catch {
+        return true;
+      }
     });
     const [isDiscoveryIntroOpen, setIsDiscoveryIntroOpen] = useState(false);
     const [isNotesModalOpen, setIsNotesModalOpen] = useState(false);
@@ -200,14 +205,7 @@ function BuilderPanel({
     const shouldShowDiscoveryIntro =
       selectedPerfumes.length === 0 &&
       (!hasSeenDiscoveryIntro || isDiscoveryIntroOpen);
-    const canNativeShareCard =
-      typeof window !== "undefined" &&
-      typeof navigator.share === "function" &&
-      typeof navigator.canShare === "function" &&
-      typeof window.File !== "undefined" &&
-      navigator.canShare({
-        files: [new File([""], collectionCardViewModel.export.defaultFilename, { type: "image/png" })],
-      });
+    const canNativeShareCard = canUseNativeShare(collectionCardViewModel.export.defaultFilename);
     const isShareGenerating = Boolean(activeShareAction);
     const nextAvailableSlotIndex = getNextAvailableSlotIndex(
       selectedPerfumes,
@@ -252,7 +250,11 @@ function BuilderPanel({
 
     const dismissDiscoveryIntro = () => {
       if (typeof window !== "undefined") {
-        window.localStorage.setItem(builderConfig.persistence.discoveryIntroSeenKey, "true");
+        try {
+          window.localStorage.setItem(builderConfig.persistence.discoveryIntroSeenKey, "true");
+        } catch {
+          // Onboarding dismissal should not block the Builder in private browsing modes.
+        }
       }
 
       setHasSeenDiscoveryIntro(true);
@@ -503,6 +505,7 @@ function BuilderPanel({
       <ComposeMyBoxPanel
         isBoxFull={totalSlots >= maxSelectableSlots}
         isGenerating={isComposerGenerating}
+        statusMessage={composerStatusMessage}
         onOpenSetup={() => setIsComposerSetupOpen(true)}
       />
 
@@ -816,6 +819,7 @@ const COMPOSER_COLLECTION_STYLE_OPTIONS = [
 function ComposeMyBoxPanel({
   isBoxFull,
   isGenerating,
+  statusMessage,
   onOpenSetup,
 }) {
   return (
@@ -837,6 +841,11 @@ function ComposeMyBoxPanel({
       {isGenerating && (
         <p className="composer-busy-status" role="status">
           Building your Discovery Box proposal.
+        </p>
+      )}
+      {statusMessage && !isGenerating && (
+        <p className="composer-busy-status composer-error-status" role="status">
+          {statusMessage}
         </p>
       )}
     </section>
@@ -3273,8 +3282,29 @@ async function copyText(text) {
 
   try {
     return document.execCommand("copy");
+  } catch {
+    return false;
   } finally {
     document.body.removeChild(textarea);
+  }
+}
+
+function canUseNativeShare(filename) {
+  if (
+    typeof window === "undefined" ||
+    typeof navigator.share !== "function" ||
+    typeof navigator.canShare !== "function" ||
+    typeof window.File === "undefined"
+  ) {
+    return false;
+  }
+
+  try {
+    return navigator.canShare({
+      files: [new File([""], filename, { type: "image/png" })],
+    });
+  } catch {
+    return false;
   }
 }
 

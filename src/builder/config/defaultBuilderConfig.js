@@ -1,4 +1,7 @@
 export const defaultBuilderConfig = {
+  software: {
+    name: "Decant Builder",
+  },
   brand: {
     businessName: "",
     displayName: "",

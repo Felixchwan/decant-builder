@@ -23,8 +23,8 @@ export function hydrateBuilderPersistence({
   config,
   defaultBuilderState,
 }) {
-  const parsedValue = parseBuilderPersistence(rawValue);
-  const validatedState = validatePersistedBuilderState(parsedValue, {
+  const validatedState = sanitizePersistedBuilderState({
+    value: parseBuilderPersistence(rawValue),
     config,
     catalog,
     maxSelectableSlots: config.box.maxSelectableSlots,
@@ -47,6 +47,98 @@ export function hydrateBuilderPersistence({
       maxSelectableSlots: config.box.maxSelectableSlots,
     }),
     wasRestored: validatedState.selectedPerfumeIds.length > 0,
+  };
+}
+
+export function sanitizePersistedBuilderState({
+  value,
+  config,
+  catalog,
+  maxSelectableSlots = config?.box?.maxSelectableSlots,
+  defaultCustomerInfo,
+}) {
+  return validatePersistedBuilderState(value, {
+    config,
+    catalog,
+    maxSelectableSlots,
+    defaultCustomerInfo,
+  });
+}
+
+export function loadPersistedBuilderState({
+  storage,
+  storageKey,
+  catalog,
+  config,
+  defaultBuilderState,
+}) {
+  const defaultHydratedState = createDefaultHydratedState(defaultBuilderState);
+  const resolvedStorage = getAvailableStorage(storage);
+
+  if (!resolvedStorage || !storageKey) {
+    return {
+      ...defaultHydratedState,
+      recovery: {
+        storageAvailable: false,
+        invalidStoredStateCleared: false,
+      },
+    };
+  }
+
+  let rawValue;
+
+  try {
+    rawValue = resolvedStorage.getItem(storageKey);
+  } catch {
+    return {
+      ...defaultHydratedState,
+      recovery: {
+        storageAvailable: false,
+        invalidStoredStateCleared: false,
+      },
+    };
+  }
+
+  const parsedValue = parseBuilderPersistence(rawValue);
+  const validatedState = sanitizePersistedBuilderState({
+    value: parsedValue,
+    config,
+    catalog,
+    maxSelectableSlots: config.box.maxSelectableSlots,
+    defaultCustomerInfo: defaultBuilderState.customerInfo,
+  });
+  const shouldClearInvalidStoredState = Boolean(rawValue) && !validatedState;
+
+  if (shouldClearInvalidStoredState) {
+    try {
+      resolvedStorage.removeItem(storageKey);
+    } catch {
+      // Invalid state should not poison rendering even when removal is blocked.
+    }
+  }
+
+  if (!validatedState) {
+    return {
+      ...defaultHydratedState,
+      recovery: {
+        storageAvailable: true,
+        invalidStoredStateCleared: shouldClearInvalidStoredState,
+      },
+    };
+  }
+
+  return {
+    ...validatedState,
+    selectedPerfumes: hydrateSelectedPerfumes({
+      selectedPerfumeIds: validatedState.selectedPerfumeIds,
+      catalog,
+      maxSelectableSlots: config.box.maxSelectableSlots,
+    }),
+    wasRestored: validatedState.selectedPerfumeIds.length > 0,
+    recovery: {
+      storageAvailable: true,
+      invalidStoredStateCleared: false,
+    },
   };
 }
 
@@ -77,6 +169,36 @@ export function serializeBuilderPersistence({
   );
 }
 
+export function savePersistedBuilderState({ storage, storageKey, value }) {
+  const resolvedStorage = getAvailableStorage(storage);
+
+  if (!resolvedStorage || !storageKey) {
+    return { saved: false, reason: "storage-unavailable" };
+  }
+
+  try {
+    resolvedStorage.setItem(storageKey, serializeBuilderPersistence(value));
+    return { saved: true, reason: null };
+  } catch {
+    return { saved: false, reason: "write-failed" };
+  }
+}
+
+export function clearPersistedBuilderState({ storage, storageKey }) {
+  const resolvedStorage = getAvailableStorage(storage);
+
+  if (!resolvedStorage || !storageKey) {
+    return { cleared: false, reason: "storage-unavailable" };
+  }
+
+  try {
+    resolvedStorage.removeItem(storageKey);
+    return { cleared: true, reason: null };
+  } catch {
+    return { cleared: false, reason: "clear-failed" };
+  }
+}
+
 export function hasMeaningfulBuilderPersistence(
   value,
   defaultBuilderState,
@@ -97,6 +219,30 @@ export function hasMeaningfulBuilderPersistence(
     Boolean(customerInfo.city.trim()) ||
     Boolean(customerInfo.notes.trim())
   );
+}
+
+function createDefaultHydratedState(defaultBuilderState) {
+  return {
+    ...defaultBuilderState,
+    selectedPerfumes: [],
+    wasRestored: false,
+  };
+}
+
+function getAvailableStorage(storage) {
+  if (!storage) {
+    return null;
+  }
+
+  if (
+    typeof storage.getItem !== "function" ||
+    typeof storage.setItem !== "function" ||
+    typeof storage.removeItem !== "function"
+  ) {
+    return null;
+  }
+
+  return storage;
 }
 
 function validatePersistedBuilderState(

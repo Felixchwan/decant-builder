@@ -62,6 +62,7 @@ function renderBuilderPanel(overrides = {}) {
       minimumComposerBudget={600}
       composerProposal={null}
       isComposerProposalStale={false}
+      composerStatusMessage=""
       onComposerSettingChange={() => {}}
       onComposerPreferenceToggle={() => {}}
       onComposerPreferenceClear={() => {}}
@@ -116,5 +117,15 @@ describe("BuilderPanel Composer setup launcher", () => {
 
     expect(markup).toContain("Order Total");
     expect(markup).not.toContain("Estimated Total");
+  });
+
+  it("shows recoverable Composer failures without technical wording", () => {
+    const markup = renderBuilderPanel({
+      composerStatusMessage: "We couldn't complete that action. Please try again.",
+    });
+
+    expect(markup).toContain("We couldn&#x27;t complete that action. Please try again.");
+    expect(markup).not.toContain("Composer engine failed");
+    expect(markup).not.toContain("undefined");
   });
 });

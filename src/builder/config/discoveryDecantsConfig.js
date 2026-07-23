@@ -1,6 +1,9 @@
 import { createBuilderConfig } from "./createBuilderConfig.js";
 
 export const discoveryDecantsConfig = createBuilderConfig({
+  software: {
+    name: "Decant Builder",
+  },
   brand: {
     businessName: "Discovery Decants",
     displayName: "Discovery Decants",

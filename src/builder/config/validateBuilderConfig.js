@@ -17,6 +17,7 @@ function isNonEmptyString(value) {
 }
 
 export function validateBuilderConfig(config) {
+  assertPath(isNonEmptyString(config.software.name), "software.name", "must be a non-empty string");
   assertPath(isNonEmptyString(config.brand.businessName), "brand.businessName", "must be a non-empty string");
   assertPath(isPositiveNumber(config.commerce.pointValue), "commerce.pointValue", "must be a positive number");
   assertPath(isNonEmptyString(config.commerce.currency), "commerce.currency", "must be a non-empty string");

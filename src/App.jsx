@@ -9,10 +9,11 @@ import { buildScentDna } from "./utils/buildScentDna";
 import { buildCatalogView } from "./builder/internal/catalog/buildCatalogView.js";
 import { buildCollectionSummary } from "./builder/internal/intelligence/buildCollectionSummary.js";
 import {
+  clearPersistedBuilderState,
   createBuilderPersistencePayload,
   hasMeaningfulBuilderPersistence,
-  hydrateBuilderPersistence,
-  serializeBuilderPersistence,
+  loadPersistedBuilderState as loadPersistedBuilderStateFromStorage,
+  savePersistedBuilderState,
 } from "./builder/internal/persistence/builderPersistence.js";
 import {
   buildComposerBoxProposal,
@@ -93,11 +94,13 @@ function App({ catalog, notes: noteMetadata = EMPTY_NOTES, config }) {
   });
   const [composerProposal, setComposerProposal] = useState(null);
   const [isComposerGenerating, setIsComposerGenerating] = useState(false);
+  const [composerStatusMessage, setComposerStatusMessage] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [sortOption, setSortOption] = useState("bestMatch");
   const [pendingPerfume, setPendingPerfume] = useState(null);
   const [detailPerfume, setDetailPerfume] = useState(null);
   const composerGenerationTimeoutRef = useRef(null);
+  const composerGenerationIdRef = useRef(0);
 
   const collectionSummary = useMemo(
     () =>
@@ -199,11 +202,11 @@ const isComposerProposalStale = isComposerBoxProposalStale(
     });
 
     if (!hasMeaningfulBuilderPersistence(persistedState, DEFAULT_BUILDER_STATE, DEFAULT_CUSTOMER_INFO)) {
-      clearPersistedBuilderState(builderConfig);
+      clearStoredBuilderState(builderConfig);
       return;
     }
 
-    savePersistedBuilderState(
+    saveStoredBuilderState(
       {
         selectedPerfumes,
         curatorBonusPreference,
@@ -281,6 +284,9 @@ const isComposerProposalStale = isComposerBoxProposalStale(
       return;
     }
 
+    const generationId = composerGenerationIdRef.current + 1;
+    composerGenerationIdRef.current = generationId;
+    setComposerStatusMessage("");
     setIsComposerGenerating(true);
     composerGenerationTimeoutRef.current = window.setTimeout(() => {
       try {
@@ -301,10 +307,27 @@ const isComposerProposalStale = isComposerBoxProposalStale(
           config: builderConfig,
         });
 
+        if (composerGenerationIdRef.current !== generationId) {
+          return;
+        }
+
         setComposerProposal(nextProposal);
+      } catch (error) {
+        if (composerGenerationIdRef.current !== generationId) {
+          return;
+        }
+
+        if (import.meta.env.DEV) {
+          console.error(error);
+        }
+
+        setComposerProposal(null);
+        setComposerStatusMessage("We couldn't complete that action. Please try again.");
       } finally {
-        setIsComposerGenerating(false);
-        composerGenerationTimeoutRef.current = null;
+        if (composerGenerationIdRef.current === generationId) {
+          setIsComposerGenerating(false);
+          composerGenerationTimeoutRef.current = null;
+        }
       }
     }, 0);
   }
@@ -421,6 +444,22 @@ const confirmAddPerfume = () => {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [detailPerfume, navigateDetailPerfume]);
 
+  useEffect(() => {
+    if (!pendingPerfume) {
+      return undefined;
+    }
+
+    function handleKeyDown(event) {
+      if (event.key === "Escape") {
+        setPendingPerfume(null);
+      }
+    }
+
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [pendingPerfume]);
+
   function removePerfume(indexToRemove) {
     setSelectedPerfumes((current) =>
       removeSelectedPerfumeAtIndex({
@@ -444,14 +483,16 @@ const confirmAddPerfume = () => {
     if (composerGenerationTimeoutRef.current) {
       window.clearTimeout(composerGenerationTimeoutRef.current);
       composerGenerationTimeoutRef.current = null;
-      setIsComposerGenerating(false);
     }
 
+    composerGenerationIdRef.current += 1;
+    setIsComposerGenerating(false);
     setComposerProposal(null);
+    setComposerStatusMessage("");
     setSelectedPerfumes([]);
     setCuratorBonusPreference(builderConfig.curatorBonus.defaultPreference);
     setReviewCustomerInfo(DEFAULT_CUSTOMER_INFO);
-    clearPersistedBuilderState(builderConfig);
+    clearStoredBuilderState(builderConfig);
     setRestoreMessage("");
   }
 
@@ -578,6 +619,7 @@ const confirmAddPerfume = () => {
             minimumComposerBudget={minimumComposerBudget}
             composerProposal={composerProposal}
             isComposerGenerating={isComposerGenerating}
+            composerStatusMessage={composerStatusMessage}
             isComposerProposalStale={isComposerProposalStale}
             onComposerSettingChange={handleComposerSettingChange}
             onComposerPreferenceToggle={handleComposerPreferenceToggle}
@@ -622,11 +664,17 @@ const confirmAddPerfume = () => {
       />
     )}
     {pendingPerfume && (
-  <div className="modal-overlay">
-    <div className="warning-modal">
+  <div className="modal-overlay" onClick={cancelAddPerfume}>
+    <div
+      className="warning-modal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="rare-selection-title"
+      onClick={(event) => event.stopPropagation()}
+    >
       <h2>Rare Selection</h2>
 
-      <h3>{pendingPerfume.name}</h3>
+      <h3 id="rare-selection-title">{pendingPerfume.name}</h3>
 
       <p>{pendingPerfume.warningMessage}</p>
 
@@ -635,11 +683,11 @@ const confirmAddPerfume = () => {
       </p>
 
       <div className="modal-actions">
-        <button onClick={confirmAddPerfume}>
+        <button type="button" onClick={confirmAddPerfume}>
           Add to Box
         </button>
 
-        <button onClick={cancelAddPerfume}>
+        <button type="button" onClick={cancelAddPerfume}>
           Cancel
         </button>
       </div>
@@ -651,28 +699,13 @@ const confirmAddPerfume = () => {
 }
 
 function loadPersistedBuilderState({ builderConfig, perfumes, defaultBuilderState }) {
-  const defaultHydratedState = {
-    ...defaultBuilderState,
-    selectedPerfumes: [],
-    wasRestored: false,
-  };
-
-  if (typeof window === "undefined" || !window.localStorage) {
-    return defaultHydratedState;
-  }
-
-  try {
-    const rawValue = window.localStorage.getItem(builderConfig.persistence.storageKey);
-
-    return hydrateBuilderPersistence({
-      rawValue,
-      catalog: perfumes,
-      config: builderConfig,
-      defaultBuilderState,
-    });
-  } catch {
-    return defaultHydratedState;
-  }
+  return loadPersistedBuilderStateFromStorage({
+    storage: getBuilderStorage(),
+    storageKey: builderConfig.persistence.storageKey,
+    catalog: perfumes,
+    config: builderConfig,
+    defaultBuilderState,
+  });
 }
 
 function formatConfigCopy(template, values = {}) {
@@ -724,30 +757,30 @@ function markFragranceDetailsHintSeen(builderConfig) {
   }
 }
 
-function savePersistedBuilderState(value, builderConfig) {
-  if (typeof window === "undefined" || !window.localStorage) {
-    return;
-  }
-
-  try {
-    window.localStorage.setItem(
-      builderConfig.persistence.storageKey,
-      serializeBuilderPersistence(value)
-    );
-  } catch {
-    // Persistence is a convenience; storage failures should not block the builder.
-  }
+function saveStoredBuilderState(value, builderConfig) {
+  savePersistedBuilderState({
+    storage: getBuilderStorage(),
+    storageKey: builderConfig.persistence.storageKey,
+    value,
+  });
 }
 
-function clearPersistedBuilderState(builderConfig) {
-  if (typeof window === "undefined" || !window.localStorage) {
-    return;
+function clearStoredBuilderState(builderConfig) {
+  clearPersistedBuilderState({
+    storage: getBuilderStorage(),
+    storageKey: builderConfig.persistence.storageKey,
+  });
+}
+
+function getBuilderStorage() {
+  if (typeof window === "undefined") {
+    return null;
   }
 
   try {
-    window.localStorage.removeItem(builderConfig.persistence.storageKey);
+    return window.localStorage;
   } catch {
-    // Ignore localStorage failures so the visible reset can still complete.
+    return null;
   }
 }
 
