@@ -102,4 +102,12 @@ describe("BuilderPanel Composer setup launcher", () => {
     expect(composerIndex).toBeGreaterThan(collectionCardIndex);
     expect(curatorIndex).toBeGreaterThan(composerIndex);
   });
+
+  it("shows a busy Composer state while a proposal is being generated", () => {
+    const markup = renderBuilderPanel({ isComposerGenerating: true });
+
+    expect(markup).toContain('aria-busy="true"');
+    expect(markup).toContain("Composing...");
+    expect(markup).toContain("Building your Discovery Box proposal.");
+  });
 });

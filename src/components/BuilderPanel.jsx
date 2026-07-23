@@ -66,6 +66,7 @@ function BuilderPanel({
   composerOptions,
   minimumComposerBudget,
   composerProposal,
+  isComposerGenerating = false,
   isComposerProposalStale,
   onComposerSettingChange,
   onComposerPreferenceToggle,
@@ -501,6 +502,7 @@ function BuilderPanel({
 
       <ComposeMyBoxPanel
         isBoxFull={totalSlots >= maxSelectableSlots}
+        isGenerating={isComposerGenerating}
         onOpenSetup={() => setIsComposerSetupOpen(true)}
       />
 
@@ -748,6 +750,7 @@ function BuilderPanel({
           settings={composerSettings}
           options={composerOptions}
           minimumComposerBudget={minimumComposerBudget}
+          isGenerating={isComposerGenerating}
           onSettingChange={onComposerSettingChange}
           onPreferenceToggle={onComposerPreferenceToggle}
           onPreferenceClear={onComposerPreferenceClear}
@@ -812,20 +815,30 @@ const COMPOSER_COLLECTION_STYLE_OPTIONS = [
 
 function ComposeMyBoxPanel({
   isBoxFull,
+  isGenerating,
   onOpenSetup,
 }) {
   return (
-    <section className="compose-box-panel compose-box-panel-compact" aria-label="Composer">
+    <section
+      className="compose-box-panel compose-box-panel-compact"
+      aria-busy={isGenerating}
+      aria-label="Composer"
+    >
       <div className="compose-box-header">
         <div>
           <span>Composer</span>
           <h3>Build a box from your preferences.</h3>
         </div>
 
-        <button type="button" onClick={onOpenSetup}>
-          {isBoxFull ? "Review Proposal" : "Compose My Box"}
+        <button type="button" onClick={onOpenSetup} disabled={isGenerating}>
+          {isGenerating ? "Composing..." : isBoxFull ? "Review Proposal" : "Compose My Box"}
         </button>
       </div>
+      {isGenerating && (
+        <p className="composer-busy-status" role="status">
+          Building your Discovery Box proposal.
+        </p>
+      )}
     </section>
   );
 }
@@ -835,6 +848,7 @@ function ComposerSetupModal({
   settings,
   options,
   minimumComposerBudget,
+  isGenerating,
   onSettingChange,
   onPreferenceToggle,
   onPreferenceClear,
@@ -990,8 +1004,8 @@ function ComposerSetupModal({
           <button type="button" className="secondary" onClick={onCancel}>
             Cancel
           </button>
-          <button type="button" onClick={onGenerate} disabled={isBudgetBelowMinimum}>
-            Generate Proposal
+          <button type="button" onClick={onGenerate} disabled={isBudgetBelowMinimum || isGenerating}>
+            {isGenerating ? "Composing..." : "Generate Proposal"}
           </button>
         </div>
       </div>

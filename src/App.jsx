@@ -92,10 +92,12 @@ function App({ catalog, notes: noteMetadata = EMPTY_NOTES, config }) {
     vibes: [],
   });
   const [composerProposal, setComposerProposal] = useState(null);
+  const [isComposerGenerating, setIsComposerGenerating] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [sortOption, setSortOption] = useState("bestMatch");
   const [pendingPerfume, setPendingPerfume] = useState(null);
   const [detailPerfume, setDetailPerfume] = useState(null);
+  const composerGenerationTimeoutRef = useRef(null);
 
   const collectionSummary = useMemo(
     () =>
@@ -223,6 +225,14 @@ const isComposerProposalStale = isComposerBoxProposalStale(
     return () => window.clearTimeout(timeoutId);
   }, [restoreMessage]);
 
+  useEffect(() => {
+    return () => {
+      if (composerGenerationTimeoutRef.current) {
+        window.clearTimeout(composerGenerationTimeoutRef.current);
+      }
+    };
+  }, []);
+
   function handleFilterChange(category, value) {
     setActiveFilters((currentFilters) => ({
       ...currentFilters,
@@ -264,28 +274,39 @@ const isComposerProposalStale = isComposerBoxProposalStale(
   }
 
   function handleComposeMyBox() {
-    if (isComposerBudgetBelowMinimum(composerBudget, minimumComposerBudget)) {
+    if (
+      isComposerGenerating ||
+      isComposerBudgetBelowMinimum(composerBudget, minimumComposerBudget)
+    ) {
       return;
     }
 
-    setComposerProposal(
-      buildComposerBoxProposal({
-        selectedPerfumes,
-        excludedPerfumeIds: [],
-        strategy: composerSettings.strategy,
-        collectionStyle: composerSettings.collectionStyle,
-        budget: composerBudget,
-        targetSlots: MAX_SELECTABLE_SLOTS,
-        minSlots: MIN_BOX_SLOTS,
-        maxSlots: MAX_SELECTABLE_SLOTS,
-        seasons: composerSettings.seasons,
-        occasions: composerSettings.occasions,
-        vibes: composerSettings.vibes,
-        catalog: perfumes,
-        notes,
-        config: builderConfig,
-      })
-    );
+    setIsComposerGenerating(true);
+    composerGenerationTimeoutRef.current = window.setTimeout(() => {
+      try {
+        const nextProposal = buildComposerBoxProposal({
+          selectedPerfumes,
+          excludedPerfumeIds: [],
+          strategy: composerSettings.strategy,
+          collectionStyle: composerSettings.collectionStyle,
+          budget: composerBudget,
+          targetSlots: MAX_SELECTABLE_SLOTS,
+          minSlots: MIN_BOX_SLOTS,
+          maxSlots: MAX_SELECTABLE_SLOTS,
+          seasons: composerSettings.seasons,
+          occasions: composerSettings.occasions,
+          vibes: composerSettings.vibes,
+          catalog: perfumes,
+          notes,
+          config: builderConfig,
+        });
+
+        setComposerProposal(nextProposal);
+      } finally {
+        setIsComposerGenerating(false);
+        composerGenerationTimeoutRef.current = null;
+      }
+    }, 0);
   }
 
   function handleCancelComposerProposal() {
@@ -420,6 +441,13 @@ const confirmAddPerfume = () => {
   }
 
   function clearBox() {
+    if (composerGenerationTimeoutRef.current) {
+      window.clearTimeout(composerGenerationTimeoutRef.current);
+      composerGenerationTimeoutRef.current = null;
+      setIsComposerGenerating(false);
+    }
+
+    setComposerProposal(null);
     setSelectedPerfumes([]);
     setCuratorBonusPreference(builderConfig.curatorBonus.defaultPreference);
     setReviewCustomerInfo(DEFAULT_CUSTOMER_INFO);
@@ -549,6 +577,7 @@ const confirmAddPerfume = () => {
             composerOptions={filterOptions}
             minimumComposerBudget={minimumComposerBudget}
             composerProposal={composerProposal}
+            isComposerGenerating={isComposerGenerating}
             isComposerProposalStale={isComposerProposalStale}
             onComposerSettingChange={handleComposerSettingChange}
             onComposerPreferenceToggle={handleComposerPreferenceToggle}

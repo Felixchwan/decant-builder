@@ -3992,6 +3992,13 @@ button {
   font-weight: 900;
 }
 
+.composer-busy-status {
+  margin: 10px 0 0;
+  color: #d9f99d;
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
 .compose-box-controls {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
