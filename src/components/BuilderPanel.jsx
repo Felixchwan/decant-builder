@@ -422,7 +422,7 @@ function BuilderPanel({
 
         <div className="box-summary-metric box-summary-total">
           <strong>${estimatedValue.toFixed(0)}</strong>
-          <span>Estimated Total</span>
+          <span>{builderConfig.commerce.totalLabel}</span>
         </div>
       </div>
 

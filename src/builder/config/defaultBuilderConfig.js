@@ -10,7 +10,7 @@ export const defaultBuilderConfig = {
     locale: "en-US",
     currencySymbol: "$",
     pointValue: 100,
-    totalLabel: "Estimated Total",
+    totalLabel: "Order Total",
   },
   box: {
     minSelectableSlots: 6,

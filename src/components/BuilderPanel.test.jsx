@@ -110,4 +110,11 @@ describe("BuilderPanel Composer setup launcher", () => {
     expect(markup).toContain("Composing...");
     expect(markup).toContain("Building your Discovery Box proposal.");
   });
+
+  it("uses customer-facing order terminology in the box summary", () => {
+    const markup = renderBuilderPanel();
+
+    expect(markup).toContain("Order Total");
+    expect(markup).not.toContain("Estimated Total");
+  });
 });
