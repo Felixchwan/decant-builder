@@ -159,6 +159,32 @@ describe("analytics foundation", () => {
     expect(received[0].payload).not.toHaveProperty("searchQuery");
   });
 
+  it("accepts onboarding path selection without personal data", () => {
+    const received = [];
+    const analytics = createAnalytics({
+      provider: {
+        track(eventName, payload) {
+          received.push({ eventName, payload });
+        },
+      },
+    });
+
+    expect(
+      analytics.track(ANALYTICS_EVENTS.ONBOARDING_PATH_SELECTED, {
+        path: "composer",
+        presentation: "mobile",
+      })
+    ).toBe(true);
+    expect(
+      analytics.track(ANALYTICS_EVENTS.ONBOARDING_PATH_SELECTED, {
+        path: "manual",
+        presentation: "desktop",
+        notes: "private",
+      })
+    ).toBe(false);
+    expect(received).toHaveLength(1);
+  });
+
   it("builds merchant context without contact data", () => {
     expect(
       buildAnalyticsContext({

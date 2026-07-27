@@ -1,5 +1,5 @@
 import { renderToStaticMarkup } from "react-dom/server";
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
 
 import { discoveryDecantsConfig } from "../builder/config/discoveryDecantsConfig.js";
 import { buildCollectionSummary } from "../builder/internal/intelligence/buildCollectionSummary.js";
@@ -8,6 +8,17 @@ import { perfumes } from "../data/perfumes.js";
 import { notes } from "../data/notes.js";
 import { buildScentDna } from "../utils/buildScentDna.js";
 import BuilderPanel from "./BuilderPanel.jsx";
+
+const originalWindow = globalThis.window;
+
+function simulateFirstVisit() {
+  globalThis.window = {
+    localStorage: {
+      getItem: () => null,
+      setItem: () => {},
+    },
+  };
+}
 
 function renderBuilderPanel(overrides = {}) {
   const selectedPerfumes = overrides.selectedPerfumes || [];
@@ -74,10 +85,15 @@ function renderBuilderPanel(overrides = {}) {
       onCuratorBonusPreferenceChange={() => {}}
       reviewCustomerInfo={discoveryDecantsConfig.finalization.customerDefaults}
       onReviewCustomerInfoChange={() => {}}
+      onMobileTabChange={() => {}}
       {...overrides}
     />
   );
 }
+
+afterEach(() => {
+  globalThis.window = originalWindow;
+});
 
 describe("BuilderPanel Composer setup launcher", () => {
   it("renders a compact Composer card without inline setup controls", () => {
@@ -127,5 +143,37 @@ describe("BuilderPanel Composer setup launcher", () => {
     expect(markup).toContain("We couldn&#x27;t complete that action. Please try again.");
     expect(markup).not.toContain("Composer engine failed");
     expect(markup).not.toContain("undefined");
+  });
+
+  it("renders first-visit onboarding path choices from localized config", () => {
+    simulateFirstVisit();
+
+    const markup = renderBuilderPanel();
+
+    expect(markup).toContain("Explore the catalog yourself");
+    expect(markup).toContain("Explore Catalog");
+    expect(markup).toContain("Let Composer build a proposal");
+    expect(markup).toContain("Use Composer");
+    expect(markup).toContain("Try Composer");
+    expect(markup).toContain("You can switch between both methods at any time.");
+    expect(markup).not.toContain("builder.onboarding");
+  });
+
+  it("does not render dead Composer onboarding actions when Composer is disabled", () => {
+    simulateFirstVisit();
+
+    const configWithoutComposer = {
+      ...discoveryDecantsConfig,
+      features: {
+        ...discoveryDecantsConfig.features,
+        composer: false,
+      },
+    };
+    const markup = renderBuilderPanel({ builderConfig: configWithoutComposer });
+
+    expect(markup).toContain("Explore the catalog yourself");
+    expect(markup).toContain("Explore Catalog");
+    expect(markup).not.toContain("Use Composer");
+    expect(markup).not.toContain("Try Composer");
   });
 });

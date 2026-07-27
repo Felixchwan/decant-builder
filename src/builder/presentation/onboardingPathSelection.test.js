@@ -1,0 +1,111 @@
+import { describe, expect, it } from "vitest";
+
+import { ANALYTICS_EVENTS } from "../../analytics/events.js";
+import {
+  buildOnboardingPathSelectionModel,
+  isComposerOnboardingAvailable,
+  ONBOARDING_ACTIONS,
+  resolveOnboardingAction,
+} from "./onboardingPathSelection.js";
+
+const config = {
+  features: {
+    composer: true,
+  },
+  copy: {
+    introAriaLabel: "Intro",
+    onboardingTitle: "Welcome",
+    onboardingIntro: "Choose a path.",
+    onboardingDesktopDescription: "Build manually or try Composer.",
+    onboardingManualTitle: "Explore the catalog yourself",
+    onboardingManualDescription: "Browse by hand.",
+    onboardingManualAction: "Explore Catalog",
+    onboardingComposerTitle: "Let Composer build a proposal",
+    onboardingComposerDescription: "Review a proposal first.",
+    onboardingComposerAction: "Use Composer",
+    onboardingDesktopComposerAction: "Try Composer",
+    onboardingSwitchNote: "Switch any time.",
+    introDismissLabel: "Got it",
+  },
+};
+
+describe("onboarding path selection", () => {
+  it("builds separate mobile path choices and compact desktop actions", () => {
+    const model = buildOnboardingPathSelectionModel({ config });
+
+    expect(model.mobile.paths.map((path) => path.id)).toEqual([
+      ONBOARDING_ACTIONS.MOBILE_MANUAL,
+      ONBOARDING_ACTIONS.MOBILE_COMPOSER,
+    ]);
+    expect(model.desktop.dismissLabel).toBe("Got it");
+    expect(model.desktop.composerLabel).toBe("Try Composer");
+  });
+
+  it("hides Composer actions when config disables Composer", () => {
+    const disabledConfig = {
+      ...config,
+      features: {
+        composer: false,
+      },
+    };
+    const model = buildOnboardingPathSelectionModel({ config: disabledConfig });
+
+    expect(isComposerOnboardingAvailable(disabledConfig)).toBe(false);
+    expect(model.composerAvailable).toBe(false);
+    expect(model.mobile.paths.map((path) => path.id)).toEqual([
+      ONBOARDING_ACTIONS.MOBILE_MANUAL,
+    ]);
+  });
+
+  it("keeps mobile manual selection non-composer and returns to catalog", () => {
+    const action = resolveOnboardingAction(ONBOARDING_ACTIONS.MOBILE_MANUAL);
+
+    expect(action).toMatchObject({
+      dismiss: true,
+      openComposer: false,
+      mobileTab: "catalog",
+      analytics: {
+        eventName: ANALYTICS_EVENTS.ONBOARDING_PATH_SELECTED,
+        payload: {
+          path: "manual",
+          presentation: "mobile",
+        },
+      },
+    });
+  });
+
+  it("opens Composer setup from mobile and desktop without selecting fragrances", () => {
+    expect(resolveOnboardingAction(ONBOARDING_ACTIONS.MOBILE_COMPOSER)).toMatchObject({
+      dismiss: true,
+      openComposer: true,
+      mobileTab: "box",
+      analytics: {
+        payload: {
+          path: "composer",
+          presentation: "mobile",
+        },
+      },
+    });
+
+    expect(resolveOnboardingAction(ONBOARDING_ACTIONS.DESKTOP_COMPOSER)).toMatchObject({
+      dismiss: true,
+      openComposer: true,
+      mobileTab: null,
+      analytics: {
+        payload: {
+          path: "composer",
+          presentation: "desktop",
+        },
+      },
+    });
+  });
+
+  it("treats desktop Got it as dismissal only", () => {
+    expect(resolveOnboardingAction(ONBOARDING_ACTIONS.DESKTOP_DISMISS)).toEqual({
+      dismiss: true,
+      openComposer: false,
+      mobileTab: null,
+      analytics: null,
+    });
+  });
+});

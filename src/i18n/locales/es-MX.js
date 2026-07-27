@@ -24,6 +24,7 @@ export const esMX = {
   "general.perfumesAvailable": "{count} fragancias disponibles",
 
   "app.mobileTabs": "Secciones del builder",
+  "app.mobileExploreTab": "Explorar",
   "app.heroTitle": "Arma tu caja de fragancias",
   "app.heroDescription":
     "Selecciona hasta {maxSelectableSlots} decants, explora diferentes estilos y ve cómo se actualiza el valor de tu caja en tiempo real.",
@@ -60,6 +61,20 @@ export const esMX = {
   "builder.introLine3":
     "Conforme crece tu caja, analizamos cobertura, fortalezas e identidad de colección.",
   "builder.gotIt": "Entendido",
+  "builder.onboardingTitle": "Bienvenido a Discovery Box",
+  "builder.onboardingIntro": "Elige como quieres empezar a armar tu Discovery Box.",
+  "builder.onboardingDesktopDescription":
+    "Arma manualmente desde el catalogo o deja que Composer prepare una propuesta a partir de tus preferencias.",
+  "builder.onboardingManualTitle": "Explorar el catalogo por mi cuenta",
+  "builder.onboardingManualDescription":
+    "Revisa fragancias, abre detalles y agrega cada seleccion manualmente.",
+  "builder.onboardingManualAction": "Explorar catalogo",
+  "builder.onboardingComposerTitle": "Dejar que Composer arme una propuesta",
+  "builder.onboardingComposerDescription":
+    "Elige preferencias y revisa una propuesta completa antes de aplicarla.",
+  "builder.onboardingComposerAction": "Usar Composer",
+  "builder.onboardingDesktopComposerAction": "Probar Composer",
+  "builder.onboardingSwitchNote": "Puedes cambiar entre ambos metodos cuando quieras.",
 
   "composer.eyebrow": "Composer",
   "composer.panelTitle": "Arma una caja a partir de tus preferencias.",

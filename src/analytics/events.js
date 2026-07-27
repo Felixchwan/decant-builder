@@ -21,6 +21,7 @@ export const ANALYTICS_EVENTS = Object.freeze({
   ORDER_FINALIZATION_SUCCEEDED: "order_finalization_succeeded",
   ORDER_FINALIZATION_FAILED: "order_finalization_failed",
   CURATOR_BONUS_UNLOCKED: "curator_bonus_unlocked",
+  ONBOARDING_PATH_SELECTED: "onboarding_path_selected",
   PERSISTENCE_RECOVERY_USED: "persistence_recovery_used",
   RUNTIME_ERROR_BOUNDARY_SHOWN: "runtime_error_boundary_shown",
 });
@@ -176,6 +177,7 @@ export const EVENT_PAYLOAD_KEYS = Object.freeze({
     "preference",
     "source",
   ],
+  [ANALYTICS_EVENTS.ONBOARDING_PATH_SELECTED]: ["path", "presentation"],
   [ANALYTICS_EVENTS.PERSISTENCE_RECOVERY_USED]: [
     "slotCount",
     "curatorBonusPreference",

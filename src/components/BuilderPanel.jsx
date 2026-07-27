@@ -35,6 +35,12 @@ import {
   buildComposerBudgetBonusFeedback,
   buildComposerProposalBonusStatus,
 } from "../builder/presentation/composerBonusStatus.js";
+import {
+  buildOnboardingPathSelectionModel,
+  isComposerOnboardingAvailable,
+  ONBOARDING_ACTIONS,
+  resolveOnboardingAction,
+} from "../builder/presentation/onboardingPathSelection.js";
 import { buildFinalizationModel } from "../builder/internal/finalization/buildFinalizationModel.js";
 import { getTierData } from "../utils/tierUtils";
 import CollectionCard from "./CollectionCard";
@@ -84,6 +90,7 @@ function BuilderPanel({
   onCuratorBonusPreferenceChange,
   reviewCustomerInfo,
   onReviewCustomerInfoChange,
+  onMobileTabChange,
   analytics = noopAnalytics,
 }) {
     const translator = useMemo(
@@ -221,6 +228,15 @@ function BuilderPanel({
     const shouldShowDiscoveryIntro =
       selectedPerfumes.length === 0 &&
       (!hasSeenDiscoveryIntro || isDiscoveryIntroOpen);
+    const isComposerAvailable = isComposerOnboardingAvailable(builderConfig);
+    const onboardingPathSelection = useMemo(
+      () =>
+        buildOnboardingPathSelectionModel({
+          config: builderConfig,
+          composerAvailable: isComposerAvailable,
+        }),
+      [builderConfig, isComposerAvailable]
+    );
     const canNativeShareCard = canUseNativeShare(collectionCardViewModel.export.defaultFilename);
     const isShareGenerating = Boolean(activeShareAction);
     const nextAvailableSlotIndex = getNextAvailableSlotIndex(
@@ -298,6 +314,41 @@ function BuilderPanel({
       setHasSeenDiscoveryIntro(true);
       setIsDiscoveryIntroOpen(false);
     };
+    const handleOnboardingAction = (actionId) => {
+      const action = resolveOnboardingAction(actionId);
+
+      if (!action) {
+        return;
+      }
+
+      if (action.openComposer && !isComposerAvailable) {
+        dismissDiscoveryIntro();
+        return;
+      }
+
+      if (action.analytics) {
+        analytics.track(action.analytics.eventName, action.analytics.payload);
+      }
+
+      if (action.dismiss) {
+        dismissDiscoveryIntro();
+      }
+
+      if (action.mobileTab) {
+        onMobileTabChange?.(action.mobileTab);
+      }
+
+      if (action.openComposer) {
+        handleOpenComposerSetup();
+      }
+    };
+
+    useEffect(() => {
+      if (shouldShowDiscoveryIntro) {
+        onMobileTabChange?.("box");
+      }
+    }, [onMobileTabChange, shouldShowDiscoveryIntro]);
+
     const showShareStatus = (message) => {
       setShareStatus(message);
 
@@ -449,7 +500,11 @@ function BuilderPanel({
       </div>
 
       {shouldShowDiscoveryIntro && (
-        <DiscoveryBoxCoachmark builderConfig={builderConfig} onDismiss={dismissDiscoveryIntro} />
+        <DiscoveryBoxCoachmark
+          model={onboardingPathSelection}
+          onDismiss={dismissDiscoveryIntro}
+          onAction={handleOnboardingAction}
+        />
       )}
 
       <div className="box-summary-card" aria-label={t("builder.boxSummary")}>
@@ -1409,24 +1464,70 @@ function buildVisibleProposalItems(proposal) {
     .filter(Boolean);
 }
 
-function DiscoveryBoxCoachmark({ builderConfig, onDismiss }) {
+function DiscoveryBoxCoachmark({ model, onDismiss, onAction }) {
   return (
-    <section className="discovery-coachmark" aria-label={builderConfig.copy.introAriaLabel}>
+    <section className="discovery-coachmark" aria-label={model.ariaLabel}>
       <span className="coachmark-pointer" aria-hidden="true" />
 
-      <div>
-        <span>{builderConfig.copy.introTitle}</span>
-        <p>Build your collection by selecting fragrances from the catalog.</p>
-        <p>{builderConfig.copy.introDescription}</p>
-        <p>
-          As your box grows, we'll analyze your coverage, strengths and
-          collection identity.
-        </p>
+      <div className="discovery-coachmark-desktop">
+        <div>
+          <span className="discovery-coachmark-eyebrow">{model.title}</span>
+          <p>{model.desktopDescription}</p>
+          <p>{model.switchNote}</p>
+        </div>
+
+        <div className="discovery-coachmark-actions">
+          <button
+            className="discovery-coachmark-secondary"
+            type="button"
+            onClick={onDismiss}
+          >
+            {model.desktop.dismissLabel}
+          </button>
+
+          {model.composerAvailable && (
+            <button
+              className="discovery-coachmark-primary"
+              type="button"
+              onClick={() => onAction(ONBOARDING_ACTIONS.DESKTOP_COMPOSER)}
+            >
+              {model.desktop.composerLabel}
+            </button>
+          )}
+        </div>
       </div>
 
-      <button type="button" onClick={onDismiss}>
-        Got it
-      </button>
+      <div className="discovery-coachmark-mobile">
+        <div>
+          <span className="discovery-coachmark-eyebrow">{model.title}</span>
+          <p>{model.intro}</p>
+        </div>
+
+        <div className="onboarding-path-grid">
+          {model.mobile.paths.map((path) => (
+            <article className="onboarding-path-card" key={path.id}>
+              <div>
+                <h3>{path.title}</h3>
+                <p>{path.description}</p>
+              </div>
+
+              <button
+                className={
+                  path.path === "composer"
+                    ? "discovery-coachmark-primary"
+                    : "discovery-coachmark-secondary"
+                }
+                type="button"
+                onClick={() => onAction(path.id)}
+              >
+                {path.actionLabel}
+              </button>
+            </article>
+          ))}
+        </div>
+
+        <p className="onboarding-switch-note">{model.switchNote}</p>
+      </div>
     </section>
   );
 }

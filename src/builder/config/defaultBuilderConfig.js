@@ -153,6 +153,20 @@ export const defaultBuilderConfig = {
     introButtonAriaLabel: "Show Discovery Box introduction",
     introTitle: "Welcome to Discovery Box",
     introDescription: "Reach 12 points to unlock Curator Bonus selections.",
+    onboardingTitle: "Welcome to Discovery Box",
+    onboardingIntro: "Choose how you want to start building your Discovery Box.",
+    onboardingDesktopDescription:
+      "Build manually from the catalog or let Composer prepare a proposal from your preferences.",
+    onboardingManualTitle: "Explore the catalog yourself",
+    onboardingManualDescription:
+      "Browse fragrances, open details, and add each pick by hand.",
+    onboardingManualAction: "Explore Catalog",
+    onboardingComposerTitle: "Let Composer build a proposal",
+    onboardingComposerDescription:
+      "Choose preferences and review a complete box proposal before applying it.",
+    onboardingComposerAction: "Use Composer",
+    onboardingDesktopComposerAction: "Try Composer",
+    onboardingSwitchNote: "You can switch between both methods at any time.",
     reviewButtonLabel: "Review My Box",
     reviewIncompletePrefix: "Need",
     reviewIncompleteFallback: "minimum requirements",

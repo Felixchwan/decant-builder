@@ -24,6 +24,7 @@ export const enUS = {
   "general.perfumesAvailable": "{count} perfumes available",
 
   "app.mobileTabs": "Builder sections",
+  "app.mobileExploreTab": "Explore",
   "app.heroTitle": "Build your fragrance box",
   "app.heroDescription":
     "Select up to {maxSelectableSlots} decants, explore different moods, and see the value of your box update in real time.",
@@ -60,6 +61,20 @@ export const enUS = {
   "builder.introLine3":
     "As your box grows, we'll analyze your coverage, strengths and collection identity.",
   "builder.gotIt": "Got it",
+  "builder.onboardingTitle": "Welcome to Discovery Box",
+  "builder.onboardingIntro": "Choose how you want to start building your Discovery Box.",
+  "builder.onboardingDesktopDescription":
+    "Build manually from the catalog or let Composer prepare a proposal from your preferences.",
+  "builder.onboardingManualTitle": "Explore the catalog yourself",
+  "builder.onboardingManualDescription":
+    "Browse fragrances, open details, and add each pick by hand.",
+  "builder.onboardingManualAction": "Explore Catalog",
+  "builder.onboardingComposerTitle": "Let Composer build a proposal",
+  "builder.onboardingComposerDescription":
+    "Choose preferences and review a complete box proposal before applying it.",
+  "builder.onboardingComposerAction": "Use Composer",
+  "builder.onboardingDesktopComposerAction": "Try Composer",
+  "builder.onboardingSwitchNote": "You can switch between both methods at any time.",
 
   "composer.eyebrow": "Composer",
   "composer.panelTitle": "Build a box from your preferences.",

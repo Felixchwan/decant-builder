@@ -245,7 +245,16 @@ button {
   border-top: 1px solid rgba(250, 204, 21, 0.24);
 }
 
-.discovery-coachmark span:not(.coachmark-pointer) {
+.discovery-coachmark-mobile {
+  display: none;
+}
+
+.discovery-coachmark-desktop {
+  display: grid;
+  gap: 12px;
+}
+
+.discovery-coachmark-eyebrow {
   display: block;
   margin-bottom: 8px;
   color: #fde68a;
@@ -262,16 +271,61 @@ button {
   line-height: 1.42;
 }
 
+.discovery-coachmark-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
 .discovery-coachmark button {
-  justify-self: center;
   margin-top: 4px;
   border: 0;
   border-radius: 999px;
   padding: 8px 13px;
-  background: #4ade80;
-  color: #052e16;
   font-size: 0.78rem;
   font-weight: 900;
+}
+
+.discovery-coachmark-primary {
+  background: #4ade80;
+  color: #052e16;
+}
+
+.discovery-coachmark-secondary {
+  background: rgba(148, 163, 184, 0.14);
+  color: #e2e8f0;
+  box-shadow: inset 0 0 0 1px rgba(226, 232, 240, 0.14);
+}
+
+.onboarding-path-grid {
+  display: grid;
+  gap: 10px;
+}
+
+.onboarding-path-card {
+  display: grid;
+  gap: 11px;
+  padding: 12px;
+  border-radius: 14px;
+  background: rgba(15, 23, 42, 0.58);
+  border: 1px solid rgba(148, 163, 184, 0.14);
+}
+
+.onboarding-path-card h3 {
+  margin: 0;
+  color: #f8fafc;
+  font-size: 0.92rem;
+}
+
+.onboarding-path-card button {
+  justify-self: start;
+}
+
+.onboarding-switch-note {
+  color: #94a3b8;
+  font-size: 0.78rem;
 }
 
 .catalog-controls {
@@ -2456,6 +2510,30 @@ button {
 
   .builder-panel {
     position: static;
+  }
+
+  .discovery-coachmark {
+    margin: 0 0 14px;
+    padding: 16px;
+    border-radius: 18px;
+  }
+
+  .discovery-coachmark-desktop {
+    display: none;
+  }
+
+  .discovery-coachmark-mobile {
+    display: grid;
+    gap: 14px;
+  }
+
+  .onboarding-path-card {
+    grid-template-columns: 1fr;
+  }
+
+  .onboarding-path-card button {
+    justify-self: stretch;
+    min-height: 44px;
   }
 
   .review-action {

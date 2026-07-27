@@ -726,7 +726,7 @@ const confirmAddPerfume = () => {
           aria-controls="catalog-panel"
           aria-selected={activeMobileTab === "catalog"}
         >
-          {t("general.catalog")}
+          {t("app.mobileExploreTab")}
         </button>
 
         <button
@@ -843,6 +843,7 @@ const confirmAddPerfume = () => {
             onCuratorBonusPreferenceChange={setCuratorBonusPreference}
             reviewCustomerInfo={reviewCustomerInfo}
             onReviewCustomerInfoChange={setReviewCustomerInfo}
+            onMobileTabChange={setActiveMobileTab}
           />
         </div>
       </section>
