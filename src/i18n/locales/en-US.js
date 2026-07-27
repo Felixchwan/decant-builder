@@ -75,6 +75,7 @@ export const enUS = {
   "builder.onboardingComposerAction": "Use Composer",
   "builder.onboardingDesktopComposerAction": "Try Composer",
   "builder.onboardingSwitchNote": "You can switch between both methods at any time.",
+  "builder.onboardingCloseLabel": "Close onboarding",
 
   "composer.eyebrow": "Composer",
   "composer.panelTitle": "Build a box from your preferences.",

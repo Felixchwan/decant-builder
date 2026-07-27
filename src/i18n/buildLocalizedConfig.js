@@ -28,6 +28,7 @@ export function buildLocalizedConfigOverrides(locale) {
       onboardingComposerAction: t("builder.onboardingComposerAction"),
       onboardingDesktopComposerAction: t("builder.onboardingDesktopComposerAction"),
       onboardingSwitchNote: t("builder.onboardingSwitchNote"),
+      onboardingCloseLabel: t("builder.onboardingCloseLabel"),
       reviewButtonLabel: t("builder.reviewMyBox"),
       reviewIncompletePrefix: t("builder.reviewNeed"),
       reviewIncompleteFallback: t("builder.reviewFallback"),

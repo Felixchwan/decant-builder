@@ -167,6 +167,7 @@ export const defaultBuilderConfig = {
     onboardingComposerAction: "Use Composer",
     onboardingDesktopComposerAction: "Try Composer",
     onboardingSwitchNote: "You can switch between both methods at any time.",
+    onboardingCloseLabel: "Close onboarding",
     reviewButtonLabel: "Review My Box",
     reviewIncompletePrefix: "Need",
     reviewIncompleteFallback: "minimum requirements",

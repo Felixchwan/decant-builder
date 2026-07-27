@@ -4,6 +4,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import { discoveryDecantsConfig } from "../builder/config/discoveryDecantsConfig.js";
 import { buildCollectionSummary } from "../builder/internal/intelligence/buildCollectionSummary.js";
 import { buildComposerRecommendations } from "../builder/internal/recommendations/buildComposerRecommendations.js";
+import { aurelianConfig } from "../merchants/aurelian/config.js";
 import { perfumes } from "../data/perfumes.js";
 import { notes } from "../data/notes.js";
 import { buildScentDna } from "../utils/buildScentDna.js";
@@ -22,25 +23,26 @@ function simulateFirstVisit() {
 
 function renderBuilderPanel(overrides = {}) {
   const selectedPerfumes = overrides.selectedPerfumes || [];
+  const builderConfig = overrides.builderConfig || discoveryDecantsConfig;
   const collectionSummary = buildCollectionSummary({
     selectedPerfumes,
     catalog: perfumes,
     notes,
-    config: discoveryDecantsConfig,
+    config: builderConfig,
   });
   const recommendations = buildComposerRecommendations({
     perfumes,
     selectedPerfumes,
     notes,
-    config: discoveryDecantsConfig,
+    config: builderConfig,
   });
 
   return renderToStaticMarkup(
     <BuilderPanel
-      builderConfig={discoveryDecantsConfig}
+      builderConfig={builderConfig}
       totalSlots={collectionSummary.counts.selected}
-      maxSlots={discoveryDecantsConfig.box.totalPhysicalSlots}
-      maxSelectableSlots={discoveryDecantsConfig.box.maxSelectableSlots}
+      maxSlots={builderConfig.box.totalPhysicalSlots}
+      maxSelectableSlots={builderConfig.box.maxSelectableSlots}
       totalPoints={collectionSummary.points.total}
       estimatedValue={collectionSummary.money.total}
       selectedPerfumes={selectedPerfumes}
@@ -49,7 +51,7 @@ function renderBuilderPanel(overrides = {}) {
       onClearBox={() => {}}
       onRemovePerfume={() => {}}
       onReorderPerfumes={() => {}}
-      minSlots={discoveryDecantsConfig.box.minSelectableSlots}
+      minSlots={builderConfig.box.minSelectableSlots}
       missingSlots={collectionSummary.counts.minimumRemaining}
       missingPoints={collectionSummary.points.remaining}
       coverageSummary={collectionSummary.coverageSummary}
@@ -81,9 +83,9 @@ function renderBuilderPanel(overrides = {}) {
       onApplyComposerProposal={() => {}}
       onMoveComposerProposalAlternative={() => {}}
       onCancelComposerProposal={() => {}}
-      curatorBonusPreference={discoveryDecantsConfig.curatorBonus.defaultPreference}
+      curatorBonusPreference={builderConfig.curatorBonus.defaultPreference}
       onCuratorBonusPreferenceChange={() => {}}
-      reviewCustomerInfo={discoveryDecantsConfig.finalization.customerDefaults}
+      reviewCustomerInfo={builderConfig.finalization.customerDefaults}
       onReviewCustomerInfoChange={() => {}}
       onMobileTabChange={() => {}}
       {...overrides}
@@ -155,8 +157,18 @@ describe("BuilderPanel Composer setup launcher", () => {
     expect(markup).toContain("Let Composer build a proposal");
     expect(markup).toContain("Use Composer");
     expect(markup).toContain("Try Composer");
+    expect(markup).toContain('aria-label="Close onboarding"');
     expect(markup).toContain("You can switch between both methods at any time.");
     expect(markup).not.toContain("builder.onboarding");
+  });
+
+  it("renders the Aurelian mobile close label through localization", () => {
+    simulateFirstVisit();
+
+    const markup = renderBuilderPanel({ builderConfig: aurelianConfig });
+
+    expect(markup).toContain('aria-label="Cerrar introducción"');
+    expect(markup).not.toContain("builder.onboardingCloseLabel");
   });
 
   it("does not render dead Composer onboarding actions when Composer is disabled", () => {

@@ -13,6 +13,7 @@ export const ONBOARDING_PRESENTATIONS = Object.freeze({
 export const ONBOARDING_ACTIONS = Object.freeze({
   MOBILE_MANUAL: "mobile_manual",
   MOBILE_COMPOSER: "mobile_composer",
+  MOBILE_DISMISS: "mobile_dismiss",
   DESKTOP_DISMISS: "desktop_dismiss",
   DESKTOP_COMPOSER: "desktop_composer",
 });
@@ -40,6 +41,7 @@ export function buildOnboardingPathSelectionModel({
     switchNote:
       copy.onboardingSwitchNote ||
       "You can switch between both methods at any time.",
+    mobileCloseLabel: copy.onboardingCloseLabel || "Close onboarding",
     composerAvailable,
     mobile: {
       paths: [
@@ -124,6 +126,20 @@ export function resolveOnboardingAction(actionId) {
     };
   }
 
+  if (actionId === ONBOARDING_ACTIONS.MOBILE_DISMISS) {
+    return {
+      dismiss: true,
+      openComposer: false,
+      mobileTab: "box",
+      analytics: {
+        eventName: ANALYTICS_EVENTS.ONBOARDING_DISMISSED,
+        payload: {
+          presentation: ONBOARDING_PRESENTATIONS.MOBILE,
+        },
+      },
+    };
+  }
+
   if (actionId === ONBOARDING_ACTIONS.DESKTOP_DISMISS) {
     return {
       dismiss: true,
@@ -134,4 +150,66 @@ export function resolveOnboardingAction(actionId) {
   }
 
   return null;
+}
+
+export function applyOnboardingAction(
+  actionId,
+  {
+    composerAvailable = true,
+    dismiss,
+    onMobileTabChange,
+    openComposer,
+    track,
+  } = {}
+) {
+  const action = resolveOnboardingAction(actionId);
+
+  if (!action) {
+    return {
+      action: null,
+      dismissed: false,
+      openedComposer: false,
+      tracked: false,
+    };
+  }
+
+  if (action.openComposer && !composerAvailable) {
+    dismiss?.();
+    return {
+      action,
+      dismissed: Boolean(action.dismiss),
+      openedComposer: false,
+      tracked: false,
+    };
+  }
+
+  if (action.dismiss) {
+    dismiss?.();
+  }
+
+  let tracked = false;
+
+  if (action.analytics && typeof track === "function") {
+    try {
+      track(action.analytics.eventName, action.analytics.payload);
+      tracked = true;
+    } catch {
+      tracked = false;
+    }
+  }
+
+  if (action.mobileTab) {
+    onMobileTabChange?.(action.mobileTab);
+  }
+
+  if (action.openComposer) {
+    openComposer?.();
+  }
+
+  return {
+    action,
+    dismissed: Boolean(action.dismiss),
+    openedComposer: Boolean(action.openComposer),
+    tracked,
+  };
 }

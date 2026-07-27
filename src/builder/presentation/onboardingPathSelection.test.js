@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { ANALYTICS_EVENTS } from "../../analytics/events.js";
 import {
+  applyOnboardingAction,
   buildOnboardingPathSelectionModel,
   isComposerOnboardingAvailable,
   ONBOARDING_ACTIONS,
@@ -25,6 +26,7 @@ const config = {
     onboardingComposerAction: "Use Composer",
     onboardingDesktopComposerAction: "Try Composer",
     onboardingSwitchNote: "Switch any time.",
+    onboardingCloseLabel: "Close onboarding",
     introDismissLabel: "Got it",
   },
 };
@@ -39,6 +41,7 @@ describe("onboarding path selection", () => {
     ]);
     expect(model.desktop.dismissLabel).toBe("Got it");
     expect(model.desktop.composerLabel).toBe("Try Composer");
+    expect(model.mobileCloseLabel).toBe("Close onboarding");
   });
 
   it("hides Composer actions when config disables Composer", () => {
@@ -106,6 +109,87 @@ describe("onboarding path selection", () => {
       openComposer: false,
       mobileTab: null,
       analytics: null,
+    });
+  });
+
+  it("treats mobile close as dismissal, not a construction path", () => {
+    const action = resolveOnboardingAction(ONBOARDING_ACTIONS.MOBILE_DISMISS);
+
+    expect(action).toEqual({
+      dismiss: true,
+      openComposer: false,
+      mobileTab: "box",
+      analytics: {
+        eventName: ANALYTICS_EVENTS.ONBOARDING_DISMISSED,
+        payload: {
+          presentation: "mobile",
+        },
+      },
+    });
+    expect(action.analytics.eventName).not.toBe(ANALYTICS_EVENTS.ONBOARDING_PATH_SELECTED);
+  });
+
+  it("applies mobile close without opening Composer or switching to catalog", () => {
+    const calls = [];
+    const selectedPerfumeIds = [1, 2, 3];
+
+    const result = applyOnboardingAction(ONBOARDING_ACTIONS.MOBILE_DISMISS, {
+      dismiss: () => calls.push("dismiss"),
+      onMobileTabChange: (tab) => calls.push(`tab:${tab}`),
+      openComposer: () => calls.push("composer"),
+      track: (eventName, payload) => calls.push({ eventName, payload }),
+    });
+
+    expect(result).toMatchObject({
+      dismissed: true,
+      openedComposer: false,
+      tracked: true,
+    });
+    expect(calls).toEqual([
+      "dismiss",
+      {
+        eventName: ANALYTICS_EVENTS.ONBOARDING_DISMISSED,
+        payload: {
+          presentation: "mobile",
+        },
+      },
+      "tab:box",
+    ]);
+    expect(selectedPerfumeIds).toEqual([1, 2, 3]);
+  });
+
+  it("lets mobile close dismiss even when analytics throws", () => {
+    const calls = [];
+
+    const result = applyOnboardingAction(ONBOARDING_ACTIONS.MOBILE_DISMISS, {
+      dismiss: () => calls.push("dismiss"),
+      onMobileTabChange: (tab) => calls.push(`tab:${tab}`),
+      openComposer: () => calls.push("composer"),
+      track: () => {
+        throw new Error("analytics unavailable");
+      },
+    });
+
+    expect(result).toMatchObject({
+      dismissed: true,
+      openedComposer: false,
+      tracked: false,
+    });
+    expect(calls).toEqual(["dismiss", "tab:box"]);
+  });
+
+  it("keeps existing manual and Composer actions unchanged", () => {
+    expect(applyOnboardingAction(ONBOARDING_ACTIONS.MOBILE_MANUAL, {}).action).toMatchObject({
+      mobileTab: "catalog",
+      openComposer: false,
+    });
+    expect(applyOnboardingAction(ONBOARDING_ACTIONS.MOBILE_COMPOSER, {}).action).toMatchObject({
+      mobileTab: "box",
+      openComposer: true,
+    });
+    expect(applyOnboardingAction(ONBOARDING_ACTIONS.DESKTOP_COMPOSER, {}).action).toMatchObject({
+      mobileTab: null,
+      openComposer: true,
     });
   });
 });

@@ -185,6 +185,37 @@ describe("analytics foundation", () => {
     expect(received).toHaveLength(1);
   });
 
+  it("accepts mobile onboarding dismissal without path attribution", () => {
+    const received = [];
+    const analytics = createAnalytics({
+      provider: {
+        track(eventName, payload) {
+          received.push({ eventName, payload });
+        },
+      },
+    });
+
+    expect(
+      analytics.track(ANALYTICS_EVENTS.ONBOARDING_DISMISSED, {
+        presentation: "mobile",
+      })
+    ).toBe(true);
+    expect(
+      analytics.track(ANALYTICS_EVENTS.ONBOARDING_DISMISSED, {
+        presentation: "mobile",
+        path: "manual",
+      })
+    ).toBe(false);
+    expect(received).toHaveLength(1);
+    expect(received[0]).toMatchObject({
+      eventName: ANALYTICS_EVENTS.ONBOARDING_DISMISSED,
+      payload: {
+        presentation: "mobile",
+      },
+    });
+    expect(received[0].payload).not.toHaveProperty("path");
+  });
+
   it("builds merchant context without contact data", () => {
     expect(
       buildAnalyticsContext({

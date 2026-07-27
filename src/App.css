@@ -247,6 +247,7 @@ button {
 
 .discovery-coachmark-mobile {
   display: none;
+  position: relative;
 }
 
 .discovery-coachmark-desktop {
@@ -302,6 +303,50 @@ button {
 .onboarding-path-grid {
   display: grid;
   gap: 10px;
+}
+
+.onboarding-mobile-header {
+  padding-right: 42px;
+}
+
+.discovery-coachmark .onboarding-mobile-close {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  display: inline-grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  margin: 0;
+  padding: 0;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.10);
+  color: #e2e8f0;
+  box-shadow: inset 0 0 0 1px rgba(226, 232, 240, 0.12);
+  opacity: 0.78;
+  transition:
+    background-color 160ms ease,
+    box-shadow 160ms ease,
+    color 160ms ease,
+    opacity 160ms ease,
+    transform 160ms ease;
+}
+
+.onboarding-mobile-close span {
+  font-size: 1.25rem;
+  line-height: 1;
+}
+
+.onboarding-mobile-close:hover,
+.onboarding-mobile-close:focus-visible {
+  background: rgba(250, 204, 21, 0.12);
+  color: #fde68a;
+  box-shadow: inset 0 0 0 1px rgba(250, 204, 21, 0.24);
+  opacity: 1;
+}
+
+.onboarding-mobile-close:active {
+  transform: scale(0.97);
 }
 
 .onboarding-path-card {

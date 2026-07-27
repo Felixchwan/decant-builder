@@ -75,6 +75,7 @@ export const esMX = {
   "builder.onboardingComposerAction": "Usar Composer",
   "builder.onboardingDesktopComposerAction": "Probar Composer",
   "builder.onboardingSwitchNote": "Puedes cambiar entre ambos metodos cuando quieras.",
+  "builder.onboardingCloseLabel": "Cerrar introducción",
 
   "composer.eyebrow": "Composer",
   "composer.panelTitle": "Arma una caja a partir de tus preferencias.",

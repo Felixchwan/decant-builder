@@ -36,10 +36,10 @@ import {
   buildComposerProposalBonusStatus,
 } from "../builder/presentation/composerBonusStatus.js";
 import {
+  applyOnboardingAction,
   buildOnboardingPathSelectionModel,
   isComposerOnboardingAvailable,
   ONBOARDING_ACTIONS,
-  resolveOnboardingAction,
 } from "../builder/presentation/onboardingPathSelection.js";
 import { buildFinalizationModel } from "../builder/internal/finalization/buildFinalizationModel.js";
 import { getTierData } from "../utils/tierUtils";
@@ -315,32 +315,13 @@ function BuilderPanel({
       setIsDiscoveryIntroOpen(false);
     };
     const handleOnboardingAction = (actionId) => {
-      const action = resolveOnboardingAction(actionId);
-
-      if (!action) {
-        return;
-      }
-
-      if (action.openComposer && !isComposerAvailable) {
-        dismissDiscoveryIntro();
-        return;
-      }
-
-      if (action.analytics) {
-        analytics.track(action.analytics.eventName, action.analytics.payload);
-      }
-
-      if (action.dismiss) {
-        dismissDiscoveryIntro();
-      }
-
-      if (action.mobileTab) {
-        onMobileTabChange?.(action.mobileTab);
-      }
-
-      if (action.openComposer) {
-        handleOpenComposerSetup();
-      }
+      applyOnboardingAction(actionId, {
+        composerAvailable: isComposerAvailable,
+        dismiss: dismissDiscoveryIntro,
+        onMobileTabChange,
+        openComposer: handleOpenComposerSetup,
+        track: analytics.track,
+      });
     };
 
     useEffect(() => {
@@ -1498,7 +1479,16 @@ function DiscoveryBoxCoachmark({ model, onDismiss, onAction }) {
       </div>
 
       <div className="discovery-coachmark-mobile">
-        <div>
+        <button
+          className="onboarding-mobile-close"
+          type="button"
+          aria-label={model.mobileCloseLabel}
+          onClick={() => onAction(ONBOARDING_ACTIONS.MOBILE_DISMISS)}
+        >
+          <span aria-hidden="true">×</span>
+        </button>
+
+        <div className="onboarding-mobile-header">
           <span className="discovery-coachmark-eyebrow">{model.title}</span>
           <p>{model.intro}</p>
         </div>
