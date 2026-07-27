@@ -1,4 +1,5 @@
 import { renderToStaticMarkup } from "react-dom/server";
+import { readFileSync } from "node:fs";
 import { afterEach, describe, expect, it } from "vitest";
 
 import { discoveryDecantsConfig } from "../builder/config/discoveryDecantsConfig.js";
@@ -11,6 +12,7 @@ import { buildScentDna } from "../utils/buildScentDna.js";
 import BuilderPanel from "./BuilderPanel.jsx";
 
 const originalWindow = globalThis.window;
+const appCss = readFileSync(new URL("../App.css", import.meta.url), "utf8");
 
 function simulateFirstVisit() {
   globalThis.window = {
@@ -120,6 +122,32 @@ describe("BuilderPanel Composer setup launcher", () => {
     expect(curatorIndex).toBeGreaterThan(-1);
     expect(composerIndex).toBeGreaterThan(collectionCardIndex);
     expect(curatorIndex).toBeGreaterThan(composerIndex);
+  });
+
+  it("keeps Collection Card share actions and responsive tooltip feedback available", () => {
+    const markup = renderBuilderPanel();
+
+    expect(markup).toContain("Download PNG");
+    expect(markup).toContain("Preview Card");
+    expect(markup).toContain('aria-describedby="share-box-tooltip"');
+    expect(markup).toContain('role="tooltip"');
+    expect(markup).toContain("Export an editorial card for your finished Discovery Box.");
+  });
+
+  it("localizes Collection Card tooltip feedback for Aurelian", () => {
+    const markup = renderBuilderPanel({ builderConfig: aurelianConfig });
+
+    expect(markup).toContain("Exporta una tarjeta editorial de tu Discovery Box terminada.");
+    expect(markup).not.toContain("collectionCard.tooltip");
+  });
+
+  it("anchors the mobile Collection Card tooltip locally without global overflow suppression", () => {
+    expect(appCss).toMatch(/\.share-box-actions\s*\{[^}]*position:\s*relative;/s);
+    expect(appCss).toMatch(/@media\s*\(max-width:\s*520px\)\s*\{[\s\S]*?\.share-info-wrap\s*\{[^}]*position:\s*static;/);
+    expect(appCss).toMatch(/@media\s*\(max-width:\s*520px\)\s*\{[\s\S]*?\.share-box-tooltip\s*\{[^}]*right:\s*0;/);
+    expect(appCss).toMatch(/@media\s*\(max-width:\s*520px\)\s*\{[\s\S]*?\.share-box-tooltip\s*\{[^}]*width:\s*min\(250px,\s*100%\);/);
+    expect(appCss).toMatch(/\.share-box-status\s*\{[^}]*overflow-wrap:\s*anywhere;/s);
+    expect(appCss).not.toMatch(/(?:html|body|#root)\s*,?[\s\S]{0,80}overflow-x:\s*hidden/);
   });
 
   it("shows a busy Composer state while a proposal is being generated", () => {

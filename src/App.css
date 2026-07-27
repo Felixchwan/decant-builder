@@ -866,6 +866,7 @@ button {
 }
 
 .share-box-actions {
+  position: relative;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -1000,11 +1001,14 @@ button {
 
 .share-box-status {
   flex: 1 0 100%;
+  min-width: 0;
+  max-width: 100%;
   margin: -2px 0 0;
   color: #d9f99d;
   font-size: 0.72rem;
   font-weight: 700;
   text-align: right;
+  overflow-wrap: anywhere;
 }
 
 @media (max-width: 520px) {
@@ -1025,10 +1029,16 @@ button {
     min-height: 38px;
   }
 
+  .share-info-wrap {
+    position: static;
+  }
+
   .share-box-tooltip {
-    left: 0;
-    width: min(250px, 82vw);
+    left: auto;
+    right: 0;
+    width: min(250px, 100%);
     transform: translate(0, 4px);
+    overflow-wrap: anywhere;
   }
 
   .share-info-wrap:hover .share-box-tooltip,
