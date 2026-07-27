@@ -2969,8 +2969,29 @@ button {
   margin-top: 8px;
 }
 
-.summary-tags span {
+.summary-tags > span {
   padding: 5px 9px;
+  border-radius: 999px;
+  background: rgba(74, 222, 128, 0.1);
+  border: 1px solid rgba(74, 222, 128, 0.22);
+  color: #bbf7d0;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.summary-tags > .summary-metadata-chip-shell {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+}
+
+.summary-tags > .summary-metadata-chip,
+.summary-metadata-chip-shell > .summary-metadata-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 4px 10px 4px 5px;
   border-radius: 999px;
   background: rgba(74, 222, 128, 0.1);
   border: 1px solid rgba(74, 222, 128, 0.22);
@@ -6804,7 +6825,7 @@ button {
 }
 
 .collection-snapshot.is-expanded .collection-snapshot-details {
-  max-height: 1200px;
+  max-height: 1400px;
   opacity: 1;
 }
 
@@ -6828,6 +6849,106 @@ button {
 
 .collection-snapshot .summary-panel div {
   margin-bottom: 0;
+}
+
+.season-profile-panel {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 112px;
+  gap: 14px;
+  align-items: center;
+  padding: 12px;
+  border: 1px solid rgba(148, 163, 184, 0.12);
+  border-radius: 16px;
+  background:
+    radial-gradient(circle at 84% 20%, rgba(250, 204, 21, 0.08), transparent 42%),
+    rgba(15, 23, 42, 0.26);
+}
+
+.season-profile-copy {
+  display: grid;
+  gap: 5px;
+}
+
+.season-profile-copy > span {
+  color: #4ade80;
+  font-size: 0.76rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.season-profile-copy p {
+  margin: 0;
+  color: #8fa99a;
+  font-size: 0.74rem;
+  line-height: 1.35;
+}
+
+.season-profile-copy strong {
+  color: #f8fafc;
+  font-size: 0.9rem;
+  line-height: 1.2;
+}
+
+.season-profile-chart {
+  display: grid;
+  place-items: center;
+  min-width: 0;
+  aspect-ratio: 1;
+}
+
+.season-profile-chart svg {
+  width: min(112px, 100%);
+  height: auto;
+  overflow: visible;
+}
+
+.season-profile-grid-ring {
+  fill: none;
+  stroke: rgba(148, 163, 184, 0.16);
+  stroke-width: 0.8;
+}
+
+.season-profile-grid-ring-outer {
+  stroke: rgba(250, 204, 21, 0.18);
+}
+
+.season-profile-axis {
+  stroke: rgba(148, 163, 184, 0.12);
+  stroke-width: 0.7;
+}
+
+.season-profile-shape {
+  fill: rgba(74, 222, 128, 0.20);
+  stroke: rgba(250, 204, 21, 0.76);
+  stroke-linejoin: round;
+  stroke-width: 1.4;
+  filter: drop-shadow(0 0 8px rgba(74, 222, 128, 0.10));
+}
+
+.season-profile-chart.is-empty .season-profile-shape {
+  fill: rgba(148, 163, 184, 0.08);
+  stroke: rgba(148, 163, 184, 0.28);
+}
+
+.season-profile-point {
+  fill: #fde68a;
+  stroke: rgba(2, 6, 23, 0.62);
+  stroke-width: 0.6;
+}
+
+.season-profile-chart.is-empty .season-profile-point {
+  fill: rgba(148, 163, 184, 0.55);
+}
+
+.season-profile-label {
+  fill: rgba(226, 232, 240, 0.66);
+  font-size: 5.8px;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  text-anchor: middle;
+  dominant-baseline: middle;
+  text-transform: uppercase;
 }
 
 .coverage-strength {
@@ -7033,32 +7154,15 @@ button {
 }
 
 .recommendation-card-header {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 12px;
-  align-items: flex-start;
+  display: block;
 }
 
 .recommendation-title-group {
   min-width: 0;
   display: grid;
-  grid-template-columns: auto auto minmax(0, 1fr);
-  gap: 9px;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 10px;
   align-items: start;
-}
-
-.recommendation-rank {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 28px;
-  height: 22px;
-  border-radius: 999px;
-  background: rgba(148, 163, 184, 0.12);
-  border: 1px solid rgba(148, 163, 184, 0.14);
-  color: #cbd5e1;
-  font-size: 0.68rem;
-  font-weight: 900;
 }
 
 .recommendation-title-group div {
@@ -7109,19 +7213,6 @@ button {
   line-height: 1.2;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-.recommendation-score {
-  flex: 0 0 auto;
-  min-width: 34px;
-  padding: 5px 7px;
-  border-radius: 999px;
-  background: rgba(74, 222, 128, 0.11);
-  border: 1px solid rgba(74, 222, 128, 0.22);
-  color: #bbf7d0 !important;
-  text-align: center;
-  font-size: 0.72rem !important;
-  font-weight: 900;
 }
 
 .recommendation-intelligence {

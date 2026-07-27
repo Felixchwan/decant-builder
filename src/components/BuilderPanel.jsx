@@ -31,6 +31,7 @@ import {
   getComposerProposalItemReasonLabels,
   getComposerTradeoffLabel,
 } from "../builder/presentation/composerAlternativeTradeoffLabels.js";
+import { buildSeasonProfileViewModel } from "../builder/presentation/seasonProfileViewModel.js";
 import {
   buildComposerBudgetBonusFeedback,
   buildComposerProposalBonusStatus,
@@ -47,6 +48,7 @@ import CollectionCard from "./CollectionCard";
 import { createTranslator } from "../i18n/createTranslator.js";
 import { ANALYTICS_EVENTS } from "../analytics/events.js";
 import { noopAnalytics } from "../analytics/noopAnalytics.js";
+import { getMetadataAsset } from "../data/metadataAssets.js";
 
 const EMPTY_RECOMMENDATIONS = [];
 const PERFUME_IMAGE_FALLBACK =
@@ -628,6 +630,7 @@ function BuilderPanel({
         boxSummary={boxSummary}
         coverageSummary={coverageSummary}
         selectedPerfumes={selectedPerfumes}
+        translator={translator}
         intelligence={collectionIntelligence}
         isBoxFull={totalSlots >= maxSelectableSlots}
         isExpanded={isCollectionSnapshotOpen}
@@ -1523,6 +1526,7 @@ function CollectionSnapshot({
   boxSummary,
   coverageSummary,
   intelligence,
+  translator,
   isBoxFull,
   isExpanded,
   selectedDnaAccord,
@@ -1535,6 +1539,10 @@ function CollectionSnapshot({
 }) {
   const dnaTriggerRefs = useRef(new Map());
   const seasonRows = intelligence.seasons.rows;
+  const seasonProfile = useMemo(
+    () => buildSeasonProfileViewModel({ seasonRows, translator }),
+    [seasonRows, translator]
+  );
   const hasProfileData = intelligence.profile.hasProfileData;
   const hasAnalysisData = intelligence.boxIntelligence.hasAnalysisData;
   const collectionProfileTraits = intelligence.profile.traits;
@@ -1578,22 +1586,6 @@ function CollectionSnapshot({
             Add fragrances to reveal the collection profile.
           </p>
         )}
-      </div>
-
-      <div className="collection-snapshot-overview">
-        <span>Season Coverage</span>
-
-        <div className="season-coverage-bars">
-          {seasonRows.map((season) => (
-            <div className="season-coverage-row" key={season.id}>
-              <span>{season.label}</span>
-              <div className="season-coverage-track" aria-label={`${season.label} coverage`}>
-                <i style={{ width: `${season.percent}%` }} />
-              </div>
-              <strong>{season.count}</strong>
-            </div>
-          ))}
-        </div>
       </div>
 
       <div className="collection-dna-summary">
@@ -1682,9 +1674,25 @@ function CollectionSnapshot({
 
           {hasProfileData ? (
             <>
-              <ProfileSummaryGroup label="Occasions" values={boxSummary.occasions} />
-              <ProfileSummaryGroup label="Seasons" values={boxSummary.seasons} />
-              <ProfileSummaryGroup label="Vibes" values={boxSummary.vibes} />
+              <SeasonProfilePanel model={seasonProfile} translator={translator} />
+              <ProfileSummaryGroup
+                label="Occasions"
+                values={boxSummary.occasions}
+                assetType="occasions"
+                translator={translator}
+              />
+              <ProfileSummaryGroup
+                label="Seasons"
+                values={boxSummary.seasons}
+                assetType="seasons"
+                translator={translator}
+              />
+              <ProfileSummaryGroup
+                label="Vibes"
+                values={boxSummary.vibes}
+                assetType="vibes"
+                translator={translator}
+              />
 
               {Object.entries(boxSummary.accordMap).length > 0 && (
                 <div>
@@ -1693,8 +1701,13 @@ function CollectionSnapshot({
                   <div className="summary-tags">
                     {Object.entries(boxSummary.accordMap).map(
                       ([accord, perfumeNames]) => (
-                        <span className="accord-tooltip" key={accord}>
-                          {accord} x{perfumeNames.length}
+                        <span className="accord-tooltip summary-metadata-chip-shell" key={accord}>
+                          <MetadataSummaryChip
+                            assetType="accords"
+                            value={accord}
+                            label={`${formatIntelligenceLabel(accord)} x${perfumeNames.length}`}
+                            translator={translator}
+                          />
 
                           <div className="tooltip-box">
                             <strong>{accord}</strong>
@@ -2217,7 +2230,44 @@ function getAccordCounts(boxSummary) {
   );
 }
 
-function ProfileSummaryGroup({ label, values }) {
+function SeasonProfilePanel({ model, translator }) {
+  return (
+    <div className="season-profile-panel">
+      <div className="season-profile-copy">
+        <span>{translator?.t?.("collectionIntelligence.seasonProfile") || "Season Profile"}</span>
+        <p>
+          {translator?.t?.("collectionIntelligence.seasonProfileDescription") ||
+            "A shape view of your strongest seasonal coverage."}
+        </p>
+        <strong>{model.summary.label}</strong>
+      </div>
+
+      <div
+        className={`season-profile-chart ${model.isEmpty ? "is-empty" : ""}`}
+        role="img"
+        aria-label={model.accessibleSummary}
+      >
+        <svg viewBox="0 0 100 100" focusable="false" aria-hidden="true">
+          <polygon className="season-profile-grid-ring season-profile-grid-ring-outer" points="50,10 90,50 50,90 10,50" />
+          <polygon className="season-profile-grid-ring" points="50,23 77,50 50,77 23,50" />
+          <line className="season-profile-axis" x1="50" y1="10" x2="50" y2="90" />
+          <line className="season-profile-axis" x1="10" y1="50" x2="90" y2="50" />
+          <polygon className="season-profile-shape" points={model.polygonPoints} />
+          {model.axes.map((axis) => (
+            <g key={axis.id}>
+              <circle className="season-profile-point" cx={axis.point.x} cy={axis.point.y} r="1.7" />
+              <text className="season-profile-label" x={axis.axis.x} y={axis.axis.y}>
+                {axis.label.slice(0, 3)}
+              </text>
+            </g>
+          ))}
+        </svg>
+      </div>
+    </div>
+  );
+}
+
+function ProfileSummaryGroup({ label, values, assetType, translator }) {
   if (values.length === 0) {
     return null;
   }
@@ -2226,9 +2276,36 @@ function ProfileSummaryGroup({ label, values }) {
     <div>
       <span>{label}</span>
       <div className="summary-tags">
-        {values.map((item) => <span key={item}>{item}</span>)}
+        {values.map((item) => (
+          <MetadataSummaryChip key={item} assetType={assetType} value={item} translator={translator} />
+        ))}
       </div>
     </div>
+  );
+}
+
+function MetadataSummaryChip({ assetType, value, label, translator }) {
+  const asset = assetType ? getMetadataAsset(assetType, value) : null;
+  const displayValue = label || translator?.label?.(assetType, value) || formatIntelligenceLabel(value);
+
+  if (!asset) {
+    return <span>{displayValue}</span>;
+  }
+
+  return (
+    <span className="detail-asset-chip summary-metadata-chip">
+      <img
+        src={asset}
+        alt=""
+        loading="lazy"
+        onError={(event) => {
+          event.currentTarget.remove();
+          event.currentTarget.parentElement?.classList.remove("detail-asset-chip");
+          event.currentTarget.parentElement?.classList.remove("summary-metadata-chip");
+        }}
+      />
+      <span>{displayValue}</span>
+    </span>
   );
 }
 
@@ -3641,7 +3718,6 @@ function RecommendationLaneContent({
 
 function RecommendationCard({
   recommendation,
-  rank,
   isAdded,
   isBoxFull,
   onAddPerfume,
@@ -3649,7 +3725,7 @@ function RecommendationCard({
   objectiveKey,
   translator,
 }) {
-  const { perfume, score } = recommendation;
+  const { perfume } = recommendation;
   const explanations = getRecommendationDisplayReasons({ recommendation, objectiveKey, translator });
   const confidence = getRecommendationConfidence(recommendation);
   const confidenceLabel = getRecommendationConfidenceLabel(recommendation, translator);
@@ -3665,8 +3741,6 @@ function RecommendationCard({
     <article className="recommendation-card" tabIndex={isFocusable ? -1 : undefined}>
       <div className="recommendation-card-header">
         <div className="recommendation-title-group">
-          <span className="recommendation-rank">#{rank}</span>
-
           <div className="recommendation-image">
             <img
               src={perfume.image || imageFallback}
@@ -3685,8 +3759,6 @@ function RecommendationCard({
             </span>
           </div>
         </div>
-
-        <span className="recommendation-score">{score}</span>
       </div>
 
       <div className="recommendation-intelligence">

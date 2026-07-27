@@ -377,6 +377,20 @@ export const esMX = {
   "finalization.unlocked": "Desbloqueado",
   "finalization.notUnlocked": "No desbloqueado",
 
+  "collectionIntelligence.seasonProfile": "Perfil de temporada",
+  "collectionIntelligence.seasonProfileDescription":
+    "Una vista de forma de tu cobertura estacional mas fuerte.",
+  "collectionIntelligence.seasonProfileEmpty": "Agrega fragancias para revelar la forma estacional.",
+  "collectionIntelligence.seasonProfileSingle": "Se inclina a {season}",
+  "collectionIntelligence.seasonProfilePair": "Se inclina a {seasonOne} y {seasonTwo}",
+  "collectionIntelligence.seasonProfileBalanced": "Balanceado entre temporadas",
+  "collectionIntelligence.seasonProfileEmptyA11y": "Aun no hay perfil estacional disponible.",
+  "collectionIntelligence.seasonProfileSingleA11y": "El perfil estacional se inclina a {season}.",
+  "collectionIntelligence.seasonProfilePairA11y":
+    "El perfil estacional se inclina a {seasonOne} y {seasonTwo}.",
+  "collectionIntelligence.seasonProfileBalancedA11y":
+    "El perfil estacional esta balanceado entre primavera, verano, otono e invierno.",
+
   "details.close": "Cerrar detalles de fragancia",
   "details.view": "Ver notas y detalles",
   "details.previous": "Fragancia anterior",

@@ -377,6 +377,19 @@ export const enUS = {
   "finalization.unlocked": "Unlocked",
   "finalization.notUnlocked": "Not unlocked",
 
+  "collectionIntelligence.seasonProfile": "Season Profile",
+  "collectionIntelligence.seasonProfileDescription": "A shape view of your strongest seasonal coverage.",
+  "collectionIntelligence.seasonProfileEmpty": "Add fragrances to reveal seasonal shape.",
+  "collectionIntelligence.seasonProfileSingle": "Leans {season}",
+  "collectionIntelligence.seasonProfilePair": "Leans {seasonOne} and {seasonTwo}",
+  "collectionIntelligence.seasonProfileBalanced": "Balanced across seasons",
+  "collectionIntelligence.seasonProfileEmptyA11y": "No seasonal profile is available yet.",
+  "collectionIntelligence.seasonProfileSingleA11y": "Season profile leans toward {season}.",
+  "collectionIntelligence.seasonProfilePairA11y":
+    "Season profile leans toward {seasonOne} and {seasonTwo}.",
+  "collectionIntelligence.seasonProfileBalancedA11y":
+    "Season profile is balanced across spring, summer, fall, and winter.",
+
   "details.close": "Close fragrance details",
   "details.view": "View notes & details",
   "details.previous": "Previous fragrance",

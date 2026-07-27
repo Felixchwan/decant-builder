@@ -165,6 +165,43 @@ describe("BuilderPanel Composer setup launcher", () => {
     expect(markup).not.toContain("Estimated Total");
   });
 
+  it("keeps compact Collection Intelligence focused on profile, DNA, and balance", () => {
+    const markup = renderBuilderPanel({ selectedPerfumes: [perfumes[0], perfumes[1], perfumes[2]] });
+
+    expect(markup).toContain("Collection Intelligence");
+    expect(markup).toContain("Collection Profile");
+    expect(markup).toContain("Collection DNA");
+    expect(markup).toContain("Collection Balance");
+    expect(markup).not.toContain("Season Coverage");
+  });
+
+  it("moves seasonal analysis into Full Analysis with a season profile view", () => {
+    const markup = renderBuilderPanel({ selectedPerfumes: [perfumes[0], perfumes[1], perfumes[2]] });
+
+    expect(markup).toContain("Season Profile");
+    expect(markup).toContain("season-profile-chart");
+    expect(markup).toContain("season-profile-shape");
+    expect(markup).toContain("Leans");
+  });
+
+  it("renders Full Analysis taxonomy tags with metadata assets when mappings exist", () => {
+    const markup = renderBuilderPanel({ selectedPerfumes: [perfumes[0], perfumes[1], perfumes[2]] });
+
+    expect(markup).toContain("summary-metadata-chip");
+    expect(markup).toContain("/images/metadata/seasons/");
+    expect(markup).toContain("/images/metadata/occasions/");
+    expect(markup).toContain("/images/metadata/vibes/");
+    expect(markup).toContain("/images/metadata/accords/");
+  });
+
+  it("removes redundant rank and score badges from recommendation cards", () => {
+    const markup = renderBuilderPanel({ selectedPerfumes: [perfumes[0], perfumes[1], perfumes[2]] });
+
+    expect(markup).toContain("recommendation-carousel-controls");
+    expect(markup).not.toContain("recommendation-rank");
+    expect(markup).not.toContain("recommendation-score");
+  });
+
   it("keeps the empty My Box header compact and leaves slot count in the summary card", () => {
     const markup = renderBuilderPanel();
 
