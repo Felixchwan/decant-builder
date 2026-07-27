@@ -46,7 +46,6 @@ export const esMX = {
   "builder.boxPanelTitle": "Mi caja",
   "builder.clearBuilder": "Vaciar caja",
   "builder.boxSummary": "Resumen de caja",
-  "builder.selectedSlotsUsed": "{total}/{max} espacios seleccionados",
   "builder.moreFragrances": "{count} fragancia{plural}",
   "builder.morePoints": "{count} punto{plural}",
   "builder.reviewMyBox": "Revisar mi caja",

@@ -148,7 +148,7 @@ export const defaultBuilderConfig = {
     heroDescription:
       "Select up to {maxSelectableSlots} decants, explore different moods, and see the value of your box update in real time.",
     boxPanelTitle: "My Box",
-    clearBuilderLabel: "Clear Builder",
+    clearBuilderLabel: "Clear Box",
     introAriaLabel: "Discovery Box introduction",
     introButtonAriaLabel: "Show Discovery Box introduction",
     introTitle: "Welcome to Discovery Box",

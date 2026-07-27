@@ -44,9 +44,8 @@ export const enUS = {
   "filter.sort.alphabetical": "Alphabetical",
 
   "builder.boxPanelTitle": "My Box",
-  "builder.clearBuilder": "Clear Builder",
+  "builder.clearBuilder": "Clear Box",
   "builder.boxSummary": "Box summary",
-  "builder.selectedSlotsUsed": "{total}/{max} selected slots used",
   "builder.moreFragrances": "{count} more fragrance{plural}",
   "builder.morePoints": "{count} more point{plural}",
   "builder.reviewMyBox": "Review My Box",

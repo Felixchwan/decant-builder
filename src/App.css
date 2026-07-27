@@ -177,6 +177,10 @@ button {
   margin: 0;
 }
 
+.builder-box-header-title {
+  min-width: 0;
+}
+
 .panel-title-row {
   display: inline-flex;
   align-items: center;
@@ -769,6 +773,10 @@ button {
 .ghost-button {
   background: rgba(148, 163, 184, 0.12);
   color: #ecfdf5;
+}
+
+.builder-clear-button {
+  white-space: nowrap;
 }
 
 .builder-panel > .panel-header {
@@ -2555,6 +2563,22 @@ button {
 
   .builder-panel {
     position: static;
+  }
+
+  .builder-panel > .panel-header {
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+
+  .panel-title-row h2 {
+    white-space: nowrap;
+  }
+
+  .builder-clear-button {
+    min-height: 40px;
+    padding: 8px 12px;
+    font-size: 0.78rem;
   }
 
   .discovery-coachmark {

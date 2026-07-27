@@ -455,7 +455,7 @@ function BuilderPanel({
   return (
     <aside className="builder-panel">
       <div className="panel-header">
-        <div>
+        <div className="builder-box-header-title">
           <div className="panel-title-row">
             <h2>{builderConfig.copy.boxPanelTitle}</h2>
             <button
@@ -467,17 +467,13 @@ function BuilderPanel({
               i
             </button>
           </div>
-          <p>
-            {t("builder.selectedSlotsUsed", {
-              total: totalSlots,
-              max: maxSelectableSlots,
-            })}
-          </p>
         </div>
 
-        <button className="ghost-button" onClick={onClearBox}>
-          {builderConfig.copy.clearBuilderLabel}
-        </button>
+        {totalSlots > 0 && (
+          <button className="ghost-button builder-clear-button" onClick={onClearBox}>
+            {builderConfig.copy.clearBuilderLabel}
+          </button>
+        )}
       </div>
 
       {shouldShowDiscoveryIntro && (

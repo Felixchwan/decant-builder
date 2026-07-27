@@ -676,6 +676,10 @@ const confirmAddPerfume = () => {
   }
 
   function clearBox() {
+    if (selectedPerfumes.length === 0) {
+      return;
+    }
+
     if (composerGenerationTimeoutRef.current) {
       window.clearTimeout(composerGenerationTimeoutRef.current);
       composerGenerationTimeoutRef.current = null;
@@ -690,14 +694,18 @@ const confirmAddPerfume = () => {
     setReviewCustomerInfo(DEFAULT_CUSTOMER_INFO);
     clearStoredBuilderState(builderConfig);
     setRestoreMessage("");
-    analytics.track(ANALYTICS_EVENTS.BOX_CLEARED, {
-      slotCountBefore: selectedPerfumes.length,
-      totalPointsBefore: totalPoints,
-      curatorBonusUnlockedBefore:
-        totalPoints >= builderConfig.curatorBonus.targetPoints &&
-        totalSlots >= MIN_BOX_SLOTS,
-      source: "manual",
-    });
+    try {
+      analytics.track(ANALYTICS_EVENTS.BOX_CLEARED, {
+        slotCountBefore: selectedPerfumes.length,
+        totalPointsBefore: totalPoints,
+        curatorBonusUnlockedBefore:
+          totalPoints >= builderConfig.curatorBonus.targetPoints &&
+          totalSlots >= MIN_BOX_SLOTS,
+        source: "manual",
+      });
+    } catch {
+      // Analytics must never block clearing the user's box.
+    }
   }
 
   return (

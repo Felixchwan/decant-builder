@@ -137,6 +137,35 @@ describe("BuilderPanel Composer setup launcher", () => {
     expect(markup).not.toContain("Estimated Total");
   });
 
+  it("keeps the empty My Box header compact and leaves slot count in the summary card", () => {
+    const markup = renderBuilderPanel();
+
+    expect(markup).not.toContain("0/14 selected slots used");
+    expect(markup).not.toContain("Clear Box");
+    expect(markup).not.toContain("Clear Builder");
+    expect(markup).toContain("0 / 14");
+    expect(markup).toContain('aria-label="Show Discovery Box introduction"');
+  });
+
+  it("shows localized Clear Box only when the box is populated", () => {
+    const markup = renderBuilderPanel({ selectedPerfumes: [perfumes[0]] });
+
+    expect(markup).toContain("Clear Box");
+    expect(markup).not.toContain("Clear Builder");
+    expect(markup).not.toContain("1/14 selected slots used");
+    expect(markup).toContain("1 / 14");
+  });
+
+  it("uses Aurelian localized clear copy for populated boxes", () => {
+    const markup = renderBuilderPanel({
+      builderConfig: aurelianConfig,
+      selectedPerfumes: [perfumes[0]],
+    });
+
+    expect(markup).toContain("Vaciar caja");
+    expect(markup).not.toContain("builder.clearBuilder");
+  });
+
   it("shows recoverable Composer failures without technical wording", () => {
     const markup = renderBuilderPanel({
       composerStatusMessage: "We couldn't complete that action. Please try again.",
