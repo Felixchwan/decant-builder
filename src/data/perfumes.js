@@ -2735,6 +2735,60 @@ baseNotes: ["caramel", "musk"],
 },
 
 {
+  id: 409,
+  name: "Orphéon Eau de Parfum",
+  shortName: "Orphéon EDP",
+  brand: "Diptyque",
+  points: 4,
+  image: "/images/perfumes/diamond/diptyque-orpheon-eau-de-parfum.png",
+
+  accords: [
+    "powdery",
+    "woody",
+    "aromatic",
+    "fresh spicy",
+    "white floral",
+  ],
+
+  topNotes: [
+    "juniper",
+  ],
+
+  middleNotes: [
+    "jasmine",
+  ],
+
+  baseNotes: [
+    "powderyNotes",
+    "cedar",
+    "tonkaBean",
+  ],
+
+  seasons: [
+    "spring",
+    "fall",
+    "winter",
+  ],
+
+  occasions: [
+    "office",
+    "date",
+    "evening",
+    "formal",
+    "special",
+  ],
+
+  vibes: [
+    "elegant",
+    "sophisticated",
+    "artistic",
+    "soft",
+    "warm",
+    "versatile",
+  ],
+},
+
+{
   id: 500,
   name: "Squid",
   shortName: "Squid",
@@ -2933,6 +2987,7 @@ const SEASON_WEIGHTS_BY_ID = {
   406: { spring: 8, summer: 8, fall: 6, winter: 3 },
   407: { spring: 8, summer: 10, fall: 3, winter: 1 },
   408: { spring: 9, summer: 9, fall: 4, winter: 1 },
+  409: { spring: 7, summer: 4, fall: 8, winter: 6 },
   500: { spring: 2, summer: 1, fall: 8, winter: 9 },
   501: { spring: 4, summer: 1, fall: 9, winter: 8 },
 };

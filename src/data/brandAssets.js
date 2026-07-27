@@ -11,6 +11,7 @@ export const brandAssets = {
   Chanel: "/images/brands/chanel.png",
   Creed: "/images/brands/creed.png",
   Dior: "/images/brands/dior.png",
+  Diptyque: "/images/brands/diptyque.png",
   "Dolce & Gabbana": "/images/brands/dolce-and-gabbana.png",
   "Essential Parfums": "/images/brands/essential-parfums.png",
   "Giorgio Armani": "/images/brands/giorgio-armani.png",

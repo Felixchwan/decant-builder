@@ -15,7 +15,7 @@ export function buildCatalogView({
     throw new Error("buildCatalogView requires catalog to be an array.");
   }
 
-  const normalizedSearchQuery = String(searchQuery || "").trim().toLowerCase();
+  const normalizedSearchQuery = normalizeSearchText(searchQuery);
   const filterOptions = buildFilterOptions(catalog);
   const visiblePerfumes = sortPerfumes(
     catalog.filter((perfume) =>
@@ -81,7 +81,9 @@ function getSearchText(perfume, notes) {
     ...noteNames,
   ]
     .join(" ")
-    .toLowerCase();
+    .toLowerCase()
+    .normalize("NFKD")
+    .replace(/\p{Diacritic}/gu, "");
 }
 
 function sortPerfumes(perfumesToSort, sortOption, searchQuery) {
@@ -126,18 +128,18 @@ function sortPerfumes(perfumesToSort, sortOption, searchQuery) {
 }
 
 function getBestMatchRank(perfume, searchQuery) {
-  if (perfume.name.toLowerCase().includes(searchQuery)) {
+  if (normalizeRequiredSearchText(perfume.name).includes(searchQuery)) {
     return 0;
   }
 
-  if (perfume.brand.toLowerCase().includes(searchQuery)) {
+  if (normalizeRequiredSearchText(perfume.brand).includes(searchQuery)) {
     return 1;
   }
 
   const accordOrVibeMatch = [
     ...(perfume.accords || []),
     ...(perfume.vibes || []),
-  ].some((item) => item.toLowerCase().includes(searchQuery));
+  ].some((item) => normalizeSearchText(item).includes(searchQuery));
 
   if (accordOrVibeMatch) {
     return 2;
@@ -157,4 +159,19 @@ function getTierRank(id) {
 
 function compareNames(a, b) {
   return a.name.localeCompare(b.name);
+}
+
+function normalizeSearchText(value) {
+  return String(value || "")
+    .trim()
+    .toLowerCase()
+    .normalize("NFKD")
+    .replace(/\p{Diacritic}/gu, "");
+}
+
+function normalizeRequiredSearchText(value) {
+  return value
+    .toLowerCase()
+    .normalize("NFKD")
+    .replace(/\p{Diacritic}/gu, "");
 }

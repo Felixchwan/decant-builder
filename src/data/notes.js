@@ -66,6 +66,13 @@ tonkaBean: {
   noteImage: "/images/notes/tonkaBean.jpg",
 },
 
+powderyNotes: {
+  name: "Powdery Notes",
+  family: "powdery",
+  image: "",
+  noteImage: "/images/notes/powderyNotes.jpg",
+},
+
 lavender: {
   name: "Lavender",
   family: "aromatic",
