@@ -84,26 +84,54 @@ function getCoverageLabel(reason, translator) {
   const value = formatValue(reason.contributionValue);
 
   if (reason.contributionCategory === "season") {
-    return translator?.t?.(`recommendation.season.${reason.contributionValue}`) || `Adds ${value} versatility`;
+    return (
+      translateRecommendationKey(
+        translator,
+        `recommendation.season.${toTranslationKey(reason.contributionValue)}`
+      ) || `Adds ${value} versatility`
+    );
   }
 
   if (reason.contributionCategory === "occasion") {
-    return translator?.t?.(`recommendation.occasion.${reason.contributionValue}`) || OCCASION_LABELS[reason.contributionValue] || `Great for ${value}`;
+    return (
+      translateRecommendationKey(
+        translator,
+        `recommendation.occasion.${toTranslationKey(reason.contributionValue)}`
+      ) ||
+      OCCASION_LABELS[reason.contributionValue] ||
+      `Great for ${value}`
+    );
   }
 
   if (reason.contributionCategory === "vibe") {
-    return translator?.t?.(`recommendation.vibe.${reason.contributionValue}`) || VIBE_LABELS[reason.contributionValue] || `${value} profile`;
+    return (
+      translateRecommendationKey(
+        translator,
+        `recommendation.vibe.${toTranslationKey(reason.contributionValue)}`
+      ) ||
+      VIBE_LABELS[reason.contributionValue] ||
+      `${value} profile`
+    );
   }
 
   return `Adds ${value}`;
 }
 
 function getAccordLabel(value, translator) {
-  return translator?.t?.(`recommendation.accord.${toTranslationKey(value)}`) || ACCORD_LABELS[value] || `Adds ${formatValue(value)}`;
+  return (
+    translateRecommendationKey(translator, `recommendation.accord.${toTranslationKey(value)}`) ||
+    ACCORD_LABELS[value] ||
+    `Adds ${formatValue(value)}`
+  );
 }
 
 function toTranslationKey(value = "") {
   return String(value).replace(/\s+/g, "_");
+}
+
+function translateRecommendationKey(translator, key, values) {
+  const translated = translator?.t?.(key, values);
+  return translated && translated !== key ? translated : "";
 }
 
 function formatValue(value) {

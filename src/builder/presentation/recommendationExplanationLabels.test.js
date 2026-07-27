@@ -6,6 +6,9 @@ import {
   getRecommendationExplanationLabel,
 } from "./recommendationExplanationLabels.js";
 import { createTranslator } from "../../i18n/createTranslator.js";
+import { perfumes } from "../../data/perfumes.js";
+import { enUS } from "../../i18n/locales/en-US.js";
+import { esMX } from "../../i18n/locales/es-MX.js";
 
 const winterPerfume = {
   id: 10,
@@ -129,4 +132,114 @@ describe("recommendationExplanationLabels", () => {
     ).toBe("Fortalece la cobertura para clima frío");
     expect(getRecommendationConfidenceLabel({ finalScore: 90 }, translator)).toBe("Alta");
   });
+
+  it("resolves the Composer preference regression values in en-US", () => {
+    const translator = createTranslator("en-US");
+
+    expect(getRequestedPreferenceLabel("vibes", "classic", translator)).toBe(
+      "Adds classic polish"
+    );
+    expect(getRequestedPreferenceLabel("vibes", "bright", translator)).toBe(
+      "Adds bright energy"
+    );
+    expect(getRequestedPreferenceLabel("occasions", "gym", translator)).toBe(
+      "Adds gym-friendly freshness"
+    );
+  });
+
+  it("resolves the Composer preference regression values in es-MX", () => {
+    const translator = createTranslator("es-MX");
+
+    expect(getRequestedPreferenceLabel("vibes", "classic", translator)).toBe(
+      "Agrega pulido clásico"
+    );
+    expect(getRequestedPreferenceLabel("vibes", "bright", translator)).toBe(
+      "Agrega energía luminosa"
+    );
+    expect(getRequestedPreferenceLabel("occasions", "gym", translator)).toBe(
+      "Agrega frescura para gimnasio"
+    );
+  });
+
+  it("keeps canonical preference values separate from display copy", () => {
+    const canonicalValues = ["classic", "bright", "gym"];
+
+    expect(canonicalValues).toEqual(["classic", "bright", "gym"]);
+    expect(createTranslator("es-MX").label("vibes", "classic")).toBe("Clásico");
+    expect(createTranslator("es-MX").label("occasions", "gym")).toBe("Gimnasio");
+  });
+
+  it("falls back to readable copy for unknown dynamic recommendation values", () => {
+    const translator = createTranslator("en-US");
+    const label = getRequestedPreferenceLabel("vibes", "future-mood", translator);
+
+    expect(label).toBe("Adds Future Mood character");
+    expect(label).not.toMatch(/recommendation\.|composer\.|filters\.|taxonomy\./);
+  });
+
+  it("covers all current catalog recommendation taxonomy values in both dictionaries", () => {
+    const missingKeys = getMissingRecommendationTaxonomyKeys();
+
+    expect(missingKeys).toEqual([]);
+    expect(getMissingTaxonomyKeys()).toEqual([]);
+  });
 });
+
+function getRequestedPreferenceLabel(domain, preference, translator) {
+  return getRecommendationExplanationLabel(
+    {
+      code: "support_requested_preferences",
+      severity: "positive",
+      evidence: {
+        unmatched: [{ domain, preference }],
+      },
+    },
+    translator
+  );
+}
+
+function getMissingRecommendationTaxonomyKeys() {
+  const dictionaries = [
+    ["en-US", enUS],
+    ["es-MX", esMX],
+  ];
+  const categoryMap = {
+    seasons: "season",
+    occasions: "occasion",
+    vibes: "vibe",
+    accords: "accord",
+  };
+
+  return Object.entries(categoryMap).flatMap(([perfumeField, recommendationCategory]) => {
+    const values = [...new Set(perfumes.flatMap((perfume) => perfume[perfumeField] || []))];
+
+    return values.flatMap((value) => {
+      const key = `recommendation.${recommendationCategory}.${toRecommendationKey(value)}`;
+      return dictionaries
+        .filter(([, dictionary]) => !Object.hasOwn(dictionary, key))
+        .map(([locale]) => `${locale}:${key}`);
+    });
+  });
+}
+
+function toRecommendationKey(value) {
+  return String(value).replace(/\s+/g, "_");
+}
+
+function getMissingTaxonomyKeys() {
+  const dictionaries = [
+    ["en-US", enUS],
+    ["es-MX", esMX],
+  ];
+
+  return ["seasons", "occasions", "vibes"].flatMap((perfumeField) => {
+    const values = [...new Set(perfumes.flatMap((perfume) => perfume[perfumeField] || []))];
+
+    return values.flatMap((value) => {
+      const key = `taxonomy.${value}`;
+      return dictionaries
+        .filter(([, dictionary]) => !Object.hasOwn(dictionary, key))
+        .map(([locale]) => `${locale}:${key}`);
+    });
+  });
+}

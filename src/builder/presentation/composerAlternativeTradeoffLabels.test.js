@@ -16,6 +16,15 @@ function reason(type, evidence = {}) {
   };
 }
 
+function contribution(category, value) {
+  return {
+    type: "contribution",
+    contributionType: "coverage_contribution",
+    contributionCategory: category,
+    contributionValue: value,
+  };
+}
+
 describe("composerAlternativeTradeoffLabels", () => {
   it("suppresses strategy support when it is the only card reason", () => {
     expect(
@@ -122,5 +131,43 @@ describe("composerAlternativeTradeoffLabels", () => {
       )
     ).toBe("Apoya la estrategia Equilibrada");
     expect(getComposerOptionPositionLabel(2, 4, translator)).toBe("Opción 2 de 4");
+  });
+
+  it("renders supported recommendation chips without raw recommendation keys in en-US", () => {
+    const translator = createTranslator("en-US");
+    const labels = getComposerProposalItemReasonLabels(
+      [
+        contribution("vibe", "classic"),
+        contribution("occasion", "gym"),
+        contribution("vibe", "bright"),
+      ],
+      { translator }
+    );
+
+    expect(labels).toEqual([
+      "Adds classic polish",
+      "Adds gym-friendly freshness",
+      "Adds bright energy",
+    ]);
+    expect(labels.join(" ")).not.toMatch(/recommendation\.|composer\.|filters\.|taxonomy\./);
+  });
+
+  it("renders supported recommendation chips without raw recommendation keys in es-MX", () => {
+    const translator = createTranslator("es-MX");
+    const labels = getComposerProposalItemReasonLabels(
+      [
+        contribution("vibe", "classic"),
+        contribution("occasion", "gym"),
+        contribution("vibe", "bright"),
+      ],
+      { translator }
+    );
+
+    expect(labels).toEqual([
+      "Agrega pulido clásico",
+      "Agrega frescura para gimnasio",
+      "Agrega energía luminosa",
+    ]);
+    expect(labels.join(" ")).not.toMatch(/recommendation\.|composer\.|filters\.|taxonomy\./);
   });
 });

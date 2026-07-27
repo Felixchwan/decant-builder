@@ -376,7 +376,13 @@ function getSeasonRecommendationCopy(season, translator) {
     winter: "Strengthens cold-weather coverage",
   };
 
-  return translator?.t?.(`recommendation.season.${season}`) || copy[season] || translator?.t?.("recommendation.seasonFallback", { value: formatRecommendationLabel(season) }) || `Expands ${formatRecommendationLabel(season)} coverage`;
+  const displayValue = formatRecommendationLabel(season);
+  return (
+    translateRecommendationKey(translator, `recommendation.season.${toTranslationKey(season)}`) ||
+    copy[season] ||
+    translateRecommendationKey(translator, "recommendation.seasonFallback", { value: displayValue }) ||
+    `Expands ${displayValue} coverage`
+  );
 }
 
 function getOccasionRecommendationCopy(occasion, translator) {
@@ -393,7 +399,13 @@ function getOccasionRecommendationCopy(occasion, translator) {
     special: "Adds special-occasion polish",
   };
 
-  return translator?.t?.(`recommendation.occasion.${occasion}`) || copy[occasion] || translator?.t?.("recommendation.occasionFallback", { value: formatRecommendationLabel(occasion) }) || `Improves ${formatRecommendationLabel(occasion)} coverage`;
+  const displayValue = formatRecommendationLabel(occasion);
+  return (
+    translateRecommendationKey(translator, `recommendation.occasion.${toTranslationKey(occasion)}`) ||
+    copy[occasion] ||
+    translateRecommendationKey(translator, "recommendation.occasionFallback", { value: displayValue }) ||
+    `Improves ${displayValue} coverage`
+  );
 }
 
 function getVibeRecommendationCopy(vibe, translator) {
@@ -414,7 +426,13 @@ function getVibeRecommendationCopy(vibe, translator) {
     romantic: "Adds romantic softness",
   };
 
-  return translator?.t?.(`recommendation.vibe.${vibe}`) || copy[vibe] || translator?.t?.("recommendation.vibeFallback", { value: formatRecommendationLabel(vibe) }) || `Adds ${formatRecommendationLabel(vibe)} character`;
+  const displayValue = formatRecommendationLabel(vibe);
+  return (
+    translateRecommendationKey(translator, `recommendation.vibe.${toTranslationKey(vibe)}`) ||
+    copy[vibe] ||
+    translateRecommendationKey(translator, "recommendation.vibeFallback", { value: displayValue }) ||
+    `Adds ${displayValue} character`
+  );
 }
 
 function getAccordRecommendationCopy(accord, translator) {
@@ -447,7 +465,18 @@ function getAccordRecommendationCopy(accord, translator) {
     salty: "Adds salty freshness",
   };
 
-  return translator?.t?.(`recommendation.accord.${toTranslationKey(accord)}`) || copy[accord] || translator?.t?.("recommendation.accordFallback", { value: formatRecommendationLabel(accord) }) || `Adds ${formatRecommendationLabel(accord)} character`;
+  const displayValue = formatRecommendationLabel(accord);
+  return (
+    translateRecommendationKey(translator, `recommendation.accord.${toTranslationKey(accord)}`) ||
+    copy[accord] ||
+    translateRecommendationKey(translator, "recommendation.accordFallback", { value: displayValue }) ||
+    `Adds ${displayValue} character`
+  );
+}
+
+function translateRecommendationKey(translator, key, values) {
+  const translated = translator?.t?.(key, values);
+  return translated && translated !== key ? translated : "";
 }
 
 function getRewriteTranslation(reason, translator) {
