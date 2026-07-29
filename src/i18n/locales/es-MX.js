@@ -391,6 +391,18 @@ export const esMX = {
   "collectionIntelligence.seasonProfileBalancedA11y":
     "El perfil estacional esta balanceado entre primavera, verano, otono e invierno.",
 
+  "scentLibrary.title": "Biblioteca olfativa",
+  "scentLibrary.subtitle": "Explora las notas representadas actualmente en tu Discovery Box.",
+  "scentLibrary.close": "Cerrar biblioteca olfativa",
+  "scentLibrary.fragranceSingular": "fragancia",
+  "scentLibrary.fragrancePlural": "fragancias",
+  "scentLibrary.foundInOne": "Presente en 1 fragancia",
+  "scentLibrary.foundInMany": "Presente en {count} fragancias",
+  "scentLibrary.noteAria": "{note}, presente en {count} {fragranceWord}",
+  "scentLibrary.fragrancesWith": "Fragancias con {note}",
+  "scentLibrary.closeDetail": "Cerrar detalles de la nota",
+  "scentLibrary.more": "+{count} más",
+
   "details.close": "Cerrar detalles de fragancia",
   "details.view": "Ver notas y detalles",
   "details.previous": "Fragancia anterior",

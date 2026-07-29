@@ -8,8 +8,9 @@ import { buildComposerRecommendations } from "../builder/internal/recommendation
 import { aurelianConfig } from "../merchants/aurelian/config.js";
 import { perfumes } from "../data/perfumes.js";
 import { notes } from "../data/notes.js";
+import { createTranslator } from "../i18n/createTranslator.js";
 import { buildScentDna } from "../utils/buildScentDna.js";
-import BuilderPanel from "./BuilderPanel.jsx";
+import BuilderPanel, { ScentLibraryContent } from "./BuilderPanel.jsx";
 
 const originalWindow = globalThis.window;
 const appCss = readFileSync(new URL("../App.css", import.meta.url), "utf8");
@@ -50,6 +51,7 @@ function renderBuilderPanel(overrides = {}) {
       estimatedValue={collectionSummary.money.total}
       selectedPerfumes={selectedPerfumes}
       catalogPerfumes={perfumes}
+      notes={notes}
       boxSummary={collectionSummary.boxSummary}
       onClearBox={() => {}}
       onRemovePerfume={() => {}}
@@ -296,6 +298,213 @@ describe("BuilderPanel Composer setup launcher", () => {
 
     expect(markup).toContain('aria-label="Cerrar introducción"');
     expect(markup).not.toContain("builder.onboardingCloseLabel");
+  });
+
+  it("renders enriched Scent Library note buttons with images, names, and unique perfume counts", () => {
+    const entries = [
+      {
+        noteId: "cedar",
+        name: "Cedar",
+        image: "/images/notes/cedar.jpg",
+        perfumeCount: 4,
+        perfumes: [
+          { perfumeId: 1, name: "One", shortName: "One", brand: "A", image: "/one.png" },
+        ],
+      },
+      {
+        noteId: "mineralNotes",
+        name: "Mineral Notes",
+        image: "",
+        perfumeCount: 1,
+        perfumes: [
+          { perfumeId: 2, name: "Two", shortName: "", brand: "B", image: "" },
+        ],
+      },
+    ];
+
+    const markup = renderToStaticMarkup(
+      <ScentLibraryContent
+        entries={entries}
+        translator={createTranslator("en-US")}
+        selectedNoteId={null}
+        onClose={() => {}}
+        onSelectNote={() => {}}
+        onCloseDetail={() => {}}
+      />
+    );
+
+    expect(markup).toContain("scent-library-note-button");
+    expect(markup).toContain("/images/notes/cedar.jpg");
+    expect(markup).toContain("Cedar");
+    expect(markup).toContain("×4");
+    expect(markup).toContain("Mineral Notes");
+    expect(markup).toContain("scent-library-note-fallback");
+    expect(markup).toContain("Cedar, found in 4 fragrances");
+    expect(markup).toContain("Mineral Notes, found in 1 fragrance");
+  });
+
+  it("does not render transient Scent Library preview markup or preview wiring", () => {
+    const entries = [
+      {
+        noteId: "cedar",
+        name: "Cedar",
+        image: "/images/notes/cedar.jpg",
+        perfumeCount: 1,
+        perfumes: [
+          { perfumeId: 1, name: "One", shortName: "One", brand: "A", image: "" },
+        ],
+      },
+    ];
+
+    const markup = renderToStaticMarkup(
+      <ScentLibraryContent
+        entries={entries}
+        translator={createTranslator("en-US")}
+        selectedNoteId={null}
+        onClose={() => {}}
+        onSelectNote={() => {}}
+        onCloseDetail={() => {}}
+      />
+    );
+
+    expect(markup).not.toContain('role="tooltip"');
+    expect(markup).not.toContain("scent-library-preview");
+    expect(builderPanelSource).not.toContain("ScentLibraryPreview");
+    expect(builderPanelSource).not.toContain("previewNoteId");
+    expect(builderPanelSource).not.toContain("onPreviewNote");
+  });
+
+  it("keeps Scent Library activation deliberate and free of hover/focus/long-press handlers", () => {
+    const noteItemSource = builderPanelSource.slice(
+      builderPanelSource.indexOf("function ScentLibraryNoteItem"),
+      builderPanelSource.indexOf("function ScentLibraryDetail")
+    );
+
+    expect(noteItemSource).toContain("onClick={onSelect}");
+    expect(noteItemSource).not.toContain("onMouseEnter");
+    expect(noteItemSource).not.toContain("onMouseLeave");
+    expect(noteItemSource).not.toContain("onFocus");
+    expect(noteItemSource).not.toContain("onBlur");
+    expect(noteItemSource).not.toContain("onTouchStart");
+    expect(noteItemSource).not.toContain("onTouchMove");
+    expect(noteItemSource).not.toContain("onTouchEnd");
+    expect(noteItemSource).not.toContain("onTouchCancel");
+    expect(noteItemSource).not.toContain("setTimeout");
+    expect(noteItemSource).not.toContain("longPress");
+  });
+
+  it("renders persistent Scent Library note detail without catalog card or Add controls", () => {
+    const entry = {
+      noteId: "cedar",
+      name: "Cedar",
+      image: "/images/notes/cedar.jpg",
+      perfumeCount: 2,
+      perfumes: [
+        {
+          perfumeId: 1,
+          name: "Acqua di Gio EDT",
+          shortName: "ADG EDT",
+          brand: "Giorgio Armani",
+          image: "/images/perfumes/bronze/batch-01/acqua-di-gio-edt.png",
+        },
+        {
+          perfumeId: 2,
+          name: "Bois Impérial",
+          shortName: "Bois Impérial",
+          brand: "Essential Parfums",
+          image: "",
+        },
+      ],
+    };
+
+    const markup = renderToStaticMarkup(
+      <ScentLibraryContent
+        entries={[entry]}
+        translator={createTranslator("en-US")}
+        selectedNoteId="cedar"
+        onClose={() => {}}
+        onSelectNote={() => {}}
+        onCloseDetail={() => {}}
+      />
+    );
+
+    expect(markup).toContain('aria-expanded="true"');
+    expect(markup).toContain("Fragrances with Cedar");
+    expect(markup).toContain("Acqua di Gio EDT");
+    expect(markup).toContain("Giorgio Armani");
+    expect(markup).toContain("Bois Impérial");
+    expect(markup).toContain("Close note details");
+    expect(markup).not.toContain("perfume-card");
+    expect(markup).not.toContain("Add to Box");
+  });
+
+  it("updates the persistent Scent Library detail when another note is selected", () => {
+    const entries = [
+      {
+        noteId: "cedar",
+        name: "Cedar",
+        image: "/images/notes/cedar.jpg",
+        perfumeCount: 1,
+        perfumes: [
+          { perfumeId: 1, name: "Cedary One", shortName: "", brand: "A", image: "" },
+        ],
+      },
+      {
+        noteId: "jasmine",
+        name: "Jasmine",
+        image: "/images/notes/jasmine.jpg",
+        perfumeCount: 1,
+        perfumes: [
+          { perfumeId: 2, name: "Floral Two", shortName: "", brand: "B", image: "" },
+        ],
+      },
+    ];
+
+    const markup = renderToStaticMarkup(
+      <ScentLibraryContent
+        entries={entries}
+        translator={createTranslator("en-US")}
+        selectedNoteId="jasmine"
+        onClose={() => {}}
+        onSelectNote={() => {}}
+        onCloseDetail={() => {}}
+      />
+    );
+
+    expect(markup).toContain('aria-expanded="true"');
+    expect(markup).toContain("Fragrances with Jasmine");
+    expect(markup).toContain("Floral Two");
+    expect(markup).not.toContain("Fragrances with Cedar");
+    expect(markup).not.toContain("Cedary One");
+  });
+
+  it("localizes Scent Library count and detail copy for Aurelian", () => {
+    const entry = {
+      noteId: "cedar",
+      name: "Cedar",
+      image: "/images/notes/cedar.jpg",
+      perfumeCount: 2,
+      perfumes: [
+        { perfumeId: 1, name: "Uno", shortName: "", brand: "Casa", image: "" },
+        { perfumeId: 2, name: "Dos", shortName: "", brand: "Casa", image: "" },
+      ],
+    };
+
+    const markup = renderToStaticMarkup(
+      <ScentLibraryContent
+        entries={[entry]}
+        translator={createTranslator(aurelianConfig.locale)}
+        selectedNoteId="cedar"
+        onClose={() => {}}
+        onSelectNote={() => {}}
+        onCloseDetail={() => {}}
+      />
+    );
+
+    expect(markup).toContain("Biblioteca olfativa");
+    expect(markup).toContain("Presente en 2 fragancias");
+    expect(markup).toContain("Fragancias con Cedar");
+    expect(markup).not.toContain("scentLibrary.");
   });
 
   it("does not render dead Composer onboarding actions when Composer is disabled", () => {

@@ -3179,18 +3179,247 @@ button {
   margin: 0;
 }
 
+.scent-library-modal .modal-header p {
+  margin: 5px 0 0;
+  color: #94a3b8;
+  font-size: 0.82rem;
+  line-height: 1.4;
+}
+
 .scent-library-modal .modal-header button {
   border: 1px solid rgba(148, 163, 184, 0.18);
   background: rgba(148, 163, 184, 0.12);
   color: #ecfdf5;
 }
 
-.scent-library-modal .notes-grid {
-  gap: 12px;
+.scent-library-body {
+  position: relative;
+  min-width: 0;
 }
 
-.scent-library-modal .note-pill {
-  padding: 9px 14px;
+.scent-library-modal .scent-library-notes-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(154px, 1fr));
+  gap: 10px;
+  align-items: start;
+}
+
+.scent-library-note-shell {
+  position: relative;
+  display: grid;
+  min-width: 0;
+}
+
+.scent-library-note-shell.is-selected {
+  grid-column: 1 / -1;
+}
+
+.scent-library-modal .scent-library-note-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8px;
+  width: 100%;
+  min-width: 0;
+  border: 1px solid rgba(74, 222, 128, 0.22);
+  padding: 5px 9px 5px 5px;
+  background:
+    radial-gradient(circle at 10% 0, rgba(134, 239, 172, 0.10), transparent 45%),
+    rgba(74, 222, 128, 0.08);
+  color: #bbf7d0;
+  text-align: left;
+  transition:
+    border-color 160ms ease,
+    background-color 160ms ease,
+    box-shadow 160ms ease,
+    transform 160ms ease;
+}
+
+.scent-library-note-button:hover,
+.scent-library-note-button:focus-visible,
+.scent-library-note-shell.is-selected .scent-library-note-button {
+  border-color: rgba(134, 239, 172, 0.42);
+  background: rgba(74, 222, 128, 0.13);
+  box-shadow:
+    0 0 0 1px rgba(134, 239, 172, 0.06),
+    0 10px 24px rgba(0, 0, 0, 0.18);
+  outline: none;
+  transform: translateY(-1px);
+}
+
+.scent-library-note-name {
+  min-width: 0;
+  color: #dcfce7;
+  font-size: 0.78rem;
+  font-weight: 900;
+  line-height: 1.18;
+  overflow-wrap: anywhere;
+}
+
+.scent-library-note-count {
+  flex: 0 0 auto;
+  margin-left: auto;
+  color: #86efac;
+  font-size: 0.72rem;
+  font-weight: 900;
+  opacity: 0.72;
+}
+
+.scent-library-count-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+}
+
+.scent-library-note-image,
+.scent-library-note-fallback {
+  flex: 0 0 auto;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 999px;
+  background:
+    radial-gradient(circle at 50% 35%, rgba(255, 255, 255, 0.16), transparent 64%),
+    rgba(2, 6, 23, 0.42);
+  object-fit: cover;
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.scent-library-note-image-small,
+.scent-library-note-fallback-small {
+  width: 28px;
+  height: 28px;
+}
+
+.scent-library-note-image-large,
+.scent-library-note-fallback-large {
+  width: 58px;
+  height: 58px;
+}
+
+.scent-library-note-fallback {
+  display: inline-grid;
+  place-items: center;
+  color: #86efac;
+  font-size: 0.8rem;
+  font-weight: 900;
+}
+
+.scent-library-note-fallback-large {
+  font-size: 1.35rem;
+}
+
+.scent-library-detail {
+  display: grid;
+  gap: 12px;
+  margin-top: 9px;
+  padding: 14px;
+  border: 1px solid rgba(250, 204, 21, 0.16);
+  border-radius: 18px;
+  background:
+    radial-gradient(circle at 8% 0, rgba(250, 204, 21, 0.08), transparent 36%),
+    radial-gradient(circle at 92% 14%, rgba(74, 222, 128, 0.08), transparent 32%),
+    rgba(2, 6, 23, 0.40);
+}
+
+.scent-library-detail-header {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  min-width: 0;
+}
+
+.scent-library-detail-header span {
+  display: block;
+  color: #86efac;
+  font-size: 0.68rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.scent-library-detail-header strong {
+  display: block;
+  margin-top: 3px;
+  color: #ecfdf5;
+  font-size: 1.08rem;
+  line-height: 1.15;
+}
+
+.scent-library-detail-header p {
+  margin: 4px 0 0;
+  color: #cbd5e1;
+  font-size: 0.82rem;
+}
+
+.scent-library-detail-header button {
+  display: inline-grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.10);
+  color: #ecfdf5;
+  font-weight: 900;
+}
+
+.scent-library-perfume-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.scent-library-perfume-list li {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 9px;
+  align-items: center;
+  min-width: 0;
+  padding: 8px;
+  border: 1px solid rgba(148, 163, 184, 0.10);
+  border-radius: 12px;
+  background: rgba(15, 23, 42, 0.36);
+}
+
+.scent-library-perfume-list img {
+  width: 34px;
+  height: 42px;
+  border-radius: 8px;
+  object-fit: contain;
+  background:
+    radial-gradient(circle at 50% 34%, rgba(255, 255, 255, 0.14), transparent 62%),
+    rgba(2, 6, 23, 0.36);
+}
+
+.scent-library-perfume-list strong,
+.scent-library-perfume-list em {
+  display: block;
+  min-width: 0;
+}
+
+.scent-library-perfume-list strong {
+  overflow: hidden;
+  color: #f8fafc;
+  font-size: 0.82rem;
+  line-height: 1.22;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.scent-library-perfume-list em {
+  margin-top: 2px;
+  color: #94a3b8;
+  font-size: 0.72rem;
+  font-style: normal;
 }
 
 .modal-header {
@@ -7330,6 +7559,38 @@ button {
   .scent-library-modal .modal-header {
     top: -18px;
     gap: 12px;
+  }
+
+  .scent-library-modal .scent-library-notes-grid {
+    grid-template-columns: repeat(auto-fit, minmax(min(148px, 100%), 1fr));
+    gap: 8px;
+  }
+
+  .scent-library-note-shell.is-selected {
+    grid-column: 1 / -1;
+  }
+
+  .scent-library-detail {
+    padding: 12px;
+  }
+
+  .scent-library-detail-header {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    gap: 9px;
+  }
+
+  .scent-library-note-image-large,
+  .scent-library-note-fallback-large {
+    width: 46px;
+    height: 46px;
+  }
+
+  .scent-library-perfume-list {
+    grid-template-columns: 1fr;
+  }
+
+  .scent-library-perfume-list strong {
+    white-space: normal;
   }
 
   .perfume-details-modal {

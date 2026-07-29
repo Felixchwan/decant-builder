@@ -820,6 +820,7 @@ const confirmAddPerfume = () => {
             estimatedValue={estimatedValue}
             selectedPerfumes={selectedPerfumes}
             catalogPerfumes={perfumes}
+            notes={notes}
             boxSummary={boxSummary}
             onClearBox={clearBox}
             onRemovePerfume={removePerfume}

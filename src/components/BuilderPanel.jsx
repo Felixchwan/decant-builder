@@ -17,6 +17,7 @@ import {
   normalizeAccordLabel,
   selectDnaExplorerDetail,
 } from "../builder/internal/intelligence/buildCollectionIntelligenceViewModel.js";
+import { buildScentLibraryViewModel } from "../builder/internal/intelligence/buildScentLibraryViewModel.js";
 import {
   getRecommendationConfidence,
   getRecommendationConfidenceLabel,
@@ -62,6 +63,7 @@ function BuilderPanel({
   estimatedValue,
   selectedPerfumes,
   catalogPerfumes,
+  notes,
   boxSummary,
   onClearBox,
   onRemovePerfume,
@@ -128,7 +130,14 @@ function BuilderPanel({
     const shareStatusTimeoutRef = useRef(null);
     const balanceLaneRef = useRef(null);
     const balanceLaneEmphasisTimeoutRef = useRef(null);
-    const sortedNotes = [...boxSummary.notes].sort();
+    const scentLibraryEntries = useMemo(
+      () =>
+        buildScentLibraryViewModel({
+          selectedPerfumes,
+          notes,
+        }),
+      [selectedPerfumes, notes]
+    );
     const selectedPerfumeIds = useMemo(
       () => new Set(selectedPerfumes.map((perfume) => perfume.id)),
       [selectedPerfumes]
@@ -790,7 +799,8 @@ function BuilderPanel({
       </div>
       {isNotesModalOpen && (
         <ScentLibraryModal
-          notes={sortedNotes}
+          entries={scentLibraryEntries}
+          translator={translator}
           onClose={() => setIsNotesModalOpen(false)}
         />
       )}
@@ -2314,13 +2324,21 @@ function MetadataSummaryChip({ assetType, value, label, translator }) {
   );
 }
 
-function ScentLibraryModal({ notes, onClose }) {
+function ScentLibraryModal({ entries, translator, onClose }) {
+  const [selectedNoteId, setSelectedNoteId] = useState(null);
+  const safeEntries = Array.isArray(entries) ? entries : [];
+
   useEffect(() => {
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
 
     function handleKeyDown(event) {
       if (event.key === "Escape") {
+        if (selectedNoteId) {
+          setSelectedNoteId(null);
+          return;
+        }
+
         onClose();
       }
     }
@@ -2331,7 +2349,11 @@ function ScentLibraryModal({ notes, onClose }) {
       document.body.style.overflow = previousOverflow;
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [onClose]);
+  }, [onClose, selectedNoteId]);
+
+  const handleSelectNote = (noteId) => {
+    setSelectedNoteId((currentNoteId) => (currentNoteId === noteId ? null : noteId));
+  };
 
   return createPortal(
     <div className="modal-overlay scent-library-overlay" onClick={onClose}>
@@ -2342,24 +2364,202 @@ function ScentLibraryModal({ notes, onClose }) {
         aria-labelledby="scent-library-title"
         onClick={(event) => event.stopPropagation()}
       >
-        <div className="modal-header">
-          <h3 id="scent-library-title">Scent Library</h3>
-
-          <button type="button" onClick={onClose} aria-label="Close Scent Library">
-            X
-          </button>
-        </div>
-
-        <div className="notes-grid">
-          {notes.map((note) => (
-            <span key={note} className="note-pill">
-              {note}
-            </span>
-          ))}
-        </div>
+        <ScentLibraryContent
+          entries={safeEntries}
+          translator={translator}
+          selectedNoteId={selectedNoteId}
+          onClose={onClose}
+          onSelectNote={handleSelectNote}
+          onCloseDetail={() => setSelectedNoteId(null)}
+        />
       </div>
     </div>,
     document.body
+  );
+}
+
+export function ScentLibraryContent({
+  entries,
+  translator,
+  selectedNoteId,
+  onClose,
+  onSelectNote,
+  onCloseDetail,
+}) {
+  const t = translator?.t || ((key) => key);
+  const safeEntries = Array.isArray(entries) ? entries : [];
+  const selectedEntry = safeEntries.find((entry) => entry.noteId === selectedNoteId);
+
+  return (
+    <>
+      <div className="modal-header">
+        <div>
+          <h3 id="scent-library-title">{t("scentLibrary.title")}</h3>
+          <p>{t("scentLibrary.subtitle")}</p>
+        </div>
+
+        <button type="button" onClick={onClose} aria-label={t("scentLibrary.close")}>
+          X
+        </button>
+      </div>
+
+      <div className="scent-library-body">
+        <div className="notes-grid scent-library-notes-grid">
+          {safeEntries.map((entry) => {
+            const isSelected = selectedNoteId === entry.noteId;
+            const detailId = `scent-library-detail-${entry.noteId}`;
+
+            return (
+              <ScentLibraryNoteItem
+                key={entry.noteId}
+                entry={entry}
+                translator={translator}
+                isSelected={isSelected}
+                detailId={detailId}
+                onSelect={() => onSelectNote(entry.noteId)}
+              >
+                {isSelected && selectedEntry && (
+                  <ScentLibraryDetail
+                    id={detailId}
+                    entry={selectedEntry}
+                    translator={translator}
+                    onClose={onCloseDetail}
+                  />
+                )}
+              </ScentLibraryNoteItem>
+            );
+          })}
+        </div>
+      </div>
+    </>
+  );
+}
+
+function ScentLibraryNoteItem({
+  entry,
+  translator,
+  isSelected,
+  detailId,
+  onSelect,
+  children,
+}) {
+  const t = translator?.t || ((key) => key);
+  const countLabel = t(
+    entry.perfumeCount === 1
+      ? "scentLibrary.foundInOne"
+      : "scentLibrary.foundInMany",
+    { count: entry.perfumeCount }
+  );
+
+  return (
+    <div className={`scent-library-note-shell ${isSelected ? "is-selected" : ""}`}>
+      <button
+        type="button"
+        className="note-pill scent-library-note-button"
+        onClick={onSelect}
+        aria-expanded={isSelected}
+        aria-controls={isSelected ? detailId : undefined}
+        aria-label={t("scentLibrary.noteAria", {
+          note: entry.name,
+          count: entry.perfumeCount,
+          fragranceWord: t(
+            entry.perfumeCount === 1
+              ? "scentLibrary.fragranceSingular"
+              : "scentLibrary.fragrancePlural"
+          ),
+        })}
+      >
+        <ScentLibraryNoteImage entry={entry} size="small" />
+        <span className="scent-library-note-name">{entry.name}</span>
+        <span className="scent-library-note-count" aria-hidden="true">
+          ×{entry.perfumeCount}
+        </span>
+        <span className="scent-library-count-sr">{countLabel}</span>
+      </button>
+
+      {children}
+    </div>
+  );
+}
+
+function ScentLibraryDetail({ id, entry, translator, onClose }) {
+  const t = translator?.t || ((key) => key);
+
+  return (
+    <section
+      id={id}
+      className="scent-library-detail"
+      aria-label={t("scentLibrary.fragrancesWith", { note: entry.name })}
+    >
+      <div className="scent-library-detail-header">
+        <ScentLibraryNoteImage entry={entry} size="large" />
+        <div>
+          <span>{t("scentLibrary.fragrancesWith", { note: entry.name })}</span>
+          <strong>{entry.name}</strong>
+          <p>
+            {t(
+              entry.perfumeCount === 1
+                ? "scentLibrary.foundInOne"
+                : "scentLibrary.foundInMany",
+              { count: entry.perfumeCount }
+            )}
+          </p>
+        </div>
+        <button type="button" onClick={onClose} aria-label={t("scentLibrary.closeDetail")}>
+          X
+        </button>
+      </div>
+
+      <ul className="scent-library-perfume-list">
+        {entry.perfumes.map((perfume) => (
+          <li key={perfume.perfumeId}>
+            {perfume.image && (
+              <img
+                src={perfume.image}
+                alt=""
+                loading="lazy"
+                onError={(event) => {
+                  event.currentTarget.remove();
+                }}
+              />
+            )}
+            <span>
+              <strong>{perfume.name}</strong>
+              <em>{perfume.brand}</em>
+            </span>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
+function ScentLibraryNoteImage({ entry, size }) {
+  if (!entry.image) {
+    return (
+      <span
+        className={`scent-library-note-fallback scent-library-note-fallback-${size}`}
+        aria-hidden="true"
+      >
+        {entry.name.charAt(0)}
+      </span>
+    );
+  }
+
+  return (
+    <img
+      className={`scent-library-note-image scent-library-note-image-${size}`}
+      src={entry.image}
+      alt=""
+      loading="lazy"
+      onError={(event) => {
+        const fallback = document.createElement("span");
+        fallback.className = `scent-library-note-fallback scent-library-note-fallback-${size}`;
+        fallback.setAttribute("aria-hidden", "true");
+        fallback.textContent = entry.name.charAt(0);
+        event.currentTarget.replaceWith(fallback);
+      }}
+    />
   );
 }
 

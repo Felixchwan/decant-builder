@@ -390,6 +390,18 @@ export const enUS = {
   "collectionIntelligence.seasonProfileBalancedA11y":
     "Season profile is balanced across spring, summer, fall, and winter.",
 
+  "scentLibrary.title": "Scent Library",
+  "scentLibrary.subtitle": "Explore the notes currently represented in your Discovery Box.",
+  "scentLibrary.close": "Close Scent Library",
+  "scentLibrary.fragranceSingular": "fragrance",
+  "scentLibrary.fragrancePlural": "fragrances",
+  "scentLibrary.foundInOne": "Found in 1 fragrance",
+  "scentLibrary.foundInMany": "Found in {count} fragrances",
+  "scentLibrary.noteAria": "{note}, found in {count} {fragranceWord}",
+  "scentLibrary.fragrancesWith": "Fragrances with {note}",
+  "scentLibrary.closeDetail": "Close note details",
+  "scentLibrary.more": "+{count} more",
+
   "details.close": "Close fragrance details",
   "details.view": "View notes & details",
   "details.previous": "Previous fragrance",
