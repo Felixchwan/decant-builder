@@ -243,6 +243,7 @@ describe("composeCollectionGreedy", () => {
       minSlots: 2,
       targetSlots: 4,
       strategy: "signature",
+      collectionStyle: "premium_focus",
     });
 
     expect(result.finalConstraintResult.metrics.remainingBudget).toBe(Infinity);
@@ -282,6 +283,7 @@ describe("composeCollectionGreedy", () => {
         minSlots: 2,
         targetSlots: 4,
         strategy: "balanced",
+        collectionStyle: "premium_focus",
       },
       [fresh, green]
     );
@@ -382,6 +384,7 @@ describe("composeCollectionGreedy", () => {
         targetSlots: 14,
         lockedPerfumeIds: [1, 2, 3, 4, 40, 41, 42, 43],
         strategy: "balanced",
+        collectionStyle: "premium_focus",
       },
       [
         fresh,

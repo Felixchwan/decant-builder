@@ -476,7 +476,13 @@ describe("deriveComposerReasoningFacts", () => {
 
   it("keeps valid partial collections derivable and impossible collections non-derivable", () => {
     const partialResult = compose(
-      { budget: 250, minSlots: 3, targetSlots: 4, strategy: "balanced" },
+      {
+        budget: 250,
+        minSlots: 3,
+        targetSlots: 4,
+        strategy: "balanced",
+        collectionStyle: "premium_focus",
+      },
       partialCatalog,
       "best"
     );
@@ -669,7 +675,16 @@ describe("deriveComposerReasoningFacts", () => {
     expect(unchanged.identity.alignment.requestedStrategy).toBe("signature");
 
     const partial = facts(
-      compose({ budget: 250, minSlots: 3, targetSlots: 4 }, partialCatalog, "best"),
+      compose(
+        {
+          budget: 250,
+          minSlots: 3,
+          targetSlots: 4,
+          collectionStyle: "premium_focus",
+        },
+        partialCatalog,
+        "best"
+      ),
       partialCatalog
     );
     expect(partial).toMatchObject({

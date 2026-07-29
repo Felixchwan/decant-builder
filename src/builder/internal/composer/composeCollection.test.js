@@ -7,6 +7,9 @@ import {
 } from "./composeCollection.js";
 import { COMPOSER_MODES, DEFAULT_COMPOSER_MODE, normalizeComposerMode } from "./composerModes.js";
 import { evaluateCompositionQuality } from "./evaluateCompositionQuality.js";
+import { perfumes as realCatalog } from "../../../data/perfumes.js";
+import { notes as realNotes } from "../../../data/notes.js";
+import { discoveryDecantsConfig } from "../../config/discoveryDecantsConfig.js";
 
 const testConfig = {
   commerce: {
@@ -112,6 +115,36 @@ function compose(input = {}, sourceCatalog = catalog, mode) {
     mode,
     config: testConfig,
   });
+}
+
+function composeRealCatalog(input = {}, mode = "best") {
+  return composeCollection({
+    request: {
+      minSlots: discoveryDecantsConfig.box.minSelectableSlots,
+      maxSlots: discoveryDecantsConfig.box.maxSelectableSlots,
+      targetSlots: discoveryDecantsConfig.box.defaultTargetSlots,
+      strategy: "balanced",
+      ...input,
+    },
+    catalog: realCatalog,
+    notes: realNotes,
+    mode,
+    config: discoveryDecantsConfig,
+  });
+}
+
+function summarizeComposition(result) {
+  const totalPoints = result.constraintResult.metrics.totalPoints;
+
+  return {
+    ids: result.collectionIds,
+    count: result.collection.length,
+    totalPoints,
+    averagePoints: roundNumber(totalPoints / Math.max(1, result.collection.length)),
+    preferenceFit: result.qualityResult.dimensions.preferenceFit?.score || 0,
+    valid: result.constraintResult.valid,
+    duplicateFree: new Set(result.collectionIds).size === result.collectionIds.length,
+  };
 }
 
 function deepFreeze(value) {
@@ -245,7 +278,13 @@ describe("composeCollection", () => {
 
   it("handles valid partial Greedy results as composed and eligible for refinement", () => {
     const result = compose(
-      { budget: 250, minSlots: 3, targetSlots: 4, strategy: "balanced" },
+      {
+        budget: 250,
+        minSlots: 3,
+        targetSlots: 4,
+        strategy: "balanced",
+        collectionStyle: "premium_focus",
+      },
       [zeroA, zeroB, zeroC, fresh],
       "best"
     );
@@ -435,7 +474,13 @@ describe("composeCollection", () => {
       },
     });
     expect(compose(
-      { budget: 250, minSlots: 3, targetSlots: 4, strategy: "balanced" },
+      {
+        budget: 250,
+        minSlots: 3,
+        targetSlots: 4,
+        strategy: "balanced",
+        collectionStyle: "premium_focus",
+      },
       [zeroA, zeroB, zeroC, fresh],
       "fast"
     )).toMatchObject({
@@ -456,4 +501,185 @@ describe("composeCollection", () => {
       },
     });
   });
+
+  it("keeps Balanced Mix between Premium Focus and More Variety for the real 17-point proposal", () => {
+    const baseRequest = {
+      budget: 1700,
+      preferredSeasons: ["spring", "summer", "fall", "winter"],
+      preferredOccasions: ["daily", "office", "date", "night", "formal"],
+      preferredVibes: ["fresh", "clean", "warm", "elegant"],
+    };
+    const premium = composeRealCatalog(
+      { ...baseRequest, collectionStyle: "premium_focus" },
+      "best"
+    );
+    const balanced = composeRealCatalog(
+      { ...baseRequest, collectionStyle: "balanced_mix" },
+      "best"
+    );
+    const variety = composeRealCatalog(
+      { ...baseRequest, collectionStyle: "more_variety" },
+      "best"
+    );
+    const premiumSummary = summarizeComposition(premium);
+    const balancedSummary = summarizeComposition(balanced);
+    const varietySummary = summarizeComposition(variety);
+    const outputMidpoint = Math.round((premiumSummary.count + varietySummary.count) / 2);
+
+    [premiumSummary, balancedSummary, varietySummary].forEach((summary) => {
+      expect(summary.valid).toBe(true);
+      expect(summary.duplicateFree).toBe(true);
+      expect(summary.totalPoints).toBeLessThanOrEqual(17);
+      expect(summary.preferenceFit).toBeGreaterThanOrEqual(90);
+    });
+    expect(premiumSummary.count).toBeLessThanOrEqual(balancedSummary.count);
+    expect(balancedSummary.count).toBeLessThanOrEqual(varietySummary.count);
+    expect(balancedSummary.count).toBeGreaterThan(premiumSummary.count);
+    expect(Math.abs(balancedSummary.count - outputMidpoint)).toBeLessThanOrEqual(1);
+    expect(premiumSummary.averagePoints).toBeGreaterThanOrEqual(
+      balancedSummary.averagePoints
+    );
+    expect(balancedSummary.averagePoints).toBeGreaterThanOrEqual(
+      varietySummary.averagePoints
+    );
+    expect(balanced.greedyResult.diagnostics).toMatchObject({
+      balancedPremiumFloorSlots: discoveryDecantsConfig.box.minSelectableSlots,
+      balancedVarietyCeilingSlots: discoveryDecantsConfig.box.defaultTargetSlots,
+      balancedTargetSlots: 10,
+      searchTargetSlots: 10,
+    });
+    expect(balanced.greedyResult.terminationReason).toBe(
+      "collection-style-target-reached"
+    );
+  }, 20000);
+
+  it("preserves Premium Focus and More Variety established 17-point outputs", () => {
+    const baseRequest = {
+      budget: 1700,
+      preferredSeasons: ["spring", "summer", "fall", "winter"],
+      preferredOccasions: ["daily", "office", "date", "night", "formal"],
+      preferredVibes: ["fresh", "clean", "warm", "elegant"],
+    };
+
+    expect(
+      composeRealCatalog({ ...baseRequest, collectionStyle: "premium_focus" }, "best")
+        .collectionIds
+    ).toEqual([23, 111, 204, 208, 302, 407, 409]);
+    expect(
+      composeRealCatalog({ ...baseRequest, collectionStyle: "more_variety" }, "best")
+        .collectionIds
+    ).toEqual([1, 8, 10, 11, 15, 16, 18, 19, 23, 30, 33, 118, 207, 302]);
+  }, 20000);
+
+  it("keeps collection-style counts ordered across a compact real-catalog matrix", () => {
+    const scenarios = [
+      {
+        name: "lower budget broad",
+        request: {
+          budget: 1200,
+          preferredSeasons: ["spring", "summer", "fall", "winter"],
+          preferredOccasions: ["daily", "office", "date"],
+          preferredVibes: ["fresh", "clean", "warm"],
+        },
+      },
+      {
+        name: "premium compatible",
+        request: {
+          budget: 1700,
+          strategy: "signature",
+          preferredSeasons: ["fall", "winter"],
+          preferredOccasions: ["date", "night", "formal", "evening"],
+          preferredVibes: ["warm", "dark", "seductive", "elegant"],
+        },
+      },
+      {
+        name: "fresh warm weather",
+        request: {
+          budget: 1700,
+          preferredSeasons: ["spring", "summer"],
+          preferredOccasions: ["daily", "office", "casual"],
+          preferredVibes: ["fresh", "clean", "energetic"],
+        },
+      },
+      {
+        name: "restrictive winter formal",
+        request: {
+          budget: 1700,
+          preferredSeasons: ["winter"],
+          preferredOccasions: ["formal"],
+          preferredVibes: ["mysterious"],
+        },
+      },
+    ];
+
+    scenarios.forEach(({ name, request }) => {
+      const premium = summarizeComposition(
+        composeRealCatalog({ ...request, collectionStyle: "premium_focus" }, "fast")
+      );
+      const balanced = summarizeComposition(
+        composeRealCatalog({ ...request, collectionStyle: "balanced_mix" }, "fast")
+      );
+      const variety = summarizeComposition(
+        composeRealCatalog({ ...request, collectionStyle: "more_variety" }, "fast")
+      );
+
+      [premium, balanced, variety].forEach((summary) => {
+        expect(summary.valid, name).toBe(true);
+        expect(summary.duplicateFree, name).toBe(true);
+        expect(summary.totalPoints, name).toBeLessThanOrEqual(request.budget / 100);
+        expect(summary.preferenceFit, name).toBeGreaterThanOrEqual(75);
+      });
+      expect(premium.count, name).toBeLessThanOrEqual(balanced.count);
+      expect(balanced.count, name).toBeLessThanOrEqual(variety.count);
+
+      if (premium.count < variety.count) {
+        expect(
+          Math.abs(balanced.count - Math.round((premium.count + variety.count) / 2)),
+          name
+        ).toBeLessThanOrEqual(2);
+      }
+      expect(premium.averagePoints, name).toBeGreaterThanOrEqual(
+        balanced.averagePoints
+      );
+      expect(balanced.averagePoints, name).toBeGreaterThanOrEqual(
+        variety.averagePoints
+      );
+    });
+  }, 20000);
+
+  it("allows legitimate collection-style count ties when slot constraints collapse the range", () => {
+    const request = {
+      budget: 1200,
+      minSlots: 3,
+      maxSlots: 3,
+      targetSlots: 3,
+      strategy: "balanced",
+    };
+    const premium = compose(
+      { ...request, collectionStyle: "premium_focus" },
+      catalog,
+      "fast"
+    );
+    const balanced = compose(
+      { ...request, collectionStyle: "balanced_mix" },
+      catalog,
+      "fast"
+    );
+    const variety = compose(
+      { ...request, collectionStyle: "more_variety" },
+      catalog,
+      "fast"
+    );
+
+    [premium, balanced, variety].forEach((result) => {
+      expect(result.constraintResult.valid).toBe(true);
+      expect(result.collection.length).toBe(3);
+      expect(result.constraintResult.metrics.totalPoints).toBeLessThanOrEqual(12);
+    });
+    expect(balanced.greedyResult.diagnostics.balancedTargetSlots).toBe(3);
+  });
 });
+
+function roundNumber(value) {
+  return Math.round(value * 100) / 100;
+}

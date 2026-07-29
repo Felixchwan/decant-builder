@@ -408,7 +408,17 @@ describe("deriveComposerExplanations", () => {
 
   it("keeps valid partial and impossible requests distinguishable", () => {
     const partial = explain(
-      compose({ budget: 250, minSlots: 3, targetSlots: 4, strategy: "balanced" }, partialCatalog, "best"),
+      compose(
+        {
+          budget: 250,
+          minSlots: 3,
+          targetSlots: 4,
+          strategy: "balanced",
+          collectionStyle: "premium_focus",
+        },
+        partialCatalog,
+        "best"
+      ),
       partialCatalog
     );
     expect(partial.headline.code).toBe("valid_partial_collection");
@@ -517,7 +527,16 @@ describe("deriveComposerExplanations", () => {
     expect(getCodes(refined.strengths)).toContain("refinement_improved_quality");
 
     const partial = explain(
-      compose({ budget: 250, minSlots: 3, targetSlots: 4 }, partialCatalog, "best"),
+      compose(
+        {
+          budget: 250,
+          minSlots: 3,
+          targetSlots: 4,
+          collectionStyle: "premium_focus",
+        },
+        partialCatalog,
+        "best"
+      ),
       partialCatalog
     );
     expect(partial).toMatchObject({

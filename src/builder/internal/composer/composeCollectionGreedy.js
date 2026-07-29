@@ -14,6 +14,7 @@ export const GREEDY_COMPOSER_STATUSES = Object.freeze({
 
 export const GREEDY_TERMINATION_REASONS = Object.freeze({
   TARGET_SLOTS_REACHED: "target-slots-reached",
+  COLLECTION_STYLE_TARGET_REACHED: "collection-style-target-reached",
   NO_LEGAL_MOVE: "no-legal-move",
   NO_IMPROVING_MOVE: "no-improving-move",
   REQUEST_INFEASIBLE: "request-infeasible",
@@ -59,6 +60,11 @@ export function composeCollectionGreedy({
   }
 
   let selectedPerfumes = stablePerfumes(initialPerfumes);
+  const searchPlan = buildSearchPlan({
+    request: searchRequest,
+    selectedPerfumes,
+    catalog: catalogPerfumes,
+  });
   let currentQuality = getSearchQuality({
     request: searchRequest,
     candidatePerfumes: selectedPerfumes,
@@ -69,7 +75,7 @@ export function composeCollectionGreedy({
   const moveHistory = [];
   let terminationReason = GREEDY_TERMINATION_REASONS.TARGET_SLOTS_REACHED;
 
-  while (selectedPerfumes.length < normalizedRequest.targetSlots) {
+  while (selectedPerfumes.length < searchPlan.targetSlots) {
     const moves = generateCandidateMoves({
       request: searchRequest,
       currentPerfumes: selectedPerfumes,
@@ -101,7 +107,7 @@ export function composeCollectionGreedy({
       }))
       .filter((move) => move.qualityResult.evaluable)
       .sort((firstMove, secondMove) =>
-        compareEvaluatedMoves(firstMove, secondMove, searchRequest)
+        compareEvaluatedMoves(firstMove, secondMove, searchRequest, searchPlan)
       );
     const bestMove = evaluatedMoves[0];
 
@@ -112,6 +118,7 @@ export function composeCollectionGreedy({
 
     if (
       selectedPerfumes.length >= normalizedRequest.minSlots &&
+      selectedPerfumes.length >= searchPlan.noImprovingStopSlots &&
       searchRequest.collectionStyle.id !== COMPOSER_COLLECTION_STYLE_IDS.MORE_VARIETY &&
       currentQuality.evaluable &&
       bestMove.qualityResult.overallScore <= currentQuality.overallScore + QUALITY_EPSILON
@@ -132,6 +139,15 @@ export function composeCollectionGreedy({
     });
   }
 
+  if (
+    terminationReason === GREEDY_TERMINATION_REASONS.TARGET_SLOTS_REACHED &&
+    searchPlan.targetSlots < normalizedRequest.targetSlots &&
+    selectedPerfumes.length >= normalizedRequest.minSlots &&
+    selectedPerfumes.length >= searchPlan.targetSlots
+  ) {
+    terminationReason = GREEDY_TERMINATION_REASONS.COLLECTION_STYLE_TARGET_REACHED;
+  }
+
   return buildResult({
     status: getCompletionStatus({
       selectedPerfumes,
@@ -149,14 +165,93 @@ export function composeCollectionGreedy({
     moveHistory,
     iterations: moveHistory.length,
     searchQualityResult: currentQuality,
+    searchPlan,
   });
 }
 
-function compareEvaluatedMoves(firstMove, secondMove, request) {
+function buildSearchPlan({ request, selectedPerfumes, catalog }) {
+  if (request.collectionStyle.id !== COMPOSER_COLLECTION_STYLE_IDS.BALANCED_MIX) {
+    return {
+      targetSlots: request.targetSlots,
+      noImprovingStopSlots: request.minSlots,
+      balancedTargetSlots: null,
+      balancedPremiumFloorSlots: null,
+      balancedVarietyCeilingSlots: null,
+    };
+  }
+
+  const constructionMinSlots = Number.isFinite(request.constructionMinSlots)
+    ? request.constructionMinSlots
+    : request.minSlots;
+  const premiumFloorSlots = Math.max(constructionMinSlots, selectedPerfumes.length);
+  const varietyCeilingSlots = getFeasibleFinalSlotCount({
+    request,
+    candidatePerfumes: selectedPerfumes,
+    catalog,
+  });
+  const balancedTargetSlots = getBalancedTargetSlots({
+    request,
+    premiumFloorSlots,
+    varietyCeilingSlots,
+    selectedCount: selectedPerfumes.length,
+  });
+
+  return {
+    targetSlots: balancedTargetSlots,
+    noImprovingStopSlots: constructionMinSlots > 0 ? balancedTargetSlots : 0,
+    balancedTargetSlots,
+    balancedPremiumFloorSlots: premiumFloorSlots,
+    balancedVarietyCeilingSlots: varietyCeilingSlots,
+  };
+}
+
+function getBalancedTargetSlots({
+  request,
+  premiumFloorSlots,
+  varietyCeilingSlots,
+  selectedCount,
+}) {
+  const feasibleCeiling = Math.min(request.targetSlots, varietyCeilingSlots);
+
+  if (feasibleCeiling <= selectedCount) {
+    return selectedCount;
+  }
+
+  if (feasibleCeiling < premiumFloorSlots) {
+    return Math.max(selectedCount, premiumFloorSlots);
+  }
+
+  if (feasibleCeiling <= premiumFloorSlots) {
+    return feasibleCeiling;
+  }
+
+  return clampSlotCount(
+    Math.round((premiumFloorSlots + feasibleCeiling) / 2),
+    Math.max(selectedCount, premiumFloorSlots),
+    feasibleCeiling
+  );
+}
+
+function compareEvaluatedMoves(firstMove, secondMove, request, searchPlan) {
   if (request.collectionStyle.id === COMPOSER_COLLECTION_STYLE_IDS.MORE_VARIETY) {
     return (
       secondMove.feasibleFinalSlotCount - firstMove.feasibleFinalSlotCount ||
       secondMove.candidatePerfumes.length - firstMove.candidatePerfumes.length ||
+      secondMove.qualityResult.overallScore - firstMove.qualityResult.overallScore ||
+      secondMove.qualityResult.dimensions.preferenceFit.score -
+        firstMove.qualityResult.dimensions.preferenceFit.score ||
+      firstMove.perfume.points - secondMove.perfume.points ||
+      firstMove.perfumeId - secondMove.perfumeId
+    );
+  }
+
+  if (request.collectionStyle.id === COMPOSER_COLLECTION_STYLE_IDS.BALANCED_MIX) {
+    const targetSlots = searchPlan?.balancedTargetSlots || request.minSlots;
+    const firstCanReachTarget = firstMove.feasibleFinalSlotCount >= targetSlots ? 1 : 0;
+    const secondCanReachTarget = secondMove.feasibleFinalSlotCount >= targetSlots ? 1 : 0;
+
+    return (
+      secondCanReachTarget - firstCanReachTarget ||
       secondMove.qualityResult.overallScore - firstMove.qualityResult.overallScore ||
       secondMove.qualityResult.dimensions.preferenceFit.score -
         firstMove.qualityResult.dimensions.preferenceFit.score ||
@@ -250,6 +345,7 @@ function buildResult({
   moveHistory,
   iterations,
   searchQualityResult,
+  searchPlan,
 }) {
   const finalConstraintResult = evaluateComposerConstraints({
     request,
@@ -280,6 +376,10 @@ function buildResult({
     diagnostics: {
       catalogSize: catalog.length,
       targetSlots: request.targetSlots,
+      searchTargetSlots: searchPlan?.targetSlots || request.targetSlots,
+      balancedTargetSlots: searchPlan?.balancedTargetSlots || null,
+      balancedPremiumFloorSlots: searchPlan?.balancedPremiumFloorSlots || null,
+      balancedVarietyCeilingSlots: searchPlan?.balancedVarietyCeilingSlots || null,
       minSlots: request.minSlots,
       maxSlots: request.maxSlots,
       lockedPerfumeIds: [...request.lockedPerfumeIds],
@@ -344,6 +444,10 @@ function hasRequestInfeasibility(violations) {
 
 function normalizePoints(value) {
   return Number.isFinite(value) ? value : 0;
+}
+
+function clampSlotCount(value, min, max) {
+  return Math.max(min, Math.min(max, value));
 }
 
 function stablePerfumes(perfumes) {
