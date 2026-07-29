@@ -13,6 +13,7 @@ import BuilderPanel from "./BuilderPanel.jsx";
 
 const originalWindow = globalThis.window;
 const appCss = readFileSync(new URL("../App.css", import.meta.url), "utf8");
+const builderPanelSource = readFileSync(new URL("./BuilderPanel.jsx", import.meta.url), "utf8");
 
 function simulateFirstVisit() {
   globalThis.window = {
@@ -150,6 +151,27 @@ describe("BuilderPanel Composer setup launcher", () => {
     expect(appCss).not.toMatch(/(?:html|body|#root)\s*,?[\s\S]{0,80}overflow-x:\s*hidden/);
   });
 
+  it("allows expanded Collection Intelligence analysis to grow without clipping taxonomy content", () => {
+    expect(appCss).toMatch(
+      /\.collection-snapshot\.is-expanded \.collection-snapshot-details\s*\{[^}]*max-height:\s*none;[^}]*overflow:\s*visible;/s
+    );
+    expect(appCss).not.toMatch(
+      /\.collection-snapshot\.is-expanded \.collection-snapshot-details\s*\{[^}]*max-height:\s*\d/s
+    );
+    expect(appCss).not.toContain("Show More");
+  });
+
+  it("keeps mobile Composer proposal layout scoped to Composer classes", () => {
+    expect(appCss).toMatch(
+      /@media\s*\(max-width:\s*520px\)\s*\{[\s\S]*?\.composer-proposal-item\s*\{[^}]*display:\s*grid;[^}]*grid-template-columns:\s*30px minmax\(0,\s*1fr\) 30px;/s
+    );
+    expect(appCss).toMatch(
+      /@media\s*\(max-width:\s*520px\)\s*\{[\s\S]*?\.composer-proposal-item\.no-alternatives\s*\{[^}]*grid-template-columns:\s*minmax\(0,\s*1fr\);/s
+    );
+    expect(appCss).not.toMatch(/\.composer-proposal-modal[\s\S]{0,600}\.summary-metadata-chip/);
+    expect(appCss).not.toMatch(/\.composer-proposal-modal[\s\S]{0,600}\.detail-asset-chip/);
+  });
+
   it("shows a busy Composer state while a proposal is being generated", () => {
     const markup = renderBuilderPanel({ isComposerGenerating: true });
 
@@ -200,6 +222,17 @@ describe("BuilderPanel Composer setup launcher", () => {
     expect(markup).toContain("recommendation-carousel-controls");
     expect(markup).not.toContain("recommendation-rank");
     expect(markup).not.toContain("recommendation-score");
+  });
+
+  it("keeps Composer proposal item structure separate from Full Analysis metadata chips", () => {
+    expect(builderPanelSource).toContain("composer-proposal-item ${");
+    expect(builderPanelSource).toContain('hasAlternatives ? "has-alternatives" : "no-alternatives"');
+    expect(builderPanelSource).toContain('className="composer-proposal-item-reasons"');
+    expect(builderPanelSource).toContain('className="composer-proposal-alt-button"');
+    expect(builderPanelSource).toContain('className="composer-proposal-alt-position"');
+    expect(builderPanelSource).not.toMatch(/composer-proposal-item-reasons[\s\S]{0,500}MetadataSummaryChip/);
+    expect(builderPanelSource).not.toMatch(/composer-proposal-item-reasons[\s\S]{0,500}detail-asset-chip/);
+    expect(builderPanelSource).not.toMatch(/composer-proposal-alt-button[\s\S]{0,300}summary-metadata-chip/);
   });
 
   it("keeps the empty My Box header compact and leaves slot count in the summary card", () => {

@@ -6825,8 +6825,9 @@ button {
 }
 
 .collection-snapshot.is-expanded .collection-snapshot-details {
-  max-height: 1400px;
+  max-height: none;
   opacity: 1;
+  overflow: visible;
 }
 
 .collection-snapshot .summary-panel,
@@ -7366,6 +7367,77 @@ button {
 
   .composer-setup-controls .compose-preference-group {
     grid-column: auto;
+  }
+
+  .composer-proposal-modal {
+    width: min(100%, 94vw);
+  }
+
+  .composer-proposal-header-actions {
+    flex-wrap: wrap;
+  }
+
+  .composer-proposal-item {
+    display: grid;
+    grid-template-columns: 30px minmax(0, 1fr) 30px;
+    gap: 8px;
+    align-items: center;
+    padding: 10px;
+  }
+
+  .composer-proposal-item-body {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .composer-proposal-item strong {
+    overflow-wrap: break-word;
+    line-height: 1.22;
+  }
+
+  .composer-proposal-item div span {
+    line-height: 1.25;
+  }
+
+  .composer-proposal-item-reasons {
+    gap: 5px;
+  }
+
+  .composer-proposal-item-reasons span,
+  .composer-proposal-tradeoff em {
+    display: inline-flex;
+    width: auto;
+    max-width: 100%;
+    align-items: center;
+    line-height: 1.25;
+    white-space: normal;
+  }
+
+  .composer-proposal-alt-position {
+    width: fit-content;
+    max-width: 100%;
+    white-space: nowrap;
+  }
+
+  .composer-proposal-alt-button {
+    align-self: center;
+    justify-self: center;
+  }
+
+  .composer-proposal-item-state {
+    grid-column: 2;
+    width: fit-content;
+    max-width: 100%;
+    justify-self: start;
+    white-space: nowrap;
+  }
+
+  .composer-proposal-item.no-alternatives {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .composer-proposal-item.no-alternatives .composer-proposal-item-state {
+    grid-column: 1;
   }
 
   .final-summary-modal .modal-header {

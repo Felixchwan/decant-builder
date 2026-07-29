@@ -1303,7 +1303,12 @@ function ComposerProposalModal({
                     !isComposerPick && (gainedLabels.length > 0 || lostLabels.length > 0);
 
                   return (
-                    <div key={item.slotId || perfume.id} className="composer-proposal-item">
+                    <div
+                      key={item.slotId || perfume.id}
+                      className={`composer-proposal-item ${
+                        hasAlternatives ? "has-alternatives" : "no-alternatives"
+                      }`}
+                    >
                       {hasAlternatives && (
                         <button
                           type="button"
