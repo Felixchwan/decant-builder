@@ -18,6 +18,7 @@ import {
   selectDnaExplorerDetail,
 } from "../builder/internal/intelligence/buildCollectionIntelligenceViewModel.js";
 import { buildScentLibraryViewModel } from "../builder/internal/intelligence/buildScentLibraryViewModel.js";
+import { isCuratorBonusUnlocked as deriveCuratorBonusUnlocked } from "../builder/internal/curatorBonus/isCuratorBonusUnlocked.js";
 import {
   getRecommendationConfidence,
   getRecommendationConfidenceLabel,
@@ -187,8 +188,12 @@ function BuilderPanel({
       () => getCollectionIdentityProfile(boxSummary),
       [boxSummary]
     );
-    const isCuratorBonusUnlocked =
-      totalPoints >= builderConfig.curatorBonus.targetPoints && totalSlots >= minSlots;
+    const isCuratorBonusUnlocked = deriveCuratorBonusUnlocked({
+      totalPoints,
+      totalSlots,
+      targetPoints: builderConfig.curatorBonus.targetPoints,
+      minSlots,
+    });
     const collectionCardViewModel = useMemo(
       () =>
         buildCollectionCardViewModel({

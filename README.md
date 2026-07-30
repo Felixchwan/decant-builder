@@ -32,9 +32,10 @@ The goal is to combine fragrance discovery with an engaging product-building exp
 
 ### Discovery Box Requirements
 
-* Minimum 6 fragrances
-* Minimum 10 points
-* Maximum 16 fragrance slots
+* Selected fragrances: minimum 6, maximum 14
+* Minimum points: 12
+* Physical box capacity: 16 slots
+* Curator Bonus: 2 reserved slots, unlocked at 12 points after selecting at least 6 fragrances
 
 ### Tier System
 

@@ -22,6 +22,10 @@ export const aurelianConfig = createBuilderConfig({
     ...localized.commerce,
     locale,
   },
+  box: {
+    minSelectableSlots: 6,
+    maxSelectableSlots: 14,
+  },
   collectionCard: {
     ...localized.collectionCard,
     brandHeading: "Aurelian",

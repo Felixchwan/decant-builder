@@ -27,6 +27,7 @@ import { getBrandAsset } from "./data/brandAssets";
 import { createTranslator } from "./i18n/createTranslator.js";
 import { ANALYTICS_EVENTS } from "./analytics/events.js";
 import { noopAnalytics } from "./analytics/noopAnalytics.js";
+import { isCuratorBonusUnlocked } from "./builder/internal/curatorBonus/isCuratorBonusUnlocked.js";
 import {
   addSelectedPerfume,
   canAddPerfume,
@@ -228,11 +229,14 @@ const isComposerProposalStale = isComposerBoxProposalStale(
   }, [analytics, curatorBonusPreference, persistedBuilderState.wasRestored, selectedPerfumes.length]);
 
   useEffect(() => {
-    const isCuratorBonusUnlocked =
-      totalPoints >= builderConfig.curatorBonus.targetPoints &&
-      totalSlots >= MIN_BOX_SLOTS;
+    const curatorBonusUnlocked = isCuratorBonusUnlocked({
+      totalPoints,
+      totalSlots,
+      targetPoints: builderConfig.curatorBonus.targetPoints,
+      minSlots: MIN_BOX_SLOTS,
+    });
 
-    if (isCuratorBonusUnlocked && !hasTrackedCuratorBonusUnlockedRef.current) {
+    if (curatorBonusUnlocked && !hasTrackedCuratorBonusUnlockedRef.current) {
       hasTrackedCuratorBonusUnlockedRef.current = true;
       analytics.track(ANALYTICS_EVENTS.CURATOR_BONUS_UNLOCKED, {
         slotCount: totalSlots,
@@ -242,7 +246,7 @@ const isComposerProposalStale = isComposerBoxProposalStale(
       });
     }
 
-    if (!isCuratorBonusUnlocked) {
+    if (!curatorBonusUnlocked) {
       hasTrackedCuratorBonusUnlockedRef.current = false;
     }
   }, [analytics, builderConfig, curatorBonusPreference, MIN_BOX_SLOTS, totalPoints, totalSlots]);
