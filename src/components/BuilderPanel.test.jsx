@@ -12,7 +12,7 @@ import { buildScentDna } from "../utils/buildScentDna.js";
 import BuilderPanel, { ScentLibraryContent } from "./BuilderPanel.jsx";
 
 const originalWindow = globalThis.window;
-const appCss = readFileSync(new URL("../App.css", import.meta.url), "utf8");
+const appCss = readFileSync(new URL("../builder/styles.css", import.meta.url), "utf8");
 const builderPanelSource = readFileSync(new URL("./BuilderPanel.jsx", import.meta.url), "utf8");
 
 function simulateFirstVisit() {
