@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto";
+import { Buffer } from "node:buffer";
 import { lstatSync, readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -37,7 +38,10 @@ function flattenAssetValues(value) {
 function treeHash(files) {
   const aggregate = createHash("sha256");
   files.forEach((relativePath) => {
-    const bytes = readFileSync(join(ASSET_ROOT, ...relativePath.split("/")));
+    const sourceBytes = readFileSync(join(ASSET_ROOT, ...relativePath.split("/")));
+    const bytes = relativePath.endsWith(".svg")
+      ? Buffer.from(sourceBytes.toString("utf8").replaceAll("\r\n", "\n"), "utf8")
+      : sourceBytes;
     const hash = createHash("sha256").update(bytes).digest("hex");
     aggregate.update(`${relativePath}\0${hash}\n`);
   });
