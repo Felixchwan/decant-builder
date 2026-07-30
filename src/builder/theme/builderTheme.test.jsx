@@ -27,6 +27,20 @@ const syntheticThemeB = {
   },
 };
 
+const approvedAurelianColors = {
+  background: "#090A09",
+  surface: "rgba(17, 17, 15, 0.94)",
+  surfaceElevated: "rgba(27, 25, 21, 0.96)",
+  text: "#F2EBDD",
+  textSecondary: "#C8BEAD",
+  textMuted: "#938B7D",
+  border: "rgba(200, 166, 101, 0.22)",
+  accent: "#C8A665",
+  accentStrong: "#9F7D43",
+  accentContrast: "#171108",
+  disabled: "rgba(147, 139, 125, 0.16)",
+};
+
 function withTheme(theme) {
   return createBuilderConfig({
     ...discoveryDecantsConfig,
@@ -106,7 +120,7 @@ describe("Builder theme contract", () => {
       </div>
     );
 
-    expect(markup.match(/class="builder-theme-root"/g)).toHaveLength(2);
+    expect(markup.match(/class="builder-theme-root builder-theme-root--custom"/g)).toHaveLength(2);
     expect(markup).toContain("--builder-color-background:#101010");
     expect(markup).toContain("--builder-color-accent:#ff00ff");
     expect(markup).toContain("--builder-color-background:#202020");
@@ -133,5 +147,30 @@ describe("Builder theme contract", () => {
       minSelectableSlots: 6,
       maxSelectableSlots: 14,
     });
+    expect(aurelianConfig.finalization.mode).toBe("unavailable");
+    expect(aurelianConfig.finalization.whatsappNumber).toBe("");
+    expect(aurelianConfig.features.whatsappFinalization).toBe(false);
+  });
+
+  it("declares the exact approved Aurelian production palette", () => {
+    expect(aurelianConfig.theme.colors).toEqual(approvedAurelianColors);
+  });
+
+  it("renders every approved Aurelian variable on its independently scoped root", () => {
+    const markup = renderToStaticMarkup(
+      <div>
+        <DiscoveryBoxBuilder catalog={[]} notes={{}} config={discoveryDecantsConfig} />
+        <DiscoveryBoxBuilder catalog={[]} notes={{}} config={aurelianConfig} />
+      </div>
+    );
+
+    expect(markup.match(/class="builder-theme-root"/g)).toHaveLength(1);
+    expect(markup.match(/class="builder-theme-root builder-theme-root--custom"/g)).toHaveLength(1);
+    Object.entries(approvedAurelianColors).forEach(([key, value]) => {
+      const cssName = key.replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`);
+      expect(markup).toContain(`--builder-color-${cssName}:${value}`);
+    });
+    expect(markup).toContain("--builder-color-background:#07100b");
+    expect(markup).toContain("--builder-color-accent:#4ade80");
   });
 });

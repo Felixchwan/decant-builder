@@ -26,6 +26,21 @@ export const aurelianConfig = createBuilderConfig({
     minSelectableSlots: 6,
     maxSelectableSlots: 14,
   },
+  theme: {
+    colors: {
+      background: "#090A09",
+      surface: "rgba(17, 17, 15, 0.94)",
+      surfaceElevated: "rgba(27, 25, 21, 0.96)",
+      text: "#F2EBDD",
+      textSecondary: "#C8BEAD",
+      textMuted: "#938B7D",
+      border: "rgba(200, 166, 101, 0.22)",
+      accent: "#C8A665",
+      accentStrong: "#9F7D43",
+      accentContrast: "#171108",
+      disabled: "rgba(147, 139, 125, 0.16)",
+    },
+  },
   collectionCard: {
     ...localized.collectionCard,
     brandHeading: "Aurelian",

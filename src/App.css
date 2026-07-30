@@ -85,6 +85,129 @@ button {
   color: var(--builder-color-text, #ecfdf5);
 }
 
+.builder-theme-root--custom {
+  background:
+    radial-gradient(
+      circle at top left,
+      color-mix(in srgb, var(--builder-color-accent-strong, #22c55e) 16%, transparent),
+      transparent 32rem
+    ),
+    var(--builder-color-background, #07100b);
+}
+
+.builder-theme-root--custom .eyebrow,
+.builder-theme-root--custom .summary-panel span,
+.builder-theme-root--custom .box-summary-total strong,
+.builder-theme-root--custom .compact-points {
+  color: var(--builder-color-accent, #4ade80);
+}
+
+.builder-theme-root--custom .perfume-card:hover,
+.builder-theme-root--custom .perfume-card:focus-visible {
+  border-color: color-mix(
+    in srgb,
+    var(--builder-color-accent, #4ade80) 45%,
+    transparent
+  );
+}
+
+.builder-theme-root--custom .perfume-card-details-trigger:focus-visible {
+  outline-color: color-mix(
+    in srgb,
+    var(--builder-color-accent, #4ade80) 45%,
+    transparent
+  );
+}
+
+.builder-theme-root--custom .perfume-card {
+  border-color: var(--builder-color-border, rgba(148, 163, 184, 0.18));
+  background: linear-gradient(
+    180deg,
+    var(--builder-color-surface-elevated, rgba(15, 23, 42, 0.72)),
+    var(--builder-color-surface, rgba(8, 20, 14, 0.82))
+  );
+}
+
+.builder-theme-root--custom .tag-row span,
+.builder-theme-root--custom .details-tag-row > span,
+.builder-theme-root--custom .summary-tags > span,
+.builder-theme-root--custom .final-summary-tags span {
+  border-color: color-mix(
+    in srgb,
+    var(--builder-color-accent, #4ade80) 18%,
+    transparent
+  );
+  background: color-mix(
+    in srgb,
+    var(--builder-color-accent, #4ade80) 8%,
+    transparent
+  );
+  color: var(--builder-color-text-secondary, #b6c8bd);
+}
+
+.builder-theme-root--custom .mobile-builder-tabs button.is-active {
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--builder-color-accent, #4ade80) 22%, transparent),
+      color-mix(in srgb, var(--builder-color-accent, #4ade80) 10%, transparent)
+    ),
+    var(--builder-color-surface-elevated, rgba(15, 23, 42, 0.72));
+  color: var(--builder-color-text, #ecfdf5);
+  box-shadow: inset 0 0 0 1px
+    color-mix(in srgb, var(--builder-color-accent, #4ade80) 22%, transparent);
+}
+
+.builder-theme-root--custom .slot-progress {
+  background: linear-gradient(
+    90deg,
+    var(--builder-color-accent-strong, #22c55e),
+    var(--builder-color-accent, #4ade80)
+  );
+}
+
+.builder-theme-root--custom .perfume-details-meta-add,
+.builder-theme-root--custom .perfume-details-actions button:first-child,
+.builder-theme-root--custom .review-box-button,
+.builder-theme-root--custom .review-modal-footer button:not(.secondary),
+.builder-theme-root--custom .compose-box-header button,
+.builder-theme-root--custom .order-prep-actions button,
+.builder-theme-root--custom .seller-order-summary button,
+.builder-theme-root--custom .recommendation-actions button {
+  border-color: color-mix(
+    in srgb,
+    var(--builder-color-accent, #4ade80) 42%,
+    transparent
+  );
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--builder-color-accent, #4ade80) 76%, white),
+    var(--builder-color-accent, #4ade80)
+  );
+  color: var(--builder-color-accent-contrast, #052e16);
+}
+
+.builder-theme-root--custom .compose-preference-chips button.is-selected {
+  border-color: color-mix(
+    in srgb,
+    var(--builder-color-accent, #4ade80) 44%,
+    transparent
+  );
+  background: color-mix(
+    in srgb,
+    var(--builder-color-accent, #4ade80) 14%,
+    transparent
+  );
+  color: var(--builder-color-text, #ecfdf5);
+}
+
+.builder-theme-root--custom .compose-box-controls select,
+.builder-theme-root--custom .compose-box-controls input {
+  border-color: var(--builder-color-border, rgba(148, 163, 184, 0.18));
+  background: var(--builder-color-surface-elevated, rgba(15, 23, 42, 0.72));
+  color: var(--builder-color-text, #ecfdf5);
+}
+
 .builder-restore-message {
   position: fixed;
   top: 14px;

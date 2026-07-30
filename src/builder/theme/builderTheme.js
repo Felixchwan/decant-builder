@@ -48,3 +48,9 @@ export function buildBuilderThemeStyle(theme) {
     ])
   );
 }
+
+export function hasCustomBuilderTheme(theme) {
+  return BUILDER_THEME_COLOR_KEYS.some(
+    (key) => theme.colors[key] !== DEFAULT_BUILDER_THEME_COLORS[key]
+  );
+}

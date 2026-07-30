@@ -28,7 +28,10 @@ import { createTranslator } from "./i18n/createTranslator.js";
 import { ANALYTICS_EVENTS } from "./analytics/events.js";
 import { noopAnalytics } from "./analytics/noopAnalytics.js";
 import { isCuratorBonusUnlocked } from "./builder/internal/curatorBonus/isCuratorBonusUnlocked.js";
-import { buildBuilderThemeStyle } from "./builder/theme/builderTheme.js";
+import {
+  buildBuilderThemeStyle,
+  hasCustomBuilderTheme,
+} from "./builder/theme/builderTheme.js";
 import {
   addSelectedPerfume,
   canAddPerfume,
@@ -52,6 +55,9 @@ function App({
     () => buildBuilderThemeStyle(builderConfig.theme),
     [builderConfig.theme]
   );
+  const builderThemeClassName = hasCustomBuilderTheme(builderConfig.theme)
+    ? "builder-theme-root builder-theme-root--custom"
+    : "builder-theme-root";
   const translator = useMemo(
     () => createTranslator(builderConfig.locale),
     [builderConfig.locale]
@@ -724,7 +730,7 @@ const confirmAddPerfume = () => {
   }
 
   return (
-    <div className="builder-theme-root" style={builderThemeStyle}>
+    <div className={builderThemeClassName} style={builderThemeStyle}>
     <main className="app">
       {restoreMessage && (
         <p className="builder-restore-message" role="status">
