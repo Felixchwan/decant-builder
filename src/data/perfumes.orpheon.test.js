@@ -5,14 +5,12 @@ import { describe, expect, it } from "vitest";
 import { discoveryDecantsConfig } from "../builder/config/discoveryDecantsConfig.js";
 import { buildCollectionSummary } from "../builder/internal/intelligence/buildCollectionSummary.js";
 import { buildCatalogView } from "../builder/internal/catalog/buildCatalogView.js";
-import { brandAssets, createCatalogAssetResolver, fragrances as perfumes, notes } from "@discovery-box/catalog";
+import { brandAssets, fragrances as perfumes, notes } from "@discovery-box/catalog";
 import { getPerfumeNoteIds } from "../utils/noteUtils.js";
 
 const ORPHEON_ID = 409;
-const resolveAsset = createCatalogAssetResolver({ basePath: "/images" });
-
-function assetPath(publicPath) {
-  return fileURLToPath(new URL(`../../public/${publicPath.replace(/^\//, "")}`, import.meta.url));
+function assetPath(assetKey) {
+  return fileURLToPath(new URL(`../../packages/catalog/assets/${assetKey}`, import.meta.url));
 }
 
 function readPngDimensions(filePath) {
@@ -61,10 +59,10 @@ describe("Diptyque Orphéon catalog entry", () => {
   });
 
   it("resolves bottle, logo, and note assets", () => {
-    const bottlePath = assetPath(resolveAsset(orpheon.imageAssetKey));
+    const bottlePath = assetPath(orpheon.imageAssetKey);
     const bottlePng = readPngDimensions(bottlePath);
-    const logoPath = assetPath(resolveAsset(brandAssets.Diptyque));
-    const powderyNotePath = assetPath(resolveAsset(notes.powderyNotes.noteImageAssetKey));
+    const logoPath = assetPath(brandAssets.Diptyque);
+    const powderyNotePath = assetPath(notes.powderyNotes.noteImageAssetKey);
 
     expect(existsSync(bottlePath)).toBe(true);
     expect(bottlePng).toEqual({
@@ -85,7 +83,7 @@ describe("Diptyque Orphéon catalog entry", () => {
     noteIds.forEach((noteId) => {
       expect(notes[noteId]).toBeTruthy();
       expect(notes[noteId].noteImageAssetKey).toBeTruthy();
-      expect(existsSync(assetPath(resolveAsset(notes[noteId].noteImageAssetKey)))).toBe(true);
+      expect(existsSync(assetPath(notes[noteId].noteImageAssetKey))).toBe(true);
     });
     expect(new Set(noteNames).size).toBe(noteNames.length);
   });

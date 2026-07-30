@@ -92,7 +92,28 @@ describe("merchant catalog composition", () => {
     expect(discoveryProps.catalog).not.toBe(aurelianProps.catalog);
     expect(discoveryProps.finalizationAdapter).toBeTruthy();
     expect(aurelianProps.finalizationAdapter).toBeUndefined();
-    expect(discoveryProps.assetResolver("brands/example.png")).toBe("/images/brands/example.png");
-    expect(aurelianProps.assetResolver("brands/example.png")).toBe("/images/brands/example.png");
+    expect(discoveryProps.assetResolver("brands/example.png")).toBe("/catalog-assets/brands/example.png");
+    expect(aurelianProps.assetResolver("brands/example.png")).toBe("/catalog-assets/brands/example.png");
+  });
+
+  it("keeps public catalog roots at merchant host composition only", () => {
+    const discoverySource = readFileSync(
+      fileURLToPath(new URL("./DiscoveryDecantsApp.jsx", import.meta.url)),
+      "utf8",
+    );
+    const aurelianSource = readFileSync(
+      fileURLToPath(new URL("./AurelianApp.jsx", import.meta.url)),
+      "utf8",
+    );
+    const sharedSources = [
+      "../builder/DiscoveryBoxBuilder.jsx",
+      "../components/BuilderPanel.jsx",
+      "../components/PerfumeCard.jsx",
+      "../components/CollectionCard.jsx",
+    ].map((relativePath) => readFileSync(fileURLToPath(new URL(relativePath, import.meta.url)), "utf8"));
+
+    expect(discoverySource).toContain('basePath: "/catalog-assets"');
+    expect(aurelianSource).toContain('basePath: "/catalog-assets"');
+    sharedSources.forEach((source) => expect(source).not.toMatch(/\/(?:catalog-assets|images)\b/));
   });
 });

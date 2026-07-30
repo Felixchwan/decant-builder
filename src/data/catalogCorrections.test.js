@@ -1,15 +1,19 @@
 import { existsSync, readFileSync } from "node:fs";
 import { Buffer } from "node:buffer";
+import { fileURLToPath } from "node:url";
 
 import { describe, expect, it } from "vitest";
 
 import { buildCatalogView } from "../builder/internal/catalog/buildCatalogView.js";
 import { buildScentLibraryViewModel } from "../builder/internal/intelligence/buildScentLibraryViewModel.js";
-import { createCatalogAssetResolver, fragrances as perfumes, notes } from "@discovery-box/catalog";
+import { fragrances as perfumes, notes } from "@discovery-box/catalog";
 
 const ARMANI_CODE_EDT_ID = 104;
 const SILVER_MOUNTAIN_WATER_ID = 401;
-const resolveAsset = createCatalogAssetResolver({ basePath: "/images" });
+
+function sourceAssetPath(assetKey) {
+  return fileURLToPath(new URL(`../../packages/catalog/assets/${assetKey}`, import.meta.url));
+}
 
 function perfumeById(id) {
   return perfumes.find((perfume) => perfume.id === id);
@@ -101,7 +105,7 @@ describe("catalog data corrections", () => {
       imageAssetKey: "perfumes/diamond/silver-mountain-water.png",
     });
 
-    const assetPath = `public${resolveAsset(smw.imageAssetKey)}`;
+    const assetPath = sourceAssetPath(smw.imageAssetKey);
     expect(existsSync(assetPath)).toBe(true);
 
     const png = readFileSync(assetPath);

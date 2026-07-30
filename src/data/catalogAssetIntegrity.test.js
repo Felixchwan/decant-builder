@@ -13,21 +13,21 @@ import {
   perfumePlaceholderAssetKey,
 } from "@discovery-box/catalog";
 
-const PUBLIC_ROOT = fileURLToPath(new URL("../../public/", import.meta.url));
-const resolveAsset = createCatalogAssetResolver({ basePath: "/images" });
+const PACKAGE_ASSET_ROOT = fileURLToPath(new URL("../../packages/catalog/assets/", import.meta.url));
+const resolveAsset = createCatalogAssetResolver({ basePath: "/catalog-assets" });
 
-function assertExactCasePublicAsset(publicUrl) {
-  expect(publicUrl).toMatch(/^\/images\//);
-  let currentDirectory = PUBLIC_ROOT;
+function assertExactCasePackageAsset(publicUrl) {
+  expect(publicUrl).toMatch(/^\/catalog-assets\//);
+  let currentDirectory = PACKAGE_ASSET_ROOT;
 
-  for (const segment of publicUrl.slice(1).split("/")) {
+  for (const segment of publicUrl.replace(/^\/catalog-assets\//, "").split("/")) {
     const exactEntry = readdirSync(currentDirectory).find((entry) => entry === segment);
     expect(exactEntry, `${publicUrl} has incorrect or missing path segment ${segment}`).toBe(segment);
     currentDirectory = join(currentDirectory, exactEntry);
   }
 
   expect(statSync(currentDirectory).isFile()).toBe(true);
-  expect(currentDirectory).toBe(join(PUBLIC_ROOT, ...publicUrl.slice(1).split("/")));
+  expect(currentDirectory).toBe(join(PACKAGE_ASSET_ROOT, ...publicUrl.replace(/^\/catalog-assets\//, "").split("/")));
 }
 
 function unique(values) {
@@ -45,7 +45,7 @@ describe("catalog asset integrity", () => {
     Object.values(metadataAssets).flatMap((assets) => Object.values(assets))
   ).map(resolveAsset);
 
-  it("maps every runtime asset URL deterministically to public with exact casing", () => {
+  it("maps every runtime asset URL deterministically to package assets with exact casing", () => {
     for (const path of [
       ...perfumeImages,
       ...noteImages,
@@ -53,7 +53,7 @@ describe("catalog asset integrity", () => {
       ...metadataImages,
       resolveAsset(perfumePlaceholderAssetKey),
     ]) {
-      assertExactCasePublicAsset(path);
+      assertExactCasePackageAsset(path);
     }
   });
 
@@ -76,10 +76,10 @@ describe("catalog asset integrity", () => {
       expect(key).not.toMatch(/^(?:\/|[a-z][a-z\d+.-]*:)/i);
     }
 
-    expect(perfumeImages.every((path) => path.startsWith("/images/perfumes/"))).toBe(true);
-    expect(noteImages.every((path) => path.startsWith("/images/notes/"))).toBe(true);
-    expect(brandImages.every((path) => path.startsWith("/images/brands/"))).toBe(true);
-    expect(metadataImages.every((path) => path.startsWith("/images/metadata/"))).toBe(true);
+    expect(perfumeImages.every((path) => path.startsWith("/catalog-assets/perfumes/"))).toBe(true);
+    expect(noteImages.every((path) => path.startsWith("/catalog-assets/notes/"))).toBe(true);
+    expect(brandImages.every((path) => path.startsWith("/catalog-assets/brands/"))).toBe(true);
+    expect(metadataImages.every((path) => path.startsWith("/catalog-assets/metadata/"))).toBe(true);
 
     for (const path of [...perfumeImages, ...noteImages, ...brandImages, ...metadataImages]) {
       const resolved = new URL(path, "https://discovery.example/builder");
@@ -95,7 +95,7 @@ describe("catalog asset integrity", () => {
     }));
     const items = buildCollectionCardItems(resolvedPerfumes);
     expect(items.map(({ image }) => image)).toEqual(resolvedPerfumes.map(({ image }) => image));
-    items.forEach(({ image }) => assertExactCasePublicAsset(image));
+    items.forEach(({ image }) => assertExactCasePackageAsset(image));
   });
 
   it("keeps duplicate logical asset references valid", () => {

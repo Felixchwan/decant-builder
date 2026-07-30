@@ -15,7 +15,7 @@ import { createWhatsAppFinalizationAdapter } from "../finalization/createWhatsAp
 const finalizationAdapter = createWhatsAppFinalizationAdapter({
   phoneNumber: discoveryDecantsConfig.finalization.whatsappNumber,
 });
-const assetResolver = createCatalogAssetResolver({ basePath: "/images" });
+const assetResolver = createCatalogAssetResolver({ basePath: "/catalog-assets" });
 const discoveryDecantsCatalog = createMerchantCatalog({
   source: fragrances,
   availableIds: discoveryDecantsAvailableIds,

@@ -8,13 +8,13 @@ import {
 describe("createCatalogAssetResolver", () => {
   it("resolves the same key beneath independently supplied host roots", () => {
     const key = "perfumes/bronze/batch-01/acqua-di-gio-edt.png";
-    const discoveryResolver = createCatalogAssetResolver({ basePath: "/images" });
+    const discoveryResolver = createCatalogAssetResolver({ basePath: "/catalog-assets" });
     const alternateResolver = createCatalogAssetResolver({ basePath: "/store-assets/" });
 
-    expect(discoveryResolver(key)).toBe(`/images/${key}`);
+    expect(discoveryResolver(key)).toBe(`/catalog-assets/${key}`);
     expect(alternateResolver(key)).toBe(`/store-assets/${key}`);
     expect(discoveryResolver(perfumePlaceholderAssetKey)).toBe(
-      "/images/perfumes/placeholders/perfume-placeholder.svg",
+      "/catalog-assets/perfumes/placeholders/perfume-placeholder.svg",
     );
   });
 
@@ -38,7 +38,7 @@ describe("createCatalogAssetResolver", () => {
     "perfumes/bottle.png#preview",
     "perfumes//bottle.png",
   ])("rejects invalid asset key %j", (assetKey) => {
-    const resolveAsset = createCatalogAssetResolver({ basePath: "/images" });
+    const resolveAsset = createCatalogAssetResolver({ basePath: "/catalog-assets" });
     expect(() => resolveAsset(assetKey)).toThrow(/asset key/i);
   });
 

@@ -15,7 +15,7 @@ const aurelianCatalog = createMerchantCatalog({
   source: fragrances,
   availableIds: aurelianAvailableIds,
 });
-const assetResolver = createCatalogAssetResolver({ basePath: "/images" });
+const assetResolver = createCatalogAssetResolver({ basePath: "/catalog-assets" });
 
 // Development switch: import this app from main.jsx to run the Aurelian merchant implementation.
 export default function AurelianApp() {

@@ -3,6 +3,9 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
+  "bin": {
+    "catalog-sync-assets": "./bin/catalog-sync-assets.js"
+  },
   "exports": {
     ".": "./src/index.js"
   }

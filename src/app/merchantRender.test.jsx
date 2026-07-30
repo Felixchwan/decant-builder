@@ -8,7 +8,7 @@ import { aurelianConfig } from "../merchants/aurelian/config.js";
 import { discoveryDecantsConfig } from "../merchants/discoveryDecants/config.js";
 import { createCatalogAssetResolver, fragrances as perfumes, notes } from "@discovery-box/catalog";
 
-const assetResolver = createCatalogAssetResolver({ basePath: "/images" });
+const assetResolver = createCatalogAssetResolver({ basePath: "/catalog-assets" });
 
 function renderBuilder(config) {
   return renderToStaticMarkup(

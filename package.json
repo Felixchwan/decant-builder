@@ -7,7 +7,10 @@
     "packages/*"
   ],
   "scripts": {
+    "sync:catalog-assets": "catalog-sync-assets --destination public/catalog-assets",
+    "predev": "npm run sync:catalog-assets",
     "dev": "vite",
+    "prebuild": "npm run sync:catalog-assets",
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
