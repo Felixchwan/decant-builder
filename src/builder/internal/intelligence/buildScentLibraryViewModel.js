@@ -26,7 +26,7 @@ export function buildScentLibraryViewModel({
         entriesByNoteId.set(noteId, {
           noteId,
           name: note.name || formatNoteId(noteId),
-          image: note.noteImage || note.image || "",
+          image: note.noteImage || "",
           perfumeCount: 0,
           perfumes: [],
         });

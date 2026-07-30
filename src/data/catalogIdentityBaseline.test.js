@@ -51,7 +51,7 @@ describe("catalog identity baseline", () => {
         name: expect.any(String),
         shortName: expect.any(String),
         brand: expect.any(String),
-        image: expect.stringMatching(/^\/images\/perfumes\/.+\.(?:png|avif)$/),
+        imageAssetKey: expect.stringMatching(/^perfumes\/.+\.(?:png|avif)$/),
         points: expect.any(Number),
         accords: expect.any(Array),
         seasons: expect.any(Array),

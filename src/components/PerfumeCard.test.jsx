@@ -19,10 +19,12 @@ function renderPerfumeCard(perfumeOverrides = {}) {
         brand: "Givenchy",
         points: 1,
         image: "/images/perfumes/bronze/givenchy-pour-homme-blue-label.png",
+        imageFallback: "/images/perfumes/placeholders/perfume-placeholder.svg",
         accords: ["fresh", "citrus"],
         ...perfumeOverrides,
       }}
       tierData={tierData}
+      assetResolver={(assetKey) => `/images/${assetKey}`}
       onAddToBox={() => {}}
       onOpenDetails={() => {}}
       isDisabled={false}

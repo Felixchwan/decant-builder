@@ -43,6 +43,7 @@ function renderBuilderPanel(overrides = {}) {
   return renderToStaticMarkup(
     <BuilderPanel
       builderConfig={builderConfig}
+      assetResolver={(assetKey) => `/images/${assetKey}`}
       totalSlots={collectionSummary.counts.selected}
       maxSlots={builderConfig.box.totalPhysicalSlots}
       maxSelectableSlots={builderConfig.box.maxSelectableSlots}

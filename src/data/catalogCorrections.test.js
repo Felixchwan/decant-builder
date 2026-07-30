@@ -5,10 +5,11 @@ import { describe, expect, it } from "vitest";
 
 import { buildCatalogView } from "../builder/internal/catalog/buildCatalogView.js";
 import { buildScentLibraryViewModel } from "../builder/internal/intelligence/buildScentLibraryViewModel.js";
-import { fragrances as perfumes, notes } from "@discovery-box/catalog";
+import { createCatalogAssetResolver, fragrances as perfumes, notes } from "@discovery-box/catalog";
 
 const ARMANI_CODE_EDT_ID = 104;
 const SILVER_MOUNTAIN_WATER_ID = 401;
+const resolveAsset = createCatalogAssetResolver({ basePath: "/images" });
 
 function perfumeById(id) {
   return perfumes.find((perfume) => perfume.id === id);
@@ -97,10 +98,10 @@ describe("catalog data corrections", () => {
       shortName: "SMW",
       brand: "Creed",
       points: 4,
-      image: "/images/perfumes/diamond/silver-mountain-water.png",
+      imageAssetKey: "perfumes/diamond/silver-mountain-water.png",
     });
 
-    const assetPath = `public${smw.image}`;
+    const assetPath = `public${resolveAsset(smw.imageAssetKey)}`;
     expect(existsSync(assetPath)).toBe(true);
 
     const png = readFileSync(assetPath);

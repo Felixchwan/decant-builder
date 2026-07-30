@@ -1,6 +1,11 @@
 import { DiscoveryBoxBuilder } from "../builder/index.js";
 import AppErrorBoundary from "../components/AppErrorBoundary.jsx";
-import { createMerchantCatalog, fragrances, notes } from "@discovery-box/catalog";
+import {
+  createCatalogAssetResolver,
+  createMerchantCatalog,
+  fragrances,
+  notes,
+} from "@discovery-box/catalog";
 import { discoveryDecantsConfig } from "../merchants/discoveryDecants/config.js";
 import { discoveryDecantsAvailableIds } from "../merchants/discoveryDecants/catalog.js";
 import { createAnalytics, buildAnalyticsContext } from "../analytics/createAnalytics.js";
@@ -10,6 +15,7 @@ import { createWhatsAppFinalizationAdapter } from "../finalization/createWhatsAp
 const finalizationAdapter = createWhatsAppFinalizationAdapter({
   phoneNumber: discoveryDecantsConfig.finalization.whatsappNumber,
 });
+const assetResolver = createCatalogAssetResolver({ basePath: "/images" });
 const discoveryDecantsCatalog = createMerchantCatalog({
   source: fragrances,
   availableIds: discoveryDecantsAvailableIds,
@@ -37,6 +43,7 @@ export default function DiscoveryDecantsApp() {
         config={discoveryDecantsConfig}
         analytics={analytics}
         finalizationAdapter={finalizationAdapter}
+        assetResolver={assetResolver}
       />
     </AppErrorBoundary>
   );

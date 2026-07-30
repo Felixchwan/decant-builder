@@ -1,3 +1,5 @@
+import { useMemo } from "react";
+import { perfumePlaceholderAssetKey } from "@discovery-box/catalog";
 import BuilderApp from "../App.jsx";
 import { validateBuilderConfig } from "./config/index.js";
 
@@ -10,6 +12,7 @@ import { validateBuilderConfig } from "./config/index.js";
  * @param {object} props.config Normalized Builder config, usually produced by createBuilderConfig.
  * @param {object} props.analytics Provider-neutral analytics adapter. Defaults to no-op when omitted.
  * @param {object} props.finalizationAdapter Host-supplied delivery-channel adapter. Optional.
+ * @param {(assetKey: string) => string} props.assetResolver Host-supplied catalog asset resolver.
  */
 export default function DiscoveryBoxBuilder({
   catalog,
@@ -17,6 +20,7 @@ export default function DiscoveryBoxBuilder({
   config,
   analytics,
   finalizationAdapter,
+  assetResolver,
 }) {
   if (!config) {
     throw new Error("DiscoveryBoxBuilder requires a normalized builder config.");
@@ -30,15 +34,45 @@ export default function DiscoveryBoxBuilder({
     throw new Error("DiscoveryBoxBuilder notes must be an object when provided.");
   }
 
+  if (typeof assetResolver !== "function") {
+    throw new Error("DiscoveryBoxBuilder requires an assetResolver function.");
+  }
+
   const validatedConfig = validateBuilderConfig(config);
+  const perfumeImageFallback = assetResolver(perfumePlaceholderAssetKey);
+  const resolvedCatalog = useMemo(
+    () =>
+      catalog.map((perfume) => ({
+        ...perfume,
+        image: assetResolver(perfume.imageAssetKey),
+        imageFallback: perfumeImageFallback,
+      })),
+    [assetResolver, catalog, perfumeImageFallback],
+  );
+  const resolvedNotes = useMemo(
+    () =>
+      Object.fromEntries(
+        Object.entries(notes).map(([noteId, note]) => [
+          noteId,
+          {
+            ...note,
+            noteImage: note.noteImageAssetKey
+              ? assetResolver(note.noteImageAssetKey)
+              : "",
+          },
+        ]),
+      ),
+    [assetResolver, notes],
+  );
 
   return (
     <BuilderApp
-      catalog={catalog}
-      notes={notes}
+      catalog={resolvedCatalog}
+      notes={resolvedNotes}
       config={validatedConfig}
       analytics={analytics}
       finalizationAdapter={finalizationAdapter}
+      assetResolver={assetResolver}
     />
   );
 }

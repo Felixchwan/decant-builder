@@ -6768,6 +6768,19 @@ button {
   white-space: nowrap;
 }
 
+.collection-card-vial-image {
+  position: absolute;
+  z-index: 1;
+  left: 3px;
+  width: 22px;
+  height: 27px;
+  object-fit: contain;
+}
+
+.collection-card-vial-image + .collection-card-vial-label {
+  margin-left: 20px;
+}
+
 .collection-card-vial.is-empty {
   opacity: 0.42;
 }
@@ -7000,6 +7013,16 @@ button {
   font-size: 13px;
 }
 
+.collection-card--export .collection-card-vial-image {
+  left: 5px;
+  width: 34px;
+  height: 40px;
+}
+
+.collection-card--export .collection-card-vial-image + .collection-card-vial-label {
+  margin-left: 32px;
+}
+
 .collection-card--export .collection-card-bonus-mark {
   width: 20px;
   height: 20px;
@@ -7109,6 +7132,15 @@ button {
   .collection-card-vial-label {
     padding: 2.5px 5px;
     font-size: 0.46rem;
+  }
+
+  .collection-card-vial-image {
+    width: 17px;
+    height: 20px;
+  }
+
+  .collection-card-vial-image + .collection-card-vial-label {
+    margin-left: 15px;
   }
 
   .collection-card-summary {

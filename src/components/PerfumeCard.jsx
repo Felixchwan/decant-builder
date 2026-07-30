@@ -2,14 +2,16 @@ import { brandAssets } from "@discovery-box/catalog";
 
 function PerfumeCard({
   perfume,
+  assetResolver,
   tierData,
   onAddToBox,
   onOpenDetails,
   isDisabled,
   labels = {},
 }) {
-  const imageFallback = "/images/perfumes/placeholders/perfume-placeholder.svg";
-  const brandAsset = brandAssets[perfume.brand] || "";
+  const imageFallback = perfume.imageFallback;
+  const brandAssetKey = brandAssets[perfume.brand] || "";
+  const brandAsset = brandAssetKey ? assetResolver(brandAssetKey) : "";
   const addLabel = labels.add || "Add";
   const addToBoxLabel = labels.addToBox || "Add to box";
   const viewDetailsLabel = labels.viewDetails || "View notes & details";

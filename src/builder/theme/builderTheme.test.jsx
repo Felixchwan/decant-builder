@@ -40,6 +40,7 @@ const approvedAurelianColors = {
   accentContrast: "#171108",
   disabled: "rgba(147, 139, 125, 0.16)",
 };
+const assetResolver = (assetKey) => `/images/${assetKey}`;
 
 function withTheme(theme) {
   return createBuilderConfig({
@@ -115,8 +116,8 @@ describe("Builder theme contract", () => {
   it("scopes different synthetic themes to separate Builder root elements", () => {
     const markup = renderToStaticMarkup(
       <div>
-        <DiscoveryBoxBuilder catalog={[]} notes={{}} config={withTheme(syntheticThemeA)} />
-        <DiscoveryBoxBuilder catalog={[]} notes={{}} config={withTheme(syntheticThemeB)} />
+        <DiscoveryBoxBuilder catalog={[]} notes={{}} config={withTheme(syntheticThemeA)} assetResolver={assetResolver} />
+        <DiscoveryBoxBuilder catalog={[]} notes={{}} config={withTheme(syntheticThemeB)} assetResolver={assetResolver} />
       </div>
     );
 
@@ -159,8 +160,8 @@ describe("Builder theme contract", () => {
   it("renders every approved Aurelian variable on its independently scoped root", () => {
     const markup = renderToStaticMarkup(
       <div>
-        <DiscoveryBoxBuilder catalog={[]} notes={{}} config={discoveryDecantsConfig} />
-        <DiscoveryBoxBuilder catalog={[]} notes={{}} config={aurelianConfig} />
+        <DiscoveryBoxBuilder catalog={[]} notes={{}} config={discoveryDecantsConfig} assetResolver={assetResolver} />
+        <DiscoveryBoxBuilder catalog={[]} notes={{}} config={aurelianConfig} assetResolver={assetResolver} />
       </div>
     );
 

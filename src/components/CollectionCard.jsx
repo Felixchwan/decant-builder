@@ -218,6 +218,13 @@ function CollectionCardVial({ perfume, isReserved, isCuratorBonusUnlocked }) {
     >
       <span className="collection-card-vial-cap" />
       <span className="collection-card-vial-body">
+        {perfume.image && (
+          <img
+            className="collection-card-vial-image"
+            src={perfume.image}
+            alt=""
+          />
+        )}
         <span className="collection-card-vial-label">{label}</span>
       </span>
     </span>

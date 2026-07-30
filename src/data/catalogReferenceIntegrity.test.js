@@ -30,7 +30,7 @@ describe("catalog reference integrity", () => {
   it("resolves every current fragrance brand through current brand behavior", () => {
     for (const perfume of perfumes) {
       expect(brandAssets[perfume.brand], `${perfume.id} has no brand asset`).toMatch(
-        /^\/images\/brands\/.+\.png$/
+        /^brands\/.+\.png$/
       );
     }
   });
@@ -42,7 +42,7 @@ describe("catalog reference integrity", () => {
           expect(
             metadataAssets[type]?.[value],
             `${perfume.id} ${field} references missing metadata ${value}`
-          ).toMatch(/^\/images\/metadata\/.+\.svg$/);
+          ).toMatch(/^metadata\/.+\.svg$/);
         }
       }
     }
@@ -50,7 +50,7 @@ describe("catalog reference integrity", () => {
 
   it("allows multiple logical records to share canonical asset paths", () => {
     expect(Object.values(notes).length).toBeGreaterThan(
-      new Set(Object.values(notes).map(({ noteImage }) => noteImage).filter(Boolean)).size
+      new Set(Object.values(notes).map(({ noteImageAssetKey }) => noteImageAssetKey).filter(Boolean)).size
     );
   });
 

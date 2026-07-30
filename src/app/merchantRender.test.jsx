@@ -6,11 +6,13 @@ import { describe, expect, it } from "vitest";
 import { DiscoveryBoxBuilder } from "../builder/index.js";
 import { aurelianConfig } from "../merchants/aurelian/config.js";
 import { discoveryDecantsConfig } from "../merchants/discoveryDecants/config.js";
-import { fragrances as perfumes, notes } from "@discovery-box/catalog";
+import { createCatalogAssetResolver, fragrances as perfumes, notes } from "@discovery-box/catalog";
+
+const assetResolver = createCatalogAssetResolver({ basePath: "/images" });
 
 function renderBuilder(config) {
   return renderToStaticMarkup(
-    <DiscoveryBoxBuilder catalog={perfumes} notes={notes} config={config} />
+    <DiscoveryBoxBuilder catalog={perfumes} notes={notes} config={config} assetResolver={assetResolver} />
   );
 }
 
@@ -58,6 +60,14 @@ describe("merchant-localized Builder render", () => {
     expect(appSource).toContain("finalizationAdapter={finalizationAdapter}");
     expect(panelSource).toContain("finalizationAdapter.finalize(finalizationModel)");
     expect(panelSource).not.toMatch(/window\.open|navigator\.clipboard|wa\.me/);
+  });
+
+  it("flows the host asset resolver through the public Builder boundary", () => {
+    const publicBuilderSource = readFileSync("src/builder/DiscoveryBoxBuilder.jsx", "utf8");
+    const appSource = readFileSync("src/App.jsx", "utf8");
+
+    expect(publicBuilderSource).toContain("assetResolver={assetResolver}");
+    expect(appSource).toContain("assetResolver={assetResolver}");
   });
 
   it("keeps WhatsApp adapter ownership with Discovery Decants and Aurelian disabled", () => {

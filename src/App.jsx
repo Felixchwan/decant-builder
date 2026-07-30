@@ -22,7 +22,10 @@ import {
   moveComposerProposalSlotAlternative,
 } from "./builder/internal/composition/buildComposerBoxProposal.js";
 import { buildComposerRecommendations } from "./builder/internal/recommendations/buildComposerRecommendations.js";
-import { brandAssets, metadataAssets } from "@discovery-box/catalog";
+import {
+  brandAssets,
+  metadataAssets,
+} from "@discovery-box/catalog";
 import { createTranslator } from "./i18n/createTranslator.js";
 import { ANALYTICS_EVENTS } from "./analytics/events.js";
 import { noopAnalytics } from "./analytics/noopAnalytics.js";
@@ -38,8 +41,6 @@ import {
   reorderSelectedPerfumes,
 } from "./builder/internal/selection/selectionState.js";
 
-const PERFUME_IMAGE_FALLBACK =
-  "/images/perfumes/placeholders/perfume-placeholder.svg";
 const EMPTY_NOTES = {};
 
 function App({
@@ -48,6 +49,7 @@ function App({
   config,
   analytics = noopAnalytics,
   finalizationAdapter,
+  assetResolver,
 }) {
   const builderConfig = config;
   const builderThemeStyle = useMemo(
@@ -809,6 +811,7 @@ const confirmAddPerfume = () => {
                   <PerfumeCard
                     key={perfume.id}
                     perfume={perfume}
+                    assetResolver={assetResolver}
                     tierData={tierData}
                     onAddToBox={addPerfume}
                     onOpenDetails={(perfume) => openPerfumeDetails(perfume, "manual")}
@@ -833,6 +836,7 @@ const confirmAddPerfume = () => {
         >
           <BuilderPanel
             builderConfig={builderConfig}
+            assetResolver={assetResolver}
             totalSlots={totalSlots}
             maxSlots={MAX_BOX_SLOTS}
             maxSelectableSlots={MAX_SELECTABLE_SLOTS}
@@ -882,6 +886,7 @@ const confirmAddPerfume = () => {
       <PerfumeDetailsModal
         key={detailPerfume.id}
         builderConfig={builderConfig}
+        assetResolver={assetResolver}
         perfume={detailPerfume}
         notes={notes}
         tierData={getTierData(detailPerfume.id)}
@@ -1076,6 +1081,7 @@ function getBuilderStorage() {
 
 function PerfumeDetailsModal({
   builderConfig,
+  assetResolver,
   translator,
   perfume,
   notes,
@@ -1113,7 +1119,9 @@ function PerfumeDetailsModal({
     (perfume.topNotes || []).length > 0 ||
     (perfume.middleNotes || []).length > 0 ||
     (perfume.baseNotes || []).length > 0;
-  const brandAsset = brandAssets[perfume.brand] || "";
+  const brandAssetKey = brandAssets[perfume.brand] || "";
+  const brandAsset = brandAssetKey ? assetResolver(brandAssetKey) : "";
+  const perfumeImageFallback = perfume.imageFallback;
 
   useEffect(() => {
     return () => {
@@ -1330,7 +1338,7 @@ function PerfumeDetailsModal({
                   alt={t("details.bottleAlt", { name: perfume.name })}
                   onError={(event) => {
                     event.currentTarget.onerror = null;
-                    event.currentTarget.src = PERFUME_IMAGE_FALLBACK;
+                    event.currentTarget.src = perfumeImageFallback;
                   }}
                 />
                 <button
@@ -1360,14 +1368,14 @@ function PerfumeDetailsModal({
         <section className="perfume-details-section">
           <h4>{t("details.profile")}</h4>
 
-          <DetailTagGroup translator={translator} label={t("details.seasons")} values={perfume.seasons || []} assetType="seasons" />
-          <DetailTagGroup translator={translator} label={t("details.occasions")} values={perfume.occasions || []} assetType="occasions" />
-          <DetailTagGroup translator={translator} label={t("details.vibes")} values={perfume.vibes || []} assetType="vibes" />
+          <DetailTagGroup assetResolver={assetResolver} translator={translator} label={t("details.seasons")} values={perfume.seasons || []} assetType="seasons" />
+          <DetailTagGroup assetResolver={assetResolver} translator={translator} label={t("details.occasions")} values={perfume.occasions || []} assetType="occasions" />
+          <DetailTagGroup assetResolver={assetResolver} translator={translator} label={t("details.vibes")} values={perfume.vibes || []} assetType="vibes" />
         </section>
 
         <section className="perfume-details-section">
           <h4>{t("details.accords")}</h4>
-          <DetailTagGroup translator={translator} label={t("details.accords")} values={perfume.accords || []} assetType="accords" />
+          <DetailTagGroup assetResolver={assetResolver} translator={translator} label={t("details.accords")} values={perfume.accords || []} assetType="accords" />
         </section>
 
         <section className="perfume-details-section">
@@ -1407,7 +1415,7 @@ function PerfumeDetailsModal({
   );
 }
 
-function DetailTagGroup({ translator, label, values, assetType }) {
+function DetailTagGroup({ assetResolver, translator, label, values, assetType }) {
   const t = translator?.t || ((key) => key);
   return (
     <div className="detail-profile-group">
@@ -1416,7 +1424,7 @@ function DetailTagGroup({ translator, label, values, assetType }) {
       <div className="details-tag-row">
         {values.length > 0 ? (
           values.map((value) => (
-            <DetailMetadataChip key={value} translator={translator} value={value} assetType={assetType} />
+            <DetailMetadataChip key={value} assetResolver={assetResolver} translator={translator} value={value} assetType={assetType} />
           ))
         ) : (
           <p>{t("details.noData")}</p>
@@ -1426,8 +1434,9 @@ function DetailTagGroup({ translator, label, values, assetType }) {
   );
 }
 
-function DetailMetadataChip({ translator, value, assetType }) {
-  const asset = assetType ? metadataAssets[assetType]?.[value] || null : null;
+function DetailMetadataChip({ assetResolver, translator, value, assetType }) {
+  const assetKey = assetType ? metadataAssets[assetType]?.[value] || null : null;
+  const asset = assetKey ? assetResolver(assetKey) : null;
   const displayValue = translator?.label?.(assetType, value) || value;
 
   if (!asset) {
@@ -1470,7 +1479,7 @@ function DetailNoteGroup({ title, noteIds, notes }) {
 
 function DetailNotePill({ note, noteId }) {
   const noteName = note?.name || formatLabel(noteId);
-  const noteImage = note?.noteImage || note?.image;
+  const noteImage = note?.noteImage;
 
   if (!noteImage) {
     return <span>{noteName}</span>;

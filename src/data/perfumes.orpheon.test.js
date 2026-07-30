@@ -5,10 +5,11 @@ import { describe, expect, it } from "vitest";
 import { discoveryDecantsConfig } from "../builder/config/discoveryDecantsConfig.js";
 import { buildCollectionSummary } from "../builder/internal/intelligence/buildCollectionSummary.js";
 import { buildCatalogView } from "../builder/internal/catalog/buildCatalogView.js";
-import { brandAssets, fragrances as perfumes, notes } from "@discovery-box/catalog";
+import { brandAssets, createCatalogAssetResolver, fragrances as perfumes, notes } from "@discovery-box/catalog";
 import { getPerfumeNoteIds } from "../utils/noteUtils.js";
 
 const ORPHEON_ID = 409;
+const resolveAsset = createCatalogAssetResolver({ basePath: "/images" });
 
 function assetPath(publicPath) {
   return fileURLToPath(new URL(`../../public/${publicPath.replace(/^\//, "")}`, import.meta.url));
@@ -38,7 +39,7 @@ describe("Diptyque Orphéon catalog entry", () => {
       shortName: "Orphéon EDP",
       brand: "Diptyque",
       points: 4,
-      image: "/images/perfumes/diamond/diptyque-orpheon-eau-de-parfum.png",
+      imageAssetKey: "perfumes/diamond/diptyque-orpheon-eau-de-parfum.png",
       accords: ["powdery", "woody", "aromatic", "fresh spicy", "white floral"],
       topNotes: ["juniper"],
       middleNotes: ["jasmine"],
@@ -60,10 +61,10 @@ describe("Diptyque Orphéon catalog entry", () => {
   });
 
   it("resolves bottle, logo, and note assets", () => {
-    const bottlePath = assetPath(orpheon.image);
+    const bottlePath = assetPath(resolveAsset(orpheon.imageAssetKey));
     const bottlePng = readPngDimensions(bottlePath);
-    const logoPath = assetPath(brandAssets.Diptyque);
-    const powderyNotePath = assetPath(notes.powderyNotes.noteImage);
+    const logoPath = assetPath(resolveAsset(brandAssets.Diptyque));
+    const powderyNotePath = assetPath(resolveAsset(notes.powderyNotes.noteImageAssetKey));
 
     expect(existsSync(bottlePath)).toBe(true);
     expect(bottlePng).toEqual({
@@ -83,8 +84,8 @@ describe("Diptyque Orphéon catalog entry", () => {
     expect(noteIds).toEqual(["juniper", "jasmine", "powderyNotes", "cedar", "tonkaBean"]);
     noteIds.forEach((noteId) => {
       expect(notes[noteId]).toBeTruthy();
-      expect(notes[noteId].noteImage).toBeTruthy();
-      expect(existsSync(assetPath(notes[noteId].noteImage))).toBe(true);
+      expect(notes[noteId].noteImageAssetKey).toBeTruthy();
+      expect(existsSync(assetPath(resolveAsset(notes[noteId].noteImageAssetKey)))).toBe(true);
     });
     expect(new Set(noteNames).size).toBe(noteNames.length);
   });

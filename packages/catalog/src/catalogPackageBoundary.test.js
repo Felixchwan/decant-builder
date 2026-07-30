@@ -23,10 +23,12 @@ describe("@discovery-box/catalog package boundary", () => {
   it("exports exactly the approved public API", () => {
     expect(Object.keys(catalog).sort()).toEqual([
       "brandAssets",
+      "createCatalogAssetResolver",
       "createMerchantCatalog",
       "fragrances",
       "metadataAssets",
       "notes",
+      "perfumePlaceholderAssetKey",
     ]);
   });
 
@@ -67,5 +69,19 @@ describe("@discovery-box/catalog package boundary", () => {
     expect(catalog.metadataAssets.occasions.daily).toBe(
       catalog.metadataAssets.occasions.day
     );
+  });
+
+  it("publishes asset keys rather than host-root URLs", () => {
+    catalog.fragrances.forEach((perfume) => {
+      expect(perfume).not.toHaveProperty("image");
+      expect(perfume.imageAssetKey).toMatch(/^perfumes\//);
+    });
+    Object.values(catalog.notes).forEach((note) => {
+      expect(note).not.toHaveProperty("noteImage");
+      expect(note).not.toHaveProperty("image");
+      if (note.noteImageAssetKey) {
+        expect(note.noteImageAssetKey).toMatch(/^notes\//);
+      }
+    });
   });
 });

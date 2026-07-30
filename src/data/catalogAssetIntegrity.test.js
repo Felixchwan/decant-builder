@@ -6,13 +6,15 @@ import { describe, expect, it } from "vitest";
 import { buildCollectionCardItems } from "../builder/internal/collectionCard/buildCollectionCardViewModel.js";
 import {
   brandAssets,
+  createCatalogAssetResolver,
   fragrances as perfumes,
   metadataAssets,
   notes,
+  perfumePlaceholderAssetKey,
 } from "@discovery-box/catalog";
 
 const PUBLIC_ROOT = fileURLToPath(new URL("../../public/", import.meta.url));
-const PERFUME_PLACEHOLDER = "/images/perfumes/placeholders/perfume-placeholder.svg";
+const resolveAsset = createCatalogAssetResolver({ basePath: "/images" });
 
 function assertExactCasePublicAsset(publicUrl) {
   expect(publicUrl).toMatch(/^\/images\//);
@@ -33,12 +35,15 @@ function unique(values) {
 }
 
 describe("catalog asset integrity", () => {
-  const perfumeImages = unique(perfumes.map(({ image }) => image));
-  const noteImages = unique(Object.values(notes).map(({ noteImage }) => noteImage).filter(Boolean));
-  const brandImages = unique(Object.values(brandAssets));
+  const perfumeAssetKeys = unique(perfumes.map(({ imageAssetKey }) => imageAssetKey));
+  const noteAssetKeys = unique(Object.values(notes).map(({ noteImageAssetKey }) => noteImageAssetKey).filter(Boolean));
+  const brandAssetKeys = unique(Object.values(brandAssets));
+  const perfumeImages = perfumeAssetKeys.map(resolveAsset);
+  const noteImages = noteAssetKeys.map(resolveAsset);
+  const brandImages = brandAssetKeys.map(resolveAsset);
   const metadataImages = unique(
     Object.values(metadataAssets).flatMap((assets) => Object.values(assets))
-  );
+  ).map(resolveAsset);
 
   it("maps every runtime asset URL deterministically to public with exact casing", () => {
     for (const path of [
@@ -46,7 +51,7 @@ describe("catalog asset integrity", () => {
       ...noteImages,
       ...brandImages,
       ...metadataImages,
-      PERFUME_PLACEHOLDER,
+      resolveAsset(perfumePlaceholderAssetKey),
     ]) {
       assertExactCasePublicAsset(path);
     }
@@ -57,10 +62,20 @@ describe("catalog asset integrity", () => {
     expect(noteImages.every((path) => extname(path) === ".jpg")).toBe(true);
     expect(brandImages.every((path) => extname(path) === ".png")).toBe(true);
     expect(metadataImages.every((path) => extname(path) === ".svg")).toBe(true);
-    expect(extname(PERFUME_PLACEHOLDER)).toBe(".svg");
+    expect(extname(perfumePlaceholderAssetKey)).toBe(".svg");
   });
 
-  it("freezes current host-root path conventions and same-origin resolution", () => {
+  it("keeps canonical references root-agnostic and host resolution same-origin", () => {
+    for (const key of [
+      ...perfumeAssetKeys,
+      ...noteAssetKeys,
+      ...brandAssetKeys,
+      ...Object.values(metadataAssets).flatMap((assets) => Object.values(assets)),
+      perfumePlaceholderAssetKey,
+    ]) {
+      expect(key).not.toMatch(/^(?:\/|[a-z][a-z\d+.-]*:)/i);
+    }
+
     expect(perfumeImages.every((path) => path.startsWith("/images/perfumes/"))).toBe(true);
     expect(noteImages.every((path) => path.startsWith("/images/notes/"))).toBe(true);
     expect(brandImages.every((path) => path.startsWith("/images/brands/"))).toBe(true);
@@ -74,13 +89,17 @@ describe("catalog asset integrity", () => {
   });
 
   it("passes unchanged, resolvable image paths into collection-card items", () => {
-    const items = buildCollectionCardItems(perfumes);
-    expect(items.map(({ image }) => image)).toEqual(perfumes.map(({ image }) => image));
+    const resolvedPerfumes = perfumes.map((perfume) => ({
+      ...perfume,
+      image: resolveAsset(perfume.imageAssetKey),
+    }));
+    const items = buildCollectionCardItems(resolvedPerfumes);
+    expect(items.map(({ image }) => image)).toEqual(resolvedPerfumes.map(({ image }) => image));
     items.forEach(({ image }) => assertExactCasePublicAsset(image));
   });
 
   it("keeps duplicate logical asset references valid", () => {
-    expect(noteImages.length).toBeLessThan(Object.values(notes).filter(({ noteImage }) => noteImage).length);
+    expect(noteImages.length).toBeLessThan(Object.values(notes).filter(({ noteImageAssetKey }) => noteImageAssetKey).length);
     expect(brandImages.length).toBeLessThan(Object.values(brandAssets).length);
     expect(metadataImages.length).toBeLessThan(
       Object.values(metadataAssets).reduce((count, assets) => count + Object.keys(assets).length, 0)

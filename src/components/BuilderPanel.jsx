@@ -53,10 +53,9 @@ import { noopAnalytics } from "../analytics/noopAnalytics.js";
 import { metadataAssets } from "@discovery-box/catalog";
 
 const EMPTY_RECOMMENDATIONS = [];
-const PERFUME_IMAGE_FALLBACK =
-  "/images/perfumes/placeholders/perfume-placeholder.svg";
 function BuilderPanel({
   builderConfig,
+  assetResolver,
   totalSlots,
   maxSlots,
   maxSelectableSlots,
@@ -642,6 +641,7 @@ function BuilderPanel({
 
       <CollectionSnapshot
         builderConfig={builderConfig}
+        assetResolver={assetResolver}
         boxSummary={boxSummary}
         coverageSummary={coverageSummary}
         selectedPerfumes={selectedPerfumes}
@@ -1545,6 +1545,7 @@ function DiscoveryBoxCoachmark({ model, onDismiss, onAction }) {
 
 function CollectionSnapshot({
   builderConfig,
+  assetResolver,
   boxSummary,
   coverageSummary,
   intelligence,
@@ -1698,18 +1699,21 @@ function CollectionSnapshot({
             <>
               <SeasonProfilePanel model={seasonProfile} translator={translator} />
               <ProfileSummaryGroup
+                assetResolver={assetResolver}
                 label="Occasions"
                 values={boxSummary.occasions}
                 assetType="occasions"
                 translator={translator}
               />
               <ProfileSummaryGroup
+                assetResolver={assetResolver}
                 label="Seasons"
                 values={boxSummary.seasons}
                 assetType="seasons"
                 translator={translator}
               />
               <ProfileSummaryGroup
+                assetResolver={assetResolver}
                 label="Vibes"
                 values={boxSummary.vibes}
                 assetType="vibes"
@@ -1725,6 +1729,7 @@ function CollectionSnapshot({
                       ([accord, perfumeNames]) => (
                         <span className="accord-tooltip summary-metadata-chip-shell" key={accord}>
                           <MetadataSummaryChip
+                            assetResolver={assetResolver}
                             assetType="accords"
                             value={accord}
                             label={`${formatIntelligenceLabel(accord)} x${perfumeNames.length}`}
@@ -2002,12 +2007,12 @@ function CollectionDnaPanel({
                         aria-controls={isDetailOpen ? detailId : undefined}
                       >
                         <img
-                          src={perfume.image || PERFUME_IMAGE_FALLBACK}
+                          src={perfume.image || perfume.imageFallback}
                           alt=""
                           aria-hidden="true"
                           onError={(event) => {
                             event.currentTarget.onerror = null;
-                            event.currentTarget.src = PERFUME_IMAGE_FALLBACK;
+                            event.currentTarget.src = perfume.imageFallback;
                           }}
                         />
                         <span>{perfume.shortName || perfume.name}</span>
@@ -2119,12 +2124,12 @@ function DnaPerfumeRow({
         aria-controls={isDetailOpen ? detailId : undefined}
       >
         <img
-          src={perfume.image || PERFUME_IMAGE_FALLBACK}
+          src={perfume.image || perfume.imageFallback}
           alt=""
           aria-hidden="true"
           onError={(event) => {
             event.currentTarget.onerror = null;
-            event.currentTarget.src = PERFUME_IMAGE_FALLBACK;
+            event.currentTarget.src = perfume.imageFallback;
           }}
         />
       </button>
@@ -2289,7 +2294,7 @@ function SeasonProfilePanel({ model, translator }) {
   );
 }
 
-function ProfileSummaryGroup({ label, values, assetType, translator }) {
+function ProfileSummaryGroup({ assetResolver, label, values, assetType, translator }) {
   if (values.length === 0) {
     return null;
   }
@@ -2299,15 +2304,16 @@ function ProfileSummaryGroup({ label, values, assetType, translator }) {
       <span>{label}</span>
       <div className="summary-tags">
         {values.map((item) => (
-          <MetadataSummaryChip key={item} assetType={assetType} value={item} translator={translator} />
+          <MetadataSummaryChip key={item} assetResolver={assetResolver} assetType={assetType} value={item} translator={translator} />
         ))}
       </div>
     </div>
   );
 }
 
-function MetadataSummaryChip({ assetType, value, label, translator }) {
-  const asset = assetType ? metadataAssets[assetType]?.[value] || null : null;
+function MetadataSummaryChip({ assetResolver, assetType, value, label, translator }) {
+  const assetKey = assetType ? metadataAssets[assetType]?.[value] || null : null;
+  const asset = assetKey ? assetResolver(assetKey) : null;
   const displayValue = label || translator?.label?.(assetType, value) || formatIntelligenceLabel(value);
 
   if (!asset) {
@@ -3929,7 +3935,7 @@ function RecommendationCard({
   const explanations = getRecommendationDisplayReasons({ recommendation, objectiveKey, translator });
   const confidence = getRecommendationConfidence(recommendation);
   const confidenceLabel = getRecommendationConfidenceLabel(recommendation, translator);
-  const imageFallback = "/images/perfumes/placeholders/perfume-placeholder.svg";
+  const imageFallback = perfume.imageFallback;
   const isAddDisabled = isAdded || isBoxFull;
   const addButtonLabel = isAdded
     ? translator?.t?.("general.added") || "Added"

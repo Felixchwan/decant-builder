@@ -92,5 +92,7 @@ describe("merchant catalog composition", () => {
     expect(discoveryProps.catalog).not.toBe(aurelianProps.catalog);
     expect(discoveryProps.finalizationAdapter).toBeTruthy();
     expect(aurelianProps.finalizationAdapter).toBeUndefined();
+    expect(discoveryProps.assetResolver("brands/example.png")).toBe("/images/brands/example.png");
+    expect(aurelianProps.assetResolver("brands/example.png")).toBe("/images/brands/example.png");
   });
 });
