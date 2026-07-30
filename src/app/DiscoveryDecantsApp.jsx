@@ -2,13 +2,19 @@ import { DiscoveryBoxBuilder } from "../builder/index.js";
 import AppErrorBoundary from "../components/AppErrorBoundary.jsx";
 import { perfumes } from "../data/perfumes";
 import { notes } from "../data/notes";
+import { createMerchantCatalog } from "../catalog/createMerchantCatalog.js";
 import { discoveryDecantsConfig } from "../merchants/discoveryDecants/config.js";
+import { discoveryDecantsAvailableIds } from "../merchants/discoveryDecants/catalog.js";
 import { createAnalytics, buildAnalyticsContext } from "../analytics/createAnalytics.js";
 import { createDevelopmentAnalytics } from "../analytics/developmentAnalytics.js";
 import { createWhatsAppFinalizationAdapter } from "../finalization/createWhatsAppFinalizationAdapter.js";
 
 const finalizationAdapter = createWhatsAppFinalizationAdapter({
   phoneNumber: discoveryDecantsConfig.finalization.whatsappNumber,
+});
+const discoveryDecantsCatalog = createMerchantCatalog({
+  source: perfumes,
+  availableIds: discoveryDecantsAvailableIds,
 });
 
 export default function DiscoveryDecantsApp() {
@@ -28,7 +34,7 @@ export default function DiscoveryDecantsApp() {
       analytics={analytics}
     >
       <DiscoveryBoxBuilder
-        catalog={perfumes}
+        catalog={discoveryDecantsCatalog}
         notes={notes}
         config={discoveryDecantsConfig}
         analytics={analytics}

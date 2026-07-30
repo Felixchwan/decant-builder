@@ -2,9 +2,16 @@ import { DiscoveryBoxBuilder } from "../builder/index.js";
 import AppErrorBoundary from "../components/AppErrorBoundary.jsx";
 import { perfumes } from "../data/perfumes";
 import { notes } from "../data/notes";
+import { createMerchantCatalog } from "../catalog/createMerchantCatalog.js";
 import { aurelianConfig } from "../merchants/aurelian/config.js";
+import { aurelianAvailableIds } from "../merchants/aurelian/catalog.js";
 import { createAnalytics, buildAnalyticsContext } from "../analytics/createAnalytics.js";
 import { createDevelopmentAnalytics } from "../analytics/developmentAnalytics.js";
+
+const aurelianCatalog = createMerchantCatalog({
+  source: perfumes,
+  availableIds: aurelianAvailableIds,
+});
 
 // Development switch: import this app from main.jsx to run the Aurelian merchant implementation.
 export default function AurelianApp() {
@@ -24,7 +31,7 @@ export default function AurelianApp() {
       analytics={analytics}
     >
       <DiscoveryBoxBuilder
-        catalog={perfumes}
+        catalog={aurelianCatalog}
         notes={notes}
         config={aurelianConfig}
         analytics={analytics}
