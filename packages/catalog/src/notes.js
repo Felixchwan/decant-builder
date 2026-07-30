@@ -1,3 +1,4 @@
+// Canonical fragrance-note dictionary.
 export const notes = {
   lime: { name: "Lime", family: "citrus", image: "", noteImage: "/images/notes/lime.jpg" },
   lemon: {

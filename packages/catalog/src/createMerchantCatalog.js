@@ -1,3 +1,4 @@
+// Pure merchant projection boundary for canonical fragrance records.
 export function createMerchantCatalog({ source, availableIds } = {}) {
   if (!Array.isArray(source)) {
     throw new TypeError("createMerchantCatalog source must be an array.");

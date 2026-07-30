@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { perfumes } from "../../../data/perfumes.js";
-import { notes } from "../../../data/notes.js";
+import { fragrances as perfumes, notes } from "@discovery-box/catalog";
 import { buildScentLibraryViewModel } from "./buildScentLibraryViewModel.js";
 
 const noteRegistry = Object.freeze({

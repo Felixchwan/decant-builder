@@ -6,8 +6,7 @@ import { buildComposerRecommendations } from "../builder/internal/recommendation
 import { discoveryDecantsConfig } from "../builder/config/discoveryDecantsConfig.js";
 import { getTierData } from "../utils/tierUtils.js";
 import { CATALOG_IDENTITY_BASELINE } from "./catalogIdentityBaseline.fixture.js";
-import { notes } from "./notes.js";
-import { perfumes } from "./perfumes.js";
+import { fragrances as perfumes, notes } from "@discovery-box/catalog";
 
 const SUPPORTED_SEASONS = ["spring", "summer", "fall", "winter"];
 describe("catalog identity baseline", () => {

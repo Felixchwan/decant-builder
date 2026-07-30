@@ -46,7 +46,3 @@ export const brandAssets = {
   Zara: "/images/brands/zara.png",
   Zoologist: "/images/brands/zoologist.png",
 };
-
-export function getBrandAsset(brand) {
-  return brandAssets[brand] || "";
-}

@@ -50,7 +50,7 @@ import CollectionCard from "./CollectionCard";
 import { createTranslator } from "../i18n/createTranslator.js";
 import { ANALYTICS_EVENTS } from "../analytics/events.js";
 import { noopAnalytics } from "../analytics/noopAnalytics.js";
-import { getMetadataAsset } from "../data/metadataAssets.js";
+import { metadataAssets } from "@discovery-box/catalog";
 
 const EMPTY_RECOMMENDATIONS = [];
 const PERFUME_IMAGE_FALLBACK =
@@ -2307,7 +2307,7 @@ function ProfileSummaryGroup({ label, values, assetType, translator }) {
 }
 
 function MetadataSummaryChip({ assetType, value, label, translator }) {
-  const asset = assetType ? getMetadataAsset(assetType, value) : null;
+  const asset = assetType ? metadataAssets[assetType]?.[value] || null : null;
   const displayValue = label || translator?.label?.(assetType, value) || formatIntelligenceLabel(value);
 
   if (!asset) {

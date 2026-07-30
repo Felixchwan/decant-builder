@@ -102,7 +102,3 @@ export const metadataAssets = {
     woody: "/images/metadata/accords/woody.svg",
   },
 };
-
-export function getMetadataAsset(type, value) {
-  return metadataAssets[type]?.[value] || null;
-}

@@ -2999,7 +2999,7 @@ const DEFAULT_SEASON_WEIGHTS = {
   winter: 0,
 };
 
-export const perfumes = perfumeCatalog.map((perfume) => ({
+export const fragrances = perfumeCatalog.map((perfume) => ({
   ...perfume,
   seasonWeights:
     SEASON_WEIGHTS_BY_ID[perfume.id] || buildSeasonWeights(perfume.seasons),

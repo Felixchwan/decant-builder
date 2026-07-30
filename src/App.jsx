@@ -22,8 +22,7 @@ import {
   moveComposerProposalSlotAlternative,
 } from "./builder/internal/composition/buildComposerBoxProposal.js";
 import { buildComposerRecommendations } from "./builder/internal/recommendations/buildComposerRecommendations.js";
-import { getMetadataAsset } from "./data/metadataAssets";
-import { getBrandAsset } from "./data/brandAssets";
+import { brandAssets, metadataAssets } from "@discovery-box/catalog";
 import { createTranslator } from "./i18n/createTranslator.js";
 import { ANALYTICS_EVENTS } from "./analytics/events.js";
 import { noopAnalytics } from "./analytics/noopAnalytics.js";
@@ -1114,7 +1113,7 @@ function PerfumeDetailsModal({
     (perfume.topNotes || []).length > 0 ||
     (perfume.middleNotes || []).length > 0 ||
     (perfume.baseNotes || []).length > 0;
-  const brandAsset = getBrandAsset(perfume.brand);
+  const brandAsset = brandAssets[perfume.brand] || "";
 
   useEffect(() => {
     return () => {
@@ -1428,7 +1427,7 @@ function DetailTagGroup({ translator, label, values, assetType }) {
 }
 
 function DetailMetadataChip({ translator, value, assetType }) {
-  const asset = assetType ? getMetadataAsset(assetType, value) : null;
+  const asset = assetType ? metadataAssets[assetType]?.[value] || null : null;
   const displayValue = translator?.label?.(assetType, value) || value;
 
   if (!asset) {

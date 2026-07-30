@@ -4,10 +4,12 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 
 import { buildCollectionCardItems } from "../builder/internal/collectionCard/buildCollectionCardViewModel.js";
-import { brandAssets } from "./brandAssets.js";
-import { metadataAssets } from "./metadataAssets.js";
-import { notes } from "./notes.js";
-import { perfumes } from "./perfumes.js";
+import {
+  brandAssets,
+  fragrances as perfumes,
+  metadataAssets,
+  notes,
+} from "@discovery-box/catalog";
 
 const PUBLIC_ROOT = fileURLToPath(new URL("../../public/", import.meta.url));
 const PERFUME_PLACEHOLDER = "/images/perfumes/placeholders/perfume-placeholder.svg";

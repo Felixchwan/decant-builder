@@ -1,6 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { perfumes as realCatalog } from "../../../data/perfumes.js";
-import { notes as realNotes } from "../../../data/notes.js";
+import { fragrances as realCatalog, notes as realNotes } from "@discovery-box/catalog";
 import { discoveryDecantsConfig } from "../../config/discoveryDecantsConfig.js";
 import { createBuilderConfig } from "../../config/createBuilderConfig.js";
 import {

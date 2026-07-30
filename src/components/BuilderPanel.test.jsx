@@ -6,8 +6,7 @@ import { discoveryDecantsConfig } from "../builder/config/discoveryDecantsConfig
 import { buildCollectionSummary } from "../builder/internal/intelligence/buildCollectionSummary.js";
 import { buildComposerRecommendations } from "../builder/internal/recommendations/buildComposerRecommendations.js";
 import { aurelianConfig } from "../merchants/aurelian/config.js";
-import { perfumes } from "../data/perfumes.js";
-import { notes } from "../data/notes.js";
+import { fragrances as perfumes, notes } from "@discovery-box/catalog";
 import { createTranslator } from "../i18n/createTranslator.js";
 import { buildScentDna } from "../utils/buildScentDna.js";
 import BuilderPanel, { ScentLibraryContent } from "./BuilderPanel.jsx";

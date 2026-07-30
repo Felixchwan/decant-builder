@@ -4,7 +4,7 @@ import { execPath } from "node:process";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 
-import { createMerchantCatalog } from "./createMerchantCatalog.js";
+import { createMerchantCatalog } from "./index.js";
 
 describe("createMerchantCatalog", () => {
   const first = Object.freeze({ id: 1, name: "One", points: 1 });
@@ -74,7 +74,7 @@ describe("createMerchantCatalog", () => {
   });
 
   it("imports in plain Node without browser, React, or Vite dependencies", () => {
-    const moduleUrl = new URL("./createMerchantCatalog.js", import.meta.url);
+    const moduleUrl = new URL("./index.js", import.meta.url);
     const output = execFileSync(
       execPath,
       ["--input-type=module", "--eval", `await import(${JSON.stringify(moduleUrl.href)}); console.log("safe");`],

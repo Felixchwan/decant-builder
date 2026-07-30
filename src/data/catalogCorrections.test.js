@@ -5,8 +5,7 @@ import { describe, expect, it } from "vitest";
 
 import { buildCatalogView } from "../builder/internal/catalog/buildCatalogView.js";
 import { buildScentLibraryViewModel } from "../builder/internal/intelligence/buildScentLibraryViewModel.js";
-import { perfumes } from "./perfumes.js";
-import { notes } from "./notes.js";
+import { fragrances as perfumes, notes } from "@discovery-box/catalog";
 
 const ARMANI_CODE_EDT_ID = 104;
 const SILVER_MOUNTAIN_WATER_ID = 401;

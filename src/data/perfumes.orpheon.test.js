@@ -5,9 +5,7 @@ import { describe, expect, it } from "vitest";
 import { discoveryDecantsConfig } from "../builder/config/discoveryDecantsConfig.js";
 import { buildCollectionSummary } from "../builder/internal/intelligence/buildCollectionSummary.js";
 import { buildCatalogView } from "../builder/internal/catalog/buildCatalogView.js";
-import { getBrandAsset } from "./brandAssets.js";
-import { notes } from "./notes.js";
-import { perfumes } from "./perfumes.js";
+import { brandAssets, fragrances as perfumes, notes } from "@discovery-box/catalog";
 import { getPerfumeNoteIds } from "../utils/noteUtils.js";
 
 const ORPHEON_ID = 409;
@@ -64,7 +62,7 @@ describe("Diptyque Orphéon catalog entry", () => {
   it("resolves bottle, logo, and note assets", () => {
     const bottlePath = assetPath(orpheon.image);
     const bottlePng = readPngDimensions(bottlePath);
-    const logoPath = assetPath(getBrandAsset("Diptyque"));
+    const logoPath = assetPath(brandAssets.Diptyque);
     const powderyNotePath = assetPath(notes.powderyNotes.noteImage);
 
     expect(existsSync(bottlePath)).toBe(true);

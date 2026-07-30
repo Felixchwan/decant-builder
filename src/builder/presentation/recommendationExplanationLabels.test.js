@@ -6,7 +6,7 @@ import {
   getRecommendationExplanationLabel,
 } from "./recommendationExplanationLabels.js";
 import { createTranslator } from "../../i18n/createTranslator.js";
-import { perfumes } from "../../data/perfumes.js";
+import { fragrances as perfumes } from "@discovery-box/catalog";
 import { enUS } from "../../i18n/locales/en-US.js";
 import { esMX } from "../../i18n/locales/es-MX.js";
 

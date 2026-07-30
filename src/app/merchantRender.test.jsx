@@ -6,8 +6,7 @@ import { describe, expect, it } from "vitest";
 import { DiscoveryBoxBuilder } from "../builder/index.js";
 import { aurelianConfig } from "../merchants/aurelian/config.js";
 import { discoveryDecantsConfig } from "../merchants/discoveryDecants/config.js";
-import { perfumes } from "../data/perfumes.js";
-import { notes } from "../data/notes.js";
+import { fragrances as perfumes, notes } from "@discovery-box/catalog";
 
 function renderBuilder(config) {
   return renderToStaticMarkup(

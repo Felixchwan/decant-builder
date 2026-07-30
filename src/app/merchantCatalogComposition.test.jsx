@@ -14,9 +14,8 @@ vi.mock("../builder/index.js", () => ({
 
 import AurelianApp from "./AurelianApp.jsx";
 import DiscoveryDecantsApp from "./DiscoveryDecantsApp.jsx";
-import { createMerchantCatalog } from "../catalog/createMerchantCatalog.js";
+import { createMerchantCatalog, fragrances as perfumes } from "@discovery-box/catalog";
 import { CATALOG_IDENTITY_BASELINE } from "../data/catalogIdentityBaseline.fixture.js";
-import { perfumes } from "../data/perfumes.js";
 import { aurelianAvailableIds } from "../merchants/aurelian/catalog.js";
 import { discoveryDecantsAvailableIds } from "../merchants/discoveryDecants/catalog.js";
 import { getTierData } from "../utils/tierUtils.js";

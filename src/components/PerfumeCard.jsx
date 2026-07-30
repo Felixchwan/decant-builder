@@ -1,4 +1,4 @@
-import { getBrandAsset } from "../data/brandAssets";
+import { brandAssets } from "@discovery-box/catalog";
 
 function PerfumeCard({
   perfume,
@@ -9,7 +9,7 @@ function PerfumeCard({
   labels = {},
 }) {
   const imageFallback = "/images/perfumes/placeholders/perfume-placeholder.svg";
-  const brandAsset = getBrandAsset(perfume.brand);
+  const brandAsset = brandAssets[perfume.brand] || "";
   const addLabel = labels.add || "Add";
   const addToBoxLabel = labels.addToBox || "Add to box";
   const viewDetailsLabel = labels.viewDetails || "View notes & details";

@@ -1,15 +1,13 @@
 import { DiscoveryBoxBuilder } from "../builder/index.js";
 import AppErrorBoundary from "../components/AppErrorBoundary.jsx";
-import { perfumes } from "../data/perfumes";
-import { notes } from "../data/notes";
-import { createMerchantCatalog } from "../catalog/createMerchantCatalog.js";
+import { createMerchantCatalog, fragrances, notes } from "@discovery-box/catalog";
 import { aurelianConfig } from "../merchants/aurelian/config.js";
 import { aurelianAvailableIds } from "../merchants/aurelian/catalog.js";
 import { createAnalytics, buildAnalyticsContext } from "../analytics/createAnalytics.js";
 import { createDevelopmentAnalytics } from "../analytics/developmentAnalytics.js";
 
 const aurelianCatalog = createMerchantCatalog({
-  source: perfumes,
+  source: fragrances,
   availableIds: aurelianAvailableIds,
 });
 
