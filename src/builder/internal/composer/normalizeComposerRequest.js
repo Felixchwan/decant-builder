@@ -1,18 +1,18 @@
-import { discoveryDecantsConfig } from "../../config/index.js";
 import { getComposerCollectionStyle } from "./composerCollectionStyles.js";
 import { getComposerStrategy } from "./composerStrategies.js";
+import { requireComposerConfig } from "./requireComposerConfig.js";
 
 const EMPTY_ARRAY = [];
 
 export function normalizeComposerRequest(input = {}, context = {}) {
   const source = input && typeof input === "object" ? input : {};
-  const config = context?.config || discoveryDecantsConfig;
-  const pointValue = normalizePositiveNumber(config.commerce?.pointValue, 100);
-  const currency = config.commerce?.currency || "";
-  const maxSelectableSlots = normalizeSlotNumber(config.box?.maxSelectableSlots, 14);
-  const defaultMinSlots = normalizeSlotNumber(config.box?.minSelectableSlots, 6);
+  const config = requireComposerConfig(context?.config);
+  const pointValue = config.commerce.pointValue;
+  const currency = config.commerce.currency;
+  const maxSelectableSlots = config.box.maxSelectableSlots;
+  const defaultMinSlots = config.box.minSelectableSlots;
   const defaultTargetSlots = normalizeSlotNumber(
-    config.box?.defaultTargetSlots,
+    config.box.defaultTargetSlots,
     maxSelectableSlots
   );
   const inputIssues = [];
@@ -124,12 +124,6 @@ function normalizeSlotNumber(value, fallback) {
   }
 
   return Math.trunc(value);
-}
-
-function normalizePositiveNumber(value, fallback) {
-  return typeof value === "number" && Number.isFinite(value) && value > 0
-    ? value
-    : fallback;
 }
 
 function uniqueInOrder(values) {

@@ -1,7 +1,7 @@
-import { discoveryDecantsConfig } from "../../config/index.js";
 import { evaluateComposerConstraints } from "../composer/evaluateComposerConstraints.js";
 import { evaluateCompositionQuality } from "../composer/evaluateCompositionQuality.js";
 import { normalizeComposerRequest } from "../composer/normalizeComposerRequest.js";
+import { requireComposerConfig } from "../composer/requireComposerConfig.js";
 import { deriveProposalItemContributions } from "./deriveProposalItemContributions.js";
 import {
   buildComposerContributionReasons,
@@ -19,7 +19,7 @@ export function buildComposerSlotAlternatives({
   notes = {},
   config,
 } = {}) {
-  const builderConfig = config || discoveryDecantsConfig;
+  const builderConfig = requireComposerConfig(config);
   const normalizedRequest = isNormalizedComposerRequest(request)
     ? request
     : normalizeComposerRequest(request, { config: builderConfig });

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { fragrances as realCatalog, notes as realNotes } from "@discovery-box/catalog";
-import { discoveryDecantsConfig } from "../../config/discoveryDecantsConfig.js";
+import { discoveryDecantsConfig } from "../../../merchants/discoveryDecants/config.js";
 import { createBuilderConfig } from "../../config/createBuilderConfig.js";
 import {
   buildComposerBoxProposal,

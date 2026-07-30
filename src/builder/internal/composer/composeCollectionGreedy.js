@@ -1,9 +1,9 @@
-import { discoveryDecantsConfig } from "../../config/index.js";
 import { COMPOSER_COLLECTION_STYLE_IDS } from "./composerCollectionStyles.js";
 import { evaluateComposerConstraints } from "./evaluateComposerConstraints.js";
 import { evaluateCompositionQuality } from "./evaluateCompositionQuality.js";
 import { generateCandidateMoves } from "./generateCandidateMoves.js";
 import { normalizeComposerRequest } from "./normalizeComposerRequest.js";
+import { requireComposerConfig } from "./requireComposerConfig.js";
 
 export const GREEDY_COMPOSER_STATUSES = Object.freeze({
   COMPLETED: "completed",
@@ -28,7 +28,7 @@ export function composeCollectionGreedy({
   notes = {},
   config,
 } = {}) {
-  const builderConfig = config || discoveryDecantsConfig;
+  const builderConfig = requireComposerConfig(config);
   const normalizedRequest = normalizeComposerRequest(request, { config: builderConfig });
   const catalogPerfumes = Array.isArray(catalog) ? catalog : [];
   const catalogById = buildCatalogById(catalogPerfumes);

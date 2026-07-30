@@ -1,4 +1,4 @@
-import { discoveryDecantsConfig } from "../builder/config/index.js";
+import { discoveryDecantsConfig } from "../merchants/discoveryDecants/config.js";
 
 export const MIN_BOX_SLOTS = discoveryDecantsConfig.box.minSelectableSlots;
 export const MAX_BOX_SLOTS = discoveryDecantsConfig.box.totalPhysicalSlots;

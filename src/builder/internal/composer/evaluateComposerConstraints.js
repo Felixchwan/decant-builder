@@ -1,5 +1,5 @@
-import { discoveryDecantsConfig } from "../../config/index.js";
 import { normalizeComposerRequest } from "./normalizeComposerRequest.js";
+import { requireComposerConfig } from "./requireComposerConfig.js";
 
 export function evaluateComposerConstraints({
   request,
@@ -7,11 +7,11 @@ export function evaluateComposerConstraints({
   catalog = [],
   config,
 } = {}) {
+  const builderConfig = requireComposerConfig(config);
   const normalizedRequest = isNormalizedComposerRequest(request)
     ? request
-    : normalizeComposerRequest(request, { config });
-  const builderConfig = config || discoveryDecantsConfig;
-  const pointValue = normalizedRequest.pointValue || builderConfig.commerce?.pointValue || 100;
+    : normalizeComposerRequest(request, { config: builderConfig });
+  const pointValue = normalizedRequest.pointValue || builderConfig.commerce.pointValue;
   const candidateItems = Array.isArray(candidatePerfumes) ? candidatePerfumes : [];
   const catalogItems = Array.isArray(catalog) ? catalog : [];
   const catalogById = buildCatalogById(catalogItems);

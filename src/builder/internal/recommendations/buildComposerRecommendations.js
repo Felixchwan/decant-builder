@@ -1,6 +1,7 @@
 import { composeCollection } from "../composer/composeCollection.js";
 import { deriveComposerExplanations } from "../composer/deriveComposerExplanations.js";
 import { deriveComposerReasoningFacts } from "../composer/deriveComposerReasoningFacts.js";
+import { requireComposerConfig } from "../composer/requireComposerConfig.js";
 
 const DEFAULT_LIMIT = 3;
 
@@ -12,13 +13,14 @@ export function buildComposerRecommendations({
   limit = DEFAULT_LIMIT,
   budget = null,
 } = {}) {
+  const builderConfig = requireComposerConfig(config);
   const safePerfumes = Array.isArray(perfumes) ? perfumes : [];
   const safeSelectedPerfumes = Array.isArray(selectedPerfumes) ? selectedPerfumes : [];
   const selectedIds = new Set(safeSelectedPerfumes.map((perfume) => perfume.id));
 
   if (
     safePerfumes.length === 0 ||
-    safeSelectedPerfumes.length >= (config?.box?.maxSelectableSlots || 14)
+    safeSelectedPerfumes.length >= builderConfig.box.maxSelectableSlots
   ) {
     return emptyRecommendations();
   }
@@ -30,7 +32,7 @@ export function buildComposerRecommendations({
           selectedPerfumes: safeSelectedPerfumes,
           selectedIds,
           notes,
-          config,
+          config: builderConfig,
           limit,
           budget,
           lane: "basedOnYourPicks",
@@ -47,7 +49,7 @@ export function buildComposerRecommendations({
     selectedPerfumes: safeSelectedPerfumes,
     selectedIds,
     notes,
-    config,
+    config: builderConfig,
     limit,
     budget,
     lane: "toBalanceYourBox",
@@ -141,9 +143,10 @@ export function buildComposerRequestFromBuilderState({
   preferences = {},
   excludedPerfumeIds = [],
 } = {}) {
+  const builderConfig = requireComposerConfig(config);
   const safeSelectedPerfumes = Array.isArray(selectedPerfumes) ? selectedPerfumes : [];
-  const maxSelectableSlots = config?.box?.maxSelectableSlots || 14;
-  const minSlots = config?.box?.minSelectableSlots || 6;
+  const maxSelectableSlots = builderConfig.box.maxSelectableSlots;
+  const minSlots = builderConfig.box.minSelectableSlots;
   const targetSlots = Math.min(
     maxSelectableSlots,
     Math.max(minSlots, safeSelectedPerfumes.length + limit)

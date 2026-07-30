@@ -3,6 +3,7 @@ import { deriveComposerExplanations } from "../composer/deriveComposerExplanatio
 import { deriveComposerReasoningFacts } from "../composer/deriveComposerReasoningFacts.js";
 import { buildComposerRequestFromBuilderState } from "../recommendations/buildComposerRecommendations.js";
 import { buildComposerSlotAlternatives } from "./buildComposerSlotAlternatives.js";
+import { requireComposerConfig } from "../composer/requireComposerConfig.js";
 import { deriveProposalItemContributions } from "./deriveProposalItemContributions.js";
 import {
   buildComposerContributionReasons,
@@ -38,16 +39,17 @@ export function buildComposerBoxProposal({
   notes = {},
   config,
 } = {}) {
+  const builderConfig = requireComposerConfig(config);
   const safeCatalog = Array.isArray(catalog) ? catalog : [];
   const safeSelectedPerfumes = Array.isArray(selectedPerfumes) ? selectedPerfumes : [];
   const safeExcludedPerfumeIds = normalizeIdList(excludedPerfumeIds);
-  const maxCustomerSlots = normalizeSlot(maxSlots, config?.box?.maxSelectableSlots || 14);
-  const minCustomerSlots = normalizeSlot(minSlots, config?.box?.minSelectableSlots || 6);
+  const maxCustomerSlots = normalizeSlot(maxSlots, builderConfig.box.maxSelectableSlots);
+  const minCustomerSlots = normalizeSlot(minSlots, builderConfig.box.minSelectableSlots);
   const customerTargetSlots = Math.min(
     maxCustomerSlots,
     Math.max(
       minCustomerSlots,
-      normalizeSlot(targetSlots, config?.box?.defaultTargetSlots || maxCustomerSlots)
+      normalizeSlot(targetSlots, builderConfig.box.defaultTargetSlots)
     )
   );
   const preferences = {
@@ -68,30 +70,13 @@ export function buildComposerBoxProposal({
     occasions: preferences.preferredOccasions,
     vibes: preferences.preferredVibes,
     catalog,
-    config,
+    config: builderConfig,
   });
   const selectedValidation = validateCurrentSelections({
     selectedPerfumes: safeSelectedPerfumes,
     catalog: safeCatalog,
     maxSlots: maxCustomerSlots,
   });
-
-  if (!config || !config.box || !config.commerce) {
-    return unavailableProposal({
-      status: COMPOSER_BOX_PROPOSAL_STATUSES.MALFORMED_INPUT,
-      inputKey,
-      selectedPerfumes: safeSelectedPerfumes,
-      targetSlots: customerTargetSlots,
-      minSlots: minCustomerSlots,
-      maxSlots: maxCustomerSlots,
-      budget,
-      pointValue: config?.commerce?.pointValue,
-      diagnostics: {
-        reason: "missing-config",
-        issues: ["MISSING_CONFIG"],
-      },
-    });
-  }
 
   if (!selectedValidation.valid) {
     return unavailableProposal({

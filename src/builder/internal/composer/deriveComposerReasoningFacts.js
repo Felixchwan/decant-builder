@@ -137,8 +137,11 @@ function buildReasoningContext({
         collection.length
       )
     : [];
-  const pointValue =
-    safeNumber(request.pointValue) || safeNumber(config?.commerce?.pointValue) || 100;
+  const pointValue = safeNumber(request.pointValue) || safeNumber(config?.commerce?.pointValue);
+
+  if (!pointValue) {
+    throw new Error("Composer reasoning requires the active Builder point value.");
+  }
   const dimensions = qualityResult?.dimensions || {};
   const penalties = qualityResult?.penalties || {};
   const qualityDiagnostics = qualityResult?.diagnostics?.quality || {};
@@ -179,7 +182,7 @@ function deriveSummaryFacts({ result, request, collection, qualityResult, metric
   const totalPoints = finiteOrZero(metrics.totalPoints, sumNumbers(collection.map((p) => p.points)));
   const estimatedValue = finiteOrZero(
     metrics.estimatedValue,
-    totalPoints * (request.pointValue || 100)
+    totalPoints * request.pointValue
   );
 
   return {

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 
+import { discoveryDecantsConfig } from "../../../merchants/discoveryDecants/config.js";
 import { getComposerCollectionStyle } from "./composerCollectionStyles.js";
 import { getComposerStrategy } from "./composerStrategies.js";
 import { normalizeComposerRequest } from "./normalizeComposerRequest.js";
@@ -27,6 +28,10 @@ function deepFreeze(value) {
   return value;
 }
 
+function normalizeWithActiveConfig(input) {
+  return normalizeComposerRequest(input, { config: discoveryDecantsConfig });
+}
+
 describe("normalizeComposerRequest", () => {
   it("normalizes undefined, null, and empty input using canonical Builder defaults", () => {
     const expected = {
@@ -48,10 +53,10 @@ describe("normalizeComposerRequest", () => {
       lockedExcludedConflicts: [],
     };
 
-    expect(normalizeComposerRequest()).toEqual(expected);
-    expect(normalizeComposerRequest(undefined)).toEqual(expected);
-    expect(normalizeComposerRequest(null)).toEqual(expected);
-    expect(normalizeComposerRequest({})).toEqual(expected);
+    expect(normalizeWithActiveConfig()).toEqual(expected);
+    expect(normalizeWithActiveConfig(undefined)).toEqual(expected);
+    expect(normalizeWithActiveConfig(null)).toEqual(expected);
+    expect(normalizeWithActiveConfig({})).toEqual(expected);
   });
 
   it("normalizes a representative valid request with context config and fractional budget points", () => {
@@ -93,19 +98,19 @@ describe("normalizeComposerRequest", () => {
   });
 
   it("characterizes zero, omitted, malformed, and negative budget values", () => {
-    expect(normalizeComposerRequest({ budget: 0 }).budget).toBe(0);
-    expect(normalizeComposerRequest({ budget: 0 }).maxPoints).toBe(0);
-    expect(normalizeComposerRequest({ budget: "" }).maxPoints).toBe(Infinity);
-    expect(normalizeComposerRequest({ budget: "500" }).inputIssues).toEqual([
+    expect(normalizeWithActiveConfig({ budget: 0 }).budget).toBe(0);
+    expect(normalizeWithActiveConfig({ budget: 0 }).maxPoints).toBe(0);
+    expect(normalizeWithActiveConfig({ budget: "" }).maxPoints).toBe(Infinity);
+    expect(normalizeWithActiveConfig({ budget: "500" }).inputIssues).toEqual([
       { code: "INVALID_BUDGET", budget: "500" },
     ]);
-    expect(normalizeComposerRequest({ budget: -1 })).toMatchObject({
+    expect(normalizeWithActiveConfig({ budget: -1 })).toMatchObject({
       budget: null,
       maxPoints: 0,
       inputIssues: [{ code: "INVALID_BUDGET", budget: -1 }],
     });
 
-    const nanResult = normalizeComposerRequest({ budget: NaN });
+    const nanResult = normalizeWithActiveConfig({ budget: NaN });
     expect(nanResult.budget).toBeNull();
     expect(nanResult.maxPoints).toBe(0);
     expect(nanResult.inputIssues[0].code).toBe("INVALID_BUDGET");
@@ -160,7 +165,7 @@ describe("normalizeComposerRequest", () => {
 
   it("keeps preferences as soft normalized arrays and ignores non-arrays", () => {
     expect(
-      normalizeComposerRequest({
+      normalizeWithActiveConfig({
         preferredSeasons: "summer",
         preferredOccasions: null,
         preferredVibes: [" Clean ", "unknown future vibe", "CLEAN"],
@@ -183,14 +188,14 @@ describe("normalizeComposerRequest", () => {
       strategy: "signature",
     });
 
-    expect(normalizeComposerRequest(input)).toEqual(normalizeComposerRequest(input));
+    expect(normalizeWithActiveConfig(input)).toEqual(normalizeWithActiveConfig(input));
     expect(input.lockedPerfumeIds).toEqual([1, 2, 1]);
     expect(input.excludedPerfumeIds).toEqual([2, 3]);
   });
 
   it("covers a golden normalized Composer request", () => {
     expect(
-      normalizeComposerRequest({
+      normalizeWithActiveConfig({
         budget: 1225,
         minSlots: 6,
         maxSlots: 14,

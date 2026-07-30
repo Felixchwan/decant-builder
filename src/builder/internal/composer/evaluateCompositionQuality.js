@@ -1,6 +1,6 @@
-import { discoveryDecantsConfig } from "../../config/index.js";
 import { evaluateComposerConstraints } from "./evaluateComposerConstraints.js";
 import { normalizeComposerRequest } from "./normalizeComposerRequest.js";
+import { requireComposerConfig } from "./requireComposerConfig.js";
 import { getComposerStrategy } from "./composerStrategies.js";
 import {
   COMPOSER_PENALTY_IDS,
@@ -26,7 +26,7 @@ export function evaluateCompositionQuality({
   config,
   constraintResult,
 } = {}) {
-  const builderConfig = config || discoveryDecantsConfig;
+  const builderConfig = requireComposerConfig(config);
   const normalizedRequest = isNormalizedComposerRequest(request)
     ? request
     : normalizeComposerRequest(request, { config: builderConfig });

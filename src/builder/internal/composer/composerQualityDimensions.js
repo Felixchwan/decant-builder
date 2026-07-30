@@ -211,7 +211,11 @@ function getCoherenceDimension({ perfumes, boxSummary, scentDna, selectedCount }
 
 function getBudgetEfficiencyDimension({ request, perfumes }) {
   const budget = request?.budget;
-  const pointValue = request?.pointValue || 100;
+  const pointValue = request?.pointValue;
+
+  if (typeof pointValue !== "number" || !Number.isFinite(pointValue) || pointValue <= 0) {
+    throw new Error("Composer quality evaluation requires normalized request pointValue.");
+  }
   const totalValue = perfumes.reduce((sum, perfume) => sum + perfume.points * pointValue, 0);
   const utilization = budget && budget > 0 ? totalValue / budget : 0;
 

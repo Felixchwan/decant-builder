@@ -4,7 +4,7 @@ import { fileURLToPath } from "node:url";
 
 import { describe, expect, it } from "vitest";
 
-import { discoveryDecantsConfig } from "./builder/config/discoveryDecantsConfig.js";
+import { discoveryDecantsConfig } from "./merchants/discoveryDecants/config.js";
 
 const projectRoot = dirname(dirname(fileURLToPath(import.meta.url)));
 const publicRoot = join(projectRoot, "public");

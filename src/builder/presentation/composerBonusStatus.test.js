@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { discoveryDecantsConfig } from "../config/discoveryDecantsConfig.js";
+import { discoveryDecantsConfig } from "../../merchants/discoveryDecants/config.js";
 import {
   buildComposerBudgetBonusFeedback,
   buildComposerProposalBonusStatus,

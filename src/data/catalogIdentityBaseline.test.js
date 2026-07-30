@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { buildCatalogView } from "../builder/internal/catalog/buildCatalogView.js";
 import { buildCollectionSummary } from "../builder/internal/intelligence/buildCollectionSummary.js";
 import { buildComposerRecommendations } from "../builder/internal/recommendations/buildComposerRecommendations.js";
-import { discoveryDecantsConfig } from "../builder/config/discoveryDecantsConfig.js";
+import { discoveryDecantsConfig } from "../merchants/discoveryDecants/config.js";
 import { getTierData } from "../utils/tierUtils.js";
 import { CATALOG_IDENTITY_BASELINE } from "./catalogIdentityBaseline.fixture.js";
 import { fragrances as perfumes, notes } from "@discovery-box/catalog";

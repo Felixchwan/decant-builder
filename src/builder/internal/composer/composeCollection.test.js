@@ -8,7 +8,7 @@ import {
 import { COMPOSER_MODES, DEFAULT_COMPOSER_MODE, normalizeComposerMode } from "./composerModes.js";
 import { evaluateCompositionQuality } from "./evaluateCompositionQuality.js";
 import { fragrances as realCatalog, notes as realNotes } from "@discovery-box/catalog";
-import { discoveryDecantsConfig } from "../../config/discoveryDecantsConfig.js";
+import { discoveryDecantsConfig } from "../../../merchants/discoveryDecants/config.js";
 
 const testConfig = {
   commerce: {

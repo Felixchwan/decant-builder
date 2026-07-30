@@ -2,7 +2,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 
-import { discoveryDecantsConfig } from "../builder/config/discoveryDecantsConfig.js";
+import { discoveryDecantsConfig } from "../merchants/discoveryDecants/config.js";
 import { buildCollectionSummary } from "../builder/internal/intelligence/buildCollectionSummary.js";
 import { buildCatalogView } from "../builder/internal/catalog/buildCatalogView.js";
 import { brandAssets, fragrances as perfumes, notes } from "@discovery-box/catalog";

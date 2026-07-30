@@ -1,4 +1,4 @@
-import { discoveryDecantsConfig } from "../builder/config/index.js";
+import { discoveryDecantsConfig } from "../merchants/discoveryDecants/config.js";
 
 export const businessConfig = {
   businessName: discoveryDecantsConfig.brand.businessName,

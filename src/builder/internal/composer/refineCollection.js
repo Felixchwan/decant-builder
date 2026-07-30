@@ -1,8 +1,8 @@
-import { discoveryDecantsConfig } from "../../config/index.js";
 import { evaluateComposerConstraints } from "./evaluateComposerConstraints.js";
 import { evaluateCompositionQuality } from "./evaluateCompositionQuality.js";
 import { generateRefinementMoves } from "./generateRefinementMoves.js";
 import { normalizeComposerRequest } from "./normalizeComposerRequest.js";
+import { requireComposerConfig } from "./requireComposerConfig.js";
 
 export const REFINEMENT_STATUSES = Object.freeze({
   REFINED: "refined",
@@ -27,7 +27,7 @@ export function refineCollection({
   config,
   maxIterations,
 } = {}) {
-  const builderConfig = config || discoveryDecantsConfig;
+  const builderConfig = requireComposerConfig(config);
   const normalizedRequest = normalizeComposerRequest(request, { config: builderConfig });
   const catalogPerfumes = Array.isArray(catalog) ? catalog : [];
   const startingPerfumes = stablePerfumes(Array.isArray(initialPerfumes) ? initialPerfumes : []);

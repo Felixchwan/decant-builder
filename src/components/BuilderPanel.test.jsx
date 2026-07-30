@@ -2,7 +2,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { readFileSync } from "node:fs";
 import { afterEach, describe, expect, it } from "vitest";
 
-import { discoveryDecantsConfig } from "../builder/config/discoveryDecantsConfig.js";
+import { discoveryDecantsConfig } from "../merchants/discoveryDecants/config.js";
 import { buildCollectionSummary } from "../builder/internal/intelligence/buildCollectionSummary.js";
 import { buildComposerRecommendations } from "../builder/internal/recommendations/buildComposerRecommendations.js";
 import { aurelianConfig } from "../merchants/aurelian/config.js";

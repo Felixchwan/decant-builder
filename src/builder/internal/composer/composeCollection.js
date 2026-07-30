@@ -1,10 +1,10 @@
-import { discoveryDecantsConfig } from "../../config/index.js";
 import { composeCollectionGreedy } from "./composeCollectionGreedy.js";
 import { COMPOSER_MODES, normalizeComposerMode } from "./composerModes.js";
 import { evaluateComposerConstraints } from "./evaluateComposerConstraints.js";
 import { evaluateCompositionQuality } from "./evaluateCompositionQuality.js";
 import { normalizeComposerRequest } from "./normalizeComposerRequest.js";
 import { REFINEMENT_STATUSES, refineCollection } from "./refineCollection.js";
+import { requireComposerConfig } from "./requireComposerConfig.js";
 
 export const COMPOSER_STATUSES = Object.freeze({
   COMPLETED: "completed",
@@ -41,7 +41,7 @@ export function composeCollection({
   config,
   refinementMaxIterations,
 } = {}) {
-  const builderConfig = config || discoveryDecantsConfig;
+  const builderConfig = requireComposerConfig(config);
   const normalizedRequest = canonicalizeComposerRequest(
     normalizeComposerRequest(request, { config: builderConfig })
   );
