@@ -9,8 +9,15 @@ import { validateBuilderConfig } from "./config/index.js";
  * @param {Record<string, object>} props.notes Note metadata consumed by catalog/detail UI. Pass an empty object when notes are unavailable.
  * @param {object} props.config Normalized Builder config, usually produced by createBuilderConfig.
  * @param {object} props.analytics Provider-neutral analytics adapter. Defaults to no-op when omitted.
+ * @param {object} props.finalizationAdapter Host-supplied delivery-channel adapter. Optional.
  */
-export default function DiscoveryBoxBuilder({ catalog, notes = {}, config, analytics }) {
+export default function DiscoveryBoxBuilder({
+  catalog,
+  notes = {},
+  config,
+  analytics,
+  finalizationAdapter,
+}) {
   if (!config) {
     throw new Error("DiscoveryBoxBuilder requires a normalized builder config.");
   }
@@ -31,6 +38,7 @@ export default function DiscoveryBoxBuilder({ catalog, notes = {}, config, analy
       notes={notes}
       config={validatedConfig}
       analytics={analytics}
+      finalizationAdapter={finalizationAdapter}
     />
   );
 }

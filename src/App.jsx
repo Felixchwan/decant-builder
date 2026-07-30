@@ -39,7 +39,13 @@ const PERFUME_IMAGE_FALLBACK =
   "/images/perfumes/placeholders/perfume-placeholder.svg";
 const EMPTY_NOTES = {};
 
-function App({ catalog, notes: noteMetadata = EMPTY_NOTES, config, analytics = noopAnalytics }) {
+function App({
+  catalog,
+  notes: noteMetadata = EMPTY_NOTES,
+  config,
+  analytics = noopAnalytics,
+  finalizationAdapter,
+}) {
   const builderConfig = config;
   const translator = useMemo(
     () => createTranslator(builderConfig.locale),
@@ -852,6 +858,7 @@ const confirmAddPerfume = () => {
             onMoveComposerProposalAlternative={handleMoveComposerProposalAlternative}
             onCancelComposerProposal={handleCancelComposerProposal}
             analytics={analytics}
+            finalizationAdapter={finalizationAdapter}
             curatorBonusPreference={curatorBonusPreference}
             onCuratorBonusPreferenceChange={setCuratorBonusPreference}
             reviewCustomerInfo={reviewCustomerInfo}

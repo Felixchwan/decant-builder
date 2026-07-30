@@ -97,6 +97,7 @@ function BuilderPanel({
   onReviewCustomerInfoChange,
   onMobileTabChange,
   analytics = noopAnalytics,
+  finalizationAdapter,
 }) {
     const translator = useMemo(
       () => createTranslator(builderConfig.locale),
@@ -827,6 +828,7 @@ function BuilderPanel({
           onCustomerInfoChange={onReviewCustomerInfoChange}
           onClose={() => setIsFinalSummaryOpen(false)}
           analytics={analytics}
+          finalizationAdapter={finalizationAdapter}
         />
       )}
       {composerProposal && (
@@ -2790,6 +2792,7 @@ function DiscoveryBoxReviewModal({
   onCustomerInfoChange,
   onClose,
   analytics = noopAnalytics,
+  finalizationAdapter,
 }) {
   const t = translator?.t || ((key) => key);
   const [finalizeStatus, setFinalizeStatus] = useState("");
@@ -2881,7 +2884,7 @@ function DiscoveryBoxReviewModal({
       return;
     }
 
-    if (!builderConfig.features.whatsappFinalization) {
+    if (!builderConfig.features.whatsappFinalization || !finalizationAdapter) {
       setFinalizeStatus(t("app.recoverableActionError"));
       analytics.track(ANALYTICS_EVENTS.ORDER_FINALIZATION_FAILED, {
         slotCount: finalizationModel.order.totalSlots,
@@ -2896,10 +2899,6 @@ function DiscoveryBoxReviewModal({
       return;
     }
 
-    const whatsappMessage = finalizationModel.message;
-    const whatsappUrl = `https://wa.me/${builderConfig.finalization.whatsappNumber}?text=${encodeURIComponent(
-      whatsappMessage
-    )}`;
     analytics.track(ANALYTICS_EVENTS.ORDER_FINALIZATION_STARTED, {
       slotCount: finalizationModel.order.totalSlots,
       totalPoints: finalizationModel.order.totalPoints,
@@ -2908,14 +2907,18 @@ function DiscoveryBoxReviewModal({
       channel: "whatsapp",
       source: "manual",
     });
-    const openedWindow = window.open(whatsappUrl, "_blank");
-    if (openedWindow) {
-      openedWindow.opener = null;
-    }
-    const didCopy = await copyText(whatsappMessage);
+    let result;
 
-    if (!openedWindow) {
-      setFallbackWhatsAppUrl(whatsappUrl);
+    try {
+      result = await finalizationAdapter.finalize(finalizationModel);
+    } catch {
+      result = { status: "failed", copied: false, manualUrl: "" };
+    }
+
+    const didCopy = Boolean(result?.copied);
+
+    if (result?.status === "manual_required") {
+      setFallbackWhatsAppUrl(result.manualUrl || "");
       setFinalizeStatus(
         didCopy
           ? builderConfig.finalization.whatsapp.blockedCopied
@@ -2928,6 +2931,22 @@ function DiscoveryBoxReviewModal({
         curatorBonusUnlocked: finalizationModel.order.curatorBonus.isUnlocked,
         channel: "whatsapp",
         errorCategory: "popup_blocked",
+        copiedToClipboard: didCopy,
+        source: "manual",
+      });
+      return;
+    }
+
+    if (result?.status !== "opened") {
+      setFallbackWhatsAppUrl(result?.manualUrl || "");
+      setFinalizeStatus(t("app.recoverableActionError"));
+      analytics.track(ANALYTICS_EVENTS.ORDER_FINALIZATION_FAILED, {
+        slotCount: finalizationModel.order.totalSlots,
+        totalPoints: finalizationModel.order.totalPoints,
+        orderTotal: finalizationModel.order.monetaryTotal,
+        curatorBonusUnlocked: finalizationModel.order.curatorBonus.isUnlocked,
+        channel: "whatsapp",
+        errorCategory: "adapter_failed",
         copiedToClipboard: didCopy,
         source: "manual",
       });
@@ -3744,35 +3763,6 @@ function isSeasonChartRestatement(value) {
   return /\b(strong|weak|limited|covered|coverage)\s+(spring|summer|fall|winter)\b/i.test(
     safeValue
   ) || /\b(spring|summer|fall|winter)\s+(covered|coverage)\b/i.test(safeValue);
-}
-
-async function copyText(text) {
-  try {
-    if (navigator.clipboard?.writeText) {
-      await navigator.clipboard.writeText(text);
-      return true;
-    }
-  } catch {
-    // Fall back to a temporary textarea for browsers without clipboard permission.
-  }
-
-  const textarea = document.createElement("textarea");
-  textarea.value = text;
-  textarea.setAttribute("readonly", "");
-  textarea.style.position = "fixed";
-  textarea.style.top = "-9999px";
-  document.body.appendChild(textarea);
-  textarea.focus();
-  textarea.select();
-  textarea.setSelectionRange(0, text.length);
-
-  try {
-    return document.execCommand("copy");
-  } catch {
-    return false;
-  } finally {
-    document.body.removeChild(textarea);
-  }
 }
 
 function canUseNativeShare(filename) {

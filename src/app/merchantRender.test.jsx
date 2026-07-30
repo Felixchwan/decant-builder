@@ -49,4 +49,28 @@ describe("merchant-localized Builder render", () => {
 
     expect(componentSource).not.toMatch(/merchants\/(aurelian|discoveryDecants)/);
   });
+
+  it("flows the host finalization adapter to BuilderPanel without browser delivery side effects", () => {
+    const publicBuilderSource = readFileSync("src/builder/DiscoveryBoxBuilder.jsx", "utf8");
+    const appSource = readFileSync("src/App.jsx", "utf8");
+    const panelSource = readFileSync("src/components/BuilderPanel.jsx", "utf8");
+
+    expect(publicBuilderSource).toContain("finalizationAdapter={finalizationAdapter}");
+    expect(appSource).toContain("finalizationAdapter={finalizationAdapter}");
+    expect(panelSource).toContain("finalizationAdapter.finalize(finalizationModel)");
+    expect(panelSource).not.toMatch(/window\.open|navigator\.clipboard|wa\.me/);
+  });
+
+  it("keeps WhatsApp adapter ownership with Discovery Decants and Aurelian disabled", () => {
+    const discoverySource = readFileSync("src/app/DiscoveryDecantsApp.jsx", "utf8");
+    const aurelianSource = readFileSync("src/app/AurelianApp.jsx", "utf8");
+
+    expect(discoverySource).toContain("createWhatsAppFinalizationAdapter");
+    expect(discoverySource).toContain("finalizationAdapter={finalizationAdapter}");
+    expect(aurelianSource).not.toContain("createWhatsAppFinalizationAdapter");
+    expect(aurelianSource).not.toContain("finalizationAdapter=");
+    expect(aurelianConfig.finalization.mode).toBe("unavailable");
+    expect(aurelianConfig.finalization.whatsappNumber).toBe("");
+    expect(aurelianConfig.features.whatsappFinalization).toBe(false);
+  });
 });
