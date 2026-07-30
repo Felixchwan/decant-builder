@@ -1,3 +1,5 @@
+import { DEFAULT_BUILDER_THEME_COLORS } from "../theme/builderTheme.js";
+
 export const defaultBuilderConfig = {
   locale: "en-US",
   software: {
@@ -174,5 +176,7 @@ export const defaultBuilderConfig = {
     reviewCuratorUnlockedCopy: "Your curator pick remains wrapped until reveal.",
     reviewCuratorLockedCopy: "Unlocks when your Discovery Box is complete.",
   },
-  theme: {},
+  theme: {
+    colors: DEFAULT_BUILDER_THEME_COLORS,
+  },
 };

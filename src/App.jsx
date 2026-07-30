@@ -28,6 +28,7 @@ import { createTranslator } from "./i18n/createTranslator.js";
 import { ANALYTICS_EVENTS } from "./analytics/events.js";
 import { noopAnalytics } from "./analytics/noopAnalytics.js";
 import { isCuratorBonusUnlocked } from "./builder/internal/curatorBonus/isCuratorBonusUnlocked.js";
+import { buildBuilderThemeStyle } from "./builder/theme/builderTheme.js";
 import {
   addSelectedPerfume,
   canAddPerfume,
@@ -47,6 +48,10 @@ function App({
   finalizationAdapter,
 }) {
   const builderConfig = config;
+  const builderThemeStyle = useMemo(
+    () => buildBuilderThemeStyle(builderConfig.theme),
+    [builderConfig.theme]
+  );
   const translator = useMemo(
     () => createTranslator(builderConfig.locale),
     [builderConfig.locale]
@@ -719,7 +724,7 @@ const confirmAddPerfume = () => {
   }
 
   return (
-    <>
+    <div className="builder-theme-root" style={builderThemeStyle}>
     <main className="app">
       {restoreMessage && (
         <p className="builder-restore-message" role="status">
@@ -927,7 +932,7 @@ const confirmAddPerfume = () => {
     </div>
   </div>
 )}
-    </>
+    </div>
   );
 }
 

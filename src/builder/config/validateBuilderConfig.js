@@ -1,4 +1,5 @@
 import { SUPPORTED_LOCALES } from "../../i18n/createTranslator.js";
+import { BUILDER_THEME_COLOR_KEYS } from "../theme/builderTheme.js";
 
 function assertPath(condition, path, message) {
   if (!condition) {
@@ -16,6 +17,10 @@ function isNonNegativeNumber(value) {
 
 function isNonEmptyString(value) {
   return typeof value === "string" && value.trim().length > 0;
+}
+
+function isPlainObject(value) {
+  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
 }
 
 export function validateBuilderConfig(config) {
@@ -64,6 +69,30 @@ export function validateBuilderConfig(config) {
 
   assertPath(isNonEmptyString(config.persistence.storageKey), "persistence.storageKey", "must be a non-empty string");
   assertPath(isPositiveNumber(config.persistence.schemaVersion), "persistence.schemaVersion", "must be a positive number");
+
+  assertPath(isPlainObject(config.theme), "theme", "must be an object");
+  const unknownThemeKeys = Object.keys(config.theme).filter((key) => key !== "colors");
+  assertPath(
+    unknownThemeKeys.length === 0,
+    "theme",
+    `contains unsupported keys: ${unknownThemeKeys.join(", ")}`
+  );
+  assertPath(isPlainObject(config.theme.colors), "theme.colors", "must be an object");
+  const unknownThemeColors = Object.keys(config.theme.colors).filter(
+    (key) => !BUILDER_THEME_COLOR_KEYS.includes(key)
+  );
+  assertPath(
+    unknownThemeColors.length === 0,
+    "theme.colors",
+    `contains unsupported keys: ${unknownThemeColors.join(", ")}`
+  );
+  BUILDER_THEME_COLOR_KEYS.forEach((key) => {
+    assertPath(
+      isNonEmptyString(config.theme.colors[key]),
+      `theme.colors.${key}`,
+      "must be a non-empty CSS color string"
+    );
+  });
 
   return config;
 }
