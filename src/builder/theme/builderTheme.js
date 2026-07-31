@@ -40,6 +40,10 @@ const THEME_COLOR_VARIABLES = Object.freeze({
   disabled: "--builder-color-disabled",
 });
 
+export const BUILDER_THEME_STYLE_PROPERTIES = Object.freeze(
+  Object.values(THEME_COLOR_VARIABLES)
+);
+
 export function buildBuilderThemeStyle(theme) {
   return Object.fromEntries(
     BUILDER_THEME_COLOR_KEYS.map((key) => [

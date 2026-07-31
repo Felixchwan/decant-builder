@@ -1,5 +1,5 @@
 import { forwardRef, useEffect, useMemo, useRef, useState } from "react";
-import { createPortal, flushSync } from "react-dom";
+import { flushSync } from "react-dom";
 import { createRoot } from "react-dom/client";
 import { toBlob } from "html-to-image";
 import { getCollectionIdentityProfile } from "../utils/collectionIdentityEngine";
@@ -51,11 +51,18 @@ import { createTranslator } from "../i18n/createTranslator.js";
 import { ANALYTICS_EVENTS } from "../analytics/events.js";
 import { noopAnalytics } from "../analytics/noopAnalytics.js";
 import { metadataAssets } from "@discovery-box/catalog";
+import { acquireBodyScrollLock } from "../builder/internal/portal/bodyScrollLock.js";
+import { renderOwnedPortal } from "../builder/internal/portal/renderOwnedPortal.jsx";
+import {
+  createCollectionCardExportStage,
+  removeCollectionCardExportStage,
+} from "../builder/internal/portal/collectionCardExportStage.js";
 
 const EMPTY_RECOMMENDATIONS = [];
 function BuilderPanel({
   builderConfig,
   assetResolver,
+  portalRoot,
   totalSlots,
   maxSlots,
   maxSelectableSlots,
@@ -361,7 +368,8 @@ function BuilderPanel({
 
     const collectionCardExportProps = collectionCardViewModel.cardProps;
 
-    const createShareImageBlob = () => renderCollectionCardPng(collectionCardExportProps);
+    const createShareImageBlob = () =>
+      renderCollectionCardPng(collectionCardExportProps, portalRoot);
 
     const handleDownloadShareImage = async () => {
       if (isShareGenerating) {
@@ -649,6 +657,7 @@ function BuilderPanel({
         intelligence={collectionIntelligence}
         isBoxFull={totalSlots >= maxSelectableSlots}
         isExpanded={isCollectionSnapshotOpen}
+        portalRoot={portalRoot}
         selectedDnaAccord={selectedDnaAccord}
         onToggle={() => setIsCollectionSnapshotOpen((isOpen) => !isOpen)}
         onOpenScentLibrary={() => setIsNotesModalOpen(true)}
@@ -803,14 +812,15 @@ function BuilderPanel({
   )}
 </div>
       </div>
-      {isNotesModalOpen && (
+      {isNotesModalOpen && portalRoot && (
         <ScentLibraryModal
           entries={scentLibraryEntries}
           translator={translator}
+          portalRoot={portalRoot}
           onClose={() => setIsNotesModalOpen(false)}
         />
       )}
-      {isFinalSummaryOpen && (
+      {isFinalSummaryOpen && portalRoot && (
         <DiscoveryBoxReviewModal
           translator={translator}
           builderConfig={builderConfig}
@@ -829,13 +839,15 @@ function BuilderPanel({
           onClose={() => setIsFinalSummaryOpen(false)}
           analytics={analytics}
           finalizationAdapter={finalizationAdapter}
+          portalRoot={portalRoot}
         />
       )}
-      {composerProposal && (
+      {composerProposal && portalRoot && (
         <ComposerProposalModal
           builderConfig={builderConfig}
           proposal={composerProposal}
           isStale={isComposerProposalStale}
+          portalRoot={portalRoot}
           onApply={onApplyComposerProposal}
           onMoveAlternative={onMoveComposerProposalAlternative}
           onCancel={onCancelComposerProposal}
@@ -845,13 +857,14 @@ function BuilderPanel({
           }}
         />
       )}
-      {isComposerSetupOpen && (
+      {isComposerSetupOpen && portalRoot && (
         <ComposerSetupModal
           builderConfig={builderConfig}
           settings={composerSettings}
           options={composerOptions}
           minimumComposerBudget={minimumComposerBudget}
           isGenerating={isComposerGenerating}
+          portalRoot={portalRoot}
           onSettingChange={onComposerSettingChange}
           onPreferenceToggle={onComposerPreferenceToggle}
           onPreferenceClear={onComposerPreferenceClear}
@@ -862,9 +875,10 @@ function BuilderPanel({
           }}
         />
       )}
-      {isCollectionCardPreviewOpen && (
+      {isCollectionCardPreviewOpen && portalRoot && (
         <CollectionCardPreviewModal
           cardProps={collectionCardViewModel.cardProps}
+          portalRoot={portalRoot}
           onClose={() => setIsCollectionCardPreviewOpen(false)}
         />
       )}
@@ -874,9 +888,10 @@ function BuilderPanel({
 
 function CollectionCardPreviewModal({
   cardProps,
+  portalRoot,
   onClose,
 }) {
-  return createPortal(
+  return renderOwnedPortal(
     <div className="modal-overlay final-summary-overlay" onClick={onClose}>
       <div
         className="collection-card-preview-modal"
@@ -897,7 +912,7 @@ function CollectionCardPreviewModal({
         <CollectionCard {...cardProps} />
       </div>
     </div>,
-    document.body
+    portalRoot
   );
 }
 
@@ -960,6 +975,7 @@ function ComposerSetupModal({
   options,
   minimumComposerBudget,
   isGenerating,
+  portalRoot,
   onSettingChange,
   onPreferenceToggle,
   onPreferenceClear,
@@ -992,7 +1008,7 @@ function ComposerSetupModal({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [onCancel]);
 
-  return createPortal(
+  return renderOwnedPortal(
     <div className="modal-overlay final-summary-overlay" onClick={onCancel}>
       <div
         className="final-summary-modal composer-setup-modal"
@@ -1126,7 +1142,7 @@ function ComposerSetupModal({
         </div>
       </div>
     </div>,
-    document.body
+    portalRoot
   );
 }
 
@@ -1184,6 +1200,7 @@ function ComposerProposalModal({
   builderConfig,
   proposal,
   isStale,
+  portalRoot,
   onApply,
   onMoveAlternative,
   onCancel,
@@ -1238,7 +1255,7 @@ function ComposerProposalModal({
       reasons: [],
     }));
 
-  return createPortal(
+  return renderOwnedPortal(
     <div className="modal-overlay final-summary-overlay" onClick={onCancel}>
       <div
         className="final-summary-modal composer-proposal-modal"
@@ -1431,7 +1448,7 @@ function ComposerProposalModal({
         </div>
       </div>
     </div>,
-    document.body
+    portalRoot
   );
 }
 
@@ -1552,6 +1569,7 @@ function CollectionSnapshot({
   translator,
   isBoxFull,
   isExpanded,
+  portalRoot,
   selectedDnaAccord,
   onToggle,
   onOpenScentLibrary,
@@ -1664,11 +1682,12 @@ function CollectionSnapshot({
         )}
       </div>
 
-      {selectedDnaItem && (
+      {selectedDnaItem && portalRoot && (
         <CollectionDnaPanel
           accord={selectedDnaItem.accord}
           detail={selectedDnaItem}
           isBoxFull={isBoxFull}
+          portalRoot={portalRoot}
           onSelectAccord={handleSelectDnaAccord}
           onClose={handleCloseDnaAccord}
           onAddPerfume={onAddPerfume}
@@ -1822,6 +1841,7 @@ function CollectionDnaPanel({
   accord,
   detail,
   isBoxFull,
+  portalRoot,
   onSelectAccord,
   onClose,
   onAddPerfume,
@@ -1920,7 +1940,7 @@ function CollectionDnaPanel({
     }
   };
 
-  return createPortal(
+  return renderOwnedPortal(
     <div
       className="modal-overlay dna-modal-overlay"
       role="presentation"
@@ -2095,7 +2115,7 @@ function CollectionDnaPanel({
         </div>
       </section>
     </div>,
-    document.body
+    portalRoot
   );
 }
 
@@ -2337,13 +2357,12 @@ function MetadataSummaryChip({ assetResolver, assetType, value, label, translato
   );
 }
 
-function ScentLibraryModal({ entries, translator, onClose }) {
+function ScentLibraryModal({ entries, translator, portalRoot, onClose }) {
   const [selectedNoteId, setSelectedNoteId] = useState(null);
   const safeEntries = Array.isArray(entries) ? entries : [];
 
   useEffect(() => {
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
+    const releaseBodyScrollLock = acquireBodyScrollLock(document);
 
     function handleKeyDown(event) {
       if (event.key === "Escape") {
@@ -2359,7 +2378,7 @@ function ScentLibraryModal({ entries, translator, onClose }) {
     window.addEventListener("keydown", handleKeyDown);
 
     return () => {
-      document.body.style.overflow = previousOverflow;
+      releaseBodyScrollLock();
       window.removeEventListener("keydown", handleKeyDown);
     };
   }, [onClose, selectedNoteId]);
@@ -2368,7 +2387,7 @@ function ScentLibraryModal({ entries, translator, onClose }) {
     setSelectedNoteId((currentNoteId) => (currentNoteId === noteId ? null : noteId));
   };
 
-  return createPortal(
+  return renderOwnedPortal(
     <div className="modal-overlay scent-library-overlay" onClick={onClose}>
       <div
         className="modal-content scent-library-modal"
@@ -2387,7 +2406,7 @@ function ScentLibraryModal({ entries, translator, onClose }) {
         />
       </div>
     </div>,
-    document.body
+    portalRoot
   );
 }
 
@@ -2799,6 +2818,7 @@ function DiscoveryBoxReviewModal({
   onClose,
   analytics = noopAnalytics,
   finalizationAdapter,
+  portalRoot,
 }) {
   const t = translator?.t || ((key) => key);
   const [finalizeStatus, setFinalizeStatus] = useState("");
@@ -2856,8 +2876,7 @@ function DiscoveryBoxReviewModal({
   const canFinalize = finalizationModel.readiness.isReady;
 
   useEffect(() => {
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
+    const releaseBodyScrollLock = acquireBodyScrollLock(document);
 
     function handleKeyDown(event) {
       if (event.key === "Escape") {
@@ -2868,7 +2887,7 @@ function DiscoveryBoxReviewModal({
     window.addEventListener("keydown", handleKeyDown);
 
     return () => {
-      document.body.style.overflow = previousOverflow;
+      releaseBodyScrollLock();
       window.removeEventListener("keydown", handleKeyDown);
     };
   }, [onClose]);
@@ -2980,7 +2999,7 @@ function DiscoveryBoxReviewModal({
     });
   }
 
-  return createPortal(
+  return renderOwnedPortal(
     <div className="modal-overlay final-summary-overlay" onClick={onClose}>
       <div
         className="final-summary-modal discovery-review-modal"
@@ -3166,7 +3185,7 @@ function DiscoveryBoxReviewModal({
         )}
       </div>
     </div>,
-    document.body
+    portalRoot
   );
 }
 
@@ -4016,15 +4035,12 @@ function getCollectionIdentity(boxSummary) {
   };
 }
 
-async function renderCollectionCardPng(collectionCardProps) {
+async function renderCollectionCardPng(collectionCardProps, portalRoot) {
   if (typeof document === "undefined") {
     throw new Error("Collection Card export requires a browser document.");
   }
 
-  const exportStage = document.createElement("div");
-  exportStage.className = "collection-card-export-stage";
-  exportStage.setAttribute("aria-hidden", "true");
-  document.body.appendChild(exportStage);
+  const exportStage = createCollectionCardExportStage(portalRoot);
 
   const root = createRoot(exportStage);
   let exportCardNode = null;
@@ -4062,7 +4078,7 @@ async function renderCollectionCardPng(collectionCardProps) {
     return blob;
   } finally {
     root.unmount();
-    exportStage.remove();
+    removeCollectionCardExportStage(exportStage);
   }
 }
 

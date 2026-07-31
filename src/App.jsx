@@ -33,6 +33,7 @@ import {
   buildBuilderThemeStyle,
   hasCustomBuilderTheme,
 } from "./builder/theme/builderTheme.js";
+import { useBuilderPortalRoot } from "./builder/internal/portal/useBuilderPortalRoot.js";
 import {
   addSelectedPerfume,
   canAddPerfume,
@@ -55,9 +56,18 @@ function App({
     () => buildBuilderThemeStyle(builderConfig.theme),
     [builderConfig.theme]
   );
-  const builderThemeClassName = hasCustomBuilderTheme(builderConfig.theme)
+  const isCustomBuilderTheme = hasCustomBuilderTheme(builderConfig.theme);
+  const builderThemeClassName = isCustomBuilderTheme
     ? "builder-theme-root builder-theme-root--custom"
     : "builder-theme-root";
+  const {
+    builderRootRef,
+    instanceId: builderInstanceId,
+    portalRoot,
+  } = useBuilderPortalRoot({
+    themeStyle: builderThemeStyle,
+    isCustomTheme: isCustomBuilderTheme,
+  });
   const translator = useMemo(
     () => createTranslator(builderConfig.locale),
     [builderConfig.locale]
@@ -730,7 +740,12 @@ const confirmAddPerfume = () => {
   }
 
   return (
-    <div className={builderThemeClassName} style={builderThemeStyle}>
+    <div
+      ref={builderRootRef}
+      className={builderThemeClassName}
+      style={builderThemeStyle}
+      data-builder-instance={builderInstanceId}
+    >
     <main className="app">
       {restoreMessage && (
         <p className="builder-restore-message" role="status">
@@ -836,6 +851,7 @@ const confirmAddPerfume = () => {
           <BuilderPanel
             builderConfig={builderConfig}
             assetResolver={assetResolver}
+            portalRoot={portalRoot}
             totalSlots={totalSlots}
             maxSlots={MAX_BOX_SLOTS}
             maxSelectableSlots={MAX_SELECTABLE_SLOTS}
@@ -888,6 +904,7 @@ const confirmAddPerfume = () => {
         assetResolver={assetResolver}
         perfume={detailPerfume}
         notes={notes}
+        portalRoot={portalRoot}
         tierData={getTierData(detailPerfume.id)}
         isAddDisabled={
           totalSlots >= MAX_SELECTABLE_SLOTS ||
@@ -1084,6 +1101,7 @@ function PerfumeDetailsModal({
   translator,
   perfume,
   notes,
+  portalRoot,
   tierData,
   isAddDisabled,
   addButtonLabel,
@@ -1385,6 +1403,7 @@ function PerfumeDetailsModal({
               title={t("details.generalNotes")}
               noteIds={perfume.generalNotes || []}
               notes={notes}
+              portalRoot={portalRoot}
             />
           ) : hasPyramidNotes ? (
             <>
@@ -1392,16 +1411,19 @@ function PerfumeDetailsModal({
                 title={t("details.topNotes")}
                 noteIds={perfume.topNotes || []}
                 notes={notes}
+                portalRoot={portalRoot}
               />
               <DetailNoteGroup
                 title={t("details.middleNotes")}
                 noteIds={perfume.middleNotes || []}
                 notes={notes}
+                portalRoot={portalRoot}
               />
               <DetailNoteGroup
                 title={t("details.baseNotes")}
                 noteIds={perfume.baseNotes || []}
                 notes={notes}
+                portalRoot={portalRoot}
               />
             </>
           ) : (
@@ -1458,7 +1480,7 @@ function DetailMetadataChip({ assetResolver, translator, value, assetType }) {
   );
 }
 
-function DetailNoteGroup({ title, noteIds, notes }) {
+function DetailNoteGroup({ title, noteIds, notes, portalRoot }) {
   if (noteIds.length === 0) {
     return null;
   }
@@ -1469,14 +1491,19 @@ function DetailNoteGroup({ title, noteIds, notes }) {
 
       <div className="details-tag-row">
         {noteIds.map((noteId) => (
-          <DetailNotePill key={noteId} note={notes[noteId]} noteId={noteId} />
+          <DetailNotePill
+            key={noteId}
+            note={notes[noteId]}
+            noteId={noteId}
+            portalRoot={portalRoot}
+          />
         ))}
       </div>
     </div>
   );
 }
 
-function DetailNotePill({ note, noteId }) {
+function DetailNotePill({ note, noteId, portalRoot }) {
   const noteName = note?.name || formatLabel(noteId);
   const noteImage = note?.noteImage;
 
@@ -1485,7 +1512,7 @@ function DetailNotePill({ note, noteId }) {
   }
 
   return (
-    <MetadataPreview title={noteName} image={noteImage}>
+    <MetadataPreview title={noteName} image={noteImage} portalRoot={portalRoot}>
       <span className="detail-note-pill has-note-image">
         <img
           src={noteImage}

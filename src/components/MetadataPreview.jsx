@@ -1,5 +1,5 @@
 import { cloneElement, useCallback, useEffect, useId, useRef, useState } from "react";
-import { createPortal } from "react-dom";
+import { renderOwnedPortal } from "../builder/internal/portal/renderOwnedPortal.jsx";
 
 const LONG_PRESS_MS = 450;
 const VIEWPORT_GUTTER = 12;
@@ -8,7 +8,13 @@ function clamp(value, min, max) {
   return Math.min(Math.max(value, min), max);
 }
 
-export default function MetadataPreview({ title, image, description, children }) {
+export default function MetadataPreview({
+  title,
+  image,
+  description,
+  children,
+  portalRoot,
+}) {
   const previewId = useId();
   const triggerRef = useRef(null);
   const previewRef = useRef(null);
@@ -177,7 +183,8 @@ export default function MetadataPreview({ title, image, description, children })
       {trigger}
       {isVisible &&
         position &&
-        createPortal(
+        portalRoot &&
+        renderOwnedPortal(
           <div
             id={previewId}
             ref={previewRef}
@@ -192,7 +199,7 @@ export default function MetadataPreview({ title, image, description, children })
             <strong>{title}</strong>
             {description && <p>{description}</p>}
           </div>,
-          document.body
+          portalRoot
         )}
     </>
   );
