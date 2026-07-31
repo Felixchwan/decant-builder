@@ -50,6 +50,7 @@ function App({
   analytics = noopAnalytics,
   finalizationAdapter,
   assetResolver,
+  isDevelopment = false,
 }) {
   const builderConfig = config;
   const builderThemeStyle = useMemo(
@@ -485,7 +486,7 @@ const isComposerProposalStale = isComposerBoxProposalStale(
           return;
         }
 
-        if (import.meta.env.DEV) {
+        if (isDevelopment) {
           console.error(error);
         }
 
@@ -888,6 +889,7 @@ const confirmAddPerfume = () => {
             onCancelComposerProposal={handleCancelComposerProposal}
             analytics={analytics}
             finalizationAdapter={finalizationAdapter}
+            isDevelopment={isDevelopment}
             curatorBonusPreference={curatorBonusPreference}
             onCuratorBonusPreferenceChange={setCuratorBonusPreference}
             reviewCustomerInfo={reviewCustomerInfo}

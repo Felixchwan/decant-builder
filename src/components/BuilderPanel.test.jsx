@@ -102,6 +102,24 @@ afterEach(() => {
   globalThis.window = originalWindow;
 });
 
+describe("BuilderPanel development capability", () => {
+  it("keeps development-only UI hidden when omitted", () => {
+    expect(renderBuilderPanel()).not.toContain(discoveryDecantsConfig.collectionCard.previewLabel);
+  });
+
+  it("keeps development-only UI hidden when explicitly false", () => {
+    expect(renderBuilderPanel({ isDevelopment: false })).not.toContain(
+      discoveryDecantsConfig.collectionCard.previewLabel,
+    );
+  });
+
+  it("shows the existing development preview action when enabled", () => {
+    expect(renderBuilderPanel({ isDevelopment: true })).toContain(
+      discoveryDecantsConfig.collectionCard.previewLabel,
+    );
+  });
+});
+
 describe("BuilderPanel Composer setup launcher", () => {
   it("renders a compact Composer card without inline setup controls", () => {
     const markup = renderBuilderPanel();
@@ -128,7 +146,7 @@ describe("BuilderPanel Composer setup launcher", () => {
   });
 
   it("keeps Collection Card share actions and responsive tooltip feedback available", () => {
-    const markup = renderBuilderPanel();
+    const markup = renderBuilderPanel({ isDevelopment: true });
 
     expect(markup).toContain("Download PNG");
     expect(markup).toContain("Preview Card");

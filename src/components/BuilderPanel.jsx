@@ -104,6 +104,7 @@ function BuilderPanel({
   onMobileTabChange,
   analytics = noopAnalytics,
   finalizationAdapter,
+  isDevelopment = false,
 }) {
     const translator = useMemo(
       () => createTranslator(builderConfig.locale),
@@ -581,7 +582,7 @@ function BuilderPanel({
               {activeShareAction === "share" ? builderConfig.collectionCard.generatingLabel : builderConfig.collectionCard.shareLabel}
             </button>
           )}
-          {import.meta.env.DEV && (
+          {isDevelopment && (
             <button
               type="button"
               onClick={() => setIsCollectionCardPreviewOpen(true)}

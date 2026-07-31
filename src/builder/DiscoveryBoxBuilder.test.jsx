@@ -62,4 +62,32 @@ describe("DiscoveryBoxBuilder asset resolver boundary", () => {
       ),
     ).toThrow(/assetResolver/);
   });
+
+  it("defaults development capability to false and forwards explicit per-instance values", () => {
+    const assetResolver = createCatalogAssetResolver({ basePath: "/merchant-assets" });
+
+    renderToStaticMarkup(
+      <>
+        <DiscoveryBoxBuilder
+          catalog={[]}
+          config={discoveryDecantsConfig}
+          assetResolver={assetResolver}
+        />
+        <DiscoveryBoxBuilder
+          catalog={[]}
+          config={discoveryDecantsConfig}
+          assetResolver={assetResolver}
+          isDevelopment
+        />
+        <DiscoveryBoxBuilder
+          catalog={[]}
+          config={discoveryDecantsConfig}
+          assetResolver={assetResolver}
+          isDevelopment={false}
+        />
+      </>,
+    );
+
+    expect(appCalls.map(({ isDevelopment }) => isDevelopment)).toEqual([false, true, false]);
+  });
 });

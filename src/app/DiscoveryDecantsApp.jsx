@@ -44,6 +44,7 @@ export default function DiscoveryDecantsApp() {
         analytics={analytics}
         finalizationAdapter={finalizationAdapter}
         assetResolver={assetResolver}
+        isDevelopment={import.meta.env.DEV}
       />
     </AppErrorBoundary>
   );

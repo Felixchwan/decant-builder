@@ -94,6 +94,8 @@ describe("merchant catalog composition", () => {
     expect(aurelianProps.finalizationAdapter).toBeUndefined();
     expect(discoveryProps.assetResolver("brands/example.png")).toBe("/catalog-assets/brands/example.png");
     expect(aurelianProps.assetResolver("brands/example.png")).toBe("/catalog-assets/brands/example.png");
+    expect(discoveryProps.isDevelopment).toBe(import.meta.env.DEV);
+    expect(aurelianProps.isDevelopment).toBe(import.meta.env.DEV);
   });
 
   it("keeps public catalog roots at merchant host composition only", () => {

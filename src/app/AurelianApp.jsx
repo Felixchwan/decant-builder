@@ -40,6 +40,7 @@ export default function AurelianApp() {
         config={aurelianConfig}
         analytics={analytics}
         assetResolver={assetResolver}
+        isDevelopment={import.meta.env.DEV}
       />
     </AppErrorBoundary>
   );

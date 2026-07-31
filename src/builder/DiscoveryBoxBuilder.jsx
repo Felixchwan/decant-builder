@@ -13,6 +13,7 @@ import { validateBuilderConfig } from "./config/index.js";
  * @param {object} props.analytics Provider-neutral analytics adapter. Defaults to no-op when omitted.
  * @param {object} props.finalizationAdapter Host-supplied delivery-channel adapter. Optional.
  * @param {(assetKey: string) => string} props.assetResolver Host-supplied catalog asset resolver.
+ * @param {boolean} props.isDevelopment Host-supplied development capability. Defaults to false.
  */
 export default function DiscoveryBoxBuilder({
   catalog,
@@ -21,6 +22,7 @@ export default function DiscoveryBoxBuilder({
   analytics,
   finalizationAdapter,
   assetResolver,
+  isDevelopment = false,
 }) {
   if (!config) {
     throw new Error("DiscoveryBoxBuilder requires a normalized builder config.");
@@ -73,6 +75,7 @@ export default function DiscoveryBoxBuilder({
       analytics={analytics}
       finalizationAdapter={finalizationAdapter}
       assetResolver={assetResolver}
+      isDevelopment={isDevelopment}
     />
   );
 }
