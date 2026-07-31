@@ -1,0 +1,37 @@
+{
+  "name": "@discovery-box/builder",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "files": [
+    "client.js",
+    "dist",
+    "styles.css"
+  ],
+  "exports": {
+    ".": {
+      "development": "./src/client.jsx",
+      "default": "./client.js"
+    },
+    "./config": {
+      "development": "./src/builder/config/index.js",
+      "default": "./dist/config.js"
+    },
+    "./analytics": {
+      "development": "./src/analytics/index.js",
+      "default": "./dist/analytics.js"
+    },
+    "./styles.css": "./styles.css"
+  },
+  "scripts": {
+    "build": "vite build"
+  },
+  "peerDependencies": {
+    "react": "^19.2.6",
+    "react-dom": "^19.2.6"
+  },
+  "dependencies": {
+    "@discovery-box/catalog": "0.0.0",
+    "html-to-image": "^1.11.13"
+  }
+}

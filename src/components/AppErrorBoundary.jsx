@@ -1,7 +1,7 @@
 import { Component } from "react";
 
 import { clearSavedBuilderState } from "../utils/appRecovery.js";
-import { ANALYTICS_EVENTS } from "../analytics/events.js";
+import { ANALYTICS_EVENTS } from "@discovery-box/builder/analytics";
 
 export class AppErrorBoundary extends Component {
   constructor(props) {

@@ -3,8 +3,8 @@ import {
   COMMON_CONTEXT_KEYS,
   EVENT_PAYLOAD_KEYS,
   PROHIBITED_ANALYTICS_KEYS,
-} from "./events.js";
-import { noopAnalytics } from "./noopAnalytics.js";
+  noopAnalytics,
+} from "@discovery-box/builder/analytics";
 
 const EVENT_NAME_SET = new Set(ANALYTICS_EVENT_NAMES);
 const PROHIBITED_KEY_SET = new Set(

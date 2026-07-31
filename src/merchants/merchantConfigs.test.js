@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 
-import { createBuilderConfig } from "../builder/config/createBuilderConfig.js";
-import { validateBuilderConfig } from "../builder/config/validateBuilderConfig.js";
+import {
+  createBuilderConfig,
+  validateBuilderConfig,
+} from "@discovery-box/builder/config";
 import { aurelianConfig } from "./aurelian/config.js";
 import { discoveryDecantsConfig } from "./discoveryDecants/config.js";
 

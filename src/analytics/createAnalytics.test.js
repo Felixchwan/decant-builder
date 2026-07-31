@@ -7,8 +7,10 @@ import {
   isValidAnalyticsEvent,
 } from "./createAnalytics.js";
 import { createDevelopmentAnalytics } from "./developmentAnalytics.js";
-import { ANALYTICS_EVENTS } from "./events.js";
-import { noopAnalytics } from "./noopAnalytics.js";
+import {
+  ANALYTICS_EVENTS,
+  noopAnalytics,
+} from "@discovery-box/builder/analytics";
 
 describe("analytics foundation", () => {
   it("keeps no-op tracking safe", () => {

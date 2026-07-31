@@ -1,5 +1,7 @@
-import { createBuilderConfig } from "../../builder/config/createBuilderConfig.js";
-import { buildLocalizedConfigOverrides } from "../../i18n/buildLocalizedConfig.js";
+import {
+  buildLocalizedConfigOverrides,
+  createBuilderConfig,
+} from "@discovery-box/builder/config";
 
 const locale = "es-MX";
 const localized = buildLocalizedConfigOverrides(locale);

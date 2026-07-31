@@ -1,4 +1,4 @@
-import { DiscoveryBoxBuilder } from "../builder/index.js";
+import { DiscoveryBoxBuilder } from "@discovery-box/builder";
 import AppErrorBoundary from "../components/AppErrorBoundary.jsx";
 import {
   createCatalogAssetResolver,

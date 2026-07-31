@@ -3,7 +3,10 @@ import { join } from "node:path";
 
 import { describe, expect, it } from "vitest";
 
-import { ANALYTICS_EVENT_NAMES, EVENT_PAYLOAD_KEYS } from "./events.js";
+import {
+  ANALYTICS_EVENT_NAMES,
+  EVENT_PAYLOAD_KEYS,
+} from "@discovery-box/builder/analytics";
 
 function listFiles(directory) {
   return readdirSync(directory).flatMap((entry) => {
@@ -28,7 +31,7 @@ describe("analytics architecture guards", () => {
   });
 
   it("keeps analytics out of Composer Core and scoring modules", () => {
-    const internalSources = readSourceFiles("src/builder/internal");
+    const internalSources = readSourceFiles("packages/builder/src/builder/internal");
     const analyticsImports = internalSources.filter(({ source }) =>
       source.includes("/analytics/") || source.includes("../analytics/")
     );

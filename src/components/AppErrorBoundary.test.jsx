@@ -5,9 +5,9 @@ import {
   AppErrorBoundary,
   AppErrorFallback,
 } from "./AppErrorBoundary.jsx";
-import { ANALYTICS_EVENTS } from "../analytics/events.js";
+import { ANALYTICS_EVENTS } from "@discovery-box/builder/analytics";
 import { clearSavedBuilderState } from "../utils/appRecovery.js";
-import { buildLocalizedConfigOverrides } from "../i18n/buildLocalizedConfig.js";
+import { buildLocalizedConfigOverrides } from "@discovery-box/builder/config";
 
 describe("AppErrorBoundary", () => {
   it("shows customer-facing fallback UI after a child render failure state", () => {

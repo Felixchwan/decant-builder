@@ -11,7 +11,7 @@
     "predev": "npm run sync:catalog-assets",
     "dev": "vite",
     "prebuild": "npm run sync:catalog-assets",
-    "build": "vite build",
+    "build": "npm run build -w @discovery-box/builder && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest run",
@@ -19,7 +19,7 @@
   },
   "dependencies": {
     "@discovery-box/catalog": "workspace:*",
-    "html-to-image": "^1.11.13",
+    "@discovery-box/builder": "workspace:*",
     "react": "^19.2.6",
     "react-dom": "^19.2.6"
   },

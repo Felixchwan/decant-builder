@@ -9,6 +9,7 @@ lerna-debug.log*
 
 node_modules
 dist
+/packages/builder/dist/
 dist-ssr
 *.local
 /public/catalog-assets/

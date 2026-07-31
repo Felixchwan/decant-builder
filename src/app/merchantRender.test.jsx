@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 
-import { DiscoveryBoxBuilder } from "../builder/index.js";
+import { DiscoveryBoxBuilder } from "@discovery-box/builder";
 import { aurelianConfig } from "../merchants/aurelian/config.js";
 import { discoveryDecantsConfig } from "../merchants/discoveryDecants/config.js";
 import { createCatalogAssetResolver, fragrances as perfumes, notes } from "@discovery-box/catalog";
@@ -46,15 +46,15 @@ describe("merchant-localized Builder render", () => {
   });
 
   it("keeps components from importing merchant implementations directly", () => {
-    const componentSource = readFileSync("src/components/BuilderPanel.jsx", "utf8");
+    const componentSource = readFileSync("packages/builder/src/components/BuilderPanel.jsx", "utf8");
 
     expect(componentSource).not.toMatch(/merchants\/(aurelian|discoveryDecants)/);
   });
 
   it("flows the host finalization adapter to BuilderPanel without browser delivery side effects", () => {
-    const publicBuilderSource = readFileSync("src/builder/DiscoveryBoxBuilder.jsx", "utf8");
-    const appSource = readFileSync("src/App.jsx", "utf8");
-    const panelSource = readFileSync("src/components/BuilderPanel.jsx", "utf8");
+    const publicBuilderSource = readFileSync("packages/builder/src/builder/DiscoveryBoxBuilder.jsx", "utf8");
+    const appSource = readFileSync("packages/builder/src/BuilderRuntime.jsx", "utf8");
+    const panelSource = readFileSync("packages/builder/src/components/BuilderPanel.jsx", "utf8");
 
     expect(publicBuilderSource).toContain("finalizationAdapter={finalizationAdapter}");
     expect(appSource).toContain("finalizationAdapter={finalizationAdapter}");
@@ -63,8 +63,8 @@ describe("merchant-localized Builder render", () => {
   });
 
   it("flows the host asset resolver through the public Builder boundary", () => {
-    const publicBuilderSource = readFileSync("src/builder/DiscoveryBoxBuilder.jsx", "utf8");
-    const appSource = readFileSync("src/App.jsx", "utf8");
+    const publicBuilderSource = readFileSync("packages/builder/src/builder/DiscoveryBoxBuilder.jsx", "utf8");
+    const appSource = readFileSync("packages/builder/src/BuilderRuntime.jsx", "utf8");
 
     expect(publicBuilderSource).toContain("assetResolver={assetResolver}");
     expect(appSource).toContain("assetResolver={assetResolver}");

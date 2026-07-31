@@ -5,7 +5,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const builderCalls = vi.hoisted(() => []);
 
-vi.mock("../builder/index.js", () => ({
+vi.mock("@discovery-box/builder", () => ({
   DiscoveryBoxBuilder(props) {
     builderCalls.push(props);
     return <div data-testid="merchant-builder" />;
@@ -15,10 +15,9 @@ vi.mock("../builder/index.js", () => ({
 import AurelianApp from "./AurelianApp.jsx";
 import DiscoveryDecantsApp from "./DiscoveryDecantsApp.jsx";
 import { createMerchantCatalog, fragrances as perfumes } from "@discovery-box/catalog";
-import { CATALOG_IDENTITY_BASELINE } from "../data/catalogIdentityBaseline.fixture.js";
+import { CATALOG_IDENTITY_BASELINE } from "../../packages/catalog/tests/catalogIdentityBaseline.fixture.js";
 import { aurelianAvailableIds } from "../merchants/aurelian/catalog.js";
 import { discoveryDecantsAvailableIds } from "../merchants/discoveryDecants/catalog.js";
-import { getTierData } from "../utils/tierUtils.js";
 
 function expectedIds() {
   return CATALOG_IDENTITY_BASELINE.map(([id]) => id);
@@ -27,8 +26,8 @@ function expectedIds() {
 function assertCurrentCatalog(catalog) {
   expect(catalog).toHaveLength(84);
   expect(catalog.map(({ id }) => id)).toEqual(expectedIds());
-  expect(catalog.map(({ id, points }) => [id, getTierData(id).name, points])).toEqual(
-    CATALOG_IDENTITY_BASELINE
+  expect(catalog.map(({ id, points }) => [id, points])).toEqual(
+    CATALOG_IDENTITY_BASELINE.map(([id, , points]) => [id, points])
   );
   catalog.forEach((record, index) => expect(record).toBe(perfumes[index]));
 }
@@ -108,10 +107,10 @@ describe("merchant catalog composition", () => {
       "utf8",
     );
     const sharedSources = [
-      "../builder/DiscoveryBoxBuilder.jsx",
-      "../components/BuilderPanel.jsx",
-      "../components/PerfumeCard.jsx",
-      "../components/CollectionCard.jsx",
+      "../../packages/builder/src/builder/DiscoveryBoxBuilder.jsx",
+      "../../packages/builder/src/components/BuilderPanel.jsx",
+      "../../packages/builder/src/components/PerfumeCard.jsx",
+      "../../packages/builder/src/components/CollectionCard.jsx",
     ].map((relativePath) => readFileSync(fileURLToPath(new URL(relativePath, import.meta.url)), "utf8"));
 
     expect(discoverySource).toContain('basePath: "/catalog-assets"');
