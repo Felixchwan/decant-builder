@@ -63,10 +63,10 @@ describe("Builder stylesheet ownership", () => {
       /^(?:\.app(?:\s|,|\{)|\.(?:builder-|hero|layout|catalog|perfume-|box-|composer-))/m,
     );
 
-    expect(builderCss).toMatch(/^\.app\s*\{/);
-    expect(builderCss).toContain(".builder-theme-root {");
-    expect(builderCss).toContain(".perfume-card {");
-    expect(builderCss).toContain(".builder-panel {");
+    expect(builderCss).toMatch(/^:where\(\.builder-scope\)\s*\{/);
+    expect(builderCss).toContain(":where(.builder-scope).builder-theme-root {");
+    expect(builderCss).toContain(":where(.builder-scope) .perfume-card {");
+    expect(builderCss).toContain(":where(.builder-scope) .builder-panel {");
     expect(builderCss).not.toMatch(
       /^(?:\*|html|body|#root|\.app-error-shell|\.app-error-card)\s*(?:,|\{)/m,
     );

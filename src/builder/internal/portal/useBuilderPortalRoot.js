@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { BUILDER_THEME_STYLE_PROPERTIES } from "../../theme/builderTheme.js";
 
-const PORTAL_ROOT_CLASS = "builder-portal-root";
+const PORTAL_ROOT_CLASS = "builder-portal-root builder-scope";
 const CUSTOM_THEME_CLASS = "builder-theme-root--custom";
 
 export function applyBuilderPortalTheme(portalRoot, themeStyle, isCustomTheme) {

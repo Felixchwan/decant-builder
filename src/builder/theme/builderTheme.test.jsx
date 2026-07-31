@@ -235,7 +235,7 @@ describe("Builder theme contract", () => {
       </div>
     );
 
-    expect(markup.match(/class="builder-theme-root builder-theme-root--custom"/g)).toHaveLength(2);
+    expect(markup.match(/class="builder-theme-root builder-scope builder-theme-root--custom"/g)).toHaveLength(2);
     expect(markup).toContain("--builder-color-background:#101010");
     expect(markup).toContain("--builder-color-accent:#ff00ff");
     expect(markup).toContain("--builder-color-background:#202020");
@@ -279,8 +279,8 @@ describe("Builder theme contract", () => {
       </div>
     );
 
-    expect(markup.match(/class="builder-theme-root"/g)).toHaveLength(1);
-    expect(markup.match(/class="builder-theme-root builder-theme-root--custom"/g)).toHaveLength(1);
+    expect(markup.match(/class="builder-theme-root builder-scope"/g)).toHaveLength(1);
+    expect(markup.match(/class="builder-theme-root builder-scope builder-theme-root--custom"/g)).toHaveLength(1);
     Object.entries(approvedAurelianColors).forEach(([key, value]) => {
       const cssName = key.replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`);
       expect(markup).toContain(`--builder-color-${cssName}:${value}`);
@@ -318,8 +318,8 @@ describe("Builder portal root lifecycle", () => {
     expect(documentLike.body.children).toEqual([discoveryRoot, aurelianRoot]);
     expect(discoveryRoot.getAttribute("data-builder-portal-instance")).toBe("discovery-instance");
     expect(aurelianRoot.getAttribute("data-builder-portal-instance")).toBe("aurelian-instance");
-    expect(discoveryRoot.className).toBe("builder-portal-root");
-    expect(aurelianRoot.className).toBe("builder-portal-root builder-theme-root--custom");
+    expect(discoveryRoot.className).toBe("builder-portal-root builder-scope");
+    expect(aurelianRoot.className).toBe("builder-portal-root builder-scope builder-theme-root--custom");
     expect(discoveryRoot.style.getPropertyValue("--builder-color-accent")).toBe("#4ade80");
     expect(aurelianRoot.style.getPropertyValue("--builder-color-background")).toBe("#090A09");
     expect(aurelianRoot.style.getPropertyValue("--builder-color-accent")).toBe("#C8A665");
@@ -368,7 +368,7 @@ describe("Builder portal root lifecycle", () => {
       false,
     );
 
-    expect(portalRoot.className).toBe("builder-portal-root");
+    expect(portalRoot.className).toBe("builder-portal-root builder-scope");
     expect(portalRoot.style.getPropertyValue("--builder-color-background")).toBe("#07100b");
     expect(portalRoot.style.getPropertyValue("--builder-color-accent")).toBe("#4ade80");
   });
@@ -403,7 +403,7 @@ describe("Builder portal root lifecycle", () => {
     expect(readPortalStyle()).toEqual(customBStyle);
     applyBuilderPortalTheme(portalRoot, defaultStyle, false);
     expect(readPortalStyle()).toEqual(defaultStyle);
-    expect(portalRoot.className).toBe("builder-portal-root");
+    expect(portalRoot.className).toBe("builder-portal-root builder-scope");
 
     removeBuilderPortalRoot(portalRoot);
     expect(

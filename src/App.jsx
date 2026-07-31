@@ -59,8 +59,8 @@ function App({
   );
   const isCustomBuilderTheme = hasCustomBuilderTheme(builderConfig.theme);
   const builderThemeClassName = isCustomBuilderTheme
-    ? "builder-theme-root builder-theme-root--custom"
-    : "builder-theme-root";
+    ? "builder-theme-root builder-scope builder-theme-root--custom"
+    : "builder-theme-root builder-scope";
   const {
     builderRootRef,
     instanceId: builderInstanceId,
