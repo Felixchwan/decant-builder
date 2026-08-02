@@ -90,4 +90,17 @@ describe("DiscoveryBoxBuilder asset resolver boundary", () => {
 
     expect(appCalls.map(({ isDevelopment }) => isDevelopment)).toEqual([false, true, false]);
   });
+
+  it("forwards an optional stable initial fragrance intent without changing the default", () => {
+    const assetResolver = createCatalogAssetResolver({ basePath: "/merchant-assets" });
+
+    renderToStaticMarkup(
+      <>
+        <DiscoveryBoxBuilder catalog={[]} config={discoveryDecantsConfig} assetResolver={assetResolver} />
+        <DiscoveryBoxBuilder catalog={[]} config={discoveryDecantsConfig} assetResolver={assetResolver} initialFragranceId={104} />
+      </>,
+    );
+
+    expect(appCalls.map(({ initialFragranceId }) => initialFragranceId)).toEqual([null, 104]);
+  });
 });

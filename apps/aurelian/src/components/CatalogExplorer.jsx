@@ -38,6 +38,7 @@ export function CatalogExplorer() {
               <p className="eyebrow">{item.brand}</p><h2>{item.name}</h2>
               <p className="product-card__accords">{item.accords.slice(0, 3).join(" · ")}</p>
               <p className="points">{item.points} {item.points === 1 ? "punto" : "puntos"}</p>
+              <Link className="button product-card__action" href={`/build-your-box?fragrance=${encodeURIComponent(item.id)}`} aria-label={`Agregar ${item.name} a mi Discovery Box`}>Agregar a mi Discovery Box</Link>
             </article>
           ))}
         </div>

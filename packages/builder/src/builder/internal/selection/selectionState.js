@@ -74,6 +74,60 @@ export function addSelectedPerfume({
   return [...currentSelection, perfume];
 }
 
+export function resolveInitialFragranceIntent({
+  initialFragranceId,
+  catalog,
+  selectedPerfumes,
+  maxSelectableSlots,
+}) {
+  const perfume = Number.isInteger(initialFragranceId)
+    ? catalog.find((item) => item?.id === initialFragranceId)
+    : null;
+
+  if (!perfume) {
+    return { status: "unavailable", perfume: null };
+  }
+
+  const eligibility = canAddPerfume({
+    selectedPerfumes,
+    perfume,
+    maxSelectableSlots,
+  });
+
+  return {
+    status: eligibility.allowed ? "ready" : eligibility.reason,
+    perfume,
+  };
+}
+
+export function applyInitialFragranceIntent({
+  initialFragranceId,
+  catalog,
+  selectedPerfumes,
+  maxSelectableSlots,
+}) {
+  if (initialFragranceId === null) {
+    return { intent: null, selectedPerfumes };
+  }
+
+  const intent = resolveInitialFragranceIntent({
+    initialFragranceId,
+    catalog,
+    selectedPerfumes,
+    maxSelectableSlots,
+  });
+  const nextSelectedPerfumes =
+    intent.status === "ready" && !intent.perfume.warningMessage
+      ? addSelectedPerfume({
+          selectedPerfumes,
+          perfume: intent.perfume,
+          maxSelectableSlots,
+        })
+      : selectedPerfumes;
+
+  return { intent, selectedPerfumes: nextSelectedPerfumes };
+}
+
 export function removeSelectedPerfumeAtIndex({
   selectedPerfumes,
   index,

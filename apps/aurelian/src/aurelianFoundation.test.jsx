@@ -106,6 +106,29 @@ describe("Aurelian application foundation", () => {
     expect(stylesheet).toMatch(/prefers-reduced-motion[\s\S]*\.hero-media__video\s*\{\s*display:none/);
   });
 
+  it("uses content-driven section density and a responsive banner media treatment", () => {
+    const homeMarkup = renderToStaticMarkup(<HomePage />);
+    const stylesheet = readFileSync(join(APP_ROOT, "src", "app", "globals.css"), "utf8");
+
+    expect(homeMarkup).toContain('class="aurelian-hero page-shell"');
+    expect(stylesheet).not.toContain("100svh");
+    expect(stylesheet).not.toMatch(/\.aurelian-hero\s*\{[^}]*min-(?:height|block-size)/);
+    expect(stylesheet).toMatch(/\.hero-media__frame\s*\{[^}]*aspect-ratio:16\/9/);
+    expect(stylesheet).toMatch(/\.hero-media__video\s*\{[^}]*object-fit:cover;[^}]*object-position:50% 48%/);
+    expect(stylesheet).toMatch(/@media \(max-width:900px\)[\s\S]*\.hero-media__frame\s*\{\s*aspect-ratio:3\/2/);
+    expect(stylesheet).toMatch(/\.page-intro--compact\s*\{\s*padding-block:/);
+    expect(stylesheet).not.toMatch(/(^|\n)\.hero\s*\{/);
+  });
+
+  it("gives every catalog fragrance an explicit stable-ID Builder action", () => {
+    const markup = renderToStaticMarkup(<CatalogPage />);
+    expect(markup.match(/Agregar a mi Discovery Box/g)).toHaveLength(aurelianCatalog.length);
+    expect(markup.match(/aria-label="Agregar [^"]+ a mi Discovery Box"/g)).toHaveLength(aurelianCatalog.length);
+    for (const fragrance of aurelianCatalog) {
+      expect(markup).toContain(`/build-your-box?fragrance=${fragrance.id}`);
+    }
+  });
+
   it("provides owned mobile-navigation focus, Escape, and route-state behavior", () => {
     const headerSource = readFileSync(join(APP_ROOT, "src", "components", "SiteHeader.jsx"), "utf8");
     expect(headerSource).toContain('event.key === "Escape"');
@@ -144,6 +167,11 @@ describe("Aurelian application foundation", () => {
     expect(builderSource).toContain('basePath: "/catalog-assets"');
     const mountSource = readFileSync(join(APP_ROOT, "src", "components", "BuilderMount.jsx"), "utf8");
     expect(mountSource).toContain("ssr: false");
+    const experienceSource = readFileSync(join(APP_ROOT, "src", "components", "BuilderExperience.jsx"), "utf8");
+    expect(experienceSource).toContain("parseFragranceIntent(window.location.search)");
+    expect(experienceSource).toContain("window.history.replaceState");
+    expect(experienceSource).toContain("initialFragranceId={initialFragranceId}");
+    expect(mountSource).not.toContain("aurelianCatalog");
     expect(readFileSync(join(REPOSITORY_ROOT, ".gitignore"), "utf8")).toContain("/apps/aurelian/public/catalog-assets/");
   });
 

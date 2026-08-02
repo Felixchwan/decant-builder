@@ -12,6 +12,7 @@ import { validateBuilderConfig } from "./config/index.js";
  * @param {object} props.config Normalized Builder config, usually produced by createBuilderConfig.
  * @param {object} props.analytics Provider-neutral analytics adapter. Defaults to no-op when omitted.
  * @param {object} props.finalizationAdapter Host-supplied delivery-channel adapter. Optional.
+ * @param {number|null} props.initialFragranceId Optional stable catalog ID to select once after persisted state is restored.
  * @param {(assetKey: string) => string} props.assetResolver Host-supplied catalog asset resolver.
  * @param {boolean} props.isDevelopment Host-supplied development capability. Defaults to false.
  */
@@ -21,6 +22,7 @@ export default function DiscoveryBoxBuilder({
   config,
   analytics,
   finalizationAdapter,
+  initialFragranceId = null,
   assetResolver,
   isDevelopment = false,
 }) {
@@ -74,6 +76,7 @@ export default function DiscoveryBoxBuilder({
       config={validatedConfig}
       analytics={analytics}
       finalizationAdapter={finalizationAdapter}
+      initialFragranceId={initialFragranceId}
       assetResolver={assetResolver}
       isDevelopment={isDevelopment}
     />

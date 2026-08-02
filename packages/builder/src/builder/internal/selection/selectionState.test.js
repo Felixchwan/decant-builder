@@ -1,10 +1,12 @@
 import { describe, expect, it } from "vitest";
 import {
   addSelectedPerfume,
+  applyInitialFragranceIntent,
   canAddPerfume,
   getSelectedPerfumeIds,
   hydrateSelectedPerfumes,
   removeSelectedPerfumeAtIndex,
+  resolveInitialFragranceIntent,
   reorderSelectedPerfumes,
 } from "./selectionState.js";
 
@@ -253,6 +255,63 @@ describe("selectionState", () => {
       });
 
       expect(ids(added)).toEqual([1]);
+    });
+  });
+
+  describe("resolveInitialFragranceIntent", () => {
+    it("resolves a canonical catalog record that can augment an empty or persisted selection", () => {
+      const catalog = freezeSelection([perfume(1), perfume(2), perfume(3)]);
+      const persisted = freezeSelection([catalog[0]]);
+      const emptyIntent = resolveInitialFragranceIntent({ initialFragranceId: 2, catalog, selectedPerfumes: [], maxSelectableSlots: 3 });
+      const persistedIntent = resolveInitialFragranceIntent({ initialFragranceId: 2, catalog, selectedPerfumes: persisted, maxSelectableSlots: 3 });
+
+      expect(emptyIntent).toEqual({ status: "ready", perfume: catalog[1] });
+      expect(persistedIntent).toEqual({ status: "ready", perfume: catalog[1] });
+      expect(ids(addSelectedPerfume({ selectedPerfumes: [], perfume: emptyIntent.perfume, maxSelectableSlots: 3 }))).toEqual([2]);
+      expect(ids(addSelectedPerfume({ selectedPerfumes: persisted, perfume: persistedIntent.perfume, maxSelectableSlots: 3 }))).toEqual([1, 2]);
+      expect(ids(catalog)).toEqual([1, 2, 3]);
+    });
+
+    it("reports duplicate, capacity, and unavailable intents without changing selection", () => {
+      const catalog = [perfume(1), perfume(2)];
+      const selected = freezeSelection([catalog[0]]);
+
+      expect(resolveInitialFragranceIntent({ initialFragranceId: 1, catalog, selectedPerfumes: selected, maxSelectableSlots: 2 }).status).toBe("duplicate");
+      expect(resolveInitialFragranceIntent({ initialFragranceId: 2, catalog, selectedPerfumes: selected, maxSelectableSlots: 1 }).status).toBe("capacity");
+      expect(resolveInitialFragranceIntent({ initialFragranceId: 99, catalog, selectedPerfumes: selected, maxSelectableSlots: 2 })).toEqual({ status: "unavailable", perfume: null });
+      expect(resolveInitialFragranceIntent({ initialFragranceId: "1", catalog, selectedPerfumes: selected, maxSelectableSlots: 2 })).toEqual({ status: "unavailable", perfume: null });
+      expect(ids(selected)).toEqual([1]);
+    });
+  });
+
+  describe("applyInitialFragranceIntent", () => {
+    it("augments restored selection once without replacing, mutating, or persisting the intent itself", () => {
+      const catalog = freezeSelection([perfume(1), perfume(2), perfume(3)]);
+      const restored = freezeSelection([catalog[0]]);
+      const result = applyInitialFragranceIntent({ initialFragranceId: 2, catalog, selectedPerfumes: restored, maxSelectableSlots: 3 });
+
+      expect(result.intent).toEqual({ status: "ready", perfume: catalog[1] });
+      expect(ids(result.selectedPerfumes)).toEqual([1, 2]);
+      expect(Object.keys(result)).toEqual(["intent", "selectedPerfumes"]);
+      expect(ids(restored)).toEqual([1]);
+      expect(ids(catalog)).toEqual([1, 2, 3]);
+    });
+
+    it("preserves the exact selection reference for duplicate, capacity, unknown, and absent intents", () => {
+      const catalog = [perfume(1), perfume(2)];
+      const selected = freezeSelection([catalog[0]]);
+      for (const [initialFragranceId, maxSelectableSlots] of [[1, 2], [2, 1], [99, 2], [null, 2]]) {
+        expect(applyInitialFragranceIntent({ initialFragranceId, catalog, selectedPerfumes: selected, maxSelectableSlots }).selectedPerfumes).toBe(selected);
+      }
+    });
+
+    it("defers warning-protected fragrances to the ordinary confirmation path", () => {
+      const warned = perfume(2, { warningMessage: "Confirm this selection" });
+      const selected = freezeSelection([perfume(1)]);
+      const result = applyInitialFragranceIntent({ initialFragranceId: 2, catalog: [selected[0], warned], selectedPerfumes: selected, maxSelectableSlots: 3 });
+
+      expect(result.intent).toEqual({ status: "ready", perfume: warned });
+      expect(result.selectedPerfumes).toBe(selected);
     });
   });
 

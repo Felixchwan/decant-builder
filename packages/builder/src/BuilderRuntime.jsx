@@ -36,6 +36,7 @@ import {
 import { useBuilderPortalRoot } from "./builder/internal/portal/useBuilderPortalRoot.js";
 import {
   addSelectedPerfume,
+  applyInitialFragranceIntent,
   canAddPerfume,
   removeSelectedPerfumeAtIndex,
   reorderSelectedPerfumes,
@@ -43,12 +44,28 @@ import {
 
 const EMPTY_NOTES = {};
 
+function getInitialFragranceIntentMessage(intent, translate) {
+  if (!intent) {
+    return "";
+  }
+
+  const messageKeys = {
+    ready: intent.perfume?.warningMessage ? null : "app.initialFragranceAdded",
+    duplicate: "app.initialFragranceAlreadySelected",
+    capacity: "app.initialFragranceCapacity",
+    unavailable: "app.initialFragranceUnavailable",
+  };
+  const key = messageKeys[intent.status];
+  return key ? translate(key) : "";
+}
+
 function App({
   catalog,
   notes: noteMetadata = EMPTY_NOTES,
   config,
   analytics = noopAnalytics,
   finalizationAdapter,
+  initialFragranceId = null,
   assetResolver,
   isDevelopment = false,
 }) {
@@ -103,19 +120,31 @@ function App({
       }),
     [builderConfig, perfumes, DEFAULT_BUILDER_STATE]
   );
-  const [selectedPerfumes, setSelectedPerfumes] = useState(
-    persistedBuilderState.selectedPerfumes
+  const initialSelectionState = useMemo(
+    () =>
+      applyInitialFragranceIntent({
+        initialFragranceId,
+        catalog: perfumes,
+        selectedPerfumes: persistedBuilderState.selectedPerfumes,
+        maxSelectableSlots: MAX_SELECTABLE_SLOTS,
+      }),
+    [initialFragranceId, MAX_SELECTABLE_SLOTS, perfumes, persistedBuilderState.selectedPerfumes]
   );
+  const initialFragranceIntent = initialSelectionState.intent;
+  const [selectedPerfumes, setSelectedPerfumes] = useState(initialSelectionState.selectedPerfumes);
   const [curatorBonusPreference, setCuratorBonusPreference] = useState(
     persistedBuilderState.curatorBonusPreference
   );
   const [reviewCustomerInfo, setReviewCustomerInfo] = useState(
     persistedBuilderState.customerInfo
   );
-  const [restoreMessage, setRestoreMessage] = useState(
-    persistedBuilderState.wasRestored ? builderConfig.persistence.restoreMessage : ""
+  const [restoreMessage, setRestoreMessage] = useState(() =>
+    getInitialFragranceIntentMessage(initialFragranceIntent, t) ||
+    (persistedBuilderState.wasRestored ? builderConfig.persistence.restoreMessage : "")
   );
-  const [activeMobileTab, setActiveMobileTab] = useState("catalog");
+  const [activeMobileTab, setActiveMobileTab] = useState(
+    initialFragranceIntent && initialFragranceIntent.status !== "unavailable" ? "box" : "catalog"
+  );
   const [activeFilters, setActiveFilters] = useState({
     seasons: "",
     occasions: "",
@@ -134,12 +163,17 @@ function App({
   const [composerStatusMessage, setComposerStatusMessage] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [sortOption, setSortOption] = useState("bestMatch");
-  const [pendingPerfume, setPendingPerfume] = useState(null);
+  const [pendingPerfume, setPendingPerfume] = useState(
+    initialFragranceIntent?.status === "ready" && initialFragranceIntent.perfume.warningMessage
+      ? initialFragranceIntent.perfume
+      : null
+  );
   const [detailPerfume, setDetailPerfume] = useState(null);
   const composerGenerationTimeoutRef = useRef(null);
   const composerGenerationIdRef = useRef(0);
   const hasTrackedAppLoadRef = useRef(false);
   const hasTrackedCuratorBonusUnlockedRef = useRef(false);
+  const pendingPerfumeSourceRef = useRef(pendingPerfume ? "initial-intent" : "manual");
 
   const collectionSummary = useMemo(
     () =>
@@ -572,7 +606,7 @@ const isComposerProposalStale = isComposerBoxProposalStale(
     });
   }
 
-  const addPerfume = (perfume) => {
+  const addPerfume = (perfume, source = "manual") => {
   const eligibility = canAddPerfume({
     selectedPerfumes,
     perfume,
@@ -584,6 +618,7 @@ const isComposerProposalStale = isComposerBoxProposalStale(
   }
 
   if (perfume.warningMessage) {
+    pendingPerfumeSourceRef.current = source;
     setPendingPerfume(perfume);
     return;
   }
@@ -598,7 +633,7 @@ const isComposerProposalStale = isComposerBoxProposalStale(
   analytics.track(ANALYTICS_EVENTS.PERFUME_ADDED, {
     perfumeId: perfume.id,
     points: perfume.points,
-    source: "manual",
+    source,
     slotCountAfter: nextSelectedPerfumes.length,
     totalPointsAfter: getTotalPoints(nextSelectedPerfumes),
   });
@@ -617,17 +652,20 @@ const confirmAddPerfume = () => {
   analytics.track(ANALYTICS_EVENTS.PERFUME_ADDED, {
     perfumeId: pendingPerfume.id,
     points: pendingPerfume.points,
-    source: "manual",
+    source: pendingPerfumeSourceRef.current,
     slotCountAfter: nextSelectedPerfumes.length,
     totalPointsAfter: getTotalPoints(nextSelectedPerfumes),
   });
 
   setPendingPerfume(null);
+  pendingPerfumeSourceRef.current = "manual";
 };
 
   const cancelAddPerfume = () => {
   setPendingPerfume(null);
+  pendingPerfumeSourceRef.current = "manual";
 };
+
 
   const navigateDetailPerfume = useCallback((direction) => {
     setDetailPerfume((currentPerfume) =>
