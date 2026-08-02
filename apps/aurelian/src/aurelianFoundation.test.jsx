@@ -147,17 +147,21 @@ describe("Aurelian application foundation", () => {
   it("keeps seasonal timing and catalog highlighting host-owned and safely paused", () => {
     const seasonalSource = readFileSync(join(APP_ROOT, "src", "components", "SeasonalFeaturedSelection.jsx"), "utf8");
     const catalogSource = readFileSync(join(APP_ROOT, "src", "components", "CatalogExplorer.jsx"), "utf8");
-    expect(seasonalSource).toContain("ROTATION_INTERVAL_MS = 3000");
+    const stylesheet = readFileSync(join(APP_ROOT, "src", "app", "globals.css"), "utf8");
+    expect(seasonalSource).toContain("buildSeasonalCycleSchedule");
     expect(seasonalSource).toContain("prefers-reduced-motion: reduce");
     expect(seasonalSource).toContain("visibilitychange");
     expect(seasonalSource).toContain("onPointerEnter");
     expect(seasonalSource).toContain("onFocus");
-    expect(seasonalSource).toContain("window.clearInterval(timer)");
+    expect(seasonalSource).toContain("window.clearTimeout(timer)");
     expect(seasonalSource).toContain('removeEventListener("visibilitychange"');
     expect(catalogSource).toContain("resolveCatalogFragranceIntent(window.location.search, aurelianCatalog)");
     expect(catalogSource).toContain("scrollIntoView");
     expect(catalogSource).toContain("product-card--highlighted");
     expect(catalogSource).toContain("window.requestAnimationFrame");
+    expect(seasonalSource).toContain("aria-disabled={interactive ? undefined : true}");
+    expect(seasonalSource).toContain("tabIndex={interactive ? undefined : -1}");
+    expect(stylesheet).toMatch(/\.seasonal-card--exiting \.seasonal-card__link\s*\{[^}]*opacity:0;[^}]*pointer-events:none/);
   });
 
   it("gives every catalog fragrance an explicit stable-ID Builder action", () => {
