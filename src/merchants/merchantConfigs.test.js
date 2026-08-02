@@ -4,7 +4,7 @@ import {
   createBuilderConfig,
   validateBuilderConfig,
 } from "@discovery-box/builder/config";
-import { aurelianConfig } from "./aurelian/config.js";
+import { aurelianConfig } from "../../apps/aurelian/src/merchant/config.js";
 import { discoveryDecantsConfig } from "./discoveryDecants/config.js";
 
 describe("merchant configs", () => {

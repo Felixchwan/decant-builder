@@ -46,16 +46,22 @@ describe("Builder host environment boundary", () => {
     expect(violations).toEqual([]);
   });
 
-  it("keeps Vite environment lookup in both current merchant hosts", () => {
-    for (const host of ["DiscoveryDecantsApp.jsx", "AurelianApp.jsx"]) {
-      const source = readFileSync(join(HOST_SOURCE_ROOT, "app", host), "utf8");
-      expect(source).toContain("isDevelopment={import.meta.env.DEV}");
-    }
+  it("keeps environment lookup in each host rather than shared Builder runtime", () => {
+    const discoverySource = readFileSync(join(HOST_SOURCE_ROOT, "app", "DiscoveryDecantsApp.jsx"), "utf8");
+    const aurelianPageSource = readFileSync(join(HOST_SOURCE_ROOT, "..", "apps", "aurelian", "src", "app", "build-your-box", "page.jsx"), "utf8");
+    const aurelianClientSource = readFileSync(join(HOST_SOURCE_ROOT, "..", "apps", "aurelian", "src", "components", "BuilderExperience.jsx"), "utf8");
+    expect(discoverySource).toContain("isDevelopment={import.meta.env.DEV}");
+    expect(aurelianPageSource).toContain('process.env.NODE_ENV === "development"');
+    expect(aurelianClientSource).not.toMatch(/import\.meta|process\.env/);
   });
 
   it("does not store deployment environment in merchant configuration", () => {
-    for (const merchant of ["discoveryDecants", "aurelian"]) {
-      const source = readFileSync(join(HOST_SOURCE_ROOT, "merchants", merchant, "config.js"), "utf8");
+    const configFiles = [
+      join(HOST_SOURCE_ROOT, "merchants", "discoveryDecants", "config.js"),
+      join(HOST_SOURCE_ROOT, "..", "apps", "aurelian", "src", "merchant", "config.js"),
+    ];
+    for (const configFile of configFiles) {
+      const source = readFileSync(configFile, "utf8");
       expect(source).not.toMatch(/isDevelopment|import\.meta|process\.env|VITE_|NODE_ENV/);
     }
   });

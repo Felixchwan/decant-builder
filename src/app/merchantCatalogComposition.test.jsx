@@ -12,11 +12,11 @@ vi.mock("@discovery-box/builder", () => ({
   },
 }));
 
-import AurelianApp from "./AurelianApp.jsx";
+import { BuilderExperience } from "../../apps/aurelian/src/components/BuilderExperience.jsx";
 import DiscoveryDecantsApp from "./DiscoveryDecantsApp.jsx";
 import { createMerchantCatalog, fragrances as perfumes } from "@discovery-box/catalog";
 import { CATALOG_IDENTITY_BASELINE } from "../../packages/catalog/tests/catalogIdentityBaseline.fixture.js";
-import { aurelianAvailableIds } from "../merchants/aurelian/catalog.js";
+import { aurelianAvailableIds } from "../../apps/aurelian/src/merchant/catalog.js";
 import { discoveryDecantsAvailableIds } from "../merchants/discoveryDecants/catalog.js";
 
 function expectedIds() {
@@ -51,7 +51,7 @@ describe("merchant catalog composition", () => {
       "utf8"
     );
     const aurelianSource = readFileSync(
-      fileURLToPath(new URL("../merchants/aurelian/catalog.js", import.meta.url)),
+      fileURLToPath(new URL("../../apps/aurelian/src/merchant/catalog.js", import.meta.url)),
       "utf8"
     );
 
@@ -80,7 +80,7 @@ describe("merchant catalog composition", () => {
 
   it("passes each merchant projection to Builder instead of the canonical array", () => {
     renderToStaticMarkup(<DiscoveryDecantsApp />);
-    renderToStaticMarkup(<AurelianApp />);
+    renderToStaticMarkup(<BuilderExperience isDevelopment={import.meta.env.DEV} />);
 
     expect(builderCalls).toHaveLength(2);
     const [discoveryProps, aurelianProps] = builderCalls;
@@ -103,7 +103,7 @@ describe("merchant catalog composition", () => {
       "utf8",
     );
     const aurelianSource = readFileSync(
-      fileURLToPath(new URL("./AurelianApp.jsx", import.meta.url)),
+      fileURLToPath(new URL("../../apps/aurelian/src/components/BuilderExperience.jsx", import.meta.url)),
       "utf8",
     );
     const sharedSources = [

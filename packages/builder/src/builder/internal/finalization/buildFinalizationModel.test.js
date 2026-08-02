@@ -4,7 +4,7 @@ import {
   buildFinalizationModel,
   normalizeCustomerInfo,
 } from "./buildFinalizationModel.js";
-import { aurelianConfig } from "../../../../../../src/merchants/aurelian/config.js";
+import { aurelianConfig } from "../../../../../../apps/aurelian/src/merchant/config.js";
 
 const config = {
   brand: {

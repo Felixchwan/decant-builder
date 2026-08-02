@@ -4,7 +4,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 
 import { DiscoveryBoxBuilder } from "@discovery-box/builder";
-import { aurelianConfig } from "../merchants/aurelian/config.js";
+import { aurelianConfig } from "../../apps/aurelian/src/merchant/config.js";
 import { discoveryDecantsConfig } from "../merchants/discoveryDecants/config.js";
 import { createCatalogAssetResolver, fragrances as perfumes, notes } from "@discovery-box/catalog";
 
@@ -72,7 +72,7 @@ describe("merchant-localized Builder render", () => {
 
   it("keeps WhatsApp adapter ownership with Discovery Decants and Aurelian disabled", () => {
     const discoverySource = readFileSync("src/app/DiscoveryDecantsApp.jsx", "utf8");
-    const aurelianSource = readFileSync("src/app/AurelianApp.jsx", "utf8");
+    const aurelianSource = readFileSync("apps/aurelian/src/components/BuilderExperience.jsx", "utf8");
 
     expect(discoverySource).toContain("createWhatsAppFinalizationAdapter");
     expect(discoverySource).toContain("finalizationAdapter={finalizationAdapter}");

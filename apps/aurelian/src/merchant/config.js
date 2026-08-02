@@ -8,26 +8,16 @@ const localized = buildLocalizedConfigOverrides(locale);
 
 export const aurelianConfig = createBuilderConfig({
   ...localized,
-  software: {
-    name: "Decant Builder",
-  },
+  software: { name: "Decant Builder" },
   brand: {
     businessName: "Aurelian",
     displayName: "Aurelian",
     shortName: "Aurelian",
     heading: "Aurelian",
   },
-  analytics: {
-    merchantId: "aurelian",
-  },
-  commerce: {
-    ...localized.commerce,
-    locale,
-  },
-  box: {
-    minSelectableSlots: 6,
-    maxSelectableSlots: 14,
-  },
+  analytics: { merchantId: "aurelian" },
+  commerce: { ...localized.commerce, locale },
+  box: { minSelectableSlots: 6, maxSelectableSlots: 14 },
   theme: {
     colors: {
       background: "#090A09",
@@ -57,10 +47,6 @@ export const aurelianConfig = createBuilderConfig({
     whatsappNumber: "",
     orderCodePrefix: "AUR",
   },
-  persistence: {
-    storageKey: "aurelian-builder-v1",
-  },
-  features: {
-    whatsappFinalization: false,
-  },
+  persistence: { storageKey: "aurelian-builder-v1" },
+  features: { whatsappFinalization: false },
 });

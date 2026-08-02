@@ -13,6 +13,8 @@ dist
 dist-ssr
 *.local
 /public/catalog-assets/
+/apps/aurelian/public/catalog-assets/
+/apps/aurelian/.next/
 
 # Editor directories and files
 .vscode/*

@@ -82,8 +82,12 @@ describe("@discovery-box/builder public boundary", () => {
       .toContain('from "@discovery-box/builder/analytics"');
     expect(readFileSync(join(hostSourceRoot, "components", "AppErrorBoundary.jsx"), "utf8"))
       .toContain('from "@discovery-box/builder/analytics"');
-    for (const merchant of ["aurelian", "discoveryDecants"]) {
-      expect(readFileSync(join(hostSourceRoot, "merchants", merchant, "config.js"), "utf8"))
+    const merchantConfigs = [
+      join(hostSourceRoot, "merchants", "discoveryDecants", "config.js"),
+      join(repositoryRoot, "apps", "aurelian", "src", "merchant", "config.js"),
+    ];
+    for (const merchantConfig of merchantConfigs) {
+      expect(readFileSync(merchantConfig, "utf8"))
         .toContain('from "@discovery-box/builder/config"');
     }
   });

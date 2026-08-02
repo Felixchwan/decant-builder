@@ -5,7 +5,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import { discoveryDecantsConfig } from "../../../../src/merchants/discoveryDecants/config.js";
 import { buildCollectionSummary } from "../builder/internal/intelligence/buildCollectionSummary.js";
 import { buildComposerRecommendations } from "../builder/internal/recommendations/buildComposerRecommendations.js";
-import { aurelianConfig } from "../../../../src/merchants/aurelian/config.js";
+import { aurelianConfig } from "../../../../apps/aurelian/src/merchant/config.js";
 import { fragrances as perfumes, notes } from "@discovery-box/catalog";
 import { createTranslator } from "../i18n/createTranslator.js";
 import { buildScentDna } from "../utils/buildScentDna.js";

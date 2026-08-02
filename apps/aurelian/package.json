@@ -1,0 +1,21 @@
+{
+  "name": "@aurelian/web",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "sync:assets": "catalog-sync-assets --destination public/catalog-assets",
+    "predev": "npm run sync:assets",
+    "dev": "next dev",
+    "prebuild": "npm run build -w @discovery-box/builder && npm run sync:assets",
+    "build": "next build",
+    "start": "next start"
+  },
+  "dependencies": {
+    "@discovery-box/builder": "0.0.0",
+    "@discovery-box/catalog": "0.0.0",
+    "next": "16.2.12",
+    "react": "^19.2.6",
+    "react-dom": "^19.2.6"
+  }
+}

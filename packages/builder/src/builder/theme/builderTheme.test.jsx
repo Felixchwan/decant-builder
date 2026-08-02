@@ -7,7 +7,7 @@ import { describe, expect, it } from "vitest";
 import { DiscoveryBoxBuilder } from "../../client.jsx";
 import { createBuilderConfig } from "../config/createBuilderConfig.js";
 import { validateBuilderConfig } from "../config/validateBuilderConfig.js";
-import { aurelianConfig } from "../../../../../src/merchants/aurelian/config.js";
+import { aurelianConfig } from "../../../../../apps/aurelian/src/merchant/config.js";
 import { discoveryDecantsConfig } from "../../../../../src/merchants/discoveryDecants/config.js";
 import {
   BUILDER_THEME_COLOR_KEYS,

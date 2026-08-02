@@ -4,14 +4,17 @@
   "version": "0.0.0",
   "type": "module",
   "workspaces": [
-    "packages/*"
+    "packages/*",
+    "apps/*"
   ],
   "scripts": {
     "sync:catalog-assets": "catalog-sync-assets --destination public/catalog-assets",
     "predev": "npm run sync:catalog-assets",
     "dev": "vite",
+    "dev:aurelian": "npm run dev -w @aurelian/web",
     "prebuild": "npm run sync:catalog-assets",
     "build": "npm run build -w @discovery-box/builder && vite build",
+    "build:aurelian": "npm run build -w @aurelian/web",
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest run",

@@ -1,3 +1,5 @@
+import { createMerchantCatalog, fragrances } from "@discovery-box/catalog";
+
 export const aurelianAvailableIds = Object.freeze([
   1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
   32, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 33, 34,
@@ -8,3 +10,8 @@ export const aurelianAvailableIds = Object.freeze([
   401, 402, 403, 404, 405, 406, 407, 408, 409,
   500, 501,
 ]);
+
+export const aurelianCatalog = createMerchantCatalog({
+  source: fragrances,
+  availableIds: aurelianAvailableIds,
+});

@@ -8,7 +8,7 @@ import { buildFinalizationModel } from "../../src/builder/internal/finalization/
 import { buildCollectionSummary } from "../../src/builder/internal/intelligence/buildCollectionSummary.js";
 import { enUS } from "../../src/i18n/locales/en-US.js";
 import { esMX } from "../../src/i18n/locales/es-MX.js";
-import { aurelianConfig } from "../../../../src/merchants/aurelian/config.js";
+import { aurelianConfig } from "../../../../apps/aurelian/src/merchant/config.js";
 import { discoveryDecantsConfig } from "../../../../src/merchants/discoveryDecants/config.js";
 
 describe("Phase 1 platform-readiness baseline", () => {
