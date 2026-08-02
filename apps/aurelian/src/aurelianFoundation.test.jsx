@@ -106,17 +106,22 @@ describe("Aurelian application foundation", () => {
     expect(stylesheet).toMatch(/prefers-reduced-motion[\s\S]*\.hero-media__video\s*\{\s*display:none/);
   });
 
-  it("uses content-driven section density and a responsive banner media treatment", () => {
+  it("uses content-driven section density and an editorial portrait media treatment", () => {
     const homeMarkup = renderToStaticMarkup(<HomePage />);
     const stylesheet = readFileSync(join(APP_ROOT, "src", "app", "globals.css"), "utf8");
 
     expect(homeMarkup).toContain('class="aurelian-hero page-shell"');
     expect(stylesheet).not.toContain("100svh");
     expect(stylesheet).not.toMatch(/\.aurelian-hero\s*\{[^}]*min-(?:height|block-size)/);
-    expect(stylesheet).toMatch(/\.hero-media__frame\s*\{[^}]*aspect-ratio:16\/9/);
-    expect(stylesheet).toMatch(/\.hero-media__video\s*\{[^}]*object-fit:cover;[^}]*object-position:50% 48%/);
-    expect(stylesheet).toMatch(/@media \(max-width:900px\)[\s\S]*\.hero-media__frame\s*\{\s*aspect-ratio:3\/2/);
+    expect(stylesheet).toMatch(/\.hero-media\s*\{[^}]*width:clamp\(17\.5rem,24vw,20rem\)/);
+    expect(stylesheet).toMatch(/\.hero-media__frame\s*\{[^}]*aspect-ratio:9\/20/);
+    expect(stylesheet).toMatch(/\.hero-media__video\s*\{[^}]*object-fit:cover;[^}]*object-position:56% 50%/);
+    expect(stylesheet).toMatch(/@media \(max-width:900px\)[\s\S]*\.hero-media__frame\s*\{\s*aspect-ratio:4\/5/);
     expect(stylesheet).toMatch(/\.page-intro--compact\s*\{\s*padding-block:/);
+    expect(stylesheet).toMatch(/\.section\s*\{\s*padding-block:clamp\(2\.5rem,3\.3vw,3rem\)/);
+    expect(stylesheet).toMatch(/\.final-cta\s*\{\s*padding-block:3rem/);
+    expect(stylesheet).toMatch(/\.service-band p:last-child\s*\{\s*margin-bottom:0/);
+    expect(stylesheet).not.toMatch(/(?:\.aurelian-hero|\.section|\.service-band|\.final-cta)\s*\{[^}]*(?:100s?vh|min-(?:height|block-size))/);
     expect(stylesheet).not.toMatch(/(^|\n)\.hero\s*\{/);
   });
 
