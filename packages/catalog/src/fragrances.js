@@ -139,7 +139,7 @@ const perfumeCatalog = [
 ,
   {
   id: 4,
-  name: "Montblanc Legend EDT",
+  name: "Legend EDT",
   shortName: "Legend",
   brand: "Montblanc",
   points: 1,
@@ -306,7 +306,7 @@ const perfumeCatalog = [
 },
 {
   id: 7,
-  name: "Hugo Boss The Scent EDT",
+  name: "The Scent EDT",
   shortName: "The Scent",
   brand: "Hugo Boss",
   points: 1,
@@ -511,7 +511,7 @@ vibes: ["fresh", "relaxed", "approachable"]
 },
 {
 id: 16,
-name: "Uomo Salvatore Ferragamo Signature",
+name: "Uomo Signature",
 shortName: "Uomo Signature",
 brand: "Salvatore Ferragamo",
 points: 1,
@@ -543,7 +543,7 @@ vibes: ["clean", "elegant", "confident"]
 },
 {
 id: 18,
-name: "L.12.12 Blanc Eau de Parfum",
+name: "L.12.12 Blanc EDP",
 shortName: "L.12.12 Blanc",
 brand: "Lacoste",
 points: 1,
@@ -1052,7 +1052,7 @@ baseNotes: ["caramel", "musk"],
 
 {
   id: 106,
-  name: "Carolina Herrera 212 VIP Black",
+  name: "212 VIP Black",
   shortName: "212 VIP Black",
   brand: "Carolina Herrera",
   points: 1.5,
@@ -1069,7 +1069,7 @@ baseNotes: ["caramel", "musk"],
 
 {
   id: 107,
-  name: "Carolina Herrera Birds of Paradise for Him",
+  name: "Birds of Paradise for Him",
   shortName: "Birds Paradise",
   brand: "Carolina Herrera",
   points: 1.5,
@@ -1086,7 +1086,7 @@ baseNotes: ["caramel", "musk"],
 
 {
   id: 108,
-  name: "Carolina Herrera Bad Boy Cobalt Parfum Electrique",
+  name: "Bad Boy Cobalt Parfum Electrique",
   shortName: "Bad Boy Cobalt",
   brand: "Carolina Herrera",
   points: 1.5,
@@ -1103,7 +1103,7 @@ baseNotes: ["caramel", "musk"],
 
 {
   id: 109,
-  name: "Dolce & Gabbana K EDP Intense",
+  name: "K EDP Intense",
   shortName: "K Intense",
   brand: "Dolce & Gabbana",
   points: 1.5,
@@ -1120,7 +1120,7 @@ baseNotes: ["caramel", "musk"],
 
 {
   id: 110,
-  name: "Hermès Concentré d'Orange Verte",
+  name: "Concentré d'Orange Verte",
   shortName: "Orange Verte",
   brand: "Hermès",
   points: 1.5,
@@ -1137,7 +1137,7 @@ baseNotes: ["caramel", "musk"],
 
 {
   id: 111,
-  name: "Hermès Terre d'Hermès",
+  name: "Terre d'Hermès EDT",
   shortName: "Terre Hermès",
   brand: "Hermès",
   points: 1.5,
@@ -1154,7 +1154,7 @@ baseNotes: ["caramel", "musk"],
 
 {
   id: 112,
-  name: "Jean Paul Gaultier Le Beau Le Parfum",
+  name: "Le Beau Le Parfum",
   shortName: "Le Beau LP",
   brand: "Jean Paul Gaultier",
   points: 1.5,
@@ -1171,7 +1171,7 @@ baseNotes: ["caramel", "musk"],
 
 {
   id: 113,
-  name: "Jean Paul Gaultier Le Male Le Parfum",
+  name: "Le Male Le Parfum",
   shortName: "Le Male LP",
   brand: "Jean Paul Gaultier",
   points: 1.5,
@@ -1188,7 +1188,7 @@ baseNotes: ["caramel", "musk"],
 
 {
   id: 114,
-  name: "Jo Milano Wildcard",
+  name: "Game of Spades Wildcard",
   shortName: "Wildcard",
   brand: "Jo Milano",
   points: 1.5,
@@ -1205,7 +1205,7 @@ baseNotes: ["caramel", "musk"],
 
 {
   id: 115,
-  name: "Mancera Cedrat Boise",
+  name: "Cedrat Boise",
   shortName: "Cedrat Boise",
   brand: "Mancera",
   points: 1.5,
@@ -1222,7 +1222,7 @@ baseNotes: ["caramel", "musk"],
 
 {
   id: 116,
-  name: "Paco Rabanne Invictus Victory",
+  name: "Invictus Victory",
   shortName: "Invictus Victory",
   brand: "Paco Rabanne",
   points: 1.5,
@@ -1256,7 +1256,7 @@ baseNotes: ["caramel", "musk"],
 
 {
   id: 118,
-  name: "YSL La Nuit de L'Homme",
+  name: "La Nuit de L'Homme",
   shortName: "La Nuit",
   brand: "YSL",
   points: 1.5,
@@ -1486,7 +1486,7 @@ baseNotes: ["caramel", "musk"],
 
 {
   id: 205,
-  name: "Givenchy Gentleman EDP",
+  name: "Gentleman EDP",
   shortName: "Gentleman EDP",
   brand: "Givenchy",
   points: 2,
@@ -1709,7 +1709,7 @@ baseNotes: ["caramel", "musk"],
 
 {
   id: 209,
-  name: "Prada Luna Rossa Black",
+  name: "Luna Rossa Black",
   shortName: "Luna Rossa Black",
   brand: "Prada",
   points: 2,
@@ -1760,7 +1760,7 @@ baseNotes: ["caramel", "musk"],
 
 {
   id: 210,
-  name: "Valentino Uomo Born In Roma",
+  name: "Born In Roma EDT",
   shortName: "Born In Roma",
   brand: "Valentino",
   points: 2,
@@ -1813,7 +1813,7 @@ baseNotes: ["caramel", "musk"],
 
 {
   id: 211,
-  name: "Valentino Uomo Born In Roma Coral Fantasy",
+  name: "Born In Roma Coral Fantasy",
   shortName: "Coral Fantasy",
   brand: "Valentino",
   points: 2,
@@ -2736,7 +2736,7 @@ baseNotes: ["caramel", "musk"],
 
 {
   id: 409,
-  name: "Orphéon Eau de Parfum",
+  name: "Orphéon EDP",
   shortName: "Orphéon EDP",
   brand: "Diptyque",
   points: 4,

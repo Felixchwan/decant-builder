@@ -26,10 +26,10 @@ function uniqueValues(field) {
 describe("Diptyque Orphéon catalog entry", () => {
   const orpheon = perfumes.find((perfume) => perfume.id === ORPHEON_ID);
 
-  it("adds Orphéon Eau de Parfum as a complete Diamond fragrance", () => {
+  it("adds Orphéon EDP as a complete Diamond fragrance", () => {
     expect(orpheon).toMatchObject({
       id: ORPHEON_ID,
-      name: "Orphéon Eau de Parfum",
+      name: "Orphéon EDP",
       shortName: "Orphéon EDP",
       brand: "Diptyque",
       points: 4,
