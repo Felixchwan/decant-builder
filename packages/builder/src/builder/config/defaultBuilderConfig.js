@@ -103,6 +103,10 @@ export const defaultBuilderConfig = {
       notes: "Notes",
     },
     requiredFields: ["name", "city"],
+    visibleCustomerFields: ["name", "city", "notes"],
+    customerFieldMaxLengths: { name: 120, city: 120, notes: 500 },
+    actionLabel: "Finalize Box",
+    requiredCustomerCopy: "Enter customer name and city before finalizing.",
     whatsapp: {
       greeting: "Hello {businessName}, I would like to finalize my Discovery Box order.",
       closing: "Please confirm availability and next steps. Thank you.",

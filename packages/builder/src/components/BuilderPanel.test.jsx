@@ -120,6 +120,14 @@ describe("BuilderPanel development capability", () => {
   });
 });
 
+describe("BuilderPanel finalization guard", () => {
+  it("uses a synchronous in-flight lock around adapter finalization", () => {
+    expect(builderPanelSource).toContain("if (finalizationInFlightRef.current)");
+    expect(builderPanelSource).toContain("finalizationInFlightRef.current = true");
+    expect(builderPanelSource).toContain("finalizationInFlightRef.current = false");
+  });
+});
+
 describe("BuilderPanel Composer setup launcher", () => {
   it("renders a compact Composer card without inline setup controls", () => {
     const markup = renderBuilderPanel();

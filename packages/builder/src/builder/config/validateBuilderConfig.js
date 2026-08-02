@@ -67,6 +67,28 @@ export function validateBuilderConfig(config) {
     assertPath(isNonEmptyString(config.finalization.whatsappNumber), "finalization.whatsappNumber", "is required when WhatsApp finalization is enabled");
   }
 
+  const supportedCustomerFields = new Set(["name", "city", "notes"]);
+  assertPath(
+    Array.isArray(config.finalization.visibleCustomerFields)
+      && config.finalization.visibleCustomerFields.every((field) => supportedCustomerFields.has(field)),
+    "finalization.visibleCustomerFields",
+    "must contain only name, city, and notes"
+  );
+  config.finalization.requiredFields.forEach((field) => {
+    assertPath(
+      config.finalization.visibleCustomerFields.includes(field),
+      "finalization.visibleCustomerFields",
+      `must include required field ${field}`
+    );
+  });
+  ["name", "city", "notes"].forEach((field) => {
+    assertPath(
+      isPositiveNumber(config.finalization.customerFieldMaxLengths[field]),
+      `finalization.customerFieldMaxLengths.${field}`,
+      "must be a positive number"
+    );
+  });
+
   assertPath(isNonEmptyString(config.persistence.storageKey), "persistence.storageKey", "must be a non-empty string");
   assertPath(isPositiveNumber(config.persistence.schemaVersion), "persistence.schemaVersion", "must be a positive number");
 

@@ -2824,6 +2824,8 @@ function DiscoveryBoxReviewModal({
   const t = translator?.t || ((key) => key);
   const [finalizeStatus, setFinalizeStatus] = useState("");
   const [fallbackWhatsAppUrl, setFallbackWhatsAppUrl] = useState("");
+  const [isFinalizing, setIsFinalizing] = useState(false);
+  const finalizationInFlightRef = useRef(false);
   const collectionIdentity = getCollectionIdentity(boxSummary);
   const curatorPreferenceLabel =
     builderConfig.curatorBonus.preferences[curatorBonusPreference]?.label;
@@ -2901,8 +2903,12 @@ function DiscoveryBoxReviewModal({
   }
 
   async function handleFinalizeBox() {
+    if (finalizationInFlightRef.current) {
+      return;
+    }
+
     if (!canFinalize) {
-      setFinalizeStatus(t("review.requireCustomer"));
+      setFinalizeStatus(builderConfig.finalization.requiredCustomerCopy);
       analytics.track(ANALYTICS_EVENTS.REVIEW_VALIDATION_FAILED, {
         failedFields: finalizationModel.readiness.blockers,
         source: "manual",
@@ -2934,11 +2940,16 @@ function DiscoveryBoxReviewModal({
       source: "manual",
     });
     let result;
+    finalizationInFlightRef.current = true;
+    setIsFinalizing(true);
 
     try {
       result = await finalizationAdapter.finalize(finalizationModel);
     } catch {
       result = { status: "failed", copied: false, manualUrl: "" };
+    } finally {
+      finalizationInFlightRef.current = false;
+      setIsFinalizing(false);
     }
 
     const didCopy = Boolean(result?.copied);
@@ -3129,6 +3140,7 @@ function DiscoveryBoxReviewModal({
               <input
                 type="text"
                 value={customerInfo.name}
+                maxLength={builderConfig.finalization.customerFieldMaxLengths.name}
                 onChange={(event) =>
                   handleCustomerInfoChange("name", event.target.value)
                 }
@@ -3141,6 +3153,7 @@ function DiscoveryBoxReviewModal({
               <input
                 type="text"
                 value={customerInfo.city}
+                maxLength={builderConfig.finalization.customerFieldMaxLengths.city}
                 onChange={(event) =>
                   handleCustomerInfoChange("city", event.target.value)
                 }
@@ -3148,17 +3161,18 @@ function DiscoveryBoxReviewModal({
               />
             </label>
 
-            <label className="review-notes-field">
+            {builderConfig.finalization.visibleCustomerFields.includes("notes") && <label className="review-notes-field">
               <span>{builderConfig.finalization.customerFieldLabels.notes}</span>
               <textarea
                 value={customerInfo.notes}
+                maxLength={builderConfig.finalization.customerFieldMaxLengths.notes}
                 onChange={(event) =>
                   handleCustomerInfoChange("notes", event.target.value)
                 }
                 placeholder={t("general.optionalNotes")}
                 rows={2}
               />
-            </label>
+            </label>}
           </div>
         </section>
 
@@ -3167,8 +3181,8 @@ function DiscoveryBoxReviewModal({
             {t("review.continueEditing")}
           </button>
 
-          <button type="button" onClick={handleFinalizeBox} disabled={!canFinalize}>
-            {t("review.finalizeBox")}
+          <button type="button" onClick={handleFinalizeBox} disabled={!canFinalize || isFinalizing}>
+            {builderConfig.finalization.actionLabel}
           </button>
         </div>
 
@@ -3179,7 +3193,7 @@ function DiscoveryBoxReviewModal({
             className="review-whatsapp-fallback"
             href={fallbackWhatsAppUrl}
             target="_blank"
-            rel="noreferrer"
+            rel="noopener noreferrer"
           >
             {builderConfig.finalization.whatsapp.manualOpenLabel}
           </a>

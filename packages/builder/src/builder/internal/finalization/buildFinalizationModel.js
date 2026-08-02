@@ -13,7 +13,11 @@ export function buildFinalizationModel({
   curatorBonus,
   config,
 }) {
-  const customer = normalizeCustomerInfo(customerInfo);
+  const customer = normalizeCustomerInfo(
+    customerInfo,
+    config.finalization.visibleCustomerFields,
+    config.finalization.customerFieldMaxLengths
+  );
   const order = buildOrderModel({
     selectedPerfumes,
     totalPoints,
@@ -38,11 +42,17 @@ export function buildFinalizationModel({
   };
 }
 
-export function normalizeCustomerInfo(customerInfo = EMPTY_CUSTOMER_INFO) {
+export function normalizeCustomerInfo(
+  customerInfo = EMPTY_CUSTOMER_INFO,
+  visibleCustomerFields = ["name", "city", "notes"],
+  maxLengths = { name: 120, city: 120, notes: 500 }
+) {
   return {
-    name: normalizeTextField(customerInfo.name),
-    city: normalizeTextField(customerInfo.city),
-    notes: normalizeTextField(customerInfo.notes),
+    name: normalizeTextField(customerInfo.name, maxLengths.name),
+    city: normalizeTextField(customerInfo.city, maxLengths.city),
+    notes: visibleCustomerFields.includes("notes")
+      ? normalizeTextField(customerInfo.notes, maxLengths.notes)
+      : "",
   };
 }
 
@@ -136,8 +146,8 @@ function buildFinalizationMessage({ customer, order, config }) {
     .join("\n");
 }
 
-function normalizeTextField(value) {
-  return typeof value === "string" ? value.trim() : "";
+function normalizeTextField(value, maxLength) {
+  return typeof value === "string" ? value.trim().slice(0, maxLength) : "";
 }
 
 function formatConfigCopy(template, values = {}) {

@@ -90,7 +90,7 @@ describe("merchant catalog composition", () => {
     expect(aurelianProps.catalog).not.toBe(perfumes);
     expect(discoveryProps.catalog).not.toBe(aurelianProps.catalog);
     expect(discoveryProps.finalizationAdapter).toBeTruthy();
-    expect(aurelianProps.finalizationAdapter).toBeUndefined();
+    expect(aurelianProps.finalizationAdapter).toBeTruthy();
     expect(discoveryProps.assetResolver("brands/example.png")).toBe("/catalog-assets/brands/example.png");
     expect(aurelianProps.assetResolver("brands/example.png")).toBe("/catalog-assets/brands/example.png");
     expect(discoveryProps.isDevelopment).toBe(import.meta.env.DEV);

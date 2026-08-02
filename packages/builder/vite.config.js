@@ -9,6 +9,7 @@ export default defineConfig({
         client: "src/client.jsx",
         config: "src/builder/config/index.js",
         analytics: "src/analytics/index.js",
+        finalization: "src/finalization/index.js",
       },
       formats: ["es"],
     },

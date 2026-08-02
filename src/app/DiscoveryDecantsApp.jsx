@@ -10,7 +10,7 @@ import { discoveryDecantsConfig } from "../merchants/discoveryDecants/config.js"
 import { discoveryDecantsAvailableIds } from "../merchants/discoveryDecants/catalog.js";
 import { createAnalytics, buildAnalyticsContext } from "../analytics/createAnalytics.js";
 import { createDevelopmentAnalytics } from "../analytics/developmentAnalytics.js";
-import { createWhatsAppFinalizationAdapter } from "../finalization/createWhatsAppFinalizationAdapter.js";
+import { createWhatsAppFinalizationAdapter } from "@discovery-box/builder/finalization";
 
 const finalizationAdapter = createWhatsAppFinalizationAdapter({
   phoneNumber: discoveryDecantsConfig.finalization.whatsappNumber,

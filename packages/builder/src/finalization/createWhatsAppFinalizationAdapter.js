@@ -38,7 +38,7 @@ export function createWhatsAppFinalizationAdapter({
   });
 }
 
-export function buildWhatsAppUrl({ phoneNumber, message }) {
+function buildWhatsAppUrl({ phoneNumber, message }) {
   return `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
 }
 

@@ -92,6 +92,8 @@ export function buildLocalizedConfigOverrides(locale) {
       curatorBonusLockedCopy: t("collectionCard.bonusLocked"),
     },
     finalization: {
+      actionLabel: t("review.finalizeBox"),
+      requiredCustomerCopy: t("review.requireCustomer"),
       customerFieldLabels: {
         name: t("review.customerName"),
         city: t("review.city"),

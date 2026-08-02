@@ -8,6 +8,7 @@ import { describe, expect, it } from "vitest";
 import * as builderEntry from "@discovery-box/builder";
 import * as configEntry from "@discovery-box/builder/config";
 import * as analyticsEntry from "@discovery-box/builder/analytics";
+import * as finalizationEntry from "@discovery-box/builder/finalization";
 
 const packageRoot = fileURLToPath(new URL("../../", import.meta.url));
 const repositoryRoot = fileURLToPath(new URL("../../../../", import.meta.url));
@@ -46,6 +47,7 @@ describe("@discovery-box/builder public boundary", () => {
       "PROHIBITED_ANALYTICS_KEYS",
       "noopAnalytics",
     ].sort());
+    expect(Object.keys(finalizationEntry)).toEqual(["createWhatsAppFinalizationAdapter"]);
   });
 
   it("keeps the client directive only on the main wrapper", () => {
@@ -53,6 +55,7 @@ describe("@discovery-box/builder public boundary", () => {
     for (const path of [
       join(packageSourceRoot, "builder", "config", "index.js"),
       join(packageSourceRoot, "analytics", "index.js"),
+      join(packageSourceRoot, "finalization", "index.js"),
     ]) {
       const source = readFileSync(path, "utf8");
       expect(source).not.toContain("use client");
@@ -63,7 +66,7 @@ describe("@discovery-box/builder public boundary", () => {
 
   it("keeps production source merchant-, host-, and environment-neutral", () => {
     const violations = sources(packageSourceRoot).flatMap(([path, source]) =>
-      /Aurelian|Discovery Decants|discovery-decants|src\/app|src\/merchants|VITE_|import\.meta\.env|process\.env|wa\.me/i.test(source)
+      /Aurelian|Discovery Decants|discovery-decants|src\/app|src\/merchants|VITE_|import\.meta\.env|process\.env/i.test(source)
         ? [relative(packageSourceRoot, path)]
         : [],
     );
@@ -115,15 +118,17 @@ describe("@discovery-box/builder public boundary", () => {
     ]) {
       expect(() => statSync(join(hostSourceRoot, path))).toThrow();
     }
+    expect(() => statSync(join(hostSourceRoot, "finalization", "createWhatsAppFinalizationAdapter.js"))).toThrow();
   });
 
   it("resolves built entries and CSS through package exports in plain Node", () => {
     const script = [
-      "const [b,c,a]=await Promise.all([",
+      "const [b,c,a,f]=await Promise.all([",
       "import('@discovery-box/builder'),",
       "import('@discovery-box/builder/config'),",
-      "import('@discovery-box/builder/analytics')]);",
-      "console.log(JSON.stringify([Object.keys(b),Object.keys(c),Object.keys(a)]));",
+      "import('@discovery-box/builder/analytics'),",
+      "import('@discovery-box/builder/finalization')]);",
+      "console.log(JSON.stringify([Object.keys(b),Object.keys(c),Object.keys(a),Object.keys(f)]));",
     ].join("");
     expect(() => execFileSync(execPath, ["--input-type=module", "--eval", script], {
       cwd: repositoryRoot,

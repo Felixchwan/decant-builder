@@ -41,8 +41,10 @@ describe("Aurelian application foundation", () => {
     expect(aurelianConfig.curatorBonus.targetPoints).toBe(12);
     expect(aurelianConfig.persistence.storageKey).toBe("aurelian-builder-v1");
     expect(aurelianConfig.theme.colors).toEqual(approvedColors);
-    expect(aurelianConfig.finalization).toMatchObject({ mode: "unavailable", whatsappNumber: "" });
-    expect(aurelianConfig.features.whatsappFinalization).toBe(false);
+    expect(aurelianConfig.finalization).toMatchObject({ mode: "whatsapp", whatsappNumber: "528129800010" });
+    expect(aurelianConfig.features.whatsappFinalization).toBe(true);
+    expect(aurelianConfig.finalization.visibleCustomerFields).toEqual(["name", "city"]);
+    expect(aurelianConfig.finalization.customerFieldLabels.city).toBe("Municipio");
   });
 
   it("owns an explicit 84-ID manifest and canonical projection", () => {
@@ -112,12 +114,14 @@ describe("Aurelian application foundation", () => {
     expect(headerSource).toContain("onClick={() => closeMenu()}");
   });
 
-  it("does not invent contact coordinates or enable finalization", () => {
+  it("publishes only the approved WhatsApp contact and enables generic finalization", () => {
     const markup = renderToStaticMarkup(<ContactPage />);
-    expect(markup).toContain("Canal oficial: próximamente");
-    expect(markup).not.toMatch(/mailto:|tel:|wa\.me|@[a-z\d.-]+\.[a-z]{2,}/i);
+    expect(markup).toContain("+52 81 29 80 0010");
+    expect(markup).not.toMatch(/mailto:|tel:|@[a-z\d.-]+\.[a-z]{2,}/i);
     const builderSource = readFileSync(join(APP_ROOT, "src", "components", "BuilderExperience.jsx"), "utf8");
-    expect(builderSource).not.toContain("finalizationAdapter");
+    expect(builderSource).toContain("finalizationAdapter");
+    expect(builderSource).toContain("createWhatsAppFinalizationAdapter");
+    expect(builderSource).toContain("phoneNumber: aurelianConfig.finalization.whatsappNumber");
     expect(builderSource).toContain("noopAnalytics");
   });
 
@@ -128,6 +132,7 @@ describe("Aurelian application foundation", () => {
     for (const packageName of ["builder", "catalog"]) {
       const packageSources = productionFiles(join(REPOSITORY_ROOT, "packages", packageName, "src")).map((path) => readFileSync(path, "utf8")).join("\n");
       expect(packageSources).not.toMatch(/Aurelian|aurelian|VITE_MERCHANT/);
+      expect(packageSources).not.toContain("528129800010");
     }
   });
 

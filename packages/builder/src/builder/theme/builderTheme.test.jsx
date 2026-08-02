@@ -262,9 +262,9 @@ describe("Builder theme contract", () => {
       minSelectableSlots: 6,
       maxSelectableSlots: 14,
     });
-    expect(aurelianConfig.finalization.mode).toBe("unavailable");
-    expect(aurelianConfig.finalization.whatsappNumber).toBe("");
-    expect(aurelianConfig.features.whatsappFinalization).toBe(false);
+    expect(aurelianConfig.finalization.mode).toBe("whatsapp");
+    expect(aurelianConfig.finalization.whatsappNumber).toBe("528129800010");
+    expect(aurelianConfig.features.whatsappFinalization).toBe(true);
   });
 
   it("declares the exact approved Aurelian production palette", () => {

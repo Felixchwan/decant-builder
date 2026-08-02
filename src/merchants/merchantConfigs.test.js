@@ -26,14 +26,16 @@ describe("merchant configs", () => {
     expect(discoveryDecantsConfig.finalization.mode).toBe("whatsapp");
     expect(discoveryDecantsConfig.finalization.whatsappNumber).toBe("528129800010");
     expect(discoveryDecantsConfig.finalization.whatsapp.greeting).toContain("{businessName}");
+    expect(discoveryDecantsConfig.finalization.visibleCustomerFields).toEqual(["name", "city", "notes"]);
   });
 
-  it("does not invent an Aurelian order destination", () => {
-    expect(aurelianConfig.finalization.mode).toBe("unavailable");
-    expect(aurelianConfig.finalization.whatsappNumber).toBe("");
-    expect(aurelianConfig.features.whatsappFinalization).toBe(false);
+  it("uses the approved Aurelian availability-request destination", () => {
+    expect(aurelianConfig.finalization.mode).toBe("whatsapp");
+    expect(aurelianConfig.finalization.whatsappNumber).toBe("528129800010");
+    expect(aurelianConfig.features.whatsappFinalization).toBe(true);
+    expect(aurelianConfig.finalization.visibleCustomerFields).toEqual(["name", "city"]);
     expect(aurelianConfig.finalization.whatsapp.greeting).toBe(
-      "Hola {businessName}, quiero finalizar mi pedido de Discovery Box."
+      "Hola, Aurelian. Esta es una Solicitud de disponibilidad para una Discovery Box."
     );
   });
 

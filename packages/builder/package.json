@@ -21,6 +21,10 @@
       "development": "./src/analytics/index.js",
       "default": "./dist/analytics.js"
     },
+    "./finalization": {
+      "development": "./src/finalization/index.js",
+      "default": "./dist/finalization.js"
+    },
     "./styles.css": "./styles.css"
   },
   "scripts": {

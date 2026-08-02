@@ -15,6 +15,7 @@ const config = {
     pointValue: 100,
   },
   finalization: {
+    visibleCustomerFields: ["name", "city", "notes"],
     whatsapp: {
       greeting:
         "Hello {businessName}, I would like to finalize my Discovery Box order.",
@@ -110,6 +111,14 @@ describe("buildFinalizationModel", () => {
 
     it("characterizes null customer input as invalid", () => {
       expect(() => normalizeCustomerInfo(null)).toThrow();
+    });
+
+    it("applies conservative field length limits after trimming", () => {
+      expect(normalizeCustomerInfo(
+        { name: ` ${"A".repeat(8)} `, city: "Monterrey", notes: "" },
+        ["name", "city"],
+        { name: 5, city: 120, notes: 500 }
+      ).name).toBe("AAAAA");
     });
   });
 
@@ -323,6 +332,21 @@ describe("buildFinalizationModel", () => {
     });
   });
 
+  it("omits notes when the host hides the notes field", () => {
+    const result = model({
+      config: {
+        ...config,
+        finalization: {
+          ...config.finalization,
+          visibleCustomerFields: ["name", "city"],
+        },
+      },
+    });
+
+    expect(result.customer.notes).toBe("");
+    expect(result.message).not.toContain("Notes:");
+  });
+
   it("preserves multiline notes and special characters after outer trimming", () => {
     const result = model({
       customerInfo: {
@@ -401,15 +425,18 @@ describe("buildFinalizationModel", () => {
       { id: 3, name: "Amber Date", brand: "Atelier Warm", points: 1.5 },
       { id: 9, name: "Nocturne Leather", brand: "Maison Test", points: 2 },
     ]);
-    expect(result.message).toContain("Hola Aurelian, quiero finalizar mi pedido de Discovery Box.");
-    expect(result.message).toContain("Cliente: Alex");
-    expect(result.message).toContain("Ciudad: Monterrey");
+    expect(result.message).toContain("Solicitud de disponibilidad");
+    expect(result.message).toContain("Nombre: Alex");
+    expect(result.message).toContain("Municipio: Monterrey");
     expect(result.message).toContain("Fragancias seleccionadas:");
-    expect(result.message).toContain("Total de espacios: 3");
+    expect(result.message).toContain("Total de fragancias: 3");
     expect(result.message).toContain("Puntos totales: 4.5");
-    expect(result.message).toContain("Total del pedido: $450");
+    expect(result.message).toContain("Total estimado de la Discovery Box: $450");
     expect(result.message).toContain("Curator Bonus: Desbloqueado");
-    expect(result.message).toContain("Estilo curator: Complementar mi colección");
+    expect(result.message).toContain("Preferencia Curator Bonus: Complementar mi colección");
+    expect(result.message).toContain("confirmará disponibilidad antes de enviarme las instrucciones de pago");
+    expect(result.message).not.toContain("Notes:");
+    expect(result.message).not.toMatch(/pedido confirmado|pago completado|inventario garantizado/i);
     expect(result.message).not.toContain("Discovery Decants");
   });
 
