@@ -168,6 +168,9 @@ describe("Aurelian application foundation", () => {
     const markup = renderToStaticMarkup(<CatalogPage />);
     expect(markup.match(/Agregar a mi Discovery Box/g)).toHaveLength(aurelianCatalog.length);
     expect(markup.match(/aria-label="Agregar [^"]+ a mi Discovery Box"/g)).toHaveLength(aurelianCatalog.length);
+    expect(markup).toContain('class="product-card__actions"');
+    expect(markup).toContain('class="product-card__points"');
+    expect(markup).not.toContain("product-card__accords");
     for (const fragrance of aurelianCatalog) {
       expect(markup).toContain(`/build-your-box?fragrance=${fragrance.id}`);
     }

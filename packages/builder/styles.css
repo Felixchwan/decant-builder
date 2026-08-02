@@ -197,7 +197,7 @@
 :where(.builder-scope).builder-theme-root--custom .eyebrow,
 :where(.builder-scope).builder-theme-root--custom .summary-panel span,
 :where(.builder-scope).builder-theme-root--custom .box-summary-total strong,
-:where(.builder-scope).builder-theme-root--custom .compact-points {
+:where(.builder-scope).builder-theme-root--custom .perfume-card-points {
   color: var(--builder-color-accent, #4ade80);
 }
 
@@ -814,17 +814,6 @@
   transition: filter 180ms ease, opacity 180ms ease;
 }
 
-:where(.builder-scope) .perfume-card-tier-row {
-  display: flex;
-  align-items: center;
-  width: 100%;
-  margin-top: 10px;
-}
-
-:where(.builder-scope) .perfume-card-tier-row .tier-badge {
-  margin: 0;
-}
-
 :where(.builder-scope) .perfume-card:hover .perfume-card-brand-logo,
 :where(.builder-scope) .perfume-card:focus-within .perfume-card-brand-logo {
   opacity: 0.9;
@@ -992,6 +981,42 @@
 }
 
 :where(.builder-scope) .perfume-card-compact-actions {
+  display: grid;
+  grid-template-columns: minmax(0, auto) minmax(9rem, 1fr);
+  gap: 14px;
+  align-items: stretch;
+}
+
+:where(.builder-scope) .perfume-card-points {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-width: max-content;
+  min-height: 42px;
+  margin: 0;
+  padding: 8px 10px;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  color: #d9f99d;
+  font-size: var(--builder-unit-082);
+  font-weight: 900;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+:where(.builder-scope) .perfume-card-points > span:first-child {
+  line-height: 1;
+}
+
+:where(.builder-scope) .perfume-card .perfume-card-compact-actions button {
+  min-height: 42px;
+  margin: 0;
+  padding: 10px 14px;
+  justify-self: stretch;
+}
+
+:where(.builder-scope) .perfume-card-add-label-short {
   display: none;
 }
 
@@ -2974,10 +2999,6 @@
     object-fit: contain;
   }
 
-  :where(.builder-scope) .perfume-card-tier-row {
-    display: none;
-  }
-
   :where(.builder-scope) .perfume-card-image .perfume-card-bottle-image {
     max-width: 112px;
     height: 84px;
@@ -3002,30 +3023,17 @@
     font-size: var(--builder-unit-092);
   }
 
-  :where(.builder-scope) .perfume-card .perfume-card-tier-desktop,
-  :where(.builder-scope) .perfume-card .perfume-card-add-full {
-    display: none;
-  }
-
   :where(.builder-scope) .perfume-card-compact-actions {
-    display: grid;
-    grid-template-columns: minmax(0, auto) auto minmax(64px, 0.72fr);
-    gap: 7px;
-    align-items: center;
+    grid-template-columns: minmax(0, auto) minmax(64px, 1fr);
+    gap: 14px;
+    align-items: stretch;
   }
 
-  :where(.builder-scope) .perfume-card-compact-actions .tier-badge {
+  :where(.builder-scope) .perfume-card-points {
     margin: 0;
     padding: 5px 9px;
     min-width: 0;
     font-size: var(--builder-unit-076);
-  }
-
-  :where(.builder-scope) .compact-points {
-    color: #d9f99d;
-    font-size: var(--builder-unit-082);
-    font-weight: 900;
-    white-space: nowrap;
   }
 
   :where(.builder-scope) .perfume-card .perfume-card-compact-actions button {
@@ -3035,13 +3043,12 @@
     justify-self: stretch;
   }
 
-  :where(.builder-scope) .tag-row {
-    gap: 6px;
+  :where(.builder-scope) .perfume-card-add-label-full {
+    display: none;
   }
 
-  :where(.builder-scope) .tag-row span {
-    padding: 4px 8px;
-    font-size: var(--builder-unit-074);
+  :where(.builder-scope) .perfume-card-add-label-short {
+    display: inline;
   }
 
   :where(.builder-scope) .box-slot-tray {

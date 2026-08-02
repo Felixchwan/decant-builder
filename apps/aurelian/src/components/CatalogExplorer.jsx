@@ -9,6 +9,21 @@ import { resolveCatalogFragranceIntent } from "../lib/resolveCatalogFragranceInt
 
 const resolveAsset = createCatalogAssetResolver({ basePath: "/catalog-assets" });
 const pointOptions = [...new Set(aurelianCatalog.map((item) => item.points))].sort((a, b) => a - b);
+const tierPresentation = [
+  { maxId: 100, emoji: "🟤", color: "#b87333", background: "rgba(184,115,51,0.12)" },
+  { maxId: 200, emoji: "⚪", color: "#cbd5e1", background: "rgba(203,213,225,0.12)" },
+  { maxId: 300, emoji: "🟡", color: "#d4af37", background: "rgba(212,175,55,0.12)" },
+  { maxId: 400, emoji: "⬢", color: "#bae6fd", background: "rgba(186,230,253,0.12)" },
+  { maxId: 500, emoji: "💎", color: "#38bdf8", background: "rgba(56,189,248,0.12)" },
+];
+
+function getCatalogTierPresentation(id) {
+  return tierPresentation.find((tier) => id < tier.maxId) ?? {
+    emoji: "👑",
+    color: "#a78bfa",
+    background: "rgba(124,58,237,0.16)",
+  };
+}
 
 export function CatalogExplorer() {
   const [query, setQuery] = useState("");
@@ -51,15 +66,30 @@ export function CatalogExplorer() {
       <div className="catalog-status"><p className="catalog-count" aria-live="polite">{visible.length} de {aurelianCatalog.length} fragancias</p><p>Los puntos ayudan a equilibrar tu Discovery Box; no representan el precio de una botella.</p></div>
       {visible.length ? (
         <div className="catalog-grid">
-          {visible.map((item) => (
-            <article className={`product-card${requestedFragrance?.id === item.id ? " product-card--highlighted" : ""}`} data-fragrance-id={item.id} key={item.id} ref={requestedFragrance?.id === item.id ? requestedCardRef : undefined} tabIndex={requestedFragrance?.id === item.id ? -1 : undefined}>
-              <div className="product-card__image"><img alt={`Frasco de ${item.name}`} loading="lazy" src={resolveAsset(item.imageAssetKey)} /></div>
-              <p className="eyebrow">{item.brand}</p><h2>{item.name}</h2>
-              <p className="product-card__accords">{item.accords.slice(0, 3).join(" · ")}</p>
-              <p className="points">{item.points} {item.points === 1 ? "punto" : "puntos"}</p>
-              <Link className="button product-card__action" href={`/build-your-box?fragrance=${encodeURIComponent(item.id)}`} aria-label={`Agregar ${item.name} a mi Discovery Box`}>Agregar a mi Discovery Box</Link>
-            </article>
-          ))}
+          {visible.map((item) => {
+            const tier = getCatalogTierPresentation(item.id);
+            return (
+              <article className={`product-card${requestedFragrance?.id === item.id ? " product-card--highlighted" : ""}`} data-fragrance-id={item.id} key={item.id} ref={requestedFragrance?.id === item.id ? requestedCardRef : undefined} tabIndex={requestedFragrance?.id === item.id ? -1 : undefined}>
+                <div className="product-card__image"><img alt={`Frasco de ${item.name}`} loading="lazy" src={resolveAsset(item.imageAssetKey)} /></div>
+                <p className="eyebrow">{item.brand}</p><h2>{item.name}</h2>
+                <div className="product-card__actions">
+                  <p
+                    className="product-card__points"
+                    style={{
+                      borderColor: tier.color,
+                      backgroundColor: tier.background,
+                      color: tier.color,
+                    }}
+                    aria-label={`${item.points} ${item.points === 1 ? "punto" : "puntos"}`}
+                  >
+                    <span aria-hidden="true">{tier.emoji}</span>
+                    <span>{item.points} {item.points === 1 ? "punto" : "puntos"}</span>
+                  </p>
+                  <Link className="button product-card__action" href={`/build-your-box?fragrance=${encodeURIComponent(item.id)}`} aria-label={`Agregar ${item.name} a mi Discovery Box`}>Agregar a mi Discovery Box</Link>
+                </div>
+              </article>
+            );
+          })}
         </div>
       ) : <div className="empty-state"><h2>No encontramos coincidencias</h2><p>Prueba otra fragancia o casa, o selecciona “Todos” en puntos.</p></div>}
       <div className="centered-cta"><Link className="button" href="/build-your-box">Construye tu Discovery Box</Link></div>

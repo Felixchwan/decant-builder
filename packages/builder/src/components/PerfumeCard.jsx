@@ -67,27 +67,8 @@ function PerfumeCard({
                 )}
               </div>
 
-              <div className="perfume-card-tier-row">
-                <div
-                  className="tier-badge perfume-card-tier-desktop"
-                  style={{
-                    borderColor: tierData.color,
-                    backgroundColor: tierData.background,
-                    color: tierData.color,
-                  }}
-                >
-                  <span>{tierData.emoji}</span>
-                  {tierData.name} - {perfume.points} pt
-                </div>
-              </div>
             </div>
           </div>
-        </div>
-
-        <div className="tag-row">
-          {(perfume.accords || []).slice(0, 3).map((accord) => (
-            <span key={accord}>{accord}</span>
-          ))}
         </div>
       </button>
 
@@ -103,31 +84,23 @@ function PerfumeCard({
 
       <div className="perfume-card-compact-actions">
         <div
-          className="tier-badge"
+          className="perfume-card-points"
           style={{
             borderColor: tierData.color,
             backgroundColor: tierData.background,
             color: tierData.color,
           }}
+          aria-label={`${perfume.points} pt`}
         >
-          <span>{tierData.emoji}</span>
-          {tierData.name}
+          <span aria-hidden="true">{tierData.emoji}</span>
+          <span>{perfume.points} pt</span>
         </div>
 
-        <span className="compact-points">{perfume.points} pt</span>
-
         <button onClick={() => onAddToBox(perfume)} disabled={isDisabled}>
-          {addLabel}
+          <span className="perfume-card-add-label-full">{addToBoxLabel}</span>
+          <span className="perfume-card-add-label-short">{addLabel}</span>
         </button>
       </div>
-
-      <button
-        className="perfume-card-add-full"
-        onClick={() => onAddToBox(perfume)}
-        disabled={isDisabled}
-      >
-        {addToBoxLabel}
-      </button>
     </article>
   );
 }
