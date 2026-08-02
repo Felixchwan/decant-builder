@@ -1,10 +1,11 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { createCatalogAssetResolver } from "@discovery-box/catalog";
 import { aurelianCatalog } from "../merchant/catalog.js";
 import { filterCatalog } from "../lib/filterCatalog.js";
+import { resolveCatalogFragranceIntent } from "../lib/resolveCatalogFragranceIntent.js";
 
 const resolveAsset = createCatalogAssetResolver({ basePath: "/catalog-assets" });
 const pointOptions = [...new Set(aurelianCatalog.map((item) => item.points))].sort((a, b) => a - b);
@@ -12,9 +13,27 @@ const pointOptions = [...new Set(aurelianCatalog.map((item) => item.points))].so
 export function CatalogExplorer() {
   const [query, setQuery] = useState("");
   const [points, setPoints] = useState("all");
+  const [requestedFragrance, setRequestedFragrance] = useState(null);
+  const requestedCardRef = useRef(null);
   const visible = useMemo(() => {
     return filterCatalog(aurelianCatalog, query, points);
   }, [points, query]);
+
+  useEffect(() => {
+    const frame = window.requestAnimationFrame(() => {
+      setRequestedFragrance(resolveCatalogFragranceIntent(window.location.search, aurelianCatalog));
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, []);
+
+  useEffect(() => {
+    if (!requestedFragrance || !requestedCardRef.current) return undefined;
+    const frame = window.requestAnimationFrame(() => {
+      requestedCardRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+      requestedCardRef.current?.focus({ preventScroll: true });
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [requestedFragrance]);
 
   return (
     <>
@@ -33,7 +52,7 @@ export function CatalogExplorer() {
       {visible.length ? (
         <div className="catalog-grid">
           {visible.map((item) => (
-            <article className="product-card" key={item.id}>
+            <article className={`product-card${requestedFragrance?.id === item.id ? " product-card--highlighted" : ""}`} data-fragrance-id={item.id} key={item.id} ref={requestedFragrance?.id === item.id ? requestedCardRef : undefined} tabIndex={requestedFragrance?.id === item.id ? -1 : undefined}>
               <div className="product-card__image"><img alt={`Frasco de ${item.name}`} loading="lazy" src={resolveAsset(item.imageAssetKey)} /></div>
               <p className="eyebrow">{item.brand}</p><h2>{item.name}</h2>
               <p className="product-card__accords">{item.accords.slice(0, 3).join(" · ")}</p>

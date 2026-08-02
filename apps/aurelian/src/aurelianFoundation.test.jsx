@@ -113,6 +113,8 @@ describe("Aurelian application foundation", () => {
     expect(homeMarkup).toContain('class="aurelian-hero page-shell"');
     expect(stylesheet).not.toContain("100svh");
     expect(stylesheet).not.toMatch(/\.aurelian-hero\s*\{[^}]*min-(?:height|block-size)/);
+    expect(stylesheet).toMatch(/\.aurelian-hero\s*\{[^}]*padding-block:0/);
+    expect(stylesheet).toMatch(/\.aurelian-hero__copy\s*\{[^}]*padding-block:clamp\(3rem,6vw,5rem\)/);
     expect(stylesheet).toMatch(/\.hero-media\s*\{[^}]*width:clamp\(17\.5rem,24vw,20rem\)/);
     expect(stylesheet).toMatch(/\.hero-media__frame\s*\{[^}]*aspect-ratio:9\/20/);
     expect(stylesheet).toMatch(/\.hero-media__video\s*\{[^}]*object-fit:cover;[^}]*object-position:56% 50%/);
@@ -123,6 +125,39 @@ describe("Aurelian application foundation", () => {
     expect(stylesheet).toMatch(/\.service-band p:last-child\s*\{\s*margin-bottom:0/);
     expect(stylesheet).not.toMatch(/(?:\.aurelian-hero|\.section|\.service-band|\.final-cta)\s*\{[^}]*(?:100s?vh|min-(?:height|block-size))/);
     expect(stylesheet).not.toMatch(/(^|\n)\.hero\s*\{/);
+    expect(homeMarkup).toContain("<h3><span>01</span>Prueba antes de decidir</h3>");
+    expect(homeMarkup).toContain("<h3><span>01</span>Explora</h3>");
+    expect(homeMarkup).not.toMatch(/<article><span>0[1-4]<\/span><h3>/);
+    expect(homeMarkup).not.toMatch(/<article><b>[1-3]<\/b>/);
+    expect(stylesheet).not.toMatch(/\.feature-grid article\s*\{[^}]*min-height/);
+    expect(stylesheet).not.toMatch(/\.steps b\s*\{/);
+  });
+
+  it("renders four stable, accessible seasonal slots without layout-shift-prone image frames", () => {
+    const markup = renderToStaticMarkup(<HomePage />);
+    const stylesheet = readFileSync(join(APP_ROOT, "src", "app", "globals.css"), "utf8");
+    expect(markup.match(/Selección de (?:primavera|verano|otoño|invierno)/g)).toHaveLength(4);
+    expect(markup.match(/aria-label="Ver [^"]+ en el catálogo"/g)).toHaveLength(4);
+    expect(markup.match(/href="\/catalogo\?fragrance=\d+"/g)).toHaveLength(4);
+    expect(markup.match(/width="240"/g)).toHaveLength(4);
+    expect(markup.match(/height="240"/g)).toHaveLength(4);
+    expect(stylesheet).toMatch(/\.seasonal-card__image\s*\{[^}]*aspect-ratio:4\/3/);
+  });
+
+  it("keeps seasonal timing and catalog highlighting host-owned and safely paused", () => {
+    const seasonalSource = readFileSync(join(APP_ROOT, "src", "components", "SeasonalFeaturedSelection.jsx"), "utf8");
+    const catalogSource = readFileSync(join(APP_ROOT, "src", "components", "CatalogExplorer.jsx"), "utf8");
+    expect(seasonalSource).toContain("ROTATION_INTERVAL_MS = 3000");
+    expect(seasonalSource).toContain("prefers-reduced-motion: reduce");
+    expect(seasonalSource).toContain("visibilitychange");
+    expect(seasonalSource).toContain("onPointerEnter");
+    expect(seasonalSource).toContain("onFocus");
+    expect(seasonalSource).toContain("window.clearInterval(timer)");
+    expect(seasonalSource).toContain('removeEventListener("visibilitychange"');
+    expect(catalogSource).toContain("resolveCatalogFragranceIntent(window.location.search, aurelianCatalog)");
+    expect(catalogSource).toContain("scrollIntoView");
+    expect(catalogSource).toContain("product-card--highlighted");
+    expect(catalogSource).toContain("window.requestAnimationFrame");
   });
 
   it("gives every catalog fragrance an explicit stable-ID Builder action", () => {
