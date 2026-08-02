@@ -9,6 +9,7 @@ import { aurelianConfig } from "./merchant/config.js";
 import { aurelianAvailableIds, aurelianCatalog } from "./merchant/catalog.js";
 import { filterCatalog } from "./lib/filterCatalog.js";
 import HomePage from "./app/page.jsx";
+import { HeroMedia } from "./components/HeroMedia.jsx";
 import HowItWorksPage, { metadata as howMetadata } from "./app/como-funciona/page.jsx";
 import ContactPage, { metadata as contactMetadata } from "./app/contacto/page.jsx";
 import CatalogPage, { metadata as catalogMetadata } from "./app/catalogo/page.jsx";
@@ -62,7 +63,7 @@ describe("Aurelian application foundation", () => {
     const pages = [HomePage, HowItWorksPage, ContactPage, CatalogPage, BuilderPage];
     pages.forEach((Page) => expect(() => renderToStaticMarkup(<Page />)).not.toThrow());
     const howMarkup = renderToStaticMarkup(<HowItWorksPage />);
-    expect(howMarkup).toContain("Selecciona de 6 a 14");
+    expect(howMarkup).toContain("Selecciona 6–14 fragancias");
     expect(howMarkup).toContain("Monterrey");
     for (const [metadata, route] of [[howMetadata, "/como-funciona"], [contactMetadata, "/contacto"], [catalogMetadata, "/catalogo"], [builderMetadata, "/build-your-box"]]) {
       expect(metadata.alternates.canonical).toBe(route);
@@ -71,9 +72,49 @@ describe("Aurelian application foundation", () => {
     expect(robots().rules.allow).toBe("/");
   });
 
+  it("exposes every canonical point value through the catalog filter", () => {
+    const markup = renderToStaticMarkup(<CatalogPage />);
+    for (const points of [1, 1.5, 2, 2.5, 4, 4.5, 5]) {
+      expect(markup).toContain(`value="${points}"`);
+    }
+  });
+
+  it("states the launch rules and service area without unsupported commerce claims", () => {
+    const markup = [HomePage, HowItWorksPage, ContactPage, CatalogPage, BuilderPage]
+      .map((Page) => renderToStaticMarkup(<Page />))
+      .join("\n");
+    expect(markup).toMatch(/6[–-]14 fragancias/);
+    expect(markup).toContain("Monterrey");
+    expect(markup).toContain("área metropolitana");
+    expect(markup).toContain("revisa manualmente");
+    expect(markup).toContain("después de confirmar disponibilidad");
+    expect(markup).not.toMatch(/compra ahora|pago en línea|inventario garantizado|envío nacional|disponibilidad garantizada/i);
+  });
+
+  it("keeps promotional media decorative, silent, resilient, and motion-aware", () => {
+    const markup = renderToStaticMarkup(<HeroMedia />);
+    expect(markup).toContain("autoPlay");
+    expect(markup).toContain("loop");
+    expect(markup).toContain("muted");
+    expect(markup).toContain("playsInline");
+    expect(markup).toContain("poster=");
+    expect(markup).toContain("/media/torino-21.mp4");
+    expect(markup).toContain("hero-media__fallback");
+    const stylesheet = readFileSync(join(APP_ROOT, "src", "app", "globals.css"), "utf8");
+    expect(stylesheet).toMatch(/prefers-reduced-motion[\s\S]*\.hero-media__video\s*\{\s*display:none/);
+  });
+
+  it("provides owned mobile-navigation focus, Escape, and route-state behavior", () => {
+    const headerSource = readFileSync(join(APP_ROOT, "src", "components", "SiteHeader.jsx"), "utf8");
+    expect(headerSource).toContain('event.key === "Escape"');
+    expect(headerSource).toContain("summaryRef.current?.focus()");
+    expect(headerSource).toContain('aria-current={isCurrent(href) ? "page" : undefined}');
+    expect(headerSource).toContain("onClick={() => closeMenu()}");
+  });
+
   it("does not invent contact coordinates or enable finalization", () => {
     const markup = renderToStaticMarkup(<ContactPage />);
-    expect(markup).toContain("pendiente de publicación");
+    expect(markup).toContain("Canal oficial: próximamente");
     expect(markup).not.toMatch(/mailto:|tel:|wa\.me|@[a-z\d.-]+\.[a-z]{2,}/i);
     const builderSource = readFileSync(join(APP_ROOT, "src", "components", "BuilderExperience.jsx"), "utf8");
     expect(builderSource).not.toContain("finalizationAdapter");

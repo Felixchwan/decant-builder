@@ -14,5 +14,5 @@ export const metadata = {
 export const viewport = { width: "device-width", initialScale: 1, themeColor: "#090A09" };
 
 export default function RootLayout({ children }) {
-  return <html lang="es-MX"><body><a className="skip-link" href="#contenido">Ir al contenido</a><SiteHeader /><main id="contenido">{children}</main><SiteFooter /></body></html>;
+  return <html data-scroll-behavior="smooth" lang="es-MX"><body><a className="skip-link" href="#contenido">Ir al contenido</a><SiteHeader /><main id="contenido">{children}</main><SiteFooter /></body></html>;
 }

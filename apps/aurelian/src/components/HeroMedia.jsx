@@ -6,19 +6,35 @@ const featured = [aurelianCatalog[3], aurelianCatalog[34], aurelianCatalog[61]];
 
 export function HeroMedia() {
   return (
-    <figure className="hero-media" aria-label="Selección visual de fragancias Aurelian">
+    <figure className="hero-media">
       <div className="hero-media__glow" />
-      {featured.map((fragrance, index) => (
-        <img
-          alt={`Frasco de ${fragrance.name} de ${fragrance.brand}`}
-          className={`hero-media__bottle hero-media__bottle--${index + 1}`}
-          height="260"
-          key={fragrance.id}
-          src={resolveAsset(fragrance.imageAssetKey)}
-          width="180"
-        />
-      ))}
-      <figcaption>Espacio preparado para la futura pieza audiovisual Aurelian.</figcaption>
+      <div className="hero-media__frame">
+        <div className="hero-media__fallback" aria-hidden="true">
+          {featured.map((fragrance, index) => (
+            <img
+              alt=""
+              className={`hero-media__bottle hero-media__bottle--${index + 1}`}
+              height="260"
+              key={fragrance.id}
+              src={resolveAsset(fragrance.imageAssetKey)}
+              width="180"
+            />
+          ))}
+        </div>
+        <video
+          aria-hidden="true"
+          autoPlay
+          className="hero-media__video"
+          loop
+          muted
+          playsInline
+          poster={resolveAsset(featured[1].imageAssetKey)}
+          preload="metadata"
+        >
+          <source src="/media/torino-21.mp4" type="video/mp4" />
+        </video>
+      </div>
+      <figcaption>Una mirada breve al universo de la perfumería.</figcaption>
     </figure>
   );
 }
