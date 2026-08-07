@@ -148,6 +148,7 @@ export const defaultBuilderConfig = {
     nativeShare: true,
     whatsappFinalization: true,
     scentLibrary: true,
+    discoveryCoachmark: true,
   },
   copy: {
     heroTitle: "Build your fragrance box",

@@ -250,6 +250,7 @@ function BuilderPanel({
       .filter(Boolean)
       .join(" and ");
     const shouldShowDiscoveryIntro =
+      builderConfig?.features?.discoveryCoachmark !== false &&
       selectedPerfumes.length === 0 &&
       (!hasSeenDiscoveryIntro || isDiscoveryIntroOpen);
     const isComposerAvailable = isComposerOnboardingAvailable(builderConfig);

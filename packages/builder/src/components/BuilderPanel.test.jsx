@@ -317,10 +317,17 @@ describe("BuilderPanel Composer setup launcher", () => {
     expect(markup).not.toContain("builder.onboarding");
   });
 
-  it("renders the Aurelian mobile close label through localization", () => {
+  it("renders the Aurelian mobile close label through localization when the coachmark is shown", () => {
     simulateFirstVisit();
 
-    const markup = renderBuilderPanel({ builderConfig: aurelianConfig });
+    const aurelianWithDiscoveryCoachmark = {
+      ...aurelianConfig,
+      features: {
+        ...aurelianConfig.features,
+        discoveryCoachmark: true,
+      },
+    };
+    const markup = renderBuilderPanel({ builderConfig: aurelianWithDiscoveryCoachmark });
 
     expect(markup).toContain('aria-label="Cerrar introducción"');
     expect(markup).not.toContain("builder.onboardingCloseLabel");
@@ -549,5 +556,47 @@ describe("BuilderPanel Composer setup launcher", () => {
     expect(markup).toContain("Explore Catalog");
     expect(markup).not.toContain("Use Composer");
     expect(markup).not.toContain("Try Composer");
+  });
+
+  it("shows the empty-box discovery intro coachmark by default on first visit", () => {
+    simulateFirstVisit();
+
+    const markup = renderBuilderPanel({ builderConfig: discoveryDecantsConfig });
+
+    expect(markup).toContain("Explore the catalog yourself");
+  });
+
+  it("suppresses the discovery intro coachmark entirely when the merchant disables it", () => {
+    simulateFirstVisit();
+
+    const configWithoutDiscoveryCoachmark = {
+      ...discoveryDecantsConfig,
+      features: {
+        ...discoveryDecantsConfig.features,
+        discoveryCoachmark: false,
+      },
+    };
+    const markup = renderBuilderPanel({ builderConfig: configWithoutDiscoveryCoachmark });
+
+    expect(markup).not.toContain("Explore the catalog yourself");
+    expect(markup).not.toContain("Use Composer");
+  });
+
+  it("keeps the coachmark suppressed for a merchant with an empty box even after a dismissal signal", () => {
+    simulateFirstVisit();
+
+    const configWithoutDiscoveryCoachmark = {
+      ...discoveryDecantsConfig,
+      features: {
+        ...discoveryDecantsConfig.features,
+        discoveryCoachmark: false,
+      },
+    };
+    const markup = renderBuilderPanel({
+      builderConfig: configWithoutDiscoveryCoachmark,
+      selectedPerfumes: [],
+    });
+
+    expect(markup).not.toContain('aria-label="Discovery Box introduction"');
   });
 });

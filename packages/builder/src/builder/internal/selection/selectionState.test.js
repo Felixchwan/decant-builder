@@ -313,6 +313,51 @@ describe("selectionState", () => {
       expect(result.intent).toEqual({ status: "ready", perfume: warned });
       expect(result.selectedPerfumes).toBe(selected);
     });
+
+    describe("restored-selection and deep-link coexistence", () => {
+      const catalog = freezeSelection([perfume(1), perfume(2), perfume(3)]);
+
+      it("adds the deep-linked fragrance to an already-restored selection", () => {
+        const restored = freezeSelection([catalog[0]]);
+        const result = applyInitialFragranceIntent({
+          initialFragranceId: 2,
+          catalog,
+          selectedPerfumes: restored,
+          maxSelectableSlots: 3,
+        });
+
+        expect(result.intent.status).toBe("ready");
+        expect(ids(result.selectedPerfumes)).toEqual([1, 2]);
+      });
+
+      it("acknowledges a deep-linked fragrance already present in the restored selection without duplicating it", () => {
+        const restored = freezeSelection([catalog[0], catalog[1]]);
+        const result = applyInitialFragranceIntent({
+          initialFragranceId: 1,
+          catalog,
+          selectedPerfumes: restored,
+          maxSelectableSlots: 3,
+        });
+
+        expect(result.intent.status).toBe("duplicate");
+        expect(result.selectedPerfumes).toBe(restored);
+        expect(ids(result.selectedPerfumes)).toEqual([1, 2]);
+      });
+
+      it("surfaces a capacity conflict instead of exceeding the restored selection's limit", () => {
+        const restored = freezeSelection([catalog[0], catalog[1]]);
+        const result = applyInitialFragranceIntent({
+          initialFragranceId: 3,
+          catalog,
+          selectedPerfumes: restored,
+          maxSelectableSlots: 2,
+        });
+
+        expect(result.intent.status).toBe("capacity");
+        expect(result.selectedPerfumes).toBe(restored);
+        expect(ids(result.selectedPerfumes)).toEqual([1, 2]);
+      });
+    });
   });
 
   describe("removeSelectedPerfumeAtIndex", () => {

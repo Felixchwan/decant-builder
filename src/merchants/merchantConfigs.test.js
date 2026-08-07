@@ -39,6 +39,11 @@ describe("merchant configs", () => {
     );
   });
 
+  it("shows the empty-box discovery intro coachmark for Discovery Decants but not Aurelian", () => {
+    expect(discoveryDecantsConfig.features.discoveryCoachmark).toBe(true);
+    expect(aurelianConfig.features.discoveryCoachmark).toBe(false);
+  });
+
   it("validates supported locales and rejects malformed locale values", () => {
     expect(() => validateBuilderConfig(discoveryDecantsConfig)).not.toThrow();
     expect(() => validateBuilderConfig(aurelianConfig)).not.toThrow();

@@ -11,6 +11,7 @@ import {
   sanitizePersistedBuilderState,
   serializeBuilderPersistence,
 } from "./builderPersistence.js";
+import { applyInitialFragranceIntent } from "../selection/selectionState.js";
 
 const config = {
   box: {
@@ -818,5 +819,36 @@ describe("builderPersistence", () => {
       selectedPerfumes: [catalog[7], catalog[4], catalog[0]],
       wasRestored: true,
     });
+  });
+});
+
+describe("restore-then-initial-fragrance-intent orchestration", () => {
+  it("applies the deep-linked fragrance intent against the hydrated persisted selection, in the same sequence BuilderRuntime composes them", () => {
+    const storage = createMemoryStorage({
+      [config.persistence.storageKey]: raw({ selectedPerfumeIds: [9, 3] }),
+    });
+
+    const persistedBuilderState = loadPersistedBuilderState({
+      storage,
+      storageKey: config.persistence.storageKey,
+      catalog,
+      config,
+      defaultBuilderState,
+    });
+
+    expect(persistedBuilderState.wasRestored).toBe(true);
+    expect(ids(persistedBuilderState)).toEqual([9, 3]);
+
+    const initialSelectionState = applyInitialFragranceIntent({
+      initialFragranceId: 12,
+      catalog,
+      selectedPerfumes: persistedBuilderState.selectedPerfumes,
+      maxSelectableSlots: config.box.maxSelectableSlots,
+    });
+
+    expect(initialSelectionState.intent).toEqual({ status: "ready", perfume: catalog[4] });
+    expect(initialSelectionState.selectedPerfumes.map((perfume) => perfume.id)).toEqual([9, 3, 12]);
+    expect(initialSelectionState.selectedPerfumes[0]).toBe(persistedBuilderState.selectedPerfumes[0]);
+    expect(initialSelectionState.selectedPerfumes[1]).toBe(persistedBuilderState.selectedPerfumes[1]);
   });
 });
