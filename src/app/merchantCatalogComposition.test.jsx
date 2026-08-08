@@ -17,7 +17,25 @@ import DiscoveryDecantsApp from "./DiscoveryDecantsApp.jsx";
 import { createMerchantCatalog, fragrances as perfumes } from "@discovery-box/catalog";
 import { CATALOG_IDENTITY_BASELINE } from "../../packages/catalog/tests/catalogIdentityBaseline.fixture.js";
 import { aurelianAvailableIds } from "../../apps/aurelian/src/merchant/catalog.js";
+import { aurelianConfig } from "../../apps/aurelian/src/merchant/config.js";
 import { discoveryDecantsAvailableIds } from "../merchants/discoveryDecants/catalog.js";
+
+const originalWindow = globalThis.window;
+
+function simulateReturningAurelianVisitor() {
+  // BuilderExperience shows the Discovery Intent entry screen for genuine
+  // first-time visitors only. This test is about catalog/prop composition,
+  // not the entry screen, so it simulates a returning visitor (a persisted
+  // box already present) to reach DiscoveryBoxBuilder directly, matching
+  // how this suite already avoided real filesystem/browser dependencies.
+  globalThis.window = {
+    localStorage: {
+      getItem: (key) => (key === aurelianConfig.persistence.storageKey ? "{}" : null),
+    },
+    location: { href: "https://aurelianperfumes.com/build-your-box", search: "" },
+    history: { replaceState: () => {} },
+  };
+}
 
 function expectedIds() {
   return CATALOG_IDENTITY_BASELINE.map(([id]) => id);
@@ -79,8 +97,13 @@ describe("merchant catalog composition", () => {
   });
 
   it("passes each merchant projection to Builder instead of the canonical array", () => {
-    renderToStaticMarkup(<DiscoveryDecantsApp />);
-    renderToStaticMarkup(<BuilderExperience isDevelopment={import.meta.env.DEV} />);
+    simulateReturningAurelianVisitor();
+    try {
+      renderToStaticMarkup(<DiscoveryDecantsApp />);
+      renderToStaticMarkup(<BuilderExperience isDevelopment={import.meta.env.DEV} />);
+    } finally {
+      globalThis.window = originalWindow;
+    }
 
     expect(builderCalls).toHaveLength(2);
     const [discoveryProps, aurelianProps] = builderCalls;

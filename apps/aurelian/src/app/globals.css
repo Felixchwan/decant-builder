@@ -113,6 +113,22 @@ h1 { max-width:15ch; margin-bottom:1.4rem; font-size:clamp(2.8rem,7vw,6.4rem); }
 .pending-note { max-width:34rem; margin-bottom:2rem; padding-left:1rem; border-left:1px solid var(--gold); color:var(--muted); }
 .pending-note strong { color:var(--secondary); }
 .pending-note p { margin:.35rem 0 0; }
+/* When the first-time Discovery Intent screen is active, its own headline is
+   the entry moment — the static page header above it would otherwise repeat
+   that moment. Purely presentational and self-healing: if .discovery-intent
+   is absent (returning visitor, deep link, or after an intent is chosen),
+   the header renders exactly as before.
+   Governs the header from hydration onward only. The gap before hydration
+   (BuilderExperience's chunk hasn't loaded yet, so .discovery-intent can't
+   exist yet for this rule to match) is closed separately by an inline
+   pre-hydration script in app/build-your-box/page.jsx — see the comment
+   there for why both exist. */
+body:has(.discovery-intent) #builder-entry-header { display:none; }
+.discovery-intent__grid { display:grid; grid-template-columns:repeat(2,1fr); gap:.85rem; margin-top:2rem; }
+.discovery-intent__tile { display:flex; flex-direction:column; align-items:flex-start; gap:.4rem; padding:1.5rem; border:1px solid var(--border); background:var(--surface); color:var(--text); text-align:left; cursor:pointer; transition:border-color .2s ease,transform .2s ease; }
+.discovery-intent__tile:hover,.discovery-intent__tile:focus-visible { border-color:var(--gold); transform:translateY(-2px); }
+.discovery-intent__tile-title { font-family:Georgia,"Times New Roman",serif; font-size:1.35rem; font-weight:400; }
+.discovery-intent__tile-description { color:var(--secondary); font-size:.88rem; }
 .builder-page { padding-bottom:5rem; }
 .builder-loading { min-height:30rem; display:grid; place-items:center; color:var(--muted); }
 .builder-page > .builder-theme-root { width:min(1440px,100%); margin-inline:auto; }
@@ -140,7 +156,7 @@ h1 { max-width:15ch; margin-bottom:1.4rem; font-size:clamp(2.8rem,7vw,6.4rem); }
   .section { padding-block:2rem; }
   .service-band { padding-block:2rem; }
   .final-cta { padding-block:2.5rem; }
-  .feature-grid,.steps,.featured-grid,.catalog-grid { grid-template-columns:1fr; }
+  .feature-grid,.steps,.featured-grid,.catalog-grid,.discovery-intent__grid { grid-template-columns:1fr; }
   .steps { gap:2.5rem; }
   .catalog-controls { grid-template-columns:1fr; }
   .catalog-status { align-items:flex-start; flex-direction:column; gap:.35rem; }

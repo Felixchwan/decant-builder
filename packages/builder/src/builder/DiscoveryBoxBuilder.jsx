@@ -13,6 +13,7 @@ import { validateBuilderConfig } from "./config/index.js";
  * @param {object} props.analytics Provider-neutral analytics adapter. Defaults to no-op when omitted.
  * @param {object} props.finalizationAdapter Host-supplied delivery-channel adapter. Optional.
  * @param {number|null} props.initialFragranceId Optional stable catalog ID to select once after persisted state is restored.
+ * @param {{seasons?: string, occasions?: string, vibes?: string}|null} props.initialCatalogFilters Optional starting catalog filter values, expressed only in the catalog's existing season/occasion/vibe taxonomy. The Builder applies these once at startup and never interprets what they mean beyond that taxonomy.
  * @param {(assetKey: string) => string} props.assetResolver Host-supplied catalog asset resolver.
  * @param {boolean} props.isDevelopment Host-supplied development capability. Defaults to false.
  */
@@ -23,6 +24,7 @@ export default function DiscoveryBoxBuilder({
   analytics,
   finalizationAdapter,
   initialFragranceId = null,
+  initialCatalogFilters = null,
   assetResolver,
   isDevelopment = false,
 }) {
@@ -77,6 +79,7 @@ export default function DiscoveryBoxBuilder({
       analytics={analytics}
       finalizationAdapter={finalizationAdapter}
       initialFragranceId={initialFragranceId}
+      initialCatalogFilters={initialCatalogFilters}
       assetResolver={assetResolver}
       isDevelopment={isDevelopment}
     />

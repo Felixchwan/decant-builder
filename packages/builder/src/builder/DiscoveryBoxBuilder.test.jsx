@@ -103,4 +103,25 @@ describe("DiscoveryBoxBuilder asset resolver boundary", () => {
 
     expect(appCalls.map(({ initialFragranceId }) => initialFragranceId)).toEqual([null, 104]);
   });
+
+  it("forwards an optional initial catalog filter expressed only in existing taxonomy, without changing the default", () => {
+    const assetResolver = createCatalogAssetResolver({ basePath: "/merchant-assets" });
+
+    renderToStaticMarkup(
+      <>
+        <DiscoveryBoxBuilder catalog={[]} config={discoveryDecantsConfig} assetResolver={assetResolver} />
+        <DiscoveryBoxBuilder
+          catalog={[]}
+          config={discoveryDecantsConfig}
+          assetResolver={assetResolver}
+          initialCatalogFilters={{ occasions: "daily" }}
+        />
+      </>,
+    );
+
+    expect(appCalls.map(({ initialCatalogFilters }) => initialCatalogFilters)).toEqual([
+      null,
+      { occasions: "daily" },
+    ]);
+  });
 });

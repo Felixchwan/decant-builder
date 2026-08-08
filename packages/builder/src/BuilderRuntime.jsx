@@ -66,6 +66,7 @@ function App({
   analytics = noopAnalytics,
   finalizationAdapter,
   initialFragranceId = null,
+  initialCatalogFilters = null,
   assetResolver,
   isDevelopment = false,
 }) {
@@ -145,11 +146,12 @@ function App({
   const [activeMobileTab, setActiveMobileTab] = useState(
     initialFragranceIntent && initialFragranceIntent.status !== "unavailable" ? "box" : "catalog"
   );
-  const [activeFilters, setActiveFilters] = useState({
+  const [activeFilters, setActiveFilters] = useState(() => ({
     seasons: "",
     occasions: "",
     vibes: "",
-  });
+    ...(initialCatalogFilters || {}),
+  }));
   const [composerSettings, setComposerSettings] = useState({
     strategy: "balanced",
     collectionStyle: "balanced_mix",
