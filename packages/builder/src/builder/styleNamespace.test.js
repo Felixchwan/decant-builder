@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest";
 const builderCss = readFileSync(new URL("../../styles.css", import.meta.url), "utf8").replace(/\r\n/g, "\n");
 const originalRulesStart = builderCss.indexOf(":where(.builder-scope) .app {");
 const transformedOriginalRules = builderCss.slice(originalRulesStart);
-const BASELINE_SHA256 = "b248faa3ff5779f5fffccee583f3d5318441042da85f930e8467d32982855812";
+const BASELINE_SHA256 = "77e6d43b257b1e955475cdf331e0e7493084389c3bf98e9b901d3655b0ae71ce";
 const unitDefinitions = [...builderCss.matchAll(/(--builder-unit-(\d+)):\s*([\d.]+)px;/g)];
 const unitReferences = [...builderCss.matchAll(/var\((--builder-unit-(\d+))\)/g)];
 
@@ -75,7 +75,7 @@ describe("Builder stylesheet namespace", () => {
 
   it("defines a complete fixed-length token set for every former rem magnitude", () => {
     expect(builderCss).not.toMatch(/\brem\b/);
-    expect(unitReferences).toHaveLength(234);
+    expect(unitReferences).toHaveLength(235);
     expect(unitDefinitions).toHaveLength(98);
 
     const referencedNames = new Set(unitReferences.map((match) => match[1]));

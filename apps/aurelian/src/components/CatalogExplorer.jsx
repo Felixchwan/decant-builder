@@ -65,7 +65,7 @@ export function CatalogExplorer() {
       </div>
       <div className="catalog-status"><p className="catalog-count" aria-live="polite">{visible.length} de {aurelianCatalog.length} fragancias</p><p>Los puntos ayudan a equilibrar tu Discovery Box; no representan el precio de una botella.</p></div>
       {visible.length ? (
-        <div className="catalog-grid">
+        <div className="catalog-explorer-grid">
           {visible.map((item) => {
             const tier = getCatalogTierPresentation(item.id);
             return (

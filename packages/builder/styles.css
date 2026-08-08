@@ -1042,7 +1042,7 @@
 
 :where(.builder-scope) .perfume-card-compact-actions {
   display: grid;
-  grid-template-columns: minmax(0, auto) minmax(9rem, 1fr);
+  grid-template-columns: auto minmax(130px, 1fr);
   gap: 14px;
   align-items: stretch;
 }
@@ -1073,7 +1073,8 @@
   min-height: 42px;
   margin: 0;
   padding: 10px 14px;
-  justify-self: stretch;
+  justify-self: end;
+  font-size: var(--builder-unit-082);
 }
 
 :where(.builder-scope) .perfume-card-add-label-short {
@@ -3084,7 +3085,7 @@
   }
 
   :where(.builder-scope) .perfume-card-compact-actions {
-    grid-template-columns: minmax(0, auto) minmax(64px, 1fr);
+    grid-template-columns: auto minmax(64px, 1fr);
     gap: 14px;
     align-items: stretch;
   }
@@ -3100,7 +3101,7 @@
     min-height: 42px;
     margin: 0;
     padding: 9px 12px;
-    justify-self: stretch;
+    justify-self: end;
   }
 
   :where(.builder-scope) .perfume-card-add-label-full {
