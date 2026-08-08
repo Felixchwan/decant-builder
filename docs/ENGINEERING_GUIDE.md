@@ -11,6 +11,7 @@ This guide exists to help engineers extend Discovery Builder without violating e
 - [`docs/adr/README.md`](adr/README.md) — the 18 active architecture decisions and why each was made.
 - [`docs/architecture/C4.md`](architecture/C4.md) — C4 architecture document (System Context → Container → Component → Code).
 - [`docs/domain/DOMAIN_MODEL.md`](domain/DOMAIN_MODEL.md) — entities, value objects, domain services, policies, invariants, aggregates, and domain events, derived from implemented behavior.
+- [`docs/AURELIAN_PHILOSOPHY.md`](AURELIAN_PHILOSOPHY.md) — foundational doctrine governing Aurelian's curation, education, and recommendation intent; read its scope note before quoting it in product copy — it describes target-state intent, not verified Composer behavior.
 - [`docs/architecture-gaps.md`](architecture-gaps.md) — capabilities the system deliberately doesn't have yet, and why that's not the same as an oversight.
 - [`docs/backlog/tier-id-range-integrity.md`](backlog/tier-id-range-integrity.md) — a known, unguarded data-integrity gap, kept out of the ADR log on purpose (see ADR-0018's retirement note).
 

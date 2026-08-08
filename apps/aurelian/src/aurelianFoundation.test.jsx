@@ -93,6 +93,17 @@ describe("Aurelian application foundation", () => {
     expect(markup).not.toMatch(/compra ahora|pago en línea|inventario garantizado|envío nacional|disponibilidad garantizada/i);
   });
 
+  it("keeps public copy oriented toward criterio-building rather than sales-maximization language", () => {
+    const markup = [HomePage, HowItWorksPage, ContactPage, CatalogPage, BuilderPage]
+      .map((Page) => renderToStaticMarkup(<Page />))
+      .join("\n");
+    // Principio durable: la popularidad/el margen nunca se presentan como argumento de venta.
+    expect(markup).not.toMatch(/los favoritos de (todos|la temporada)|recomendado por expertos|el mejor perfume|oferta especial|descuento|últimas unidades/i);
+    // Principio durable: el sitio declara, en alguna de varias redacciones posibles, que la
+    // selección no está ordenada por popularidad, ventas o margen.
+    expect(markup).toMatch(/no (?:est[aá] ordenad[oa]|prioriza\w*|deja\w* que) .{0,40}\b(popularidad|lo m[aá]s vendido|margen)\b/i);
+  });
+
   it("keeps promotional media decorative, silent, resilient, and motion-aware", () => {
     const markup = renderToStaticMarkup(<HeroMedia />);
     expect(markup).toContain("autoPlay");

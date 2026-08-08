@@ -7,7 +7,7 @@ export function DiscoveryIntentScreen({ onSelect }) {
     <section className="discovery-intent page-shell page-intro page-intro--compact">
       <p className="eyebrow">Tu Discovery Box</p>
       <h1>¿Qué buscas hoy?</h1>
-      <p className="lede">Elige lo que más se acerque. Podrás ajustar todo después.</p>
+      <p className="lede">Elige lo que más se acerque hoy — no es una promesa, es un punto de partida.</p>
       <div className="discovery-intent__grid">
         {DISCOVERY_INTENT_OPTIONS.map((option) => (
           <button
