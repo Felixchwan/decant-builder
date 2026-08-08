@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest";
 const builderCss = readFileSync(new URL("../../styles.css", import.meta.url), "utf8").replace(/\r\n/g, "\n");
 const originalRulesStart = builderCss.indexOf(":where(.builder-scope) .app {");
 const transformedOriginalRules = builderCss.slice(originalRulesStart);
-const BASELINE_SHA256 = "124e3f686af937cc0d74f8e18861a8ab5fdebc1426b087d389577e592bbaa77b";
+const BASELINE_SHA256 = "b248faa3ff5779f5fffccee583f3d5318441042da85f930e8467d32982855812";
 const unitDefinitions = [...builderCss.matchAll(/(--builder-unit-(\d+)):\s*([\d.]+)px;/g)];
 const unitReferences = [...builderCss.matchAll(/var\((--builder-unit-(\d+))\)/g)];
 
@@ -69,13 +69,13 @@ describe("Builder stylesheet namespace", () => {
       .replace(/var\(--builder-unit-(\d+)\)/g, (_, digits) => `${remMagnitude(digits)}rem`);
     expect(createHash("sha256").update(recovered).digest("hex")).toBe(BASELINE_SHA256);
     expect((builderCss.match(/!important/g) || [])).toHaveLength(17);
-    expect((builderCss.match(/color-mix\(/g) || [])).toHaveLength(48);
-    expect((builderCss.match(/var\([^,()]+,/g) || [])).toHaveLength(53);
+    expect((builderCss.match(/color-mix\(/g) || [])).toHaveLength(141);
+    expect((builderCss.match(/var\([^,()]+,/g) || [])).toHaveLength(218);
   });
 
   it("defines a complete fixed-length token set for every former rem magnitude", () => {
     expect(builderCss).not.toMatch(/\brem\b/);
-    expect(unitReferences).toHaveLength(233);
+    expect(unitReferences).toHaveLength(234);
     expect(unitDefinitions).toHaveLength(98);
 
     const referencedNames = new Set(unitReferences.map((match) => match[1]));
@@ -99,7 +99,7 @@ describe("Builder stylesheet namespace", () => {
 
   it("binds every ordinary selector to the neutral scope exactly once", () => {
     const selectors = collectRuleSelectors(builderCss);
-    expect(selectors).toHaveLength(1155);
+    expect(selectors).toHaveLength(1158);
     selectors.forEach((selector) => {
       expect(selector.startsWith(":where(.builder-scope)")).toBe(true);
       expect(selector.match(/:where\(\.builder-scope\)/g)).toHaveLength(1);

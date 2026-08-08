@@ -14,6 +14,7 @@ import { validateBuilderConfig } from "./config/index.js";
  * @param {object} props.finalizationAdapter Host-supplied delivery-channel adapter. Optional.
  * @param {number|null} props.initialFragranceId Optional stable catalog ID to select once after persisted state is restored.
  * @param {{strategy?: string, preferredSeasons?: string[], preferredOccasions?: string[], preferredVibes?: string[], excludedPerfumeIds?: number[]}|null} props.initialRecommendationHint Optional starting recommendation bias, expressed only in Composer's existing request vocabulary (strategy, preferred seasons/occasions/vibes, excluded ids). When present, the Builder shows a curated recommendation set above the full catalog on first load; the catalog itself is never filtered or reduced by this. The Builder applies this once at startup and never interprets what the hint means beyond that vocabulary — it has no concept of why a host chose these values.
+ * @param {(recommendation: object) => (string|null)} [props.explainRecommendation] Optional host-supplied presentation callback, separate from initialRecommendationHint (a policy-input contract, not a copy contract). Called once per card in the recommendation surface produced by initialRecommendationHint; its return value is rendered as a short reason line, or nothing when it returns null/undefined. The Builder never inspects the string or the recommendation's explanation codes itself — purely relayed, same as assetResolver/finalizationAdapter.
  * @param {(assetKey: string) => string} props.assetResolver Host-supplied catalog asset resolver.
  * @param {boolean} props.isDevelopment Host-supplied development capability. Defaults to false.
  */
@@ -25,6 +26,7 @@ export default function DiscoveryBoxBuilder({
   finalizationAdapter,
   initialFragranceId = null,
   initialRecommendationHint = null,
+  explainRecommendation,
   assetResolver,
   isDevelopment = false,
 }) {
@@ -80,6 +82,7 @@ export default function DiscoveryBoxBuilder({
       finalizationAdapter={finalizationAdapter}
       initialFragranceId={initialFragranceId}
       initialRecommendationHint={initialRecommendationHint}
+      explainRecommendation={explainRecommendation}
       assetResolver={assetResolver}
       isDevelopment={isDevelopment}
     />

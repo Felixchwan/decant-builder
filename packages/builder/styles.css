@@ -201,6 +201,11 @@
   color: var(--builder-color-accent, #4ade80);
 }
 
+:where(.builder-scope).builder-theme-root--custom .perfume-card-points,
+:where(.builder-scope).builder-theme-root--custom .tier-badge {
+  border-radius: 0;
+}
+
 :where(.builder-scope).builder-theme-root--custom .perfume-card:hover,
 :where(.builder-scope).builder-theme-root--custom .perfume-card:focus-visible {
   border-color: color-mix(
@@ -314,12 +319,12 @@
   z-index: 20;
   transform: translateX(-50%);
   margin: 0;
-  border: 1px solid rgba(134, 239, 172, 0.22);
+  border: 1px solid color-mix(in srgb, var(--builder-color-accent, #86efac) 22%, transparent);
   border-radius: 999px;
   padding: 9px 14px;
   background: rgba(8, 20, 14, 0.9);
   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.32);
-  color: #bbf7d0;
+  color: var(--builder-color-accent, #bbf7d0);
   font-size: var(--builder-unit-082);
   font-weight: 800;
   backdrop-filter: blur(16px);
@@ -344,7 +349,7 @@
 
 :where(.builder-scope) .eyebrow {
   margin: 0 0 4px;
-  color: #4ade80;
+  color: var(--builder-color-accent, #4ade80);
   font-weight: 700;
   letter-spacing: 0.16em;
   text-transform: uppercase;
@@ -759,7 +764,7 @@
   border: 1px solid rgba(148, 163, 184, 0.18);
   border-radius: 999px;
   background: rgba(2, 6, 23, 0.9);
-  color: #d9f99d;
+  color: var(--builder-color-accent, #d9f99d);
   content: attr(data-tooltip);
   font-family: inherit;
   font-size: var(--builder-unit-070);
@@ -835,6 +840,17 @@
   min-width: 0;
 }
 
+:where(.builder-scope) .perfume-card-reason {
+  margin: 4px 0 0;
+  overflow: hidden;
+  color: var(--builder-color-text-muted, #94a3b8);
+  font-size: var(--builder-unit-078);
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
 :where(.builder-scope) .perfume-card-brand-logo {
   display: inline-flex;
   flex: 0 1 auto;
@@ -897,7 +913,7 @@
 :where(.builder-scope) .perfume-card:hover,
 :where(.builder-scope) .perfume-card:focus-visible {
   transform: translateY(-4px);
-  border-color: rgba(74, 222, 128, 0.45);
+  border-color: color-mix(in srgb, var(--builder-color-accent, #4ade80) 45%, transparent);
   box-shadow: 0 18px 48px rgba(0, 0, 0, 0.26);
   outline: none;
 }
@@ -942,7 +958,7 @@
 }
 
 :where(.builder-scope) .perfume-card-details-trigger:focus-visible {
-  outline: 2px solid rgba(74, 222, 128, 0.45);
+  outline: 2px solid color-mix(in srgb, var(--builder-color-accent, #4ade80) 45%, transparent);
   outline-offset: 4px;
 }
 
@@ -952,7 +968,7 @@
   place-items: center;
   border-radius: 18px;
   background:
-    radial-gradient(circle at center, rgba(74, 222, 128, 0.16), transparent 60%),
+    radial-gradient(circle at center, color-mix(in srgb, var(--builder-color-accent, #4ade80) 16%, transparent), transparent 60%),
     rgba(2, 6, 23, 0.7);
 }
 
@@ -963,7 +979,7 @@
   border-radius: 16px 16px 10px 10px;
   display: grid;
   place-items: center;
-  color: #4ade80;
+  color: var(--builder-color-accent, #4ade80);
   font-weight: 800;
   font-size: var(--builder-unit-150);
 }
@@ -991,9 +1007,9 @@
 }
 
 :where(.builder-scope) .tag-row span {
-  border: 1px solid rgba(74, 222, 128, 0.18);
-  background: rgba(74, 222, 128, 0.08);
-  color: #bbf7d0;
+  border: 1px solid color-mix(in srgb, var(--builder-color-accent, #4ade80) 18%, transparent);
+  background: color-mix(in srgb, var(--builder-color-accent, #4ade80) 8%, transparent);
+  color: var(--builder-color-accent, #bbf7d0);
   border-radius: 999px;
   padding: 5px 9px;
   font-size: var(--builder-unit-078);
@@ -1042,7 +1058,7 @@
   padding: 8px 10px;
   border: 1px solid currentColor;
   border-radius: 999px;
-  color: #d9f99d;
+  color: var(--builder-color-accent, #d9f99d);
   font-size: var(--builder-unit-082);
   font-weight: 900;
   line-height: 1;
@@ -1127,7 +1143,7 @@
 }
 
 :where(.builder-scope) .box-summary-total strong {
-  color: #d9f99d;
+  color: var(--builder-color-accent, #d9f99d);
   font-size: clamp(var(--builder-unit-108), 2.5vw, var(--builder-unit-138));
 }
 
@@ -1160,7 +1176,7 @@
 
 :where(.builder-scope) .slot-progress {
   height: 100%;
-  background: linear-gradient(90deg, #22c55e, #84cc16);
+  background: linear-gradient(90deg, var(--builder-color-accent-strong, #22c55e), var(--builder-color-accent, #84cc16));
   border-radius: inherit;
 }
 
@@ -1303,7 +1319,7 @@
   min-width: 0;
   max-width: 100%;
   margin: -2px 0 0;
-  color: #d9f99d;
+  color: var(--builder-color-accent, #d9f99d);
   font-size: var(--builder-unit-072);
   font-weight: 700;
   text-align: right;
@@ -1430,12 +1446,12 @@
 :where(.builder-scope) .discovery-progress-bar div {
   height: 100%;
   border-radius: inherit;
-  background: linear-gradient(90deg, #22c55e, #84cc16);
+  background: linear-gradient(90deg, var(--builder-color-accent-strong, #22c55e), var(--builder-color-accent, #84cc16));
   transition: width 220ms ease;
 }
 
 :where(.builder-scope) .discovery-bonus-panel.unlocked .discovery-progress-bar div {
-  background: linear-gradient(90deg, #22c55e, #facc15);
+  background: linear-gradient(90deg, var(--builder-color-accent-strong, #22c55e), #facc15);
 }
 
 :where(.builder-scope) .discovery-progress-copy {
@@ -1543,7 +1559,7 @@
   border-radius: 999px;
   border: 1px solid rgba(250, 204, 21, 0.32);
   background:
-    linear-gradient(90deg, rgba(250, 204, 21, 0.10), rgba(74, 222, 128, 0.08)),
+    linear-gradient(90deg, rgba(250, 204, 21, 0.10), color-mix(in srgb, var(--builder-color-accent, #4ade80) 8%, transparent)),
     rgba(15, 23, 42, 0.52);
   color: #fde68a;
   font-size: var(--builder-unit-078);
@@ -1668,15 +1684,15 @@
   gap: 10px;
   padding: 12px;
   border-radius: 16px;
-  border: 1px solid rgba(134, 239, 172, 0.16);
+  border: 1px solid color-mix(in srgb, var(--builder-color-accent, #86efac) 16%, transparent);
   background:
-    radial-gradient(circle at 12% 0, rgba(74, 222, 128, 0.09), transparent 42%),
+    radial-gradient(circle at 12% 0, color-mix(in srgb, var(--builder-color-accent, #4ade80) 9%, transparent), transparent 42%),
     rgba(2, 6, 23, 0.34);
 }
 
 :where(.builder-scope) .curator-insight h4 {
   margin: 0;
-  color: #bbf7d0;
+  color: var(--builder-color-accent, #bbf7d0);
   font-size: var(--builder-unit-072);
   font-weight: 900;
   letter-spacing: 0.08em;
@@ -1719,7 +1735,7 @@
 
 :where(.builder-scope) .curator-insight-grid li::before {
   content: "\2713";
-  color: #86efac;
+  color: var(--builder-color-accent, #86efac);
   font-weight: 900;
 }
 
@@ -1756,8 +1772,8 @@
 }
 
 :where(.builder-scope) .discovery-requirement.met span {
-  background: rgba(34, 197, 94, 0.16);
-  color: #86efac;
+  background: color-mix(in srgb, var(--builder-color-accent-strong, #22c55e) 16%, transparent);
+  color: var(--builder-color-accent, #86efac);
 }
 
 :where(.builder-scope) .discovery-requirement.met span::before {
@@ -1855,7 +1871,7 @@
   border-color: rgba(250, 204, 21, 0.38);
   background:
     radial-gradient(circle at 15% 0, rgba(250, 204, 21, 0.18), transparent 46%),
-    linear-gradient(135deg, rgba(250, 204, 21, 0.10), rgba(34, 197, 94, 0.08)),
+    linear-gradient(135deg, rgba(250, 204, 21, 0.10), color-mix(in srgb, var(--builder-color-accent-strong, #22c55e) 8%, transparent)),
     rgba(15, 23, 42, 0.58);
 }
 
@@ -2682,7 +2698,7 @@
   border-color: rgba(250, 204, 21, 0.18);
   background:
     radial-gradient(circle at 18% 0, rgba(250, 204, 21, 0.10), transparent 38%),
-    radial-gradient(circle at 88% 18%, rgba(74, 222, 128, 0.08), transparent 34%),
+    radial-gradient(circle at 88% 18%, color-mix(in srgb, var(--builder-color-accent, #4ade80) 8%, transparent), transparent 34%),
     rgba(2, 6, 23, 0.36);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.04),
@@ -2695,7 +2711,7 @@
 }
 
 :where(.builder-scope) .discovery-empty-intro span {
-  color: #86efac;
+  color: var(--builder-color-accent, #86efac);
   font-size: var(--builder-unit-072);
   font-weight: 900;
   letter-spacing: 0.08em;
@@ -2799,7 +2815,7 @@
 
 :where(.builder-scope) .summary-panel span {
   display: block;
-  color: #4ade80;
+  color: var(--builder-color-accent, #4ade80);
   font-weight: 800;
   font-size: var(--builder-unit-078);
   text-transform: uppercase;
@@ -2839,10 +2855,10 @@
 
   :where(.builder-scope) .mobile-builder-tabs button.is-active {
     background:
-      linear-gradient(180deg, rgba(74, 222, 128, 0.22), rgba(74, 222, 128, 0.10)),
+      linear-gradient(180deg, color-mix(in srgb, var(--builder-color-accent, #4ade80) 22%, transparent), color-mix(in srgb, var(--builder-color-accent, #4ade80) 10%, transparent)),
       rgba(15, 23, 42, 0.88);
     color: #ecfdf5;
-    box-shadow: inset 0 0 0 1px rgba(74, 222, 128, 0.22);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--builder-color-accent, #4ade80) 22%, transparent);
   }
 
   :where(.builder-scope) .mobile-builder-tabs span {
@@ -3253,9 +3269,9 @@
 :where(.builder-scope) .summary-tags > span {
   padding: 5px 9px;
   border-radius: 999px;
-  background: rgba(74, 222, 128, 0.1);
-  border: 1px solid rgba(74, 222, 128, 0.22);
-  color: #bbf7d0;
+  background: color-mix(in srgb, var(--builder-color-accent, #4ade80) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--builder-color-accent, #4ade80) 22%, transparent);
+  color: var(--builder-color-accent, #bbf7d0);
   font-size: var(--builder-unit-078);
   font-weight: 700;
 }
@@ -3274,9 +3290,9 @@
   gap: 7px;
   padding: 4px 10px 4px 5px;
   border-radius: 999px;
-  background: rgba(74, 222, 128, 0.1);
-  border: 1px solid rgba(74, 222, 128, 0.22);
-  color: #bbf7d0;
+  background: color-mix(in srgb, var(--builder-color-accent, #4ade80) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--builder-color-accent, #4ade80) 22%, transparent);
+  color: var(--builder-color-accent, #bbf7d0);
   font-size: var(--builder-unit-078);
   font-weight: 700;
 }
@@ -3301,7 +3317,7 @@
   padding: 10px 12px;
 
   border-radius: 14px;
-  border: 1px solid rgba(74, 222, 128, 0.28);
+  border: 1px solid color-mix(in srgb, var(--builder-color-accent, #4ade80) 28%, transparent);
   background: rgba(6, 18, 12, 0.96);
   box-shadow: 0 18px 50px rgba(0, 0, 0, 0.45);
 
@@ -3313,7 +3329,7 @@
 :where(.builder-scope) .tooltip-box strong {
   display: block;
   margin-bottom: 6px;
-  color: #86efac;
+  color: var(--builder-color-accent, #86efac);
   text-transform: uppercase;
   font-size: var(--builder-unit-075);
   letter-spacing: 0.08em;
@@ -3351,8 +3367,8 @@
 }
 
 :where(.builder-scope) .box-status.ready {
-  border-color: rgba(74, 222, 128, 0.35);
-  background: rgba(74, 222, 128, 0.09);
+  border-color: color-mix(in srgb, var(--builder-color-accent, #4ade80) 35%, transparent);
+  background: color-mix(in srgb, var(--builder-color-accent, #4ade80) 9%, transparent);
 }
 
 :where(.builder-scope) .box-status.not-ready {
@@ -3363,10 +3379,10 @@
 :where(.builder-scope) .review-box-button {
   width: 100%;
   margin: 0 0 16px;
-  border: 1px solid rgba(74, 222, 128, 0.34);
+  border: 1px solid color-mix(in srgb, var(--builder-color-accent, #4ade80) 34%, transparent);
   border-radius: 14px;
   padding: 12px 14px;
-  background: linear-gradient(180deg, #6ee7b7, #4ade80);
+  background: linear-gradient(180deg, var(--builder-color-accent, #6ee7b7), var(--builder-color-accent, #4ade80));
   color: #04110b;
   font-weight: 900;
 }
@@ -3393,8 +3409,8 @@
 :where(.builder-scope) .review-box-button.is-unlocked {
   border-color: rgba(250, 204, 21, 0.48);
   background:
-    linear-gradient(180deg, rgba(253, 230, 138, 0.96), rgba(74, 222, 128, 0.92));
-  box-shadow: 0 14px 34px rgba(74, 222, 128, 0.16);
+    linear-gradient(180deg, rgba(253, 230, 138, 0.96), color-mix(in srgb, var(--builder-color-accent, #4ade80) 92%, transparent));
+  box-shadow: 0 14px 34px color-mix(in srgb, var(--builder-color-accent, #4ade80) 16%, transparent);
 }
 
 :where(.builder-scope) .details-button {
@@ -3432,7 +3448,7 @@
 :where(.builder-scope) .scent-library-overlay {
   padding: 18px;
   background:
-    radial-gradient(circle at 50% 12%, rgba(74, 222, 128, 0.08), transparent 34%),
+    radial-gradient(circle at 50% 12%, color-mix(in srgb, var(--builder-color-accent, #4ade80) 8%, transparent), transparent 34%),
     rgba(0, 0, 0, 0.78);
 }
 
@@ -3441,7 +3457,7 @@
   max-height: min(720px, 86vh);
   padding: 30px;
   background:
-    radial-gradient(circle at 16% 0, rgba(74, 222, 128, 0.10), transparent 34%),
+    radial-gradient(circle at 16% 0, color-mix(in srgb, var(--builder-color-accent, #4ade80) 10%, transparent), transparent 34%),
     #08110d;
   border: 1px solid rgba(255, 255, 255, 0.13);
   box-shadow: 0 28px 90px rgba(0, 0, 0, 0.58);
@@ -3502,12 +3518,12 @@
   gap: 8px;
   width: 100%;
   min-width: 0;
-  border: 1px solid rgba(74, 222, 128, 0.22);
+  border: 1px solid color-mix(in srgb, var(--builder-color-accent, #4ade80) 22%, transparent);
   padding: 5px 9px 5px 5px;
   background:
-    radial-gradient(circle at 10% 0, rgba(134, 239, 172, 0.10), transparent 45%),
-    rgba(74, 222, 128, 0.08);
-  color: #bbf7d0;
+    radial-gradient(circle at 10% 0, color-mix(in srgb, var(--builder-color-accent, #86efac) 10%, transparent), transparent 45%),
+    color-mix(in srgb, var(--builder-color-accent, #4ade80) 8%, transparent);
+  color: var(--builder-color-accent, #bbf7d0);
   text-align: left;
   transition:
     border-color 160ms ease,
@@ -3519,10 +3535,10 @@
 :where(.builder-scope) .scent-library-note-button:hover,
 :where(.builder-scope) .scent-library-note-button:focus-visible,
 :where(.builder-scope) .scent-library-note-shell.is-selected .scent-library-note-button {
-  border-color: rgba(134, 239, 172, 0.42);
-  background: rgba(74, 222, 128, 0.13);
+  border-color: color-mix(in srgb, var(--builder-color-accent, #86efac) 42%, transparent);
+  background: color-mix(in srgb, var(--builder-color-accent, #4ade80) 13%, transparent);
   box-shadow:
-    0 0 0 1px rgba(134, 239, 172, 0.06),
+    0 0 0 1px color-mix(in srgb, var(--builder-color-accent, #86efac) 6%, transparent),
     0 10px 24px rgba(0, 0, 0, 0.18);
   outline: none;
   transform: translateY(-1px);
@@ -3540,7 +3556,7 @@
 :where(.builder-scope) .scent-library-note-count {
   flex: 0 0 auto;
   margin-left: auto;
-  color: #86efac;
+  color: var(--builder-color-accent, #86efac);
   font-size: var(--builder-unit-072);
   font-weight: 900;
   opacity: 0.72;
@@ -3584,7 +3600,7 @@
 :where(.builder-scope) .scent-library-note-fallback {
   display: inline-grid;
   place-items: center;
-  color: #86efac;
+  color: var(--builder-color-accent, #86efac);
   font-size: var(--builder-unit-080);
   font-weight: 900;
 }
@@ -3602,7 +3618,7 @@
   border-radius: 18px;
   background:
     radial-gradient(circle at 8% 0, rgba(250, 204, 21, 0.08), transparent 36%),
-    radial-gradient(circle at 92% 14%, rgba(74, 222, 128, 0.08), transparent 32%),
+    radial-gradient(circle at 92% 14%, color-mix(in srgb, var(--builder-color-accent, #4ade80) 8%, transparent), transparent 32%),
     rgba(2, 6, 23, 0.40);
 }
 
@@ -3616,7 +3632,7 @@
 
 :where(.builder-scope) .scent-library-detail-header span {
   display: block;
-  color: #86efac;
+  color: var(--builder-color-accent, #86efac);
   font-size: var(--builder-unit-068);
   font-weight: 900;
   letter-spacing: 0.08em;
@@ -3721,8 +3737,8 @@
   padding: 8px 12px;
   border-radius: 999px;
 
-  background: rgba(74, 222, 128, 0.12);
-  border: 1px solid rgba(74, 222, 128, 0.25);
+  background: color-mix(in srgb, var(--builder-color-accent, #4ade80) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--builder-color-accent, #4ade80) 25%, transparent);
 }
 
 :where(.builder-scope) .perfume-details-modal {
@@ -3734,7 +3750,7 @@
   padding: 24px;
   border-radius: 20px;
   background:
-    radial-gradient(circle at 18% 0, rgba(74, 222, 128, 0.10), transparent 34%),
+    radial-gradient(circle at 18% 0, color-mix(in srgb, var(--builder-color-accent, #4ade80) 10%, transparent), transparent 34%),
     #08110d;
   border: 1px solid rgba(255, 255, 255, 0.12);
   box-shadow: 0 28px 90px rgba(0, 0, 0, 0.58);
@@ -3752,12 +3768,12 @@
 
 :where(.builder-scope) .perfume-details-modal.is-swipe-next::after {
   opacity: 1;
-  background: linear-gradient(90deg, transparent 70%, rgba(74, 222, 128, 0.12));
+  background: linear-gradient(90deg, transparent 70%, color-mix(in srgb, var(--builder-color-accent, #4ade80) 12%, transparent));
 }
 
 :where(.builder-scope) .perfume-details-modal.is-swipe-previous::after {
   opacity: 1;
-  background: linear-gradient(270deg, transparent 70%, rgba(74, 222, 128, 0.12));
+  background: linear-gradient(270deg, transparent 70%, color-mix(in srgb, var(--builder-color-accent, #4ade80) 12%, transparent));
 }
 
 :where(.builder-scope) .perfume-details-modal .modal-header {
@@ -3814,8 +3830,8 @@
   justify-content: center;
   min-height: 42px;
   min-width: 124px;
-  background: #4ade80;
-  border-color: rgba(74, 222, 128, 0.7);
+  background: var(--builder-color-accent, #4ade80);
+  border-color: color-mix(in srgb, var(--builder-color-accent, #4ade80) 70%, transparent);
   color: #052e16;
 }
 
@@ -3843,7 +3859,7 @@
 
 :where(.builder-scope) .perfume-details-meta > strong {
   flex: 1 1 auto;
-  color: #86efac;
+  color: var(--builder-color-accent, #86efac);
   text-align: center;
   white-space: nowrap;
 }
@@ -3855,7 +3871,7 @@
 :where(.builder-scope) .perfume-details-add-feedback {
   min-height: 18px;
   margin: -10px 0 -8px;
-  color: #86efac;
+  color: var(--builder-color-accent, #86efac);
   font-size: var(--builder-unit-082);
   font-weight: 800;
   text-align: right;
@@ -4036,7 +4052,7 @@
 :where(.builder-scope) .perfume-details-section h4,
 :where(.builder-scope) .detail-profile-group > span,
 :where(.builder-scope) .detail-note-group > span {
-  color: #86efac;
+  color: var(--builder-color-accent, #86efac);
   font-size: var(--builder-unit-074);
   font-weight: 900;
   letter-spacing: 0.08em;
@@ -4056,7 +4072,7 @@
 :where(.builder-scope) .detail-note-group > span {
   display: block;
   margin-bottom: 7px;
-  color: rgba(134, 239, 172, 0.74);
+  color: color-mix(in srgb, var(--builder-color-accent, #86efac) 74%, transparent);
 }
 
 :where(.builder-scope) .details-tag-row {
@@ -4069,9 +4085,9 @@
 :where(.builder-scope) .details-tag-row > span {
   padding: 6px 9px;
   border-radius: 999px;
-  background: rgba(74, 222, 128, 0.09);
-  border: 1px solid rgba(74, 222, 128, 0.18);
-  color: #bbf7d0;
+  background: color-mix(in srgb, var(--builder-color-accent, #4ade80) 9%, transparent);
+  border: 1px solid color-mix(in srgb, var(--builder-color-accent, #4ade80) 18%, transparent);
+  color: var(--builder-color-accent, #bbf7d0);
   font-size: var(--builder-unit-078);
   font-weight: 800;
 }
@@ -4092,18 +4108,18 @@
 @media (hover: hover) and (pointer: fine) {
   :where(.builder-scope) .details-tag-row > .detail-note-pill.has-note-image:hover,
   :where(.builder-scope) .details-tag-row > .detail-note-pill.has-note-image:focus-visible {
-    border-color: rgba(134, 239, 172, 0.38);
-    background: rgba(74, 222, 128, 0.13);
+    border-color: color-mix(in srgb, var(--builder-color-accent, #86efac) 38%, transparent);
+    background: color-mix(in srgb, var(--builder-color-accent, #4ade80) 13%, transparent);
     box-shadow:
-      0 0 0 1px rgba(134, 239, 172, 0.08),
+      0 0 0 1px color-mix(in srgb, var(--builder-color-accent, #86efac) 8%, transparent),
       0 8px 20px rgba(0, 0, 0, 0.18);
     transform: translateY(-1px) scale(1.025);
   }
 }
 
 :where(.builder-scope) .details-tag-row > .detail-note-pill.has-note-image:active {
-  border-color: rgba(134, 239, 172, 0.34);
-  background: rgba(74, 222, 128, 0.14);
+  border-color: color-mix(in srgb, var(--builder-color-accent, #86efac) 34%, transparent);
+  background: color-mix(in srgb, var(--builder-color-accent, #4ade80) 14%, transparent);
   transform: scale(1.035);
 }
 
@@ -4138,18 +4154,18 @@
 @media (hover: hover) and (pointer: fine) {
   :where(.builder-scope) .details-tag-row > .detail-asset-chip:hover,
   :where(.builder-scope) .details-tag-row > .detail-asset-chip:focus-visible {
-    border-color: rgba(134, 239, 172, 0.38);
-    background: rgba(74, 222, 128, 0.13);
+    border-color: color-mix(in srgb, var(--builder-color-accent, #86efac) 38%, transparent);
+    background: color-mix(in srgb, var(--builder-color-accent, #4ade80) 13%, transparent);
     box-shadow:
-      0 0 0 1px rgba(134, 239, 172, 0.08),
+      0 0 0 1px color-mix(in srgb, var(--builder-color-accent, #86efac) 8%, transparent),
       0 8px 20px rgba(0, 0, 0, 0.18);
     transform: translateY(-1px) scale(1.025);
   }
 }
 
 :where(.builder-scope) .details-tag-row > .detail-asset-chip:active {
-  border-color: rgba(134, 239, 172, 0.34);
-  background: rgba(74, 222, 128, 0.14);
+  border-color: color-mix(in srgb, var(--builder-color-accent, #86efac) 34%, transparent);
+  background: color-mix(in srgb, var(--builder-color-accent, #4ade80) 14%, transparent);
   transform: scale(1.035);
 }
 
@@ -4179,7 +4195,7 @@
   border: 1px solid rgba(226, 232, 240, 0.16);
   border-radius: 18px;
   background:
-    radial-gradient(circle at 50% 0, rgba(74, 222, 128, 0.12), transparent 48%),
+    radial-gradient(circle at 50% 0, color-mix(in srgb, var(--builder-color-accent, #4ade80) 12%, transparent), transparent 48%),
     linear-gradient(180deg, rgba(15, 23, 42, 0.98), rgba(2, 6, 23, 0.98));
   box-shadow:
     0 24px 60px rgba(0, 0, 0, 0.42),
@@ -4274,7 +4290,7 @@
 
 :where(.builder-scope) .perfume-details-actions button:first-child {
   border: 0;
-  background: #4ade80;
+  background: var(--builder-color-accent, #4ade80);
   color: #052e16;
 }
 
@@ -4297,7 +4313,7 @@
   padding: 30px;
   border-radius: 20px;
   background:
-    radial-gradient(circle at 15% 0, rgba(74, 222, 128, 0.11), transparent 34%),
+    radial-gradient(circle at 15% 0, color-mix(in srgb, var(--builder-color-accent, #4ade80) 11%, transparent), transparent 34%),
     radial-gradient(circle at 85% 8%, rgba(250, 204, 21, 0.08), transparent 30%),
     #08110d;
   border: 1px solid rgba(255, 255, 255, 0.12);
@@ -4347,7 +4363,7 @@
 
 :where(.builder-scope) .collection-card-preview-header span {
   display: block;
-  color: #86efac;
+  color: var(--builder-color-accent, #86efac);
   font-size: var(--builder-unit-068);
   font-weight: 900;
   letter-spacing: 0.08em;
@@ -4364,7 +4380,7 @@
 :where(.builder-scope) .final-summary-section h4,
 :where(.builder-scope) .final-analysis-grid span,
 :where(.builder-scope) .final-profile-group > span {
-  color: #86efac;
+  color: var(--builder-color-accent, #86efac);
   font-size: var(--builder-unit-074);
   font-weight: 900;
   letter-spacing: 0.08em;
@@ -4376,7 +4392,7 @@
   padding: 16px;
   border-radius: 16px;
   background: rgba(15, 23, 42, 0.58);
-  border: 1px solid rgba(74, 222, 128, 0.18);
+  border: 1px solid color-mix(in srgb, var(--builder-color-accent, #4ade80) 18%, transparent);
 }
 
 :where(.builder-scope) .collection-identity span,
@@ -4405,11 +4421,11 @@
 :where(.builder-scope) .review-overview-section {
   margin-top: 8px;
   padding: 14px 16px;
-  border: 1px solid rgba(74, 222, 128, 0.18);
+  border: 1px solid color-mix(in srgb, var(--builder-color-accent, #4ade80) 18%, transparent);
   border-radius: 16px;
   background:
     radial-gradient(circle at 12% 0, rgba(250, 204, 21, 0.1), transparent 38%),
-    radial-gradient(circle at 88% 8%, rgba(74, 222, 128, 0.08), transparent 32%),
+    radial-gradient(circle at 88% 8%, color-mix(in srgb, var(--builder-color-accent, #4ade80) 8%, transparent), transparent 32%),
     rgba(15, 23, 42, 0.46);
 }
 
@@ -4421,7 +4437,7 @@
 :where(.builder-scope) .review-section-heading span,
 :where(.builder-scope) .review-overview-section h5 {
   margin: 0;
-  color: #86efac;
+  color: var(--builder-color-accent, #86efac);
   font-size: var(--builder-unit-072);
   font-weight: 900;
   letter-spacing: 0.08em;
@@ -4448,11 +4464,11 @@
 
 :where(.builder-scope) .review-assessment-badge {
   justify-self: start;
-  border: 1px solid rgba(134, 239, 172, 0.2);
+  border: 1px solid color-mix(in srgb, var(--builder-color-accent, #86efac) 20%, transparent);
   border-radius: 999px;
   padding: 4px 9px;
-  background: rgba(74, 222, 128, 0.08);
-  color: #bbf7d0;
+  background: color-mix(in srgb, var(--builder-color-accent, #4ade80) 8%, transparent);
+  color: var(--builder-color-accent, #bbf7d0);
   font-size: var(--builder-unit-070);
   font-weight: 900;
   letter-spacing: 0.06em;
@@ -4494,7 +4510,7 @@
 }
 
 :where(.builder-scope) .review-customer-form span {
-  color: #86efac;
+  color: var(--builder-color-accent, #86efac);
   font-size: var(--builder-unit-068);
   font-weight: 900;
   letter-spacing: 0.08em;
@@ -4563,7 +4579,7 @@
 :where(.builder-scope) .review-list li::before {
   position: absolute;
   left: 0;
-  color: #86efac;
+  color: var(--builder-color-accent, #86efac);
   font-weight: 900;
 }
 
@@ -4609,7 +4625,7 @@
 
 :where(.builder-scope) .review-curator-grid span {
   display: block;
-  color: #86efac;
+  color: var(--builder-color-accent, #86efac);
   font-size: var(--builder-unit-068);
   font-weight: 900;
   letter-spacing: 0.08em;
@@ -4658,7 +4674,7 @@
   border: 0;
   border-radius: 999px;
   padding: 10px 16px;
-  background: linear-gradient(180deg, #6ee7b7, #4ade80);
+  background: linear-gradient(180deg, var(--builder-color-accent, #6ee7b7), var(--builder-color-accent, #4ade80));
   color: #04110b;
   font-weight: 900;
 }
@@ -4679,7 +4695,7 @@
   gap: 12px;
   margin-top: 14px;
   padding: 14px;
-  border: 1px solid rgba(134, 239, 172, 0.14);
+  border: 1px solid color-mix(in srgb, var(--builder-color-accent, #86efac) 14%, transparent);
   border-radius: 16px;
   background:
     radial-gradient(circle at 12% 0, rgba(250, 204, 21, 0.06), transparent 42%),
@@ -4701,7 +4717,7 @@
 :where(.builder-scope) .compose-box-header span,
 :where(.builder-scope) .compose-box-controls span {
   display: block;
-  color: #86efac;
+  color: var(--builder-color-accent, #86efac);
   font-size: var(--builder-unit-066);
   font-weight: 900;
   letter-spacing: 0.08em;
@@ -4724,7 +4740,7 @@
   border: 0;
   border-radius: 999px;
   padding: 9px 13px;
-  background: linear-gradient(180deg, #6ee7b7, #4ade80);
+  background: linear-gradient(180deg, var(--builder-color-accent, #6ee7b7), var(--builder-color-accent, #4ade80));
   color: #04110b;
   font-size: var(--builder-unit-082);
   font-weight: 900;
@@ -4732,7 +4748,7 @@
 
 :where(.builder-scope) .composer-busy-status {
   margin: 10px 0 0;
-  color: #d9f99d;
+  color: var(--builder-color-accent, #d9f99d);
   font-size: var(--builder-unit-082);
   font-weight: 800;
 }
@@ -4803,7 +4819,7 @@
 :where(.builder-scope) .compose-preference-heading button {
   border: 0;
   background: transparent;
-  color: #bbf7d0;
+  color: var(--builder-color-accent, #bbf7d0);
   font-size: var(--builder-unit-070);
   font-weight: 900;
 }
@@ -4825,8 +4841,8 @@
 }
 
 :where(.builder-scope) .compose-preference-chips button.is-selected {
-  border-color: rgba(134, 239, 172, 0.44);
-  background: rgba(74, 222, 128, 0.14);
+  border-color: color-mix(in srgb, var(--builder-color-accent, #86efac) 44%, transparent);
+  background: color-mix(in srgb, var(--builder-color-accent, #4ade80) 14%, transparent);
   color: #dcfce7;
 }
 
@@ -4847,12 +4863,12 @@
 }
 
 :where(.builder-scope) .composer-budget-bonus-eligible {
-  color: #bbf7d0;
+  color: var(--builder-color-accent, #bbf7d0);
 }
 
 :where(.builder-scope) .compose-preference-chips button:focus-visible,
 :where(.builder-scope) .compose-preference-heading button:focus-visible {
-  outline: 2px solid rgba(134, 239, 172, 0.7);
+  outline: 2px solid color-mix(in srgb, var(--builder-color-accent, #86efac) 70%, transparent);
   outline-offset: 2px;
 }
 
@@ -4925,7 +4941,7 @@
 }
 
 :where(.builder-scope) .composer-proposal-bonus-unlocked {
-  color: #bbf7d0;
+  color: var(--builder-color-accent, #bbf7d0);
 }
 
 :where(.builder-scope) .composer-proposal-list {
@@ -4974,11 +4990,11 @@
 
 :where(.builder-scope) .composer-proposal-item-reasons span {
   margin: 0;
-  border: 1px solid rgba(134, 239, 172, 0.2);
+  border: 1px solid color-mix(in srgb, var(--builder-color-accent, #86efac) 20%, transparent);
   border-radius: 999px;
   padding: 4px 7px;
-  background: rgba(74, 222, 128, 0.1);
-  color: #bbf7d0;
+  background: color-mix(in srgb, var(--builder-color-accent, #4ade80) 10%, transparent);
+  color: var(--builder-color-accent, #bbf7d0);
   font-size: var(--builder-unit-070);
   font-weight: 900;
 }
@@ -4987,10 +5003,10 @@
   flex: 0 0 auto;
   width: 30px;
   height: 30px;
-  border: 1px solid rgba(134, 239, 172, 0.22);
+  border: 1px solid color-mix(in srgb, var(--builder-color-accent, #86efac) 22%, transparent);
   border-radius: 999px;
   background: rgba(15, 23, 42, 0.58);
-  color: #bbf7d0;
+  color: var(--builder-color-accent, #bbf7d0);
   font-size: var(--builder-unit-120);
   font-weight: 900;
   line-height: 1;
@@ -5002,8 +5018,8 @@
 
 :where(.builder-scope) .composer-proposal-alt-button:hover,
 :where(.builder-scope) .composer-proposal-alt-button:focus-visible {
-  border-color: rgba(134, 239, 172, 0.5);
-  background: rgba(34, 197, 94, 0.14);
+  border-color: color-mix(in srgb, var(--builder-color-accent, #86efac) 50%, transparent);
+  background: color-mix(in srgb, var(--builder-color-accent-strong, #22c55e) 14%, transparent);
   color: #ecfdf5;
 }
 
@@ -5060,8 +5076,8 @@
   flex: 0 0 auto;
   border-radius: 999px;
   padding: 4px 8px;
-  background: rgba(134, 239, 172, 0.09);
-  color: #bbf7d0;
+  background: color-mix(in srgb, var(--builder-color-accent, #86efac) 9%, transparent);
+  color: var(--builder-color-accent, #bbf7d0);
   font-size: var(--builder-unit-068);
   font-weight: 900;
   letter-spacing: 0.06em;
@@ -5089,7 +5105,7 @@
 
 :where(.builder-scope) .review-finalize-status {
   margin: 10px 0 0;
-  color: #86efac;
+  color: var(--builder-color-accent, #86efac);
   font-size: var(--builder-unit-084);
   font-weight: 800;
   text-align: right;
@@ -5101,8 +5117,8 @@
   margin-top: 10px;
   border-radius: 999px;
   padding: 9px 14px;
-  background: rgba(74, 222, 128, 0.12);
-  color: #bbf7d0;
+  background: color-mix(in srgb, var(--builder-color-accent, #4ade80) 12%, transparent);
+  color: var(--builder-color-accent, #bbf7d0);
   font-size: var(--builder-unit-084);
   font-weight: 900;
   text-decoration: none;
@@ -5130,15 +5146,15 @@
 }
 
 :where(.builder-scope) .final-readiness-grid div.ready {
-  border-color: rgba(74, 222, 128, 0.22);
+  border-color: color-mix(in srgb, var(--builder-color-accent, #4ade80) 22%, transparent);
   background:
-    radial-gradient(circle at 12% 0, rgba(74, 222, 128, 0.1), transparent 42%),
+    radial-gradient(circle at 12% 0, color-mix(in srgb, var(--builder-color-accent, #4ade80) 10%, transparent), transparent 42%),
     rgba(15, 23, 42, 0.54);
 }
 
 :where(.builder-scope) .final-readiness-grid span {
   display: block;
-  color: #86efac;
+  color: var(--builder-color-accent, #86efac);
   font-size: var(--builder-unit-068);
   font-weight: 900;
   letter-spacing: 0.08em;
@@ -5218,7 +5234,7 @@
   border: 0;
   border-radius: 999px;
   padding: 9px 13px;
-  background: #4ade80;
+  background: var(--builder-color-accent, #4ade80);
   color: #052e16;
   font-weight: 900;
 }
@@ -5266,7 +5282,7 @@
 }
 
 :where(.builder-scope) .seller-order-summary .copy-status {
-  color: #86efac;
+  color: var(--builder-color-accent, #86efac);
   font-weight: 800;
 }
 
@@ -5303,7 +5319,7 @@
 :where(.builder-scope) .final-summary-section.review-overview-section {
   margin-top: 8px;
   padding: 14px 16px;
-  border: 1px solid rgba(74, 222, 128, 0.18);
+  border: 1px solid color-mix(in srgb, var(--builder-color-accent, #4ade80) 18%, transparent);
 }
 
 :where(.builder-scope) .final-summary-section.review-curator-note-section {
@@ -5329,7 +5345,7 @@
 
 :where(.builder-scope) .final-fragrance-list article > strong {
   white-space: nowrap;
-  color: #86efac;
+  color: var(--builder-color-accent, #86efac);
 }
 
 :where(.builder-scope) .final-fragrance-list article div strong,
@@ -5365,9 +5381,9 @@
 :where(.builder-scope) .final-summary-tags span {
   padding: 5px 9px;
   border-radius: 999px;
-  background: rgba(74, 222, 128, 0.09);
-  border: 1px solid rgba(74, 222, 128, 0.18);
-  color: #bbf7d0;
+  background: color-mix(in srgb, var(--builder-color-accent, #4ade80) 9%, transparent);
+  border: 1px solid color-mix(in srgb, var(--builder-color-accent, #4ade80) 18%, transparent);
+  color: var(--builder-color-accent, #bbf7d0);
   font-size: var(--builder-unit-078);
   font-weight: 800;
 }
@@ -5419,14 +5435,14 @@
   padding: 13px;
   border-radius: 14px;
   background:
-    linear-gradient(180deg, rgba(74, 222, 128, 0.08), rgba(2, 6, 23, 0.45));
-  border: 1px solid rgba(74, 222, 128, 0.16);
+    linear-gradient(180deg, color-mix(in srgb, var(--builder-color-accent, #4ade80) 8%, transparent), rgba(2, 6, 23, 0.45));
+  border: 1px solid color-mix(in srgb, var(--builder-color-accent, #4ade80) 16%, transparent);
 }
 
 :where(.builder-scope) .scent-dna-score span,
 :where(.builder-scope) .scent-dna-group > span {
   display: block;
-  color: #86efac;
+  color: var(--builder-color-accent, #86efac);
   font-size: var(--builder-unit-072);
   font-weight: 900;
   letter-spacing: 0.08em;
@@ -5501,7 +5517,7 @@
   height: 100%;
   max-width: 100%;
   border-radius: inherit;
-  background: linear-gradient(90deg, #6ee7b7, #22c55e);
+  background: linear-gradient(90deg, var(--builder-color-accent, #6ee7b7), var(--builder-color-accent-strong, #22c55e));
 }
 
 :where(.builder-scope) .modal-overlay {
@@ -5595,14 +5611,14 @@
 }
 
 :where(.builder-scope) .modal-actions button:first-child {
-  background: #6ee7b7;
+  background: var(--builder-color-accent, #6ee7b7);
   border: none;
   color: #04110b;
 }
 
 :where(.builder-scope) .modal-actions button:last-child {
   background: transparent;
-  border: 1px solid rgba(110, 231, 183, 0.35);
+  border: 1px solid color-mix(in srgb, var(--builder-color-accent, #6ee7b7) 35%, transparent);
   color: #b7f7d3;
 }
 
@@ -5648,7 +5664,7 @@
   padding: 14px;
   border-radius: 16px;
   background:
-    radial-gradient(circle at 14% 0, rgba(74, 222, 128, 0.09), transparent 34%),
+    radial-gradient(circle at 14% 0, color-mix(in srgb, var(--builder-color-accent, #4ade80) 9%, transparent), transparent 34%),
     rgba(2, 6, 23, 0.34);
   border: 1px solid rgba(148, 163, 184, 0.13);
 }
@@ -5731,7 +5747,7 @@
 
 :where(.builder-scope) .collection-snapshot-header h3 {
   margin: 0;
-  color: rgba(134, 239, 172, 0.68);
+  color: color-mix(in srgb, var(--builder-color-accent, #86efac) 68%, transparent);
   font-size: var(--builder-unit-078);
   font-weight: 900;
   letter-spacing: 0.08em;
@@ -5769,7 +5785,7 @@
 :where(.builder-scope) .collection-balance-summary > span,
 :where(.builder-scope) .summary-panel > div > span {
   display: block;
-  color: #4ade80;
+  color: var(--builder-color-accent, #4ade80);
   font-weight: 800;
   font-size: var(--builder-unit-078);
   text-transform: uppercase;
@@ -6037,7 +6053,7 @@
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 20px;
   background:
-    radial-gradient(circle at 12% 0, rgba(74, 222, 128, 0.10), transparent 34%),
+    radial-gradient(circle at 12% 0, color-mix(in srgb, var(--builder-color-accent, #4ade80) 10%, transparent), transparent 34%),
     radial-gradient(circle at 90% 8%, rgba(250, 204, 21, 0.08), transparent 32%),
     #08110d;
   box-shadow: 0 28px 90px rgba(0, 0, 0, 0.58);
@@ -6055,7 +6071,7 @@
   padding: 18px 20px 14px;
   border-bottom: 1px solid rgba(148, 163, 184, 0.11);
   background:
-    radial-gradient(circle at 12% 0, rgba(74, 222, 128, 0.10), transparent 34%),
+    radial-gradient(circle at 12% 0, color-mix(in srgb, var(--builder-color-accent, #4ade80) 10%, transparent), transparent 34%),
     rgba(8, 17, 13, 0.94);
   backdrop-filter: blur(12px);
 }
@@ -6063,7 +6079,7 @@
 :where(.builder-scope) .dna-modal-header span,
 :where(.builder-scope) .dna-modal-section > span {
   display: block;
-  color: #86efac;
+  color: var(--builder-color-accent, #86efac);
   font-size: var(--builder-unit-070);
   font-weight: 900;
   letter-spacing: 0.08em;
@@ -6419,7 +6435,7 @@
 :where(.builder-scope) .dna-quick-detail p span {
   display: inline;
   margin-right: 5px;
-  color: #86efac;
+  color: var(--builder-color-accent, #86efac);
   font-weight: 900;
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -7352,8 +7368,8 @@
   display: block;
   height: 100%;
   border-radius: inherit;
-  background: linear-gradient(90deg, rgba(74, 222, 128, 0.72), rgba(250, 204, 21, 0.70));
-  box-shadow: 0 0 14px rgba(74, 222, 128, 0.12);
+  background: linear-gradient(90deg, color-mix(in srgb, var(--builder-color-accent, #4ade80) 72%, transparent), rgba(250, 204, 21, 0.70));
+  box-shadow: 0 0 14px color-mix(in srgb, var(--builder-color-accent, #4ade80) 12%, transparent);
 }
 
 :where(.builder-scope) .collection-snapshot-details {
@@ -7413,7 +7429,7 @@
 }
 
 :where(.builder-scope) .season-profile-copy > span {
-  color: #4ade80;
+  color: var(--builder-color-accent, #4ade80);
   font-size: var(--builder-unit-076);
   font-weight: 900;
   letter-spacing: 0.08em;
@@ -7462,11 +7478,11 @@
 }
 
 :where(.builder-scope) .season-profile-shape {
-  fill: rgba(74, 222, 128, 0.20);
+  fill: color-mix(in srgb, var(--builder-color-accent, #4ade80) 20%, transparent);
   stroke: rgba(250, 204, 21, 0.76);
   stroke-linejoin: round;
   stroke-width: 1.4;
-  filter: drop-shadow(0 0 8px rgba(74, 222, 128, 0.10));
+  filter: drop-shadow(0 0 8px color-mix(in srgb, var(--builder-color-accent, #4ade80) 10%, transparent));
 }
 
 :where(.builder-scope) .season-profile-chart.is-empty .season-profile-shape {
@@ -7505,7 +7521,7 @@
 
 :where(.builder-scope) .coverage-strength::before {
   content: "\2713";
-  color: #86efac;
+  color: var(--builder-color-accent, #86efac);
   font-weight: 900;
 }
 
@@ -7526,7 +7542,7 @@
 :where(.builder-scope) .seasonal-gaps h4 {
   margin-bottom: 6px;
 
-  color: rgba(134, 239, 172, 0.55);
+  color: color-mix(in srgb, var(--builder-color-accent, #86efac) 55%, transparent);
 
   font-size: var(--builder-unit-075);
   font-weight: 700;
@@ -7561,7 +7577,7 @@
   padding: 13px;
   border-radius: 16px;
   background:
-    radial-gradient(circle at 14% 0, rgba(134, 239, 172, 0.08), transparent 34%),
+    radial-gradient(circle at 14% 0, color-mix(in srgb, var(--builder-color-accent, #86efac) 8%, transparent), transparent 34%),
     rgba(2, 6, 23, 0.30);
   border: 1px solid rgba(148, 163, 184, 0.12);
 }
@@ -7576,7 +7592,7 @@
 }
 
 :where(.builder-scope) .next-improvement-copy span {
-  color: rgba(134, 239, 172, 0.62);
+  color: color-mix(in srgb, var(--builder-color-accent, #86efac) 62%, transparent);
   font-size: var(--builder-unit-068);
   font-weight: 900;
   letter-spacing: 0.08em;
@@ -7636,7 +7652,7 @@
 
 :where(.builder-scope) .recommendations h4 {
   margin: 0;
-  color: rgba(134, 239, 172, 0.62);
+  color: color-mix(in srgb, var(--builder-color-accent, #86efac) 62%, transparent);
   font-size: var(--builder-unit-075);
   font-weight: 800;
   letter-spacing: 0.08em;
@@ -7794,9 +7810,9 @@
 }
 
 :where(.builder-scope) .recommendation-confidence-high {
-  border-color: rgba(74, 222, 128, 0.26);
-  background: rgba(74, 222, 128, 0.10);
-  color: #bbf7d0;
+  border-color: color-mix(in srgb, var(--builder-color-accent, #4ade80) 26%, transparent);
+  background: color-mix(in srgb, var(--builder-color-accent, #4ade80) 10%, transparent);
+  color: var(--builder-color-accent, #bbf7d0);
 }
 
 :where(.builder-scope) .recommendation-confidence-medium {
@@ -7831,7 +7847,7 @@
 
 :where(.builder-scope) .recommendation-reasons p::before {
   content: "\2713";
-  color: #86efac;
+  color: var(--builder-color-accent, #86efac);
   font-weight: 900;
 }
 
@@ -7845,7 +7861,7 @@
   border: 0;
   border-radius: 999px;
   padding: 7px 11px;
-  background: #4ade80;
+  background: var(--builder-color-accent, #4ade80);
   color: #052e16;
   font-size: var(--builder-unit-072);
   font-weight: 900;

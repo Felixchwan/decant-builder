@@ -70,6 +70,7 @@ function App({
   finalizationAdapter,
   initialFragranceId = null,
   initialRecommendationHint = null,
+  explainRecommendation,
   assetResolver,
   isDevelopment = false,
 }) {
@@ -882,7 +883,8 @@ const confirmAddPerfume = () => {
                 </div>
 
                 <div className="catalog-grid">
-                  {intentRecommendations.map(({ perfume }) => {
+                  {intentRecommendations.map((recommendation) => {
+                    const { perfume } = recommendation;
                     const tierData = getTierData(perfume.id);
 
                     return (
@@ -891,6 +893,7 @@ const confirmAddPerfume = () => {
                         perfume={perfume}
                         assetResolver={assetResolver}
                         tierData={tierData}
+                        reason={explainRecommendation?.(recommendation)}
                         onAddToBox={(addedPerfume) => addPerfume(addedPerfume, "intent_recommendation")}
                         onOpenDetails={(perfume) => openPerfumeDetails(perfume, "intent_recommendation")}
                         isDisabled={totalSlots >= MAX_SELECTABLE_SLOTS}

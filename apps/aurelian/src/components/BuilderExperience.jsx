@@ -9,6 +9,7 @@ import { aurelianCatalog } from "../merchant/catalog.js";
 import { aurelianConfig } from "../merchant/config.js";
 import { parseFragranceIntent, FRAGRANCE_QUERY_PARAM } from "../lib/parseFragranceIntent.js";
 import { getIntentRecommendationHint } from "../discoveryIntent/intentRecommendationPolicy.js";
+import { explainRecommendation } from "../discoveryIntent/recommendationExplanation.js";
 import { DiscoveryIntentScreen } from "./DiscoveryIntentScreen.jsx";
 
 const assetResolver = createCatalogAssetResolver({ basePath: "/catalog-assets" });
@@ -61,6 +62,7 @@ export function BuilderExperience({ isDevelopment = false }) {
       isDevelopment={isDevelopment}
       initialFragranceId={initialFragranceId}
       initialRecommendationHint={getIntentRecommendationHint(selectedIntentId)}
+      explainRecommendation={explainRecommendation}
       finalizationAdapter={finalizationAdapter}
       notes={notes}
     />

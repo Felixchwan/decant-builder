@@ -152,7 +152,7 @@ describe("Aurelian application foundation", () => {
     expect(markup.match(/href="\/catalogo\?fragrance=\d+"/g)).toHaveLength(4);
     expect(markup.match(/width="240"/g)).toHaveLength(4);
     expect(markup.match(/height="240"/g)).toHaveLength(4);
-    expect(stylesheet).toMatch(/\.seasonal-card__image\s*\{[^}]*aspect-ratio:4\/3/);
+    expect(stylesheet).toMatch(/\.seasonal-card__image\s*\{[^}]*aspect-ratio:1\/1/);
   });
 
   it("keeps seasonal timing and catalog highlighting host-owned and safely paused", () => {

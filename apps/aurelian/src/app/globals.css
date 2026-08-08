@@ -63,7 +63,7 @@ h1 { max-width:15ch; margin-bottom:1.4rem; font-size:clamp(2.8rem,7vw,6.4rem); }
 .seasonal-card__link { display:block; height:100%; padding:1.3rem; opacity:1; transition:opacity .35s ease; }
 .seasonal-card--exiting .seasonal-card__link { opacity:0; pointer-events:none; }
 .seasonal-card--entering .seasonal-card__link { opacity:1; pointer-events:none; }
-.seasonal-card__image { display:grid; width:100%; aspect-ratio:4/3; place-items:center; margin-bottom:.75rem; overflow:hidden; }
+.seasonal-card__image { display:grid; width:100%; aspect-ratio:1/1; place-items:center; margin-bottom:.75rem; overflow:hidden; }
 .featured-grid img { width:100%; height:100%; object-fit:contain; transition:opacity .25s ease; }
 .seasonal-card__season { margin-bottom:.65rem; color:var(--secondary); font-size:.72rem; letter-spacing:.08em; text-transform:uppercase; }
 .featured-grid h3 { min-height:4.8rem; font-family:Georgia,serif; font-weight:400; }
@@ -75,11 +75,12 @@ h1 { max-width:15ch; margin-bottom:1.4rem; font-size:clamp(2.8rem,7vw,6.4rem); }
 .final-cta { padding-block:3rem; text-align:center; }
 .final-cta h2 { max-width:18ch; margin-inline:auto; font-family:Georgia,serif; font-size:clamp(2.5rem,6vw,5rem); font-weight:400; line-height:1.05; }
 .final-cta > p:not(.eyebrow) { max-width:38rem; margin:0 auto 2rem; color:var(--secondary); }
-.site-footer { width:min(1240px,calc(100% - 2rem)); margin:auto; padding:3rem 0; display:grid; grid-template-columns:1fr auto; gap:2rem; border-top:1px solid var(--border); color:var(--muted); font-size:.85rem; }
+.site-footer { width:min(1240px,calc(100% - 2rem)); margin:auto; padding:1.75rem 0; display:grid; grid-template-columns:auto 1fr auto; align-items:center; gap:1.5rem; border-top:1px solid var(--border); color:var(--muted); font-size:.82rem; }
 .site-footer strong { color:var(--text); letter-spacing:.15em; }
-.site-footer nav { display:flex; gap:1.5rem; }
-.site-footer__note { grid-column:1/-1; }
-.page-intro { padding-block:clamp(3.5rem,7vw,6.5rem); }
+.site-footer p { margin:.2rem 0 0; }
+.site-footer nav { display:flex; justify-content:center; gap:1.5rem; }
+.site-footer__note { margin:0; text-align:right; }
+.page-intro { padding-block:clamp(3.5rem,7vw,6.5rem) 2.5rem; }
 .page-intro--compact { padding-block:clamp(2.5rem,4vw,3.5rem) 1.75rem; }
 .page-intro h1 { font-size:clamp(2.7rem,6vw,5.5rem); }
 .catalog-controls { display:grid; grid-template-columns:1fr 14rem; gap:1rem; margin-top:3.5rem; padding:1.25rem; border:1px solid var(--border); background:var(--surface); }
@@ -161,8 +162,9 @@ body:has(.discovery-intent) #builder-entry-header { display:none; }
   .catalog-controls { grid-template-columns:1fr; }
   .catalog-status { align-items:flex-start; flex-direction:column; gap:.35rem; }
   .catalog-status p:last-child { text-align:left; }
-  .site-footer { grid-template-columns:1fr; }
-  .site-footer nav { align-items:flex-start; flex-direction:column; gap:.5rem; }
+  .site-footer { grid-template-columns:1fr; gap:1rem; }
+  .site-footer nav { justify-content:flex-start; align-items:flex-start; flex-direction:column; gap:.5rem; }
+  .site-footer__note { text-align:left; }
   .process-list article { grid-template-columns:3rem 1fr; }
 }
 @media (prefers-reduced-motion:reduce) { html { scroll-behavior:auto; } *,*::before,*::after { scroll-behavior:auto!important; transition-duration:.01ms!important; animation-duration:.01ms!important; animation-iteration-count:1!important; } .hero-media__video { display:none; } .seasonal-card__link { opacity:1!important; } }

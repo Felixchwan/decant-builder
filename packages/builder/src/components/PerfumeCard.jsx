@@ -4,6 +4,7 @@ function PerfumeCard({
   perfume,
   assetResolver,
   tierData,
+  reason,
   onAddToBox,
   onOpenDetails,
   isDisabled,
@@ -67,6 +68,7 @@ function PerfumeCard({
                 )}
               </div>
 
+              {reason && <p className="perfume-card-reason">{reason}</p>}
             </div>
           </div>
         </div>

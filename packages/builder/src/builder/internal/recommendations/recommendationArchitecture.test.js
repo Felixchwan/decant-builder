@@ -97,6 +97,15 @@ describe("recommendation architecture", () => {
       "Quiero explorar todo",
       "Aurelian",
       "aurelian",
+      // Recommendation Explainability v1 — Aurelian's own reason-line copy
+      // (apps/aurelian/src/discoveryIntent/recommendationExplanation.js)
+      // must never leak into shared Builder code either.
+      "Pensado para noche y citas",
+      "Pensado para la noche",
+      "Pensado para citas",
+      "Versátil para uso diario",
+      "Pensado para ocasiones especiales",
+      "Versátil: funciona en distintas ocasiones",
     ];
     const offenders = getSourceFiles(srcRoot)
       // getSourceFiles only strips ".test.js" — production vocabulary is

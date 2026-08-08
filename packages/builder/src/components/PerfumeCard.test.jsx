@@ -75,6 +75,20 @@ describe("PerfumeCard", () => {
     expect(markup).toContain("Add to box");
   });
 
+  it("renders an optional reason line, clamped to two lines, only when supplied", () => {
+    const withoutReason = renderPerfumeCard();
+    expect(withoutReason).not.toContain("perfume-card-reason");
+
+    const withReason = renderPerfumeCard({}, { reason: "Fresco y limpio." });
+    expect(withReason).toContain('class="perfume-card-reason"');
+    expect(withReason).toContain("Fresco y limpio.");
+  });
+
+  it("omits the reason line for a null/undefined reason (the default for the main catalog grid)", () => {
+    const markup = renderPerfumeCard({}, { reason: null });
+    expect(markup).not.toContain("perfume-card-reason");
+  });
+
   it("keeps localized full and compact add labels available without changing disabled behavior", () => {
     const markup = renderPerfumeCard({}, {
       isDisabled: true,
