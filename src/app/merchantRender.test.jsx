@@ -70,6 +70,16 @@ describe("merchant-localized Builder render", () => {
     expect(appSource).toContain("assetResolver={assetResolver}");
   });
 
+  it("never shows the intent-recommendation surface for Discovery Decants, which never supplies a hint", () => {
+    const markup = renderBuilder(discoveryDecantsConfig);
+
+    expect(markup).not.toContain("intent-recommendations");
+    expect(markup).not.toContain("Recommended for you");
+
+    const discoverySource = readFileSync("src/app/DiscoveryDecantsApp.jsx", "utf8");
+    expect(discoverySource).not.toContain("initialRecommendationHint");
+  });
+
   it("keeps generic WhatsApp adapter construction in each merchant host", () => {
     const discoverySource = readFileSync("src/app/DiscoveryDecantsApp.jsx", "utf8");
     const aurelianSource = readFileSync("apps/aurelian/src/components/BuilderExperience.jsx", "utf8");

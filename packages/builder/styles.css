@@ -648,6 +648,50 @@
   gap: 14px;
 }
 
+:where(.builder-scope) .intent-recommendations {
+  margin-bottom: 22px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.16);
+}
+
+:where(.builder-scope) .intent-recommendations .catalog-grid {
+  margin-bottom: 0;
+}
+
+:where(.builder-scope) .intent-recommendations__header {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+:where(.builder-scope) .intent-recommendations__header h3 {
+  margin: 0;
+}
+
+:where(.builder-scope) .intent-recommendations__nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+:where(.builder-scope) .intent-recommendations__nav--catalog {
+  margin-bottom: 10px;
+}
+
+:where(.builder-scope) .intent-recommendations__nav button {
+  border: 1px solid rgba(148, 163, 184, 0.24);
+  background: var(--builder-color-surface-elevated, rgba(15, 23, 42, 0.72));
+  color: var(--builder-color-text, #ecfdf5);
+  border-radius: 999px;
+  padding: 8px 16px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
 :where(.builder-scope) .perfume-card {
   position: relative;
   display: flex;

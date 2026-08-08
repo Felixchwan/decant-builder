@@ -8,7 +8,7 @@ import { createCatalogAssetResolver, notes } from "@discovery-box/catalog";
 import { aurelianCatalog } from "../merchant/catalog.js";
 import { aurelianConfig } from "../merchant/config.js";
 import { parseFragranceIntent, FRAGRANCE_QUERY_PARAM } from "../lib/parseFragranceIntent.js";
-import { getDiscoveryIntentCatalogFilters } from "../discoveryIntent/discoveryIntentOptions.js";
+import { getIntentRecommendationHint } from "../discoveryIntent/intentRecommendationPolicy.js";
 import { DiscoveryIntentScreen } from "./DiscoveryIntentScreen.jsx";
 
 const assetResolver = createCatalogAssetResolver({ basePath: "/catalog-assets" });
@@ -60,7 +60,7 @@ export function BuilderExperience({ isDevelopment = false }) {
       config={aurelianConfig}
       isDevelopment={isDevelopment}
       initialFragranceId={initialFragranceId}
-      initialCatalogFilters={getDiscoveryIntentCatalogFilters(selectedIntentId)}
+      initialRecommendationHint={getIntentRecommendationHint(selectedIntentId)}
       finalizationAdapter={finalizationAdapter}
       notes={notes}
     />

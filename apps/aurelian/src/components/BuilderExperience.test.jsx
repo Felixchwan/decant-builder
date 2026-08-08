@@ -83,10 +83,10 @@ describe("BuilderExperience entry routing", () => {
 
     expect(markup).not.toContain("¿Qué buscas hoy?");
     expect(builderCalls).toHaveLength(1);
-    expect(builderCalls[0].initialCatalogFilters).toBeNull();
+    expect(builderCalls[0].initialRecommendationHint).toBeNull();
   });
 
-  it("skips the Discovery Intent screen when a deep-linked fragrance is present, and applies no catalog filter", () => {
+  it("skips the Discovery Intent screen when a deep-linked fragrance is present, and applies no recommendation hint", () => {
     mockWindow({ search: "?fragrance=1" });
 
     const markup = renderToStaticMarkup(<BuilderExperience />);
@@ -94,7 +94,7 @@ describe("BuilderExperience entry routing", () => {
     expect(markup).not.toContain("¿Qué buscas hoy?");
     expect(builderCalls).toHaveLength(1);
     expect(builderCalls[0].initialFragranceId).toBe(1);
-    expect(builderCalls[0].initialCatalogFilters).toBeNull();
+    expect(builderCalls[0].initialRecommendationHint).toBeNull();
   });
 });
 

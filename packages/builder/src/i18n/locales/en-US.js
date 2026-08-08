@@ -23,6 +23,10 @@ export const enUS = {
   "general.boxFull": "Box full",
   "general.perfumesAvailable": "{count} perfumes available",
 
+  "app.intentRecommendationsTitle": "Recommended for you",
+  "app.intentRecommendationsNav": "Recommended for you",
+  "app.viewFullCatalogNav": "View full catalog ({count})",
+
   "app.mobileTabs": "Builder sections",
   "app.mobileExploreTab": "Explore",
   "app.heroTitle": "Build your fragrance box",

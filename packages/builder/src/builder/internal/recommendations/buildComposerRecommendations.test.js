@@ -3,6 +3,7 @@ import { createBuilderConfig } from "../../config/createBuilderConfig.js";
 import {
   buildComposerRecommendations,
   buildComposerRequestFromBuilderState,
+  buildIntentRecommendations,
 } from "./buildComposerRecommendations.js";
 
 const config = createBuilderConfig({
@@ -230,5 +231,84 @@ describe("buildComposerRecommendations", () => {
     const second = build({ perfumes: [...catalog].reverse() });
 
     expect(first).toEqual(second);
+  });
+});
+
+describe("buildIntentRecommendations", () => {
+  it("composes cold, from preferences and strategy alone, with no prior selection required", () => {
+    const results = buildIntentRecommendations({
+      perfumes: catalog,
+      notes: {},
+      config,
+      strategy: "balanced",
+      preferredOccasions: ["office"],
+      preferredVibes: ["clean"],
+      limit: 10,
+    });
+
+    expect(results.length).toBeGreaterThan(0);
+    results.forEach((recommendation) => {
+      expect(recommendation).toMatchObject({
+        perfume: { id: expect.any(Number) },
+        score: expect.any(Number),
+        explanations: expect.any(Array),
+      });
+    });
+  });
+
+  it("never returns a fragrance listed in excludedPerfumeIds, regardless of how well it would otherwise score", () => {
+    const results = buildIntentRecommendations({
+      perfumes: catalog,
+      notes: {},
+      config,
+      strategy: "versatile",
+      preferredOccasions: ["office"],
+      excludedPerfumeIds: [formal.id, smoky.id],
+      limit: 10,
+    });
+
+    expect(results.length).toBeGreaterThan(0);
+    expect(results.some((r) => r.perfume.id === formal.id)).toBe(false);
+    expect(results.some((r) => r.perfume.id === smoky.id)).toBe(false);
+  });
+
+  it("excludes fragrances already in the current selection, same as the existing lanes", () => {
+    const results = buildIntentRecommendations({
+      perfumes: catalog,
+      selectedPerfumes: [fresh, green],
+      notes: {},
+      config,
+      strategy: "balanced",
+      limit: 10,
+    });
+
+    expect(results.some((r) => r.perfume.id === fresh.id)).toBe(false);
+    expect(results.some((r) => r.perfume.id === green.id)).toBe(false);
+  });
+
+  it("returns an empty array once the selection already fills the box, and never throws on an empty catalog", () => {
+    expect(
+      buildIntentRecommendations({ perfumes: [], config, strategy: "balanced" })
+    ).toEqual([]);
+    expect(
+      buildIntentRecommendations({
+        perfumes: catalog,
+        selectedPerfumes: catalog.slice(0, config.box.maxSelectableSlots),
+        config,
+        strategy: "balanced",
+      })
+    ).toEqual([]);
+  });
+
+  it("returns at most `limit`, never padding to reach it when Composer produces fewer explainable results", () => {
+    const results = buildIntentRecommendations({
+      perfumes: catalog,
+      notes: {},
+      config,
+      strategy: "balanced",
+      limit: 1,
+    });
+
+    expect(results.length).toBeLessThanOrEqual(1);
   });
 });

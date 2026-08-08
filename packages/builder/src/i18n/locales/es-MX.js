@@ -23,6 +23,10 @@ export const esMX = {
   "general.boxFull": "Caja llena",
   "general.perfumesAvailable": "{count} fragancias disponibles",
 
+  "app.intentRecommendationsTitle": "Recomendado para ti",
+  "app.intentRecommendationsNav": "Recomendado para ti",
+  "app.viewFullCatalogNav": "Ver todo el catálogo ({count})",
+
   "app.mobileTabs": "Secciones del builder",
   "app.mobileExploreTab": "Explorar",
   "app.heroTitle": "Arma tu caja de fragancias",

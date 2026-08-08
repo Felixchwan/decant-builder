@@ -133,6 +133,59 @@ function buildComposerRecommendationLane({
     .slice(0, limit);
 }
 
+// Host-neutral entry point for a recommendation set driven by an
+// already-resolved preference/strategy hint, rather than derived from the
+// current selection (compare `basedOnYourPicks` above, which derives its
+// preferences from `selectedPerfumes`). Reuses the exact same lane pipeline —
+// no Composer scoring, weighting, or constraint logic is duplicated or
+// changed. `selectedPerfumes` is still honored (locked, and excluded from the
+// returned list) so the set naturally adapts as the host's caller builds a
+// box, exactly like the two lanes above already do.
+//
+// Vocabulary here is intentionally generic (strategy/preferred*/excluded*) —
+// this function has no concept of "Discovery Intent," "Fresco," "gift," or
+// any other host-specific naming. A host translates its own concept into
+// these Composer-native inputs before calling this.
+export function buildIntentRecommendations({
+  perfumes = [],
+  selectedPerfumes = [],
+  notes = {},
+  config,
+  limit = DEFAULT_LIMIT,
+  budget = null,
+  strategy = "balanced",
+  preferredSeasons = [],
+  preferredOccasions = [],
+  preferredVibes = [],
+  excludedPerfumeIds = [],
+} = {}) {
+  const builderConfig = requireComposerConfig(config);
+  const safePerfumes = Array.isArray(perfumes) ? perfumes : [];
+  const safeSelectedPerfumes = Array.isArray(selectedPerfumes) ? selectedPerfumes : [];
+  const selectedIds = new Set(safeSelectedPerfumes.map((perfume) => perfume.id));
+
+  if (
+    safePerfumes.length === 0 ||
+    safeSelectedPerfumes.length >= builderConfig.box.maxSelectableSlots
+  ) {
+    return [];
+  }
+
+  return buildComposerRecommendationLane({
+    perfumes: safePerfumes,
+    selectedPerfumes: safeSelectedPerfumes,
+    selectedIds,
+    notes,
+    config: builderConfig,
+    limit,
+    budget,
+    lane: "intentRecommendation",
+    strategy,
+    preferences: { preferredSeasons, preferredOccasions, preferredVibes },
+    excludedPerfumeIds,
+  });
+}
+
 export function buildComposerRequestFromBuilderState({
   selectedPerfumes = [],
   config,

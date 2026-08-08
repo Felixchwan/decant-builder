@@ -81,4 +81,35 @@ describe("recommendation architecture", () => {
 
     expect(composerFiles).toEqual([]);
   });
+
+  it("keeps recommendation-policy vocabulary (intent ids, merchant-specific labels) out of shared Builder code", () => {
+    // These are Aurelian's real Discovery Intent ids and Spanish labels
+    // (apps/aurelian/src/discoveryIntent/*). Shared Builder code must only
+    // ever see Composer's own vocabulary (strategy/preferred*/excluded*) —
+    // it has no concept of what a host's intent means or is called.
+    const forbiddenTerms = [
+      "fresh_everyday",
+      "intentional_evening",
+      "explore_freely",
+      "Fresco y cotidiano",
+      "Noche con intención",
+      "Es un regalo",
+      "Quiero explorar todo",
+      "Aurelian",
+      "aurelian",
+    ];
+    const offenders = getSourceFiles(srcRoot)
+      // getSourceFiles only strips ".test.js" — production vocabulary is
+      // the concern here, not what merchant name a ".test.jsx" fixture
+      // happens to use for unrelated coverage (e.g. theme rendering).
+      .filter((filePath) => !filePath.endsWith(".test.jsx"))
+      .map((filePath) => ({
+        filePath: toProjectPath(filePath),
+        source: readFileSync(filePath, "utf8"),
+      }))
+      .filter(({ source }) => forbiddenTerms.some((term) => source.includes(term)))
+      .map(({ filePath }) => filePath);
+
+    expect(offenders).toEqual([]);
+  });
 });

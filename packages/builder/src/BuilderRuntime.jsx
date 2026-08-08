@@ -20,7 +20,10 @@ import {
   isComposerBoxProposalStale,
   moveComposerProposalSlotAlternative,
 } from "./builder/internal/composition/buildComposerBoxProposal.js";
-import { buildComposerRecommendations } from "./builder/internal/recommendations/buildComposerRecommendations.js";
+import {
+  buildComposerRecommendations,
+  buildIntentRecommendations,
+} from "./builder/internal/recommendations/buildComposerRecommendations.js";
 import {
   brandAssets,
   metadataAssets,
@@ -66,7 +69,7 @@ function App({
   analytics = noopAnalytics,
   finalizationAdapter,
   initialFragranceId = null,
-  initialCatalogFilters = null,
+  initialRecommendationHint = null,
   assetResolver,
   isDevelopment = false,
 }) {
@@ -146,12 +149,11 @@ function App({
   const [activeMobileTab, setActiveMobileTab] = useState(
     initialFragranceIntent && initialFragranceIntent.status !== "unavailable" ? "box" : "catalog"
   );
-  const [activeFilters, setActiveFilters] = useState(() => ({
+  const [activeFilters, setActiveFilters] = useState({
     seasons: "",
     occasions: "",
     vibes: "",
-    ...(initialCatalogFilters || {}),
-  }));
+  });
   const [composerSettings, setComposerSettings] = useState({
     strategy: "balanced",
     collectionStyle: "balanced_mix",
@@ -171,6 +173,8 @@ function App({
       : null
   );
   const [detailPerfume, setDetailPerfume] = useState(null);
+  const intentRecommendationsRef = useRef(null);
+  const fullCatalogRef = useRef(null);
   const composerGenerationTimeoutRef = useRef(null);
   const composerGenerationIdRef = useRef(0);
   const hasTrackedAppLoadRef = useRef(false);
@@ -236,6 +240,25 @@ const recommendations = useMemo(() => {
     config: builderConfig,
   });
 }, [perfumes, selectedPerfumes, notes, builderConfig]);
+const intentRecommendations = useMemo(() => {
+  if (!initialRecommendationHint) {
+    return [];
+  }
+
+  return buildIntentRecommendations({
+    perfumes,
+    selectedPerfumes,
+    notes,
+    config: builderConfig,
+    limit: 10,
+    strategy: initialRecommendationHint.strategy,
+    preferredSeasons: initialRecommendationHint.preferredSeasons,
+    preferredOccasions: initialRecommendationHint.preferredOccasions,
+    preferredVibes: initialRecommendationHint.preferredVibes,
+    excludedPerfumeIds: initialRecommendationHint.excludedPerfumeIds,
+  });
+}, [initialRecommendationHint, perfumes, selectedPerfumes, notes, builderConfig]);
+const hasIntentRecommendations = intentRecommendations.length > 0;
 const composerBudget = parseComposerBudget(composerSettings.budget);
 const composerInputKey = useMemo(
   () =>
@@ -356,6 +379,10 @@ const isComposerProposalStale = isComposerBoxProposalStale(
       }
     };
   }, []);
+
+  function scrollToRef(ref) {
+    ref.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
 
   function handleFilterChange(category, value) {
     const nextFilters = {
@@ -840,7 +867,53 @@ const confirmAddPerfume = () => {
               </div>
             </div>
 
-            <div className="catalog-controls">
+            {hasIntentRecommendations && (
+              <section className="intent-recommendations" ref={intentRecommendationsRef}>
+                <div className="intent-recommendations__header">
+                  <h3>{t("app.intentRecommendationsTitle")}</h3>
+                  <div className="intent-recommendations__nav">
+                    <button type="button" onClick={() => scrollToRef(intentRecommendationsRef)}>
+                      {t("app.intentRecommendationsNav")}
+                    </button>
+                    <button type="button" onClick={() => scrollToRef(fullCatalogRef)}>
+                      {t("app.viewFullCatalogNav", { count: perfumes.length })}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="catalog-grid">
+                  {intentRecommendations.map(({ perfume }) => {
+                    const tierData = getTierData(perfume.id);
+
+                    return (
+                      <PerfumeCard
+                        key={perfume.id}
+                        perfume={perfume}
+                        assetResolver={assetResolver}
+                        tierData={tierData}
+                        onAddToBox={(addedPerfume) => addPerfume(addedPerfume, "intent_recommendation")}
+                        onOpenDetails={(perfume) => openPerfumeDetails(perfume, "intent_recommendation")}
+                        isDisabled={totalSlots >= MAX_SELECTABLE_SLOTS}
+                        labels={{
+                          add: t("general.add"),
+                          addToBox: t("general.addToBox"),
+                          viewDetails: t("details.view"),
+                        }}
+                      />
+                    );
+                  })}
+                </div>
+              </section>
+            )}
+
+            <div className="catalog-controls" ref={fullCatalogRef}>
+              {hasIntentRecommendations && (
+                <div className="intent-recommendations__nav intent-recommendations__nav--catalog">
+                  <button type="button" onClick={() => scrollToRef(intentRecommendationsRef)}>
+                    {t("app.intentRecommendationsNav")}
+                  </button>
+                </div>
+              )}
               <input
                 type="search"
                 value={searchQuery}
