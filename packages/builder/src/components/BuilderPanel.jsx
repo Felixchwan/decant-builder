@@ -528,34 +528,38 @@ function BuilderPanel({
           />
         )}
 
-        <div className="box-summary-card" aria-label={t("builder.boxSummary")}>
-          <div className="box-summary-metric">
-            <strong>{totalSlots} / {maxSelectableSlots}</strong>
-            <span>{t("general.slots")}</span>
+        <div className="builder-panel-summary-row">
+          <div className="box-summary-card" aria-label={t("builder.boxSummary")}>
+            <div className="box-summary-metric">
+              <strong>{totalSlots} / {maxSelectableSlots}</strong>
+              <span>{t("general.slots")}</span>
+            </div>
+
+            <div className="box-summary-metric">
+              <strong>{totalPoints.toFixed(1)}</strong>
+              <span>{t("general.points")}</span>
+            </div>
+
+            <div className="box-summary-metric box-summary-total">
+              <strong>${estimatedValue.toFixed(0)}</strong>
+              <span>{builderConfig.commerce.totalLabel}</span>
+            </div>
           </div>
 
-          <div className="box-summary-metric">
-            <strong>{totalPoints.toFixed(1)}</strong>
-            <span>{t("general.points")}</span>
-          </div>
-
-          <div className="box-summary-metric box-summary-total">
-            <strong>${estimatedValue.toFixed(0)}</strong>
-            <span>{builderConfig.commerce.totalLabel}</span>
+          <div className="builder-panel-tray-scale">
+            <BoxSlotTray
+              selectedPerfumes={selectedPerfumes}
+              maxSlots={maxSlots}
+              maxSelectableSlots={maxSelectableSlots}
+              isCuratorBonusUnlocked={isCuratorBonusUnlocked}
+              nextAvailableSlotIndex={nextAvailableSlotIndex}
+              onNextSlotRecommendation={handleNextSlotRecommendation}
+              onRemovePerfume={onRemovePerfume}
+              onReorderPerfumes={onReorderPerfumes}
+              translator={translator}
+            />
           </div>
         </div>
-
-        <BoxSlotTray
-          selectedPerfumes={selectedPerfumes}
-          maxSlots={maxSlots}
-          maxSelectableSlots={maxSelectableSlots}
-          isCuratorBonusUnlocked={isCuratorBonusUnlocked}
-          nextAvailableSlotIndex={nextAvailableSlotIndex}
-          onNextSlotRecommendation={handleNextSlotRecommendation}
-          onRemovePerfume={onRemovePerfume}
-          onReorderPerfumes={onReorderPerfumes}
-          translator={translator}
-        />
       </div>
 
       <div className="share-box-actions">
