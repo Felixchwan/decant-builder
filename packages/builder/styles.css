@@ -399,16 +399,47 @@
   margin-top: 16px;
 }
 
+:where(.builder-scope) .builder-panel-summary-sentinel {
+  height: 0;
+  margin: 0;
+  padding: 0;
+}
+
 :where(.builder-scope) .builder-panel-sticky-summary {
   position: sticky;
   top: 12px;
   z-index: 5;
+}
+
+:where(.builder-scope) .builder-panel-sticky-summary-card {
   margin: -22px -22px 0;
   padding: 22px 22px 18px;
   background: var(--builder-color-surface, rgba(8, 20, 14, 0.82));
   border-radius: 28px 28px 0 0;
   border-bottom: 1px solid var(--builder-color-border, rgba(148, 163, 184, 0.18));
   backdrop-filter: blur(18px);
+}
+
+:where(.builder-scope) .builder-panel-sticky-summary-card.is-docked {
+  /* Docked means portaled into a host-owned slot outside .builder-panel, so
+     the negative margin that normally pulls the card flush against the
+     panel's own padding would just push it off its host slot instead. The
+     host positions the docked card within its own slot. max-height enforces
+     the locked header footprint (166px) at the card level itself, rather
+     than only relying on each child's own dimensions summing correctly —
+     a hard ceiling, not a magic offset, so nothing can visually spill past
+     the reserved header region regardless of any individual child's sizing. */
+  margin: 0;
+  padding-top: 10px;
+  max-height: 166px;
+  overflow: hidden;
+}
+
+:where(.builder-scope) .builder-panel-sticky-summary-card.is-docked .panel-header {
+  /* Docked reads as a compact control surface in the header, not a
+     miniature copy of the whole panel card — the title/clear-button row
+     stays available in the card's normal in-panel position. */
+  display: none;
 }
 
 :where(.builder-scope) .panel-header {
@@ -2900,6 +2931,10 @@
 
   :where(.builder-scope) .builder-panel-sticky-summary {
     position: static;
+    height: auto;
+  }
+
+  :where(.builder-scope) .builder-panel-sticky-summary-card {
     margin: 0;
     padding: 0;
     background: none;
@@ -2990,7 +3025,7 @@
     padding: 18px;
   }
 
-  :where(.builder-scope) .builder-panel-sticky-summary {
+  :where(.builder-scope) .builder-panel-sticky-summary-card {
     padding-bottom: 10px;
   }
 
@@ -3047,6 +3082,234 @@
     border-left: 0;
     border-top: 1px solid rgba(148, 163, 184, 0.14);
     padding-top: 4px;
+  }
+
+  :where(.builder-scope).builder-theme-root--custom .builder-panel-summary-row {
+    /* Shared Aurelian presentation: the wide two-column tray + horizontal
+       metrics band is the box's normal representation in both the natural
+       (in-panel) and docked (header) states — docking only relocates and
+       further compacts this same composition, it never swaps to a
+       different one. Discovery Decants (no --custom theme) keeps the
+       original narrow tray + tall side metrics column untouched below. */
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  :where(.builder-scope).builder-theme-root--custom .builder-panel-tray-scale {
+    order: 1;
+    width: 100%;
+    height: auto;
+    overflow: visible;
+    flex-shrink: 0;
+  }
+
+  :where(.builder-scope).builder-theme-root--custom .builder-panel-tray-scale .box-slot-tray {
+    width: auto;
+    margin: 0;
+    padding: 8px;
+    transform: none;
+  }
+
+  :where(.builder-scope).builder-theme-root--custom .box-column {
+    gap: 3px;
+  }
+
+  :where(.builder-scope).builder-theme-root--custom .box-column .box-vial:nth-child(8) {
+    margin-top: 0;
+  }
+
+  :where(.builder-scope).builder-theme-root--custom .box-vial {
+    height: 18px;
+    grid-template-columns: 12px minmax(0, 1fr);
+  }
+
+  :where(.builder-scope).builder-theme-root--custom .vial-cap,
+  :where(.builder-scope).builder-theme-root--custom .box-vial.filled .vial-cap {
+    width: 10px;
+    height: 18px;
+  }
+
+  :where(.builder-scope).builder-theme-root--custom .vial-body {
+    height: 18px;
+    padding: 0 6px;
+  }
+
+  :where(.builder-scope).builder-theme-root--custom .vial-label {
+    font-size: var(--builder-unit-046);
+  }
+
+  :where(.builder-scope).builder-theme-root--custom .bonus-slot-icon {
+    width: 12px;
+    height: 12px;
+  }
+
+  :where(.builder-scope).builder-theme-root--custom .empty-slot-add {
+    /* Root cause of the off-center "+": shrinking the circle without also
+       shrinking the glyph's font-size (base is --builder-unit-072, ~13px)
+       left the "+" larger than its 11px container, so it overflowed
+       asymmetrically instead of sitting centered inside it. */
+    width: 11px;
+    height: 11px;
+    font-size: var(--builder-unit-046);
+  }
+
+  :where(.builder-scope).builder-theme-root--custom .builder-panel-summary-row .box-summary-card {
+    order: 2;
+    flex-direction: row;
+    align-items: stretch;
+    justify-content: stretch;
+    height: 46px;
+    gap: 0;
+    padding: 0;
+    border-top: 1px solid rgba(148, 163, 184, 0.14);
+  }
+
+  :where(.builder-scope).builder-theme-root--custom .builder-panel-summary-row .box-summary-metric {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+    min-width: 0;
+    padding: 0 8px;
+  }
+
+  :where(.builder-scope).builder-theme-root--custom .builder-panel-summary-row .box-summary-metric + .box-summary-metric {
+    border-left: 1px solid rgba(148, 163, 184, 0.14);
+    border-top: 0;
+    padding-top: 0;
+  }
+
+  :where(.builder-scope) .builder-panel-sticky-summary-card.is-docked .builder-panel-summary-row {
+    /* Docked further compacts the same shared composition above: the
+       4px gap replaces the natural state's roomier 8px. */
+    gap: 4px;
+  }
+
+  :where(.builder-scope) .builder-panel-sticky-summary-card.is-docked .builder-panel-tray-scale {
+    width: 316px;
+    height: 122px;
+    overflow: hidden;
+  }
+
+  :where(.builder-scope) .builder-panel-sticky-summary-card.is-docked .builder-panel-tray-scale .box-slot-tray {
+    /* Non-uniform docked layout: the same two-column/eight-row topology as
+       the normal tray, at its own purpose-built dimensions rather than a
+       transform:scale() copy — cells go shorter and wider instead of
+       shrinking uniformly. Column tracks (144px) + channel (12px) sum to
+       the full 316px width; no extra grid gap is needed since the channel
+       track already provides the visual separation. */
+    width: auto;
+    margin: 0;
+    padding: 4px 8px;
+    grid-template-columns: 144px 12px 144px;
+    gap: 0;
+    transform: none;
+  }
+
+  :where(.builder-scope) .builder-panel-sticky-summary-card.is-docked .box-column {
+    gap: 2px;
+    padding: 2px;
+  }
+
+  :where(.builder-scope) .builder-panel-sticky-summary-card.is-docked .box-vial {
+    height: 12px;
+    grid-template-columns: 10px minmax(0, 1fr);
+    overflow: hidden;
+  }
+
+  :where(.builder-scope) .builder-panel-sticky-summary-card.is-docked .vial-cap,
+  :where(.builder-scope) .builder-panel-sticky-summary-card.is-docked .box-vial.filled .vial-cap {
+    width: 8px;
+    height: 12px;
+    overflow: hidden;
+  }
+
+  :where(.builder-scope) .builder-panel-sticky-summary-card.is-docked .vial-body {
+    height: 12px;
+    padding: 0 4px;
+    overflow: hidden;
+  }
+
+  :where(.builder-scope) .builder-panel-sticky-summary-card.is-docked .vial-label {
+    display: none;
+  }
+
+  :where(.builder-scope) .builder-panel-sticky-summary-card.is-docked .bonus-slot-icon {
+    width: 8px;
+    height: 8px;
+  }
+
+  :where(.builder-scope) .builder-panel-sticky-summary-card.is-docked .empty-slot-add {
+    width: 10px;
+    height: 10px;
+    font-size: var(--builder-unit-046);
+  }
+
+  :where(.builder-scope) .builder-panel-sticky-summary-card.is-docked .builder-panel-summary-row .box-summary-card {
+    /* Metrics move from a tall vertical column beside the tray to a short
+       horizontal band beneath it: ~36px tall, three equal-width cells. */
+    order: 2;
+    height: 36px;
+    flex-direction: row;
+    align-items: stretch;
+    justify-content: stretch;
+    gap: 0;
+    padding: 0;
+    border-top: 1px solid rgba(148, 163, 184, 0.14);
+  }
+
+  :where(.builder-scope) .builder-panel-sticky-summary-card.is-docked .builder-panel-summary-row .box-summary-metric {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+    min-width: 0;
+    padding: 0 6px;
+  }
+
+  :where(.builder-scope) .builder-panel-sticky-summary-card.is-docked .box-summary-metric span {
+    font-size: var(--builder-unit-046);
+  }
+
+  :where(.builder-scope) .builder-panel-sticky-summary-card.is-docked .box-summary-metric strong {
+    font-size: var(--builder-unit-072);
+  }
+
+  :where(.builder-scope) .builder-panel-sticky-summary-card.is-docked .box-summary-total strong {
+    font-size: var(--builder-unit-082);
+  }
+
+  :where(.builder-scope) .builder-panel-sticky-summary-card.is-docked .builder-panel-summary-row .box-summary-metric + .box-summary-metric {
+    border-left: 1px solid rgba(148, 163, 184, 0.14);
+    border-top: 0;
+    padding-top: 0;
+  }
+
+  :where(.builder-scope).builder-theme-root--custom .catalog-grid {
+    /* Aurelian-only desktop catalog density: narrower, capped cards (not a
+       stretched 1fr) with a centered row instead of the shared
+       minmax(260px, 1fr) that Discovery Decants keeps below. Higher
+       specificity than the min-width:1600px upgrade further down, so it
+       wins there too. */
+    grid-template-columns: repeat(auto-fit, minmax(220px, 237px));
+    justify-content: center;
+    gap: 20px;
+  }
+
+  :where(.builder-scope).builder-theme-root--custom .catalog-section--reflow .catalog-grid {
+    /* The full-width continuation grid (rendered after .layout's right
+       panel ends, so it has more available width than the constrained
+       grid above) must keep the same preferred card width rather than
+       stretching into the reclaimed space — reclaimed width buys more
+       columns, not wider cards. Same values as the rule above, restated
+       with higher specificity so this surface is unambiguously covered
+       regardless of its wider container. */
+    grid-template-columns: repeat(auto-fit, minmax(220px, 237px));
+    justify-content: center;
+    gap: 20px;
   }
 }
 

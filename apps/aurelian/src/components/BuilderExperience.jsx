@@ -40,6 +40,19 @@ export function BuilderExperience({ isDevelopment = false }) {
     () => initialFragranceId !== null || hasPersistedBox(),
   );
   const [selectedIntentId, setSelectedIntentId] = useState(null);
+  // SiteHeader (a sibling tree, not an ancestor of this component — see
+  // app/layout.jsx) reserves this slot in its own right-hand region whenever
+  // the current route is the Builder. Looked up by id, lazily on first
+  // render, rather than threaded through React state/context, because the
+  // two trees don't share a common ancestor closer than the root layout —
+  // the pre-hydration script in build-your-box/page.jsx already establishes
+  // this exact getElementById bridging pattern between them. This component
+  // is itself mounted ssr:false (see BuilderMount.jsx), so by the time it
+  // renders at all, the surrounding page — including SiteHeader's slot —
+  // has already committed to the DOM.
+  const [stickySummaryPortalTarget] = useState(() =>
+    typeof document === "undefined" ? null : document.getElementById("aurelian-builder-summary-slot"),
+  );
 
   useEffect(() => {
     const url = new URL(window.location.href);
@@ -65,6 +78,7 @@ export function BuilderExperience({ isDevelopment = false }) {
       explainRecommendation={explainRecommendation}
       finalizationAdapter={finalizationAdapter}
       notes={notes}
+      stickySummaryPortalTarget={stickySummaryPortalTarget}
     />
   );
 }

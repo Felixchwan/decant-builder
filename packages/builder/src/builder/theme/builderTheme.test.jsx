@@ -452,13 +452,52 @@ describe("coordinated body scroll locking", () => {
 });
 
 describe("Builder portal architecture", () => {
-  it("routes all seven portal families through the owned target", () => {
+  it("routes all eight portal families through the owned target", () => {
     const portalSources = `${builderPanelSource}\n${metadataPreviewSource}`;
-    expect(portalSources.match(/renderOwnedPortal\(/g)).toHaveLength(7);
+    expect(portalSources.match(/renderOwnedPortal\(/g)).toHaveLength(8);
     expect(portalSources).not.toContain("createPortal(");
     expect(ownedPortalSource).toContain("createPortalLike(content, portalRoot)");
     expect(appSource).toContain("portalRoot={portalRoot}");
     expect(appSource).toContain("useBuilderPortalRoot");
+  });
+
+  it("re-establishes the builder-scope namespace and theme custom properties for the dockable summary portal", () => {
+    // Every :where(.builder-scope) selector in styles.css — which is
+    // effectively all of them — only matches within a DOM subtree that has
+    // .builder-scope as an actual ancestor. A portal moves real DOM, not
+    // just React tree position, so once the summary is portaled to a
+    // host-owned target outside the Builder's own root, none of those
+    // selectors (or the --builder-color-* custom properties the root
+    // normally provides by inheritance) apply anymore unless this wrapper
+    // re-establishes them at the portal boundary itself.
+    expect(builderPanelSource).toContain(
+      "import { buildBuilderThemeStyle, hasCustomBuilderTheme } from \"../builder/theme/builderTheme.js\";",
+    );
+    expect(builderPanelSource).toContain("buildBuilderThemeStyle(builderConfig.theme)");
+    expect(builderPanelSource).toContain("hasCustomBuilderTheme(builderConfig.theme)");
+    expect(builderPanelSource).toMatch(
+      /className=\{`builder-scope\$\{isCustomSummaryTheme[^}]*\}`\}\s*\n\s*style=\{summaryThemeStyle\}/,
+    );
+    // The wrapper must derive from the same generic, per-merchant theme
+    // config every other Builder surface uses — never a literal color a
+    // specific host happens to use today.
+    expect(builderPanelSource).not.toMatch(/#[0-9a-fA-F]{3,8}.*isCustomSummaryTheme/);
+  });
+
+  it("keeps exactly one summary instance rendered, whichever portal target is active", () => {
+    // activeSummaryPortalTarget resolves to exactly one of (host slot |
+    // local anchor | null) per render, and stickySummaryContent is passed
+    // to a single renderOwnedPortal call gated on that one value — never
+    // rendered a second time as a fallback or duplicate.
+    const dockingSection = builderPanelSource.slice(
+      builderPanelSource.indexOf("stickySummaryPortalTarget ?"),
+      builderPanelSource.indexOf("</aside>"),
+    );
+    // Exactly two usages: the portal branch and the no-target fallback
+    // branch — never both rendered in the same pass, since the ternary
+    // that starts this slice picks exactly one.
+    expect(dockingSection.match(/stickySummaryContent/g)?.length).toBe(2);
+    expect(dockingSection.match(/renderOwnedPortal\(/g)?.length).toBe(1);
   });
 
   it("uses the exact supplied root at runtime and never falls back to body", () => {

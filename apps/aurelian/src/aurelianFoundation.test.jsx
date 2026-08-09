@@ -198,9 +198,27 @@ describe("Aurelian application foundation", () => {
   it("hides the redundant desktop CTA on the Builder route and labels it correctly elsewhere", () => {
     const headerSource = readFileSync(join(APP_ROOT, "src", "components", "SiteHeader.jsx"), "utf8");
     expect(headerSource).toContain('pathname.startsWith("/build-your-box")');
-    expect(headerSource).toContain("{!isBuilderRoute && (");
+    expect(headerSource).toContain("{isBuilderRoute ? (");
+    expect(headerSource).toContain('id="aurelian-builder-summary-slot"');
     expect(headerSource).toContain(">Construye tu caja</Link>");
     expect(headerSource).not.toContain(">Construye tu box</Link>");
+  });
+
+  it("docks the Builder summary into the header without the reserved slot competing with nav for width", () => {
+    const stylesheet = readFileSync(join(APP_ROOT, "src", "app", "globals.css"), "utf8");
+    // The nav's own margin-right is what reserves this horizontal region.
+    // If the slot ALSO reserved width as a normal flex sibling, the two
+    // reservations would stack and squeeze the nav into wrapping — this
+    // is exactly the regression this test guards against. Taking the slot
+    // out of flex flow (position:absolute) is what lets it overlay that
+    // already-reserved region instead of reserving it a second time.
+    expect(stylesheet).toContain(".site-header__inner--builder { position:relative; }");
+    expect(stylesheet).toMatch(/\.site-header__builder-slot\s*\{\s*position:absolute;/);
+    expect(stylesheet).not.toMatch(/\.site-header__builder-slot\s*\{[^}]*align-self/);
+    // Mobile: the slot has nothing to dock into (no scroll-driven docking
+    // there — see BuilderPanel's desktop-only matchMedia gate) and must not
+    // occupy any space in the mobile header row, empty or not.
+    expect(stylesheet).toMatch(/@media \(max-width:900px\) \{[^}]*\.site-header__builder-slot[^}]*display:none/s);
   });
 
   it("publishes only the approved WhatsApp contact and enables generic finalization", () => {

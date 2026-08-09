@@ -17,6 +17,7 @@ import { validateBuilderConfig } from "./config/index.js";
  * @param {(recommendation: object) => (string|null)} [props.explainRecommendation] Optional host-supplied presentation callback, separate from initialRecommendationHint (a policy-input contract, not a copy contract). Called once per card in the recommendation surface produced by initialRecommendationHint; its return value is rendered as a short reason line, or nothing when it returns null/undefined. The Builder never inspects the string or the recommendation's explanation codes itself — purely relayed, same as assetResolver/finalizationAdapter.
  * @param {(assetKey: string) => string} props.assetResolver Host-supplied catalog asset resolver.
  * @param {boolean} props.isDevelopment Host-supplied development capability. Defaults to false.
+ * @param {HTMLElement|null} [props.stickySummaryPortalTarget] Optional host-supplied DOM node the compact box summary can relocate into once scrolled to the top of the viewport (e.g. a reserved slot in a host's own sticky page header). The Builder never assumes such a slot exists or where it lives — when omitted, the summary renders inline exactly as it always has.
  */
 export default function DiscoveryBoxBuilder({
   catalog,
@@ -29,6 +30,7 @@ export default function DiscoveryBoxBuilder({
   explainRecommendation,
   assetResolver,
   isDevelopment = false,
+  stickySummaryPortalTarget = null,
 }) {
   if (!config) {
     throw new Error("DiscoveryBoxBuilder requires a normalized builder config.");
@@ -85,6 +87,7 @@ export default function DiscoveryBoxBuilder({
       explainRecommendation={explainRecommendation}
       assetResolver={assetResolver}
       isDevelopment={isDevelopment}
+      stickySummaryPortalTarget={stickySummaryPortalTarget}
     />
   );
 }

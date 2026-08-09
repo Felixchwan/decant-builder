@@ -34,6 +34,27 @@ button,input,select { font:inherit; }
 @media (min-width:981px) {
   .site-header__inner--builder .desktop-nav { margin-right:376px; }
 }
+/* Reserved dock for the Builder's compact box summary once it scrolls to
+   the top of the viewport (see BuilderPanel.jsx's docking logic, wired via
+   the stickySummaryPortalTarget prop) — empty and inert until the Builder
+   portals its summary card in here.
+   The nav's own margin-right (above) is what reserves this horizontal
+   region — the slot must NOT reserve it a second time as a flex sibling,
+   or the two reservations stack and squeeze the nav into wrapping. Taking
+   the slot out of flex flow entirely (position:absolute) and overlaying it
+   on that same already-reserved region is what keeps it from competing
+   with the nav for width while still landing in the right place; the
+   header gets its own position:relative so the slot's containing block is
+   this row, not some further ancestor. Its own height isn't set — it has
+   no content and therefore no footprint until docked — and once the
+   summary card portals in, the card (position:absolute, see below) is
+   sized by its own content, extending below the header's own height into
+   the page below without growing the header itself. 360px matches
+   .builder-panel's own rendered width, so the docked card reads as the
+   same column, not a resize. */
+.site-header__inner--builder { position:relative; }
+.site-header__builder-slot { position:absolute; top:0; right:0; width:360px; }
+#aurelian-builder-summary-slot .builder-panel-sticky-summary-card { position:absolute; top:0; left:0; right:0; }
 .button { display:inline-flex; justify-content:center; align-items:center; min-height:3rem; padding:.75rem 1.25rem; border:1px solid var(--gold); background:var(--gold); color:var(--ink); font-weight:750; letter-spacing:.02em; transition:background .2s ease,transform .2s ease; }
 .button:hover { background:#d6b778; transform:translateY(-1px); }
 .button--compact { min-height:2.55rem; padding:.55rem 1rem; font-size:.82rem; }
@@ -147,7 +168,7 @@ body:has(.discovery-intent) #builder-entry-header { display:none; }
 .builder-loading { min-height:30rem; display:grid; place-items:center; color:var(--muted); }
 .builder-page > .builder-theme-root { width:min(1440px,100%); margin-inline:auto; }
 @media (max-width:900px) {
-  .desktop-nav,.desktop-cta { display:none; }
+  .desktop-nav,.desktop-cta,.site-header__builder-slot { display:none; }
   .mobile-menu { display:block; position:relative; }
   .mobile-menu summary { color:var(--gold); cursor:pointer; list-style:none; font-weight:700; }
   .mobile-menu nav { position:absolute; top:2.75rem; right:0; width:min(19rem,calc(100vw - 2rem)); padding:1rem; display:flex; flex-direction:column; gap:.25rem; border:1px solid var(--border); background:#11110f; box-shadow:0 20px 50px rgba(0,0,0,.6); }

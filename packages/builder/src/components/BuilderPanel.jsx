@@ -1,4 +1,4 @@
-import { forwardRef, useEffect, useMemo, useRef, useState } from "react";
+import { forwardRef, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { flushSync } from "react-dom";
 import { createRoot } from "react-dom/client";
 import { toBlob } from "html-to-image";
@@ -19,6 +19,7 @@ import {
 } from "../builder/internal/intelligence/buildCollectionIntelligenceViewModel.js";
 import { buildScentLibraryViewModel } from "../builder/internal/intelligence/buildScentLibraryViewModel.js";
 import { isCuratorBonusUnlocked as deriveCuratorBonusUnlocked } from "../builder/internal/curatorBonus/isCuratorBonusUnlocked.js";
+import { buildBuilderThemeStyle, hasCustomBuilderTheme } from "../builder/theme/builderTheme.js";
 import {
   getRecommendationConfidence,
   getRecommendationConfidenceLabel,
@@ -69,6 +70,38 @@ import {
 } from "../builder/internal/portal/collectionCardExportStage.js";
 
 const EMPTY_RECOMMENDATIONS = [];
+
+// Docking relocates the summary card's DOM via a portal-target change (see
+// activeSummaryPortalTarget below), which this codebase couldn't confirm
+// preserves browser focus in every case without live verification against a
+// real compositor. This fingerprint-based capture/restore is a safety net:
+// harmless if the move turns out to preserve focus on its own, load-bearing
+// if it doesn't. Fingerprints by tag+className+ordinal rather than a ref
+// map, since the summary's interactive elements (info button, clear button,
+// tray vials) don't carry stable ids of their own.
+function getFocusFingerprint(container, element) {
+  if (!container || !element || !container.contains(element)) {
+    return null;
+  }
+  const className = typeof element.className === "string" ? element.className : "";
+  const selector = className
+    ? `${element.tagName}.${className.trim().split(/\s+/).join(".")}`
+    : element.tagName;
+  const matches = [...container.querySelectorAll(selector)];
+  const index = matches.indexOf(element);
+  return index === -1 ? null : { selector, index };
+}
+
+function focusElementFromFingerprint(container, fingerprint) {
+  if (!container || !fingerprint) {
+    return;
+  }
+  const match = container.querySelectorAll(fingerprint.selector)[fingerprint.index];
+  if (match && typeof match.focus === "function") {
+    match.focus();
+  }
+}
+
 const BuilderPanel = forwardRef(function BuilderPanel({
   builderConfig,
   assetResolver,
@@ -116,6 +149,7 @@ const BuilderPanel = forwardRef(function BuilderPanel({
   analytics = noopAnalytics,
   finalizationAdapter,
   isDevelopment = false,
+  stickySummaryPortalTarget = null,
 }, ref) {
     const translator = useMemo(
       () => createTranslator(builderConfig.locale),
@@ -150,6 +184,131 @@ const BuilderPanel = forwardRef(function BuilderPanel({
     const shareStatusTimeoutRef = useRef(null);
     const balanceLaneRef = useRef(null);
     const balanceLaneEmphasisTimeoutRef = useRef(null);
+
+    // Docking: when a host supplies stickySummaryPortalTarget (e.g. a slot
+    // reserved in the host's own page header), the compact summary card can
+    // relocate there once
+    // scrolled to the top of the viewport, instead of staying pinned below the
+    // panel's own content. Hosts that don't supply a target (Discovery
+    // Decants) never dock — summarySentinelRef/summaryCardRef stay inert and
+    // the card always renders through summaryAnchorEl, exactly as before this
+    // feature existed.
+    const [isSummaryDocked, setIsSummaryDocked] = useState(false);
+    const [summaryAnchorEl, setSummaryAnchorEl] = useState(null);
+    const [summarySpacerHeight, setSummarySpacerHeight] = useState(null);
+    const summarySentinelRef = useRef(null);
+    const summaryCardRef = useRef(null);
+    const pendingSummaryFocusRef = useRef(null);
+    const isSummaryDockedRef = useRef(false);
+    const summaryAnchorCallbackRef = useCallback((node) => {
+      setSummaryAnchorEl(node);
+    }, []);
+
+    useEffect(() => {
+      if (!stickySummaryPortalTarget) {
+        return undefined;
+      }
+      if (
+        typeof window === "undefined" ||
+        typeof IntersectionObserver === "undefined" ||
+        !summarySentinelRef.current
+      ) {
+        return undefined;
+      }
+
+      const desktopQuery = window.matchMedia("(min-width: 981px)");
+
+      function transitionDocked(nextIsDocked) {
+        if (isSummaryDockedRef.current === nextIsDocked) {
+          return;
+        }
+        // The move (see activeSummaryPortalTarget) relocates the card's DOM
+        // via a portal-target change, which couldn't be confirmed to
+        // preserve focus without a real compositor to test against (see
+        // getFocusFingerprint above). Capture before the state flips, so
+        // the fingerprint reflects where focus was in the pre-move DOM.
+        if (
+          summaryCardRef.current &&
+          summaryCardRef.current.contains(document.activeElement)
+        ) {
+          pendingSummaryFocusRef.current = getFocusFingerprint(
+            summaryCardRef.current,
+            document.activeElement
+          );
+        }
+        isSummaryDockedRef.current = nextIsDocked;
+        setIsSummaryDocked(nextIsDocked);
+      }
+
+      function handleIntersect([entry]) {
+        if (!desktopQuery.matches) {
+          transitionDocked(false);
+          return;
+        }
+        // A 1px rootMargin buffer (below) keeps this from toggling back and
+        // forth at the exact boundary; boundingClientRect.top < 0 confirms
+        // the sentinel left above the viewport (scrolling down), not below it.
+        const shouldDock = !entry.isIntersecting && entry.boundingClientRect.top < 0;
+        if (shouldDock) {
+          const height = summaryCardRef.current?.getBoundingClientRect().height;
+          if (height) {
+            setSummarySpacerHeight(height);
+          }
+        }
+        transitionDocked(shouldDock);
+      }
+
+      const observer = new IntersectionObserver(handleIntersect, {
+        threshold: 0,
+        rootMargin: "-1px 0px 0px 0px",
+      });
+      observer.observe(summarySentinelRef.current);
+
+      function handleModeChange() {
+        if (!desktopQuery.matches) {
+          transitionDocked(false);
+        }
+      }
+      desktopQuery.addEventListener("change", handleModeChange);
+
+      return () => {
+        observer.disconnect();
+        desktopQuery.removeEventListener("change", handleModeChange);
+      };
+    }, [stickySummaryPortalTarget]);
+
+    useLayoutEffect(() => {
+      const fingerprint = pendingSummaryFocusRef.current;
+      if (!fingerprint) {
+        return;
+      }
+      pendingSummaryFocusRef.current = null;
+      focusElementFromFingerprint(summaryCardRef.current, fingerprint);
+    }, [isSummaryDocked]);
+
+    const activeSummaryPortalTarget = !stickySummaryPortalTarget
+      ? null
+      : isSummaryDocked
+        ? stickySummaryPortalTarget
+        : summaryAnchorEl;
+    // Every :where(.builder-scope) selector in this stylesheet — which is
+    // effectively all of them, including every rule the summary card
+    // depends on — only matches within a DOM subtree that actually has
+    // .builder-scope as an ancestor. A portal moves real DOM, not just
+    // React tree position, so once summaryAnchorEl/stickySummaryPortalTarget
+    // sits outside that subtree (a host's own page header, for instance),
+    // none of those rules apply anymore, and neither do the
+    // --builder-color-* custom properties the root normally provides by
+    // inheritance. Re-establishing both here — scoped to only the portaled
+    // content, not by reaching into host DOM — is the same contract
+    // useBuilderPortalRoot already establishes for this package's other
+    // portals (Composer setup, Review, Scent Library, ...), which all
+    // render outside the main tree the same way.
+    const summaryThemeStyle = useMemo(
+      () => buildBuilderThemeStyle(builderConfig.theme),
+      [builderConfig.theme]
+    );
+    const isCustomSummaryTheme = hasCustomBuilderTheme(builderConfig.theme);
     const scentLibraryEntries = useMemo(
       () =>
         buildScentLibraryViewModel({
@@ -495,72 +654,107 @@ const BuilderPanel = forwardRef(function BuilderPanel({
       },
       []
     );
-  return (
-    <aside className="builder-panel" ref={ref}>
-      <div className="builder-panel-sticky-summary">
-        <div className="panel-header">
-          <div className="builder-box-header-title">
-            <div className="panel-title-row">
-              <h2>{builderConfig.copy.boxPanelTitle}</h2>
-              <button
-                className="info-button"
-                type="button"
-                onClick={() => setIsDiscoveryIntroOpen(true)}
-                aria-label={builderConfig.copy.introButtonAriaLabel}
-              >
-                i
-              </button>
-            </div>
-          </div>
-
-          {totalSlots > 0 && (
-            <button className="ghost-button builder-clear-button" onClick={onClearBox}>
-              {builderConfig.copy.clearBuilderLabel}
+  const stickySummaryContent = (
+    <div
+      className={`builder-panel-sticky-summary-card${isSummaryDocked ? " is-docked" : ""}`}
+      ref={summaryCardRef}
+      role={isSummaryDocked ? "group" : undefined}
+      aria-label={isSummaryDocked ? builderConfig.copy.boxPanelTitle : undefined}
+    >
+      <div className="panel-header">
+        <div className="builder-box-header-title">
+          <div className="panel-title-row">
+            <h2>{builderConfig.copy.boxPanelTitle}</h2>
+            <button
+              className="info-button"
+              type="button"
+              onClick={() => setIsDiscoveryIntroOpen(true)}
+              aria-label={builderConfig.copy.introButtonAriaLabel}
+            >
+              i
             </button>
-          )}
+          </div>
         </div>
 
-        {shouldShowDiscoveryIntro && (
-          <DiscoveryBoxCoachmark
-            model={onboardingPathSelection}
-            onDismiss={dismissDiscoveryIntro}
-            onAction={handleOnboardingAction}
-          />
+        {totalSlots > 0 && (
+          <button className="ghost-button builder-clear-button" onClick={onClearBox}>
+            {builderConfig.copy.clearBuilderLabel}
+          </button>
         )}
+      </div>
 
-        <div className="builder-panel-summary-row">
-          <div className="box-summary-card" aria-label={t("builder.boxSummary")}>
-            <div className="box-summary-metric">
-              <strong>{totalSlots} / {maxSelectableSlots}</strong>
-              <span>{t("general.slots")}</span>
-            </div>
+      {shouldShowDiscoveryIntro && (
+        <DiscoveryBoxCoachmark
+          model={onboardingPathSelection}
+          onDismiss={dismissDiscoveryIntro}
+          onAction={handleOnboardingAction}
+        />
+      )}
 
-            <div className="box-summary-metric">
-              <strong>{totalPoints.toFixed(1)}</strong>
-              <span>{t("general.points")}</span>
-            </div>
-
-            <div className="box-summary-metric box-summary-total">
-              <strong>${estimatedValue.toFixed(0)}</strong>
-              <span>{t("general.orderTotalCompact")}</span>
-            </div>
+      <div className="builder-panel-summary-row">
+        <div className="box-summary-card" aria-label={t("builder.boxSummary")}>
+          <div className="box-summary-metric">
+            <strong>{totalSlots} / {maxSelectableSlots}</strong>
+            <span>{t("general.slots")}</span>
           </div>
 
-          <div className="builder-panel-tray-scale">
-            <BoxSlotTray
-              selectedPerfumes={selectedPerfumes}
-              maxSlots={maxSlots}
-              maxSelectableSlots={maxSelectableSlots}
-              isCuratorBonusUnlocked={isCuratorBonusUnlocked}
-              nextAvailableSlotIndex={nextAvailableSlotIndex}
-              onNextSlotRecommendation={handleNextSlotRecommendation}
-              onRemovePerfume={onRemovePerfume}
-              onReorderPerfumes={onReorderPerfumes}
-              translator={translator}
-            />
+          <div className="box-summary-metric">
+            <strong>{totalPoints.toFixed(1)}</strong>
+            <span>{t("general.points")}</span>
           </div>
+
+          <div className="box-summary-metric box-summary-total">
+            <strong>${estimatedValue.toFixed(0)}</strong>
+            <span>{t("general.orderTotalCompact")}</span>
+          </div>
+        </div>
+
+        <div className="builder-panel-tray-scale">
+          <BoxSlotTray
+            selectedPerfumes={selectedPerfumes}
+            maxSlots={maxSlots}
+            maxSelectableSlots={maxSelectableSlots}
+            isCuratorBonusUnlocked={isCuratorBonusUnlocked}
+            nextAvailableSlotIndex={nextAvailableSlotIndex}
+            onNextSlotRecommendation={handleNextSlotRecommendation}
+            onRemovePerfume={onRemovePerfume}
+            onReorderPerfumes={onReorderPerfumes}
+            translator={translator}
+            isCompact={isSummaryDocked}
+          />
         </div>
       </div>
+    </div>
+  );
+
+  return (
+    <aside className="builder-panel" ref={ref}>
+      {stickySummaryPortalTarget ? (
+        <>
+          <div
+            className="builder-panel-summary-sentinel"
+            ref={summarySentinelRef}
+            aria-hidden="true"
+          />
+          <div
+            className="builder-panel-sticky-summary"
+            ref={summaryAnchorCallbackRef}
+            style={isSummaryDocked ? { height: summarySpacerHeight ?? undefined } : undefined}
+          >
+            {renderOwnedPortal(
+              <div
+                className={`builder-scope${isCustomSummaryTheme ? " builder-theme-root--custom" : ""}`}
+                style={summaryThemeStyle}
+              >
+                {stickySummaryContent}
+              </div>,
+              activeSummaryPortalTarget
+            )}
+          </div>
+        </>
+      ) : (
+        <div className="builder-panel-sticky-summary">{stickySummaryContent}</div>
+      )}
 
       <div className="share-box-actions">
         <div className="share-box-toolbar">
@@ -4388,6 +4582,7 @@ function BoxSlotTray({
   onRemovePerfume,
   onReorderPerfumes,
   translator,
+  isCompact,
 }) {
   const [activeSlotIndex, setActiveSlotIndex] = useState(null);
   const [draggingIndex, setDraggingIndex] = useState(null);
@@ -4509,6 +4704,7 @@ function BoxSlotTray({
               onPointerUp={handlePointerUp}
               onClick={handleSlotClick}
               translator={translator}
+              isCompact={isCompact}
             />
         ))}
       </div>
@@ -4546,6 +4742,7 @@ function BoxSlotTray({
               onPointerUp={handlePointerUp}
               onClick={handleSlotClick}
               translator={translator}
+              isCompact={isCompact}
             />
           ) : null
         )}
@@ -4573,6 +4770,7 @@ function BoxVialSlot({
   onPointerUp,
   onClick,
   translator,
+  isCompact,
 }) {
   if (isReserved) {
     return (
@@ -4592,9 +4790,10 @@ function BoxVialSlot({
   }
 
   if (!perfume) {
-    const EmptySlotElement = isNextAvailable ? "button" : "div";
+    const isInteractiveNextAvailable = isNextAvailable && !isCompact;
+    const EmptySlotElement = isInteractiveNextAvailable ? "button" : "div";
     const handleNextSlotKeyDown = (event) => {
-      if (!isNextAvailable || (event.key !== "Enter" && event.key !== " ")) {
+      if (!isInteractiveNextAvailable || (event.key !== "Enter" && event.key !== " ")) {
         return;
       }
 
@@ -4613,13 +4812,13 @@ function BoxVialSlot({
             : translator?.t?.("collectionIntelligence.emptySlot", { index: index + 1 }) ||
               `Empty slot ${index + 1}`
         }
-        type={isNextAvailable ? "button" : undefined}
-        onClick={isNextAvailable ? onNextSlotRecommendation : undefined}
-        onKeyDown={isNextAvailable ? handleNextSlotKeyDown : undefined}
-        onDragOver={onDragOver}
-        onDrop={(event) => onDrop(event, index)}
-        onPointerEnter={onPointerEnter}
-        onPointerUp={() => onPointerUp(index)}
+        type={isInteractiveNextAvailable ? "button" : undefined}
+        onClick={isInteractiveNextAvailable ? onNextSlotRecommendation : undefined}
+        onKeyDown={isInteractiveNextAvailable ? handleNextSlotKeyDown : undefined}
+        onDragOver={isCompact ? undefined : onDragOver}
+        onDrop={isCompact ? undefined : (event) => onDrop(event, index)}
+        onPointerEnter={isCompact ? undefined : onPointerEnter}
+        onPointerUp={isCompact ? undefined : () => onPointerUp(index)}
       >
         <span className="vial-cap" />
         <span className="vial-body">
@@ -4644,15 +4843,19 @@ function BoxVialSlot({
         `Filled slot ${index + 1}: ${perfume.name}`
       }
       title={perfume.name}
-      draggable
-      onDragStart={(event) => onDragStart(event, index)}
-      onDragEnd={() => onDrop({ preventDefault() {}, dataTransfer: { getData: () => index } }, index)}
-      onDragOver={onDragOver}
-      onDrop={(event) => onDrop(event, index)}
-      onPointerDown={(event) => onPointerDown(event, index, true)}
-      onPointerEnter={onPointerEnter}
-      onPointerUp={() => onPointerUp(index)}
-      onClick={() => onClick(index)}
+      draggable={!isCompact}
+      onDragStart={isCompact ? undefined : (event) => onDragStart(event, index)}
+      onDragEnd={
+        isCompact
+          ? undefined
+          : () => onDrop({ preventDefault() {}, dataTransfer: { getData: () => index } }, index)
+      }
+      onDragOver={isCompact ? undefined : onDragOver}
+      onDrop={isCompact ? undefined : (event) => onDrop(event, index)}
+      onPointerDown={isCompact ? undefined : (event) => onPointerDown(event, index, true)}
+      onPointerEnter={isCompact ? undefined : onPointerEnter}
+      onPointerUp={isCompact ? undefined : () => onPointerUp(index)}
+      onClick={isCompact ? undefined : () => onClick(index)}
       style={{
         "--tier-color": tierData.color,
         "--tier-background": tierData.background,
@@ -4665,22 +4868,24 @@ function BoxVialSlot({
         <span className={`vial-label ${hasCuratedShortName ? "has-short-name" : ""}`}>
           <strong>{slotLabel}</strong>
         </span>
-        <button
-          type="button"
-          className="slot-remove-button"
-          onClick={(event) => {
-            event.stopPropagation();
-            onRemove(index);
-          }}
-          aria-label={
-            translator?.t?.("collectionIntelligence.removePerfume", { name: perfume.name }) ||
-            `Remove ${perfume.name}`
-          }
-        >
-          ×
-        </button>
+        {!isCompact && (
+          <button
+            type="button"
+            className="slot-remove-button"
+            onClick={(event) => {
+              event.stopPropagation();
+              onRemove(index);
+            }}
+            aria-label={
+              translator?.t?.("collectionIntelligence.removePerfume", { name: perfume.name }) ||
+              `Remove ${perfume.name}`
+            }
+          >
+            ×
+          </button>
+        )}
       </span>
-      {isActive && (
+      {isActive && !isCompact && (
         <div className="slot-action-popover">
           <button type="button" onClick={() => onRemove(index)}>
             Remove

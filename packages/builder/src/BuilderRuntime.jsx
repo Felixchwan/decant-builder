@@ -75,6 +75,7 @@ function App({
   explainRecommendation,
   assetResolver,
   isDevelopment = false,
+  stickySummaryPortalTarget = null,
 }) {
   const builderConfig = config;
   const builderThemeStyle = useMemo(
@@ -1206,6 +1207,7 @@ const confirmAddPerfume = () => {
             reviewCustomerInfo={reviewCustomerInfo}
             onReviewCustomerInfoChange={setReviewCustomerInfo}
             onMobileTabChange={setActiveMobileTab}
+            stickySummaryPortalTarget={stickySummaryPortalTarget}
           />
         </div>
       </section>

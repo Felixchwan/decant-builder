@@ -49,7 +49,9 @@ export function SiteHeader() {
         <nav className="desktop-nav" aria-label="Navegación principal">
           {links.map(([href, label]) => <Link aria-current={isCurrent(href) ? "page" : undefined} href={href} key={href}>{label}</Link>)}
         </nav>
-        {!isBuilderRoute && (
+        {isBuilderRoute ? (
+          <div id="aurelian-builder-summary-slot" className="site-header__builder-slot" />
+        ) : (
           <Link className="button button--compact desktop-cta" href="/build-your-box">Construye tu caja</Link>
         )}
         <details className="mobile-menu" ref={menuRef}>
