@@ -35,6 +35,16 @@ import {
 } from "../builder/presentation/composerAlternativeTradeoffLabels.js";
 import { buildSeasonProfileViewModel } from "../builder/presentation/seasonProfileViewModel.js";
 import {
+  getBalanceDimensionLabel,
+  getBoxIntelligenceCoverageLabel,
+  getBoxIntelligenceProfileLabel,
+  getCoverageGapLabel,
+  getCoverageStrengthLabel,
+  getDominantProfileLabel,
+  getNextImprovementCopy,
+  getStrongestCoverageLabel,
+} from "../builder/presentation/collectionIntelligenceLabels.js";
+import {
   buildComposerBudgetBonusFeedback,
   buildComposerProposalBonusStatus,
 } from "../builder/presentation/composerBonusStatus.js";
@@ -91,6 +101,7 @@ function BuilderPanel({
   composerStatusMessage = "",
   isComposerProposalStale,
   onComposerSettingChange,
+  onRefreshComposerBudgetDefault,
   onComposerPreferenceToggle,
   onComposerPreferenceClear,
   onComposeMyBox,
@@ -233,7 +244,7 @@ function BuilderPanel({
         maxSelectableSlots,
       ]
     );
-    const reviewRequirementText = [
+    const reviewRequirementParts = [
       missingSlots > 0
         ? t("builder.moreFragrances", {
             count: missingSlots,
@@ -246,9 +257,14 @@ function BuilderPanel({
             plural: missingPoints === 1 ? "" : "s",
           })
         : null,
-    ]
-      .filter(Boolean)
-      .join(" and ");
+    ].filter(Boolean);
+    const reviewRequirementText =
+      reviewRequirementParts.length === 2
+        ? t("builder.requirementConjunction", {
+            first: reviewRequirementParts[0],
+            second: reviewRequirementParts[1],
+          })
+        : reviewRequirementParts.join("");
     const shouldShowDiscoveryIntro =
       builderConfig?.features?.discoveryCoachmark !== false &&
       selectedPerfumes.length === 0 &&
@@ -306,6 +322,7 @@ function BuilderPanel({
     };
 
     const handleOpenComposerSetup = () => {
+      onRefreshComposerBudgetDefault?.();
       analytics.track(ANALYTICS_EVENTS.COMPOSER_OPENED, {
         slotCount: totalSlots,
         totalPoints,
@@ -480,63 +497,66 @@ function BuilderPanel({
     );
   return (
     <aside className="builder-panel">
-      <div className="panel-header">
-        <div className="builder-box-header-title">
-          <div className="panel-title-row">
-            <h2>{builderConfig.copy.boxPanelTitle}</h2>
-            <button
-              className="info-button"
-              type="button"
-              onClick={() => setIsDiscoveryIntroOpen(true)}
-              aria-label={builderConfig.copy.introButtonAriaLabel}
-            >
-              i
+      <div className="builder-panel-sticky-summary">
+        <div className="panel-header">
+          <div className="builder-box-header-title">
+            <div className="panel-title-row">
+              <h2>{builderConfig.copy.boxPanelTitle}</h2>
+              <button
+                className="info-button"
+                type="button"
+                onClick={() => setIsDiscoveryIntroOpen(true)}
+                aria-label={builderConfig.copy.introButtonAriaLabel}
+              >
+                i
+              </button>
+            </div>
+          </div>
+
+          {totalSlots > 0 && (
+            <button className="ghost-button builder-clear-button" onClick={onClearBox}>
+              {builderConfig.copy.clearBuilderLabel}
             </button>
+          )}
+        </div>
+
+        {shouldShowDiscoveryIntro && (
+          <DiscoveryBoxCoachmark
+            model={onboardingPathSelection}
+            onDismiss={dismissDiscoveryIntro}
+            onAction={handleOnboardingAction}
+          />
+        )}
+
+        <div className="box-summary-card" aria-label={t("builder.boxSummary")}>
+          <div className="box-summary-metric">
+            <strong>{totalSlots} / {maxSelectableSlots}</strong>
+            <span>{t("general.slots")}</span>
+          </div>
+
+          <div className="box-summary-metric">
+            <strong>{totalPoints.toFixed(1)}</strong>
+            <span>{t("general.points")}</span>
+          </div>
+
+          <div className="box-summary-metric box-summary-total">
+            <strong>${estimatedValue.toFixed(0)}</strong>
+            <span>{builderConfig.commerce.totalLabel}</span>
           </div>
         </div>
 
-        {totalSlots > 0 && (
-          <button className="ghost-button builder-clear-button" onClick={onClearBox}>
-            {builderConfig.copy.clearBuilderLabel}
-          </button>
-        )}
-      </div>
-
-      {shouldShowDiscoveryIntro && (
-        <DiscoveryBoxCoachmark
-          model={onboardingPathSelection}
-          onDismiss={dismissDiscoveryIntro}
-          onAction={handleOnboardingAction}
+        <BoxSlotTray
+          selectedPerfumes={selectedPerfumes}
+          maxSlots={maxSlots}
+          maxSelectableSlots={maxSelectableSlots}
+          isCuratorBonusUnlocked={isCuratorBonusUnlocked}
+          nextAvailableSlotIndex={nextAvailableSlotIndex}
+          onNextSlotRecommendation={handleNextSlotRecommendation}
+          onRemovePerfume={onRemovePerfume}
+          onReorderPerfumes={onReorderPerfumes}
+          translator={translator}
         />
-      )}
-
-      <div className="box-summary-card" aria-label={t("builder.boxSummary")}>
-        <div className="box-summary-metric">
-          <strong>{totalSlots} / {maxSelectableSlots}</strong>
-          <span>{t("general.slots")}</span>
-        </div>
-
-        <div className="box-summary-metric">
-          <strong>{totalPoints.toFixed(1)}</strong>
-          <span>{t("general.points")}</span>
-        </div>
-
-        <div className="box-summary-metric box-summary-total">
-          <strong>${estimatedValue.toFixed(0)}</strong>
-          <span>{builderConfig.commerce.totalLabel}</span>
-        </div>
       </div>
-
-      <BoxSlotTray
-        selectedPerfumes={selectedPerfumes}
-        maxSlots={maxSlots}
-        maxSelectableSlots={maxSelectableSlots}
-        isCuratorBonusUnlocked={isCuratorBonusUnlocked}
-        nextAvailableSlotIndex={nextAvailableSlotIndex}
-        onNextSlotRecommendation={handleNextSlotRecommendation}
-        onRemovePerfume={onRemovePerfume}
-        onReorderPerfumes={onReorderPerfumes}
-      />
 
       <div className="share-box-actions">
         <div className="share-box-toolbar">
@@ -712,7 +732,7 @@ function BuilderPanel({
     {(basedOnYourPicks.length > 0 || toBalanceYourBox.length > 0) && (
     <div className="recommendations">
     <RecommendationLane
-      title="Based On Your Picks"
+      title={t("collectionIntelligence.basedOnYourPicks")}
       recommendations={basedOnYourPicks}
       selectedPerfumeIds={selectedPerfumeIds}
       isBoxFull={totalSlots >= maxSelectableSlots}
@@ -1609,14 +1629,16 @@ function CollectionSnapshot({
   return (
     <section className={`collection-snapshot ${isExpanded ? "is-expanded" : ""}`}>
       <div className="collection-snapshot-header">
-        <h3>Collection Intelligence</h3>
+        <h3>{translator?.t?.("collectionIntelligence.collectionIntelligence") || "Collection Intelligence"}</h3>
         <button type="button" onClick={onToggle} aria-expanded={isExpanded}>
-          {isExpanded ? "Hide Full Analysis" : "View Full Analysis"}
+          {isExpanded
+            ? translator?.t?.("collectionIntelligence.hideFullAnalysis") || "Hide Full Analysis"
+            : translator?.t?.("collectionIntelligence.viewFullAnalysis") || "View Full Analysis"}
         </button>
       </div>
 
       <div className="collection-profile-summary">
-        <span>Collection Profile</span>
+        <span>{translator?.t?.("collectionIntelligence.collectionProfile") || "Collection Profile"}</span>
 
         {collectionProfileTraits.length > 0 ? (
           <div className="collection-profile-chips">
@@ -1626,18 +1648,23 @@ function CollectionSnapshot({
           </div>
         ) : (
           <p className="collection-empty-message">
-            Add fragrances to reveal the collection profile.
+            {translator?.t?.("collectionIntelligence.addFragrancesToRevealProfile") ||
+              "Add fragrances to reveal the collection profile."}
           </p>
         )}
       </div>
 
       <div className="collection-dna-summary">
-        <span>Collection DNA</span>
+        <span>{translator?.t?.("collectionIntelligence.collectionDna") || "Collection DNA"}</span>
 
         {visibleCollectionDna.length > 0 ? (
           <p className="collection-dna-helper">
-            <span className="collection-dna-helper-desktop">Select an accord to explore</span>
-            <span className="collection-dna-helper-mobile">Tap an accord to explore</span>
+            <span className="collection-dna-helper-desktop">
+              {translator?.t?.("collectionIntelligence.selectAccordToExplore") || "Select an accord to explore"}
+            </span>
+            <span className="collection-dna-helper-mobile">
+              {translator?.t?.("collectionIntelligence.tapAccordToExplore") || "Tap an accord to explore"}
+            </span>
           </p>
         ) : null}
 
@@ -1679,7 +1706,8 @@ function CollectionSnapshot({
           </div>
         ) : (
           <p className="collection-empty-message">
-            Dominant accords appear as the box takes shape.
+            {translator?.t?.("collectionIntelligence.dominantAccordsAppear") ||
+              "Dominant accords appear as the box takes shape."}
           </p>
         )}
       </div>
@@ -1698,44 +1726,47 @@ function CollectionSnapshot({
       )}
 
       <div className="collection-balance-summary">
-        <span>Collection Balance</span>
+        <span>{translator?.t?.("collectionIntelligence.collectionBalance") || "Collection Balance"}</span>
 
         <div className="collection-balance-list">
-          {balanceRows.map((row) => (
-            <div className="collection-balance-row" key={row.label}>
-              <span>{row.label}</span>
-              <strong aria-label={`${row.label}: ${row.level} out of 5`}>
-                {formatFiveStarRating(row.level)}
-              </strong>
-            </div>
-          ))}
+          {balanceRows.map((row) => {
+            const dimensionLabel = getBalanceDimensionLabel(row.label, translator);
+            return (
+              <div className="collection-balance-row" key={row.label}>
+                <span>{dimensionLabel}</span>
+                <strong aria-label={`${dimensionLabel}: ${row.level} out of 5`}>
+                  {formatFiveStarRating(row.level)}
+                </strong>
+              </div>
+            );
+          })}
         </div>
       </div>
 
       <div className="collection-snapshot-details" aria-hidden={!isExpanded}>
         <div className="summary-panel">
-          <h3>Box Profile</h3>
+          <h3>{translator?.t?.("collectionIntelligence.boxProfile") || "Box Profile"}</h3>
 
           {hasProfileData ? (
             <>
               <SeasonProfilePanel model={seasonProfile} translator={translator} />
               <ProfileSummaryGroup
                 assetResolver={assetResolver}
-                label="Occasions"
+                label={translator?.t?.("collectionIntelligence.occasions") || "Occasions"}
                 values={boxSummary.occasions}
                 assetType="occasions"
                 translator={translator}
               />
               <ProfileSummaryGroup
                 assetResolver={assetResolver}
-                label="Seasons"
+                label={translator?.t?.("collectionIntelligence.seasons") || "Seasons"}
                 values={boxSummary.seasons}
                 assetType="seasons"
                 translator={translator}
               />
               <ProfileSummaryGroup
                 assetResolver={assetResolver}
-                label="Vibes"
+                label={translator?.t?.("collectionIntelligence.vibes") || "Vibes"}
                 values={boxSummary.vibes}
                 assetType="vibes"
                 translator={translator}
@@ -1743,7 +1774,7 @@ function CollectionSnapshot({
 
               {Object.entries(boxSummary.accordMap).length > 0 && (
                 <div>
-                  <span>Dominant Accords</span>
+                  <span>{translator?.t?.("collectionIntelligence.dominantAccords") || "Dominant Accords"}</span>
 
                   <div className="summary-tags">
                     {Object.entries(boxSummary.accordMap).map(
@@ -1774,62 +1805,71 @@ function CollectionSnapshot({
                 <div>
                   <span>{builderConfig.finalization.customerFieldLabels.notes}</span>
 
-                  <p>{boxSummary.notes.length} unique notes covered</p>
+                  <p>
+                    {translator?.t?.("collectionIntelligence.uniqueNotesCovered", {
+                      count: boxSummary.notes.length,
+                    }) || `${boxSummary.notes.length} unique notes covered`}
+                  </p>
 
                   <button
                     className="details-button"
                     type="button"
                     onClick={onOpenScentLibrary}
                   >
-                    View Details
+                    {translator?.t?.("collectionIntelligence.viewDetails") || "View Details"}
                   </button>
                 </div>
               )}
             </>
           ) : (
             <p className="collection-empty-message">
-              Build your collection to reveal its profile.
+              {translator?.t?.("collectionIntelligence.buildCollectionToRevealProfile") ||
+                "Build your collection to reveal its profile."}
             </p>
           )}
         </div>
 
         <div className="coverage-panel">
-          <h3>Box Analysis</h3>
+          <h3>{translator?.t?.("collectionIntelligence.boxAnalysis") || "Box Analysis"}</h3>
           <p className="analysis-subtitle">
-            Coverage strengths and collection gaps
+            {translator?.t?.("collectionIntelligence.coverageStrengthsAndGaps") ||
+              "Coverage strengths and collection gaps"}
           </p>
 
           {hasAnalysisData ? (
             <>
               {coverageSummary.strengths.slice(0, 6).map((item) => (
                 <p key={`${item.category}-${item.label}`} className="coverage-strength">
-                  {item.label}
+                  {getCoverageStrengthLabel(item, translator) || item.label}
                 </p>
               ))}
 
               {coverageSummary.strengths.length > 6 && (
                 <p className="coverage-more">
-                  +{coverageSummary.strengths.length - 6} more strengths
+                  {translator?.t?.("collectionIntelligence.moreStrengths", {
+                    count: coverageSummary.strengths.length - 6,
+                  }) || `+${coverageSummary.strengths.length - 6} more strengths`}
                 </p>
               )}
             </>
           ) : (
             <p className="collection-empty-message">
-              Select fragrances to generate collection insights.
+              {translator?.t?.("collectionIntelligence.selectFragrancesToGenerateInsights") ||
+                "Select fragrances to generate collection insights."}
             </p>
           )}
         </div>
 
         {coverageSummary.gaps.length > 0 && (
           <div className="seasonal-gaps">
-            <h4>Seasonal Gaps</h4>
+            <h4>{translator?.t?.("collectionIntelligence.seasonalGaps") || "Seasonal Gaps"}</h4>
 
             {coverageSummary.gaps.map((item) => (
               <p
                 key={`${item.category}-${item.target}`}
                 style={{ color: item.seasonColor }}
               >
-                {getSeasonIcon(item.target)} {item.label}
+                {getSeasonIcon(item.target)} {getCoverageGapLabel(item, translator) || item.label}
               </p>
             ))}
           </div>
@@ -2778,23 +2818,33 @@ function RequirementLine({ isMet, value }) {
   );
 }
 
-function BoxIntelligenceSummary({ intelligence }) {
+function BoxIntelligenceSummary({ intelligence, translator }) {
   if (!intelligence?.items?.length) {
     return null;
   }
 
   return (
-    <section className="box-intelligence" aria-label="Box Intelligence">
+    <section className="box-intelligence" aria-label={translator?.t?.("collectionIntelligence.boxIntelligence") || "Box Intelligence"}>
       <div className="box-intelligence-header">
-        <h3>Box Intelligence</h3>
-        {intelligence.isEarly && <span>Early read</span>}
+        <h3>{translator?.t?.("collectionIntelligence.boxIntelligence") || "Box Intelligence"}</h3>
+        {intelligence.isEarly && (
+          <span>{translator?.t?.("collectionIntelligence.earlyRead") || "Early read"}</span>
+        )}
       </div>
 
       <div className="box-intelligence-grid">
         {intelligence.items.map((item) => (
           <div className="box-intelligence-item" key={item.type}>
-            <span>{item.label}</span>
-            <strong>{item.value}</strong>
+            <span>
+              {item.type === "profile"
+                ? getBoxIntelligenceProfileLabel(intelligence.isEarly, translator)
+                : getBoxIntelligenceCoverageLabel(translator)}
+            </span>
+            <strong>
+              {item.type === "profile"
+                ? getDominantProfileLabel(item.value, translator)
+                : getStrongestCoverageLabel(item.value, translator)}
+            </strong>
           </div>
         ))}
       </div>
@@ -3838,20 +3888,22 @@ function NextImprovementSection({
     return null;
   }
 
+  const copy = getNextImprovementCopy(result, translator);
+
   return (
     <section
       ref={sectionRef}
       className={`next-improvement-section ${isEmphasized ? "is-emphasized" : ""}`}
-      aria-label="Next improvement"
+      aria-label={translator?.t?.("collectionIntelligence.nextImprovement") || "Next improvement"}
     >
       <div className="next-improvement-copy">
-        <span>{result.eyebrow}</span>
-        <h4 tabIndex={-1}>{result.title}</h4>
-        <p>{result.description}</p>
+        <span>{copy.eyebrow}</span>
+        <h4 tabIndex={-1}>{copy.title}</h4>
+        <p>{copy.description}</p>
       </div>
 
       <RecommendationLane
-        title="Recommended Next Pick"
+        title={translator?.t?.("collectionIntelligence.recommendedNextPick") || "Recommended Next Pick"}
         recommendations={result.recommendations}
         selectedPerfumeIds={selectedPerfumeIds}
         isBoxFull={isBoxFull}
@@ -3915,12 +3967,21 @@ function RecommendationLaneContent({
       <div className="recommendation-lane-header">
         <h4 tabIndex={-1}>{title}</h4>
 
-        <div className="recommendation-carousel-controls" aria-label={`${title} recommendations`}>
+        <div
+          className="recommendation-carousel-controls"
+          aria-label={
+            translator?.t?.("collectionIntelligence.laneRecommendations", { title }) ||
+            `${title} recommendations`
+          }
+        >
           <button
             type="button"
             onClick={goToPrevious}
             disabled={!hasMultipleRecommendations}
-            aria-label={`Previous ${title} recommendation`}
+            aria-label={
+              translator?.t?.("collectionIntelligence.previousLaneRecommendation", { title }) ||
+              `Previous ${title} recommendation`
+            }
           >
             &lt;
           </button>
@@ -3933,7 +3994,10 @@ function RecommendationLaneContent({
             type="button"
             onClick={goToNext}
             disabled={!hasMultipleRecommendations}
-            aria-label={`Next ${title} recommendation`}
+            aria-label={
+              translator?.t?.("collectionIntelligence.nextLaneRecommendation", { title }) ||
+              `Next ${title} recommendation`
+            }
           >
             &gt;
           </button>
@@ -4319,6 +4383,7 @@ function BoxSlotTray({
   onNextSlotRecommendation,
   onRemovePerfume,
   onReorderPerfumes,
+  translator,
 }) {
   const [activeSlotIndex, setActiveSlotIndex] = useState(null);
   const [draggingIndex, setDraggingIndex] = useState(null);
@@ -4439,6 +4504,7 @@ function BoxSlotTray({
               }}
               onPointerUp={handlePointerUp}
               onClick={handleSlotClick}
+              translator={translator}
             />
         ))}
       </div>
@@ -4475,6 +4541,7 @@ function BoxSlotTray({
               }}
               onPointerUp={handlePointerUp}
               onClick={handleSlotClick}
+              translator={translator}
             />
           ) : null
         )}
@@ -4501,6 +4568,7 @@ function BoxVialSlot({
   onPointerEnter,
   onPointerUp,
   onClick,
+  translator,
 }) {
   if (isReserved) {
     return (
@@ -4534,7 +4602,13 @@ function BoxVialSlot({
       <EmptySlotElement
         className={`box-vial empty ${isNextAvailable ? "next-available" : "passive-empty"} ${isDragTarget ? "drag-target" : ""}`}
         data-slot-index={index}
-        aria-label={isNextAvailable ? "View recommendations for the next box slot" : `Empty slot ${index + 1}`}
+        aria-label={
+          isNextAvailable
+            ? translator?.t?.("collectionIntelligence.viewRecommendationsForNextSlot") ||
+              "View recommendations for the next box slot"
+            : translator?.t?.("collectionIntelligence.emptySlot", { index: index + 1 }) ||
+              `Empty slot ${index + 1}`
+        }
         type={isNextAvailable ? "button" : undefined}
         onClick={isNextAvailable ? onNextSlotRecommendation : undefined}
         onKeyDown={isNextAvailable ? handleNextSlotKeyDown : undefined}
@@ -4561,7 +4635,10 @@ function BoxVialSlot({
         isDragging ? "is-dragging" : ""
       } ${isDragTarget ? "drag-target" : ""}`}
       data-slot-index={index}
-      aria-label={`Filled slot ${index + 1}: ${perfume.name}`}
+      aria-label={
+        translator?.t?.("collectionIntelligence.filledSlot", { index: index + 1, name: perfume.name }) ||
+        `Filled slot ${index + 1}: ${perfume.name}`
+      }
       title={perfume.name}
       draggable
       onDragStart={(event) => onDragStart(event, index)}
@@ -4591,7 +4668,10 @@ function BoxVialSlot({
             event.stopPropagation();
             onRemove(index);
           }}
-          aria-label={`Remove ${perfume.name}`}
+          aria-label={
+            translator?.t?.("collectionIntelligence.removePerfume", { name: perfume.name }) ||
+            `Remove ${perfume.name}`
+          }
         >
           ×
         </button>

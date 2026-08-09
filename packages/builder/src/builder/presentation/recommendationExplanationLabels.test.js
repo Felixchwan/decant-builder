@@ -91,6 +91,49 @@ describe("recommendationExplanationLabels", () => {
     ]);
   });
 
+  it("translates objectiveReasons instead of leaking raw English into the reason list", () => {
+    const recommendation = {
+      perfume: winterPerfume,
+      finalScore: 82,
+      objectiveReasons: ["Adds a stronger after-dark profile", "Adds evening range"],
+      scoreBreakdown: {},
+    };
+
+    const enReasons = getRecommendationDisplayReasons({
+      recommendation,
+      objectiveKey: "evening",
+      translator: createTranslator("en-US"),
+    });
+    expect(enReasons).toEqual(["Adds a stronger after-dark profile", "Adds evening range"]);
+
+    const esReasons = getRecommendationDisplayReasons({
+      recommendation,
+      objectiveKey: "evening",
+      translator: createTranslator("es-MX"),
+    });
+    expect(esReasons).toEqual([
+      "Agrega rango nocturno",
+      "Agrega un perfil más marcado para después del atardecer",
+    ]);
+    esReasons.forEach((reason) => {
+      expect(reason).not.toMatch(/^(Adds|Improves|Strengthens|Broadens|Expands)\b/);
+    });
+  });
+
+  it("falls back to the raw objective reason text when no translator is supplied", () => {
+    const reasons = getRecommendationDisplayReasons({
+      recommendation: {
+        perfume: winterPerfume,
+        finalScore: 82,
+        objectiveReasons: ["Adds a stronger after-dark profile"],
+        scoreBreakdown: {},
+      },
+      objectiveKey: "evening",
+    });
+
+    expect(reasons).toEqual(["Adds a stronger after-dark profile"]);
+  });
+
   it("keeps legacy reason fallback display-only and filters low-value filler", () => {
     const reasons = getRecommendationDisplayReasons({
       recommendation: {

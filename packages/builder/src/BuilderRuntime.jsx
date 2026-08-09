@@ -7,6 +7,7 @@ import MetadataPreview from "./components/MetadataPreview";
 import { buildScentDna } from "./utils/buildScentDna";
 import { buildCatalogView } from "./builder/internal/catalog/buildCatalogView.js";
 import { buildCollectionSummary } from "./builder/internal/intelligence/buildCollectionSummary.js";
+import { deriveDefaultComposerBudget } from "./builder/internal/composer/deriveDefaultComposerBudget.js";
 import {
   clearPersistedBuilderState,
   createBuilderPersistencePayload,
@@ -155,13 +156,42 @@ function App({
     occasions: "",
     vibes: "",
   });
-  const [composerSettings, setComposerSettings] = useState({
-    strategy: "balanced",
-    collectionStyle: "balanced_mix",
-    budget: String(minimumComposerBudget),
-    seasons: [],
-    occasions: [],
-    vibes: [],
+  const hasCustomizedComposerBudgetRef = useRef(false);
+  const [composerSettings, setComposerSettings] = useState(() => {
+    const initialSelectedPerfumes = initialSelectionState.selectedPerfumes;
+    const initialTotalPoints = initialSelectedPerfumes.reduce(
+      (sum, perfume) => sum + perfume.points,
+      0
+    );
+    const initialMissingSlots = Math.max(0, MIN_BOX_SLOTS - initialSelectedPerfumes.length);
+    const initialMissingPoints = Math.max(
+      0,
+      (builderConfig.box.minPoints || 0) - initialTotalPoints
+    );
+
+    const completionAwareDefault = deriveDefaultComposerBudget({
+      catalog: perfumes,
+      missingSlots: initialMissingSlots,
+      missingPoints: initialMissingPoints,
+      pointValue: builderConfig.commerce.pointValue,
+    });
+
+    return {
+      strategy: "balanced",
+      collectionStyle: "balanced_mix",
+      // Never below the permissive gate (minimumComposerBudget): missingSlots
+      // is state-aware and can be smaller than the static slot-count floor
+      // the gate uses once the box already has some progress, which could
+      // otherwise produce a default the gate itself would reject.
+      budget: String(
+        Number.isFinite(minimumComposerBudget)
+          ? Math.max(completionAwareDefault, minimumComposerBudget)
+          : completionAwareDefault
+      ),
+      seasons: [],
+      occasions: [],
+      vibes: [],
+    };
   });
   const [composerProposal, setComposerProposal] = useState(null);
   const [isComposerGenerating, setIsComposerGenerating] = useState(false);
@@ -455,9 +485,40 @@ const isComposerProposalStale = isComposerBoxProposalStale(
     const nextValue =
       field === "budget" && value !== "" && Number(value) < 0 ? "0" : value;
 
+    if (field === "budget") {
+      hasCustomizedComposerBudgetRef.current = true;
+    }
+
     setComposerSettings((currentSettings) => ({
       ...currentSettings,
       [field]: nextValue,
+    }));
+  }
+
+  // Called right before the Composer setup modal opens. If the customer has
+  // never touched the budget field, refresh it to the current completion-aware
+  // default rather than leaving whatever was true when the component first
+  // mounted — the box may have gained or lost items since then. Once the
+  // customer has typed their own value (including clearing it for "no limit"),
+  // that choice is preserved and never overwritten here.
+  function refreshComposerBudgetDefault() {
+    if (hasCustomizedComposerBudgetRef.current) {
+      return;
+    }
+
+    const completionAwareDefault = deriveDefaultComposerBudget({
+      catalog: perfumes,
+      missingSlots,
+      missingPoints,
+      pointValue: builderConfig.commerce.pointValue,
+    });
+    const freshDefault = Number.isFinite(minimumComposerBudget)
+      ? Math.max(completionAwareDefault, minimumComposerBudget)
+      : completionAwareDefault;
+
+    setComposerSettings((currentSettings) => ({
+      ...currentSettings,
+      budget: String(freshDefault),
     }));
   }
 
@@ -997,6 +1058,7 @@ const confirmAddPerfume = () => {
             composerStatusMessage={composerStatusMessage}
             isComposerProposalStale={isComposerProposalStale}
             onComposerSettingChange={handleComposerSettingChange}
+            onRefreshComposerBudgetDefault={refreshComposerBudgetDefault}
             onComposerPreferenceToggle={handleComposerPreferenceToggle}
             onComposerPreferenceClear={handleComposerPreferenceClear}
             onComposeMyBox={handleComposeMyBox}

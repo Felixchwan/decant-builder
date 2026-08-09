@@ -1,4 +1,5 @@
 import { getObjectiveCompatibilityScore } from "../internal/intelligence/buildCollectionIntelligenceViewModel.js";
+import { getObjectiveReasonLabel } from "./collectionIntelligenceLabels.js";
 
 const MAX_RECOMMENDATION_EXPLANATIONS = 3;
 
@@ -34,7 +35,7 @@ export function getRecommendationDisplayReasons({ recommendation, objectiveKey, 
     : [];
   const reasons = Array.isArray(recommendation?.reasons) ? recommendation.reasons : [];
   const objectiveReasons = objectiveKey
-    ? getObjectiveReasonOptions(recommendation, objectiveKey)
+    ? getObjectiveReasonOptions(recommendation, objectiveKey, translator)
     : [];
   const reasonOptions = [
     ...objectiveReasons,
@@ -198,12 +199,12 @@ export function getRecommendationExplanationLabel(explanation = {}, translator) 
   return "";
 }
 
-function getObjectiveReasonOptions(recommendation, objectiveKey) {
+function getObjectiveReasonOptions(recommendation, objectiveKey, translator) {
   const compatibilityReasons = recommendation?.objectiveReasons || [];
 
   if (compatibilityReasons.length > 0) {
     return compatibilityReasons.map((reason) => ({
-      label: reason,
+      label: getObjectiveReasonLabel(reason, translator),
       category: "objective",
       priority: 0,
       topic: objectiveKey,
@@ -212,7 +213,7 @@ function getObjectiveReasonOptions(recommendation, objectiveKey) {
 
   return getObjectiveCompatibilityScore(objectiveKey, recommendation?.perfume).reasons.map(
     (reason) => ({
-      label: reason,
+      label: getObjectiveReasonLabel(reason, translator),
       category: "objective",
       priority: 0,
       topic: objectiveKey,

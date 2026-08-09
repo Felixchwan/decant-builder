@@ -25,6 +25,7 @@ export function buildCoverageSummary(boxSummary, perfumes = []) {
           category,
           target,
           label: `Strong ${formatLabel(target)} Coverage`,
+          level: "strong",
           count,
         });
       }
@@ -34,6 +35,7 @@ export function buildCoverageSummary(boxSummary, perfumes = []) {
           category,
           target,
           label: `${formatLabel(target)} Covered`,
+          level: "covered",
           count,
         });
       }

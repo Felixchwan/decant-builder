@@ -153,6 +153,51 @@ describe("BuilderPanel Composer setup launcher", () => {
     expect(curatorIndex).toBeGreaterThan(composerIndex);
   });
 
+  it("localizes the review-requirement conjunction instead of hardcoding English 'and'", () => {
+    const enMarkup = renderBuilderPanel({ missingSlots: 6, missingPoints: 12 });
+    expect(enMarkup).toContain("6 more fragrances and 12.0 more points");
+
+    const esMarkup = renderBuilderPanel({
+      builderConfig: aurelianConfig,
+      missingSlots: 6,
+      missingPoints: 12,
+    });
+    expect(esMarkup).toContain("6 fragancias y 12.0 puntos");
+    expect(esMarkup).not.toMatch(/fragancias and|puntos and/);
+  });
+
+  it("does not introduce a conjunction when only one requirement is outstanding", () => {
+    const slotsOnlyMarkup = renderBuilderPanel({ missingSlots: 2, missingPoints: 0 });
+    expect(slotsOnlyMarkup).toContain("<p>Need 2 more fragrances to review.</p>");
+
+    const pointsOnlyMarkup = renderBuilderPanel({
+      builderConfig: aurelianConfig,
+      missingSlots: 0,
+      missingPoints: 3,
+    });
+    expect(pointsOnlyMarkup).toContain("<p>Falta 3.0 puntos para revisar.</p>");
+  });
+
+  it("keeps only the operational summary sticky, leaving Collection Card onward in normal flow", () => {
+    const markup = renderBuilderPanel();
+    const stickyOpenIndex = markup.indexOf('class="builder-panel-sticky-summary"');
+    const stickyCloseIndex = markup.indexOf("</div>", markup.indexOf("box-slot-tray"));
+    const collectionCardIndex = markup.indexOf("Collection Card");
+
+    expect(stickyOpenIndex).toBeGreaterThan(-1);
+    expect(markup.indexOf("panel-header")).toBeGreaterThan(stickyOpenIndex);
+    expect(markup.indexOf("box-summary-card")).toBeGreaterThan(stickyOpenIndex);
+    expect(markup.indexOf("box-slot-tray")).toBeGreaterThan(stickyOpenIndex);
+    expect(collectionCardIndex).toBeGreaterThan(stickyCloseIndex);
+
+    expect(appCss).toMatch(/:where\(\.builder-scope\) \.builder-panel-sticky-summary \{[^}]*position:\s*sticky;/s);
+    expect(appCss).not.toMatch(/:where\(\.builder-scope\) \.builder-panel \{[^}]*position:\s*sticky;/s);
+    expect(appCss).toMatch(
+      /@media \(max-width: 980px\) \{[\s\S]*?:where\(\.builder-scope\) \.builder-panel-sticky-summary \{[^}]*position:\s*static;/
+    );
+    expect(appCss).not.toMatch(/\.review-action\.is-incomplete\s*\{\s*display:\s*none;/);
+  });
+
   it("keeps Collection Card share actions and responsive tooltip feedback available", () => {
     const markup = renderBuilderPanel({ isDevelopment: true });
 

@@ -607,9 +607,19 @@ describe("buildCollectionIntelligenceViewModel", () => {
         objectiveKey: "coldWeather",
         objectiveUrgency: 90,
         title: "Add warm evening fragrance",
+        titleCode: undefined,
         description:
           "Your box is beginning to lean fresh-heavy. A warmer evening addition would add depth and improve cold-weather range. The next recommendation is chosen to answer that opportunity.",
+        descriptionCode: "objective",
+        descriptionParams: {
+          profile: "Fresh-heavy",
+          coverage: "Dominant spring coverage",
+          profilePhraseCode: "earlyLeaning",
+          objectiveKey: "coldWeather",
+          recommendationName: null,
+        },
         eyebrow: "EARLY OPPORTUNITY",
+        eyebrowCode: "earlyOpportunity",
         recommendations: [],
         primaryRecommendation: undefined,
       });
@@ -738,9 +748,19 @@ describe("buildCollectionIntelligenceViewModel", () => {
       objectiveKey: "coldWeather",
       objectiveUrgency: 90,
       title: "Add warm evening fragrance",
+      titleCode: undefined,
       description:
         "Your box is currently strongest as fresh-heavy. A warmer evening addition would add depth and improve cold-weather range. Amber Night is the pick that best answers that opportunity.",
+      descriptionCode: "objective",
+      descriptionParams: {
+        profile: "Fresh-heavy",
+        coverage: "Strong daily versatility",
+        profilePhraseCode: "currentlyStrongest",
+        objectiveKey: "coldWeather",
+        recommendationName: "Amber Night",
+      },
       eyebrow: "NEXT IMPROVEMENT",
+      eyebrowCode: "nextImprovement",
       recommendations: [
         {
           ...amberNightRecommendation,

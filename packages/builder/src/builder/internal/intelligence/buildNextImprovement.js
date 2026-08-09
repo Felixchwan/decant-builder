@@ -48,6 +48,10 @@ export function buildNextImprovementResult({
     title: guidance.title,
     description: guidance.description,
     eyebrow: guidance.eyebrow,
+    eyebrowCode: guidance.eyebrowCode,
+    titleCode: guidance.titleCode,
+    descriptionCode: guidance.descriptionCode,
+    descriptionParams: guidance.descriptionParams,
     recommendations: objectiveResult.recommendations,
     primaryRecommendation,
   };
@@ -253,39 +257,68 @@ function buildNextImprovementGuidance({
   if (isBoxFull) {
     return {
       eyebrow: "NEXT IMPROVEMENT",
+      eyebrowCode: "nextImprovement",
       title: "Box complete",
+      titleCode: "boxComplete",
       description:
         "Your Discovery Box is full. Use the recommendation below only as a comparison point for future swaps.",
+      descriptionCode: "boxFull",
     };
   }
 
   if (selectedCount === 0) {
     return {
       eyebrow: "STARTER DIRECTION",
+      eyebrowCode: "starterDirection",
       title: "Start with a versatile anchor",
+      titleCode: "starterAnchor",
       description:
         "Choose a first fragrance that gives the box a clear center. The recommendation below is a strong opening pick.",
+      descriptionCode: "starter",
     };
   }
 
   const recommendationName = recommendation?.perfume?.shortName || recommendation?.perfume?.name;
-  const moveTitle = getObjectiveTitle(objectiveKey, bestNextMove, mainGap);
-  const profilePhrase =
-    selectedCount < 3
-      ? getEarlyProfilePhrase(profile)
-      : getProfileGuidancePhrase(profile, coverage);
+  const { title: moveTitle, titleCode } = getObjectiveTitle(objectiveKey, bestNextMove, mainGap);
+  const isEarlyProfile = selectedCount < 3;
+  const profilePhraseCode = getProfilePhraseCode(profile, isEarlyProfile);
   const improvementPhrase = getImprovementGuidancePhrase(
     objectiveKey,
     mainGap,
     bestNextMove,
     recommendationName
   );
+  const profilePhrase = isEarlyProfile
+    ? getEarlyProfilePhrase(profile)
+    : getProfileGuidancePhrase(profile, coverage);
 
   return {
     eyebrow: selectedCount < 3 ? "EARLY OPPORTUNITY" : "NEXT IMPROVEMENT",
+    eyebrowCode: selectedCount < 3 ? "earlyOpportunity" : "nextImprovement",
     title: moveTitle,
+    titleCode,
     description: `${profilePhrase} ${improvementPhrase}`,
+    descriptionCode: "objective",
+    descriptionParams: {
+      profile,
+      coverage,
+      profilePhraseCode,
+      objectiveKey,
+      recommendationName: recommendationName || null,
+    },
   };
+}
+
+function getProfilePhraseCode(profile, isEarlyProfile) {
+  if (isEarlyProfile) {
+    return profile && profile !== "Still taking shape" ? "earlyLeaning" : "earlyForming";
+  }
+
+  if (profile === "Balanced and versatile") {
+    return "balancedAlready";
+  }
+
+  return profile ? "currentlyStrongest" : "clearStart";
 }
 
 function getObjectiveFromGap({ mainGap, bestNextMove }) {
@@ -458,30 +491,40 @@ function getObjectiveTitle(objectiveKey, bestNextMove, mainGap) {
     .trim();
 
   if (objectiveKey === getObjectiveFromGap({ mainGap, bestNextMove }) && normalizedMove) {
-    return `Add ${normalizedMove.charAt(0).toLowerCase()}${normalizedMove.slice(1)}`;
+    // Echoes the gap-detection system's own English text, which that system
+    // also regex-matches internally (see getObjectiveFromGap's bestNextMove
+    // fallback branches). Translating this display value without first
+    // decoupling the engine's matching logic from its display text would
+    // risk silently breaking that matching, so this branch intentionally
+    // stays untranslated for this sprint. titleCode is omitted (not null'd
+    // to a fixed key) so the presentation layer falls back to this raw text.
+    return {
+      title: `Add ${normalizedMove.charAt(0).toLowerCase()}${normalizedMove.slice(1)}`,
+      titleCode: undefined,
+    };
   }
 
   if (objectiveKey === "coldWeather") {
-    return "Add warm evening depth";
+    return { title: "Add warm evening depth", titleCode: "warmEveningDepth" };
   }
 
   if (objectiveKey === "formal") {
-    return "Expand formal versatility";
+    return { title: "Expand formal versatility", titleCode: "expandFormalVersatility" };
   }
 
   if (objectiveKey === "freshDaytime") {
-    return "Add fresh daytime contrast";
+    return { title: "Add fresh daytime contrast", titleCode: "freshDaytimeContrast" };
   }
 
   if (objectiveKey === "evening") {
-    return "Add a stronger evening profile";
+    return { title: "Add a stronger evening profile", titleCode: "strongerEveningProfile" };
   }
 
   if (objectiveKey === "contrast") {
-    return "Add a contrasting profile";
+    return { title: "Add a contrasting profile", titleCode: "contrastingProfile" };
   }
 
-  return "Add a clearer contrast";
+  return { title: "Add a clearer contrast", titleCode: "clearerContrast" };
 }
 
 function getEarlyProfilePhrase(profile) {
