@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { getTierData } from "./utils/tierUtils";
 import PerfumeCard from "./components/PerfumeCard";
 import FilterBar from "./components/FilterBar";
@@ -8,6 +8,7 @@ import { buildScentDna } from "./utils/buildScentDna";
 import { buildCatalogView } from "./builder/internal/catalog/buildCatalogView.js";
 import { buildCollectionSummary } from "./builder/internal/intelligence/buildCollectionSummary.js";
 import { deriveDefaultComposerBudget } from "./builder/internal/composer/deriveDefaultComposerBudget.js";
+import { computeCatalogReflowSplit } from "./builder/internal/layout/computeCatalogReflowSplit.js";
 import {
   clearPersistedBuilderState,
   createBuilderPersistencePayload,
@@ -243,6 +244,135 @@ function App({
   );
   const filterOptions = catalogView.filterOptions;
   const visiblePerfumes = catalogView.visiblePerfumes;
+
+  // Once the sticky right panel's own content ends, the catalog below that
+  // point should reclaim the panel's column width instead of leaving it
+  // empty for the rest of the scroll. catalogSplitIndex is the number of
+  // cards that stay in the narrow, panel-constrained grid; the remainder
+  // render in a second, full-width grid after .layout. null means "no
+  // split" (render everything in one grid — current/legacy behavior),
+  // which is also the safe fallback whenever measurement isn't possible
+  // (SSR, no ResizeObserver, narrower-than-desktop viewport, or an empty
+  // catalog).
+  const catalogPanelRef = useRef(null);
+  const catalogGridRef = useRef(null);
+  const [catalogSplitIndex, setCatalogSplitIndex] = useState(null);
+
+  useLayoutEffect(() => {
+    if (typeof window === "undefined" || typeof ResizeObserver === "undefined") {
+      return undefined;
+    }
+
+    const desktopQuery = window.matchMedia("(min-width: 981px)");
+
+    function recomputeCatalogSplit() {
+      if (!desktopQuery.matches || visiblePerfumes.length === 0) {
+        setCatalogSplitIndex(null);
+        return;
+      }
+
+      const panelEl = catalogPanelRef.current;
+      const gridEl = catalogGridRef.current;
+      const sectionEl = gridEl?.closest(".catalog-section");
+      if (!panelEl || !gridEl || !sectionEl || gridEl.children.length === 0) {
+        setCatalogSplitIndex(null);
+        return;
+      }
+
+      const gridStyle = window.getComputedStyle(gridEl);
+      const columnCount = gridStyle
+        .getPropertyValue("grid-template-columns")
+        .split(" ")
+        .filter(Boolean).length;
+      const rowGap = parseFloat(gridStyle.rowGap || gridStyle.gap || "0") || 0;
+
+      // The grid the split renders into is nested inside .catalog-section,
+      // below the panel-header/search/filter chrome and the section's own
+      // padding — .builder-panel has no such offset (it's the grid item
+      // itself). Measuring that reserved height directly (rather than
+      // assuming a fixed value) keeps this correct if that chrome ever
+      // changes, and is what the panel height actually needs to be
+      // compared against for the two grid items to end at the same point.
+      const reservedSectionHeight =
+        sectionEl.getBoundingClientRect().height - gridEl.getBoundingClientRect().height;
+      const availableGridHeight =
+        panelEl.getBoundingClientRect().height - reservedSectionHeight;
+
+      // Anchor to the real, currently-rendered rows first (exact — no
+      // assumptions) instead of trusting a single uniform row-height
+      // estimate for the whole available height. Rows aren't uniform: a
+      // two-line perfume name stretches its whole row via the grid's
+      // default align-items:stretch, and an estimate compounded across
+      // many rows can drift by more than one row's worth of height,
+      // especially when several such rows fall inside the same estimate.
+      // Only the portion beyond what's currently rendered (room for the
+      // panel to still grow into) falls back to an estimate, and that
+      // estimate now only has to cover the leftover gap, not the whole
+      // available height — bounding its worst case to roughly one row
+      // either way.
+      const rows = getGridRows(gridEl);
+      let confirmedRows = 0;
+      let confirmedHeight = 0;
+      for (let i = 0; i < rows.length; i += 1) {
+        const addition = (i === 0 ? 0 : rowGap) + rows[i].height;
+        if (confirmedHeight + addition > availableGridHeight) break;
+        confirmedHeight += addition;
+        confirmedRows += 1;
+      }
+
+      let splitIndex = Math.min(confirmedRows * columnCount, visiblePerfumes.length);
+
+      const allRenderedRowsFit = confirmedRows === rows.length;
+      if (allRenderedRowsFit && splitIndex < visiblePerfumes.length) {
+        const additional = computeCatalogReflowSplit({
+          panelHeight: availableGridHeight - confirmedHeight,
+          cardHeight: getModeCardHeight(gridEl),
+          columnCount,
+          rowGap,
+          totalCount: visiblePerfumes.length - splitIndex,
+        });
+        splitIndex = Math.min(splitIndex + additional, visiblePerfumes.length);
+      }
+
+      setCatalogSplitIndex(splitIndex >= visiblePerfumes.length ? null : splitIndex);
+    }
+
+    recomputeCatalogSplit();
+
+    const observer = new ResizeObserver(recomputeCatalogSplit);
+    if (catalogPanelRef.current) observer.observe(catalogPanelRef.current);
+    desktopQuery.addEventListener("change", recomputeCatalogSplit);
+    window.addEventListener("resize", recomputeCatalogSplit);
+
+    return () => {
+      observer.disconnect();
+      desktopQuery.removeEventListener("change", recomputeCatalogSplit);
+      window.removeEventListener("resize", recomputeCatalogSplit);
+    };
+    // ResizeObserver is the general-purpose signal (it also catches panel-
+    // height changes this component can't otherwise see, e.g. the Collection
+    // Snapshot's own internal expand/collapse toggle). The state values below
+    // are listed too, as a direct, synchronous fallback for the height
+    // changes this component *does* know about, since ResizeObserver
+    // callbacks land on their own async schedule.
+  }, [
+    // The array reference (not just its length), since a search/filter
+    // change can swap in a same-length but different set of cards whose
+    // rendered heights differ from the previous set.
+    visiblePerfumes,
+    totalSlots,
+    missingSlots,
+    missingPoints,
+    isBoxReady,
+    composerProposal,
+    isComposerGenerating,
+    curatorBonusPreference,
+  ]);
+
+  const catalogSplitPerfumes =
+    catalogSplitIndex === null ? visiblePerfumes : visiblePerfumes.slice(0, catalogSplitIndex);
+  const catalogOverflowPerfumes =
+    catalogSplitIndex === null ? [] : visiblePerfumes.slice(catalogSplitIndex);
 
   const detailPerfumeIndex = detailPerfume
     ? visiblePerfumes.findIndex((perfume) => perfume.id === detailPerfume.id)
@@ -869,6 +999,27 @@ const confirmAddPerfume = () => {
     }
   }
 
+  function renderCatalogCard(perfume) {
+    const tierData = getTierData(perfume.id);
+
+    return (
+      <PerfumeCard
+        key={perfume.id}
+        perfume={perfume}
+        assetResolver={assetResolver}
+        tierData={tierData}
+        onAddToBox={addPerfume}
+        onOpenDetails={(perfume) => openPerfumeDetails(perfume, "manual")}
+        isDisabled={totalSlots >= MAX_SELECTABLE_SLOTS}
+        labels={{
+          add: t("general.add"),
+          addToBox: t("general.addToBox"),
+          viewDetails: t("details.view"),
+        }}
+      />
+    );
+  }
+
   return (
     <div
       ref={builderRootRef}
@@ -995,27 +1146,8 @@ const confirmAddPerfume = () => {
               setSortOption={handleSortChange}
             />
 
-            <div className="catalog-grid">
-              {visiblePerfumes.map((perfume) => {
-                const tierData = getTierData(perfume.id);
-
-                return (
-                  <PerfumeCard
-                    key={perfume.id}
-                    perfume={perfume}
-                    assetResolver={assetResolver}
-                    tierData={tierData}
-                    onAddToBox={addPerfume}
-                    onOpenDetails={(perfume) => openPerfumeDetails(perfume, "manual")}
-                    isDisabled={totalSlots >= MAX_SELECTABLE_SLOTS}
-                    labels={{
-                      add: t("general.add"),
-                      addToBox: t("general.addToBox"),
-                      viewDetails: t("details.view"),
-                    }}
-                  />
-                );
-              })}
+            <div className="catalog-grid" ref={catalogGridRef}>
+              {catalogSplitPerfumes.map(renderCatalogCard)}
             </div>
           </section>
         </div>
@@ -1027,6 +1159,7 @@ const confirmAddPerfume = () => {
           }`}
         >
           <BuilderPanel
+            ref={catalogPanelRef}
             builderConfig={builderConfig}
             assetResolver={assetResolver}
             portalRoot={portalRoot}
@@ -1076,6 +1209,14 @@ const confirmAddPerfume = () => {
           />
         </div>
       </section>
+
+      {catalogOverflowPerfumes.length > 0 && (
+        <section className="catalog-section catalog-section--reflow">
+          <div className="catalog-grid">
+            {catalogOverflowPerfumes.map(renderCatalogCard)}
+          </div>
+        </section>
+      )}
     </main>
     {detailPerfume && (
       <PerfumeDetailsModal
@@ -1140,6 +1281,46 @@ const confirmAddPerfume = () => {
 )}
     </div>
   );
+}
+
+function getGridRows(gridEl) {
+  const gridTop = gridEl.getBoundingClientRect().top;
+  const rows = [];
+
+  for (const card of gridEl.children) {
+    const rect = card.getBoundingClientRect();
+    const relativeTop = Math.round(rect.top - gridTop);
+    const height = Math.round(rect.height);
+    if (height <= 0) continue;
+
+    const currentRow = rows[rows.length - 1];
+    if (currentRow && Math.abs(currentRow.top - relativeTop) < 2) {
+      currentRow.height = Math.max(currentRow.height, height);
+    } else {
+      rows.push({ top: relativeTop, height });
+    }
+  }
+
+  return rows;
+}
+
+function getModeCardHeight(gridEl) {
+  const counts = new Map();
+  let mode = null;
+  let modeCount = 0;
+
+  for (const card of gridEl.children) {
+    const height = Math.round(card.getBoundingClientRect().height);
+    if (height <= 0) continue;
+    const count = (counts.get(height) || 0) + 1;
+    counts.set(height, count);
+    if (count > modeCount) {
+      modeCount = count;
+      mode = height;
+    }
+  }
+
+  return mode;
 }
 
 function loadPersistedBuilderState({ builderConfig, perfumes, defaultBuilderState }) {

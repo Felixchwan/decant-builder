@@ -69,7 +69,7 @@ import {
 } from "../builder/internal/portal/collectionCardExportStage.js";
 
 const EMPTY_RECOMMENDATIONS = [];
-function BuilderPanel({
+const BuilderPanel = forwardRef(function BuilderPanel({
   builderConfig,
   assetResolver,
   portalRoot,
@@ -116,7 +116,7 @@ function BuilderPanel({
   analytics = noopAnalytics,
   finalizationAdapter,
   isDevelopment = false,
-}) {
+}, ref) {
     const translator = useMemo(
       () => createTranslator(builderConfig.locale),
       [builderConfig.locale]
@@ -496,7 +496,7 @@ function BuilderPanel({
       []
     );
   return (
-    <aside className="builder-panel">
+    <aside className="builder-panel" ref={ref}>
       <div className="builder-panel-sticky-summary">
         <div className="panel-header">
           <div className="builder-box-header-title">
@@ -542,7 +542,7 @@ function BuilderPanel({
 
             <div className="box-summary-metric box-summary-total">
               <strong>${estimatedValue.toFixed(0)}</strong>
-              <span>{builderConfig.commerce.totalLabel}</span>
+              <span>{t("general.orderTotalCompact")}</span>
             </div>
           </div>
 
@@ -910,7 +910,7 @@ function BuilderPanel({
       )}
     </aside>
   );
-}
+});
 
 function CollectionCardPreviewModal({
   cardProps,

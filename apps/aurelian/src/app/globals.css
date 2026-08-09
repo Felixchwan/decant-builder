@@ -21,6 +21,19 @@ button,input,select { font:inherit; }
 .desktop-nav a:hover,.desktop-nav a[aria-current="page"],.text-link:hover { color:var(--gold); }
 .desktop-nav a[aria-current="page"]::after { opacity:1; transform:scaleX(1); }
 .mobile-menu { display:none; margin-left:auto; }
+/* On the Builder route the header CTA is hidden (redundant with the page the
+   user is already on). Reserve that freed space on the right of the nav so
+   it doesn't stretch to the header's own edge, and instead ends roughly at
+   the boundary of the Builder's own right panel column. 360px mirrors the
+   shared Builder package's fixed right-panel column width (packages/builder
+   styles.css, .layout grid-template-columns) — kept as a literal here since
+   this app has no build-time link to that package's CSS; if that column
+   width ever changes, this should change with it. Scoped to the Builder's
+   own two-column breakpoint (981px), not this header's own 900px mobile
+   cutoff, since below 981px the Builder has no right panel to align with. */
+@media (min-width:981px) {
+  .site-header__inner--builder .desktop-nav { margin-right:376px; }
+}
 .button { display:inline-flex; justify-content:center; align-items:center; min-height:3rem; padding:.75rem 1.25rem; border:1px solid var(--gold); background:var(--gold); color:var(--ink); font-weight:750; letter-spacing:.02em; transition:background .2s ease,transform .2s ease; }
 .button:hover { background:#d6b778; transform:translateY(-1px); }
 .button--compact { min-height:2.55rem; padding:.55rem 1rem; font-size:.82rem; }

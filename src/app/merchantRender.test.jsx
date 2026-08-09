@@ -23,7 +23,7 @@ describe("merchant-localized Builder render", () => {
     expect(markup).toContain("Catalog");
     expect(markup).toContain("My Box");
     expect(markup).toContain("Compose My Box");
-    expect(markup).toContain("Order Total");
+    expect(markup).toContain("Points");
     expect(markup).not.toContain("Aurelian");
   });
 
@@ -33,7 +33,7 @@ describe("merchant-localized Builder render", () => {
     expect(markup).toContain("Catálogo");
     expect(markup).toContain("Mi caja");
     expect(markup).toContain("Armar mi caja");
-    expect(markup).toContain("Total del pedido");
+    expect(markup).toContain("Puntos");
     expect(markup).not.toContain("Discovery Decants");
   });
 

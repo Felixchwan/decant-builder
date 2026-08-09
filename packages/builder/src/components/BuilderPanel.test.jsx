@@ -256,7 +256,7 @@ describe("BuilderPanel Composer setup launcher", () => {
   it("uses customer-facing order terminology in the box summary", () => {
     const markup = renderBuilderPanel();
 
-    expect(markup).toContain("Order Total");
+    expect(markup).toContain("<span>Total</span>");
     expect(markup).not.toContain("Estimated Total");
   });
 

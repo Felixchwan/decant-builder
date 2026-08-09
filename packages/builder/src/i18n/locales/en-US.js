@@ -15,6 +15,7 @@ export const enUS = {
   "general.slots": "Slots",
   "general.points": "Points",
   "general.orderTotal": "Order Total",
+  "general.orderTotalCompact": "Total",
   "general.unlocked": "Unlocked",
   "general.locked": "Locked",
   "general.addToBox": "Add to Box",

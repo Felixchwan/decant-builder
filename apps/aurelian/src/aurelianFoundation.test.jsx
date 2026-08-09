@@ -195,6 +195,14 @@ describe("Aurelian application foundation", () => {
     expect(headerSource).toContain("onClick={() => closeMenu()}");
   });
 
+  it("hides the redundant desktop CTA on the Builder route and labels it correctly elsewhere", () => {
+    const headerSource = readFileSync(join(APP_ROOT, "src", "components", "SiteHeader.jsx"), "utf8");
+    expect(headerSource).toContain('pathname.startsWith("/build-your-box")');
+    expect(headerSource).toContain("{!isBuilderRoute && (");
+    expect(headerSource).toContain(">Construye tu caja</Link>");
+    expect(headerSource).not.toContain(">Construye tu box</Link>");
+  });
+
   it("publishes only the approved WhatsApp contact and enables generic finalization", () => {
     const markup = renderToStaticMarkup(<ContactPage />);
     expect(markup).toContain("+52 81 29 80 0010");

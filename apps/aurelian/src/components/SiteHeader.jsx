@@ -38,17 +38,20 @@ export function SiteHeader() {
   }, []);
 
   const isCurrent = (href) => href === "/" ? pathname === href : pathname.startsWith(href);
+  const isBuilderRoute = pathname.startsWith("/build-your-box");
 
   return (
     <header className="site-header">
-      <div className="site-header__inner">
+      <div className={`site-header__inner${isBuilderRoute ? " site-header__inner--builder" : ""}`}>
         <Link className="wordmark" href="/" aria-label="Aurelian Perfumes, inicio">
           <span>AURELIAN</span><small>PERFUMES</small>
         </Link>
         <nav className="desktop-nav" aria-label="Navegación principal">
           {links.map(([href, label]) => <Link aria-current={isCurrent(href) ? "page" : undefined} href={href} key={href}>{label}</Link>)}
         </nav>
-        <Link className="button button--compact desktop-cta" href="/build-your-box">Construye tu box</Link>
+        {!isBuilderRoute && (
+          <Link className="button button--compact desktop-cta" href="/build-your-box">Construye tu caja</Link>
+        )}
         <details className="mobile-menu" ref={menuRef}>
           <summary aria-label="Abrir navegación" ref={summaryRef}>Menú</summary>
           <nav aria-label="Navegación móvil">

@@ -15,6 +15,7 @@ export const esMX = {
   "general.slots": "Espacios",
   "general.points": "Puntos",
   "general.orderTotal": "Total del pedido",
+  "general.orderTotalCompact": "Total",
   "general.unlocked": "Desbloqueado",
   "general.locked": "Bloqueado",
   "general.addToBox": "Agregar a caja",

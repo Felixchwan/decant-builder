@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest";
 const builderCss = readFileSync(new URL("../../styles.css", import.meta.url), "utf8").replace(/\r\n/g, "\n");
 const originalRulesStart = builderCss.indexOf(":where(.builder-scope) .app {");
 const transformedOriginalRules = builderCss.slice(originalRulesStart);
-const BASELINE_SHA256 = "8400978b21ebaad9470dc9e0c561fe3a592bb723e6d345dad1337b408dc982e2";
+const BASELINE_SHA256 = "25b9c7b91c5464769b01e7069045513a981896489c597b34b0ab602d488dd53b";
 const unitDefinitions = [...builderCss.matchAll(/(--builder-unit-(\d+)):\s*([\d.]+)px;/g)];
 const unitReferences = [...builderCss.matchAll(/var\((--builder-unit-(\d+))\)/g)];
 
@@ -75,7 +75,7 @@ describe("Builder stylesheet namespace", () => {
 
   it("defines a complete fixed-length token set for every former rem magnitude", () => {
     expect(builderCss).not.toMatch(/\brem\b/);
-    expect(unitReferences).toHaveLength(235);
+    expect(unitReferences).toHaveLength(238);
     expect(unitDefinitions).toHaveLength(98);
 
     const referencedNames = new Set(unitReferences.map((match) => match[1]));
@@ -99,7 +99,7 @@ describe("Builder stylesheet namespace", () => {
 
   it("binds every ordinary selector to the neutral scope exactly once", () => {
     const selectors = collectRuleSelectors(builderCss);
-    expect(selectors).toHaveLength(1162);
+    expect(selectors).toHaveLength(1167);
     selectors.forEach((selector) => {
       expect(selector.startsWith(":where(.builder-scope)")).toBe(true);
       expect(selector.match(/:where\(\.builder-scope\)/g)).toHaveLength(1);
