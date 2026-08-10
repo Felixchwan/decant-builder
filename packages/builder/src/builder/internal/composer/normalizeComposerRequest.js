@@ -17,6 +17,17 @@ export function normalizeComposerRequest(input = {}, context = {}) {
   );
   const inputIssues = [];
   const budgetResult = normalizeBudget(source.budget, pointValue);
+  // composeCollection.js normalizes the raw caller request once, then hands
+  // a derived "engine request" to composeCollectionGreedy/refineCollection,
+  // which each normalize again internally (the same pattern every other
+  // field already relies on, e.g. minSlots/lockedPerfumeIds keep the same
+  // key name on the way out as on the way in, so a second pass is a no-op).
+  // pointsFloor is the one field whose normalized name differs from its raw
+  // input name (minimumPoints), so it must accept its own prior output too,
+  // or the value is silently dropped on that second pass.
+  const pointsFloor = normalizePointsFloor(
+    source.minimumPoints !== undefined ? source.minimumPoints : source.pointsFloor
+  );
   const lockedPerfumeIds = normalizeIdList(source.lockedPerfumeIds);
   const excludedPerfumeIdsBeforeConflict = normalizeIdList(source.excludedPerfumeIds);
   const lockedSet = new Set(lockedPerfumeIds);
@@ -55,6 +66,11 @@ export function normalizeComposerRequest(input = {}, context = {}) {
     currency,
     pointValue,
     maxPoints: budgetResult.maxPoints,
+    // Generic, host-supplied, opt-in lower aggregate-points bound — never
+    // derived from merchant config here or anywhere else in Composer. null
+    // means "no floor requested", and every downstream floor-aware branch
+    // is gated on that, preserving today's behavior exactly when omitted.
+    pointsFloor,
     minSlots,
     maxSlots,
     targetSlots,
@@ -95,6 +111,18 @@ function normalizeBudget(value, pointValue) {
     maxPoints: roundNumber(value / pointValue),
     issue: null,
   };
+}
+
+function normalizePointsFloor(value) {
+  if (value === undefined || value === null || value === "") {
+    return null;
+  }
+
+  if (typeof value !== "number" || !Number.isFinite(value) || value < 0) {
+    return null;
+  }
+
+  return roundNumber(value);
 }
 
 function normalizeIdList(value) {

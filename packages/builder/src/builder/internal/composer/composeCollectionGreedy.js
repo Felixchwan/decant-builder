@@ -15,6 +15,13 @@ export const GREEDY_COMPOSER_STATUSES = Object.freeze({
 export const GREEDY_TERMINATION_REASONS = Object.freeze({
   TARGET_SLOTS_REACHED: "target-slots-reached",
   COLLECTION_STYLE_TARGET_REACHED: "collection-style-target-reached",
+  // Only used when an explicit points floor forced construction past the
+  // collection style's own preferred target slot count, up to maxSlots, and
+  // the floor was then satisfied. When the floor happens to be met exactly
+  // at the ordinary target (no extra iterations forced), the ordinary
+  // TARGET_SLOTS_REACHED/COLLECTION_STYLE_TARGET_REACHED reasons are used
+  // instead, since nothing about the floor changed what already happened.
+  POINTS_FLOOR_REACHED: "points-floor-reached",
   NO_LEGAL_MOVE: "no-legal-move",
   NO_IMPROVING_MOVE: "no-improving-move",
   REQUEST_INFEASIBLE: "request-infeasible",
@@ -43,6 +50,9 @@ export function composeCollectionGreedy({
     candidatePerfumes: initialPerfumes,
     catalog: catalogPerfumes,
     config: builderConfig,
+    // The one genuine preflight moment: is an explicit points floor even
+    // reachable at all, before spending any search effort on it.
+    checkPointsFloorReachability: true,
   });
 
   if (hasRequestInfeasibility(requestConstraintResult.violations)) {
@@ -75,7 +85,11 @@ export function composeCollectionGreedy({
   const moveHistory = [];
   let terminationReason = GREEDY_TERMINATION_REASONS.TARGET_SLOTS_REACHED;
 
-  while (selectedPerfumes.length < searchPlan.targetSlots) {
+  while (
+    (selectedPerfumes.length < searchPlan.targetSlots ||
+      isBelowPointsFloor(normalizedRequest, selectedPerfumes)) &&
+    selectedPerfumes.length < normalizedRequest.maxSlots
+  ) {
     const moves = generateCandidateMoves({
       request: searchRequest,
       currentPerfumes: selectedPerfumes,
@@ -121,7 +135,14 @@ export function composeCollectionGreedy({
       selectedPerfumes.length >= searchPlan.noImprovingStopSlots &&
       searchRequest.collectionStyle.id !== COMPOSER_COLLECTION_STYLE_IDS.MORE_VARIETY &&
       currentQuality.evaluable &&
-      bestMove.qualityResult.overallScore <= currentQuality.overallScore + QUALITY_EPSILON
+      bestMove.qualityResult.overallScore <= currentQuality.overallScore + QUALITY_EPSILON &&
+      // An explicit, still-unmet points floor overrides the ordinary
+      // quality plateau: a caller who asked for a completion-valid box
+      // gets the least-damaging legal move toward it instead of an early
+      // stop, for as long as reaching it remains possible (moves that
+      // would make it impossible were already filtered out of `moves`
+      // above by generateCandidateMoves).
+      !isBelowPointsFloor(normalizedRequest, selectedPerfumes)
     ) {
       terminationReason = GREEDY_TERMINATION_REASONS.NO_IMPROVING_MOVE;
       break;
@@ -139,13 +160,39 @@ export function composeCollectionGreedy({
     });
   }
 
-  if (
-    terminationReason === GREEDY_TERMINATION_REASONS.TARGET_SLOTS_REACHED &&
+  // Captured once: every branch below only reinterprets a "the while
+  // condition itself became false" exit (the loop's only path that leaves
+  // terminationReason at its untouched default) — an internal break
+  // (NO_LEGAL_MOVE / NO_IMPROVING_MOVE / REQUEST_INFEASIBLE) always wins
+  // and is left alone.
+  const exitedThroughLoopCondition =
+    terminationReason === GREEDY_TERMINATION_REASONS.TARGET_SLOTS_REACHED;
+
+  if (exitedThroughLoopCondition && isBelowPointsFloor(normalizedRequest, selectedPerfumes)) {
+    // The only way the loop's own condition can become false while still
+    // below an explicit, believed-reachable floor is hitting maxSlots —
+    // an honest "ran out of room" outcome, not a real target completion.
+    terminationReason = GREEDY_TERMINATION_REASONS.NO_LEGAL_MOVE;
+  } else if (
+    exitedThroughLoopCondition &&
     searchPlan.targetSlots < normalizedRequest.targetSlots &&
     selectedPerfumes.length >= normalizedRequest.minSlots &&
     selectedPerfumes.length >= searchPlan.targetSlots
   ) {
     terminationReason = GREEDY_TERMINATION_REASONS.COLLECTION_STYLE_TARGET_REACHED;
+  }
+
+  if (
+    exitedThroughLoopCondition &&
+    normalizedRequest.pointsFloor != null &&
+    !isBelowPointsFloor(normalizedRequest, selectedPerfumes) &&
+    selectedPerfumes.length > searchPlan.targetSlots
+  ) {
+    // The floor genuinely forced construction past what the collection
+    // style's own target math would have produced — say so explicitly
+    // rather than reporting an ordinary target-reached reason that would
+    // misstate why the search kept going.
+    terminationReason = GREEDY_TERMINATION_REASONS.POINTS_FLOOR_REACHED;
   }
 
   return buildResult({
@@ -438,8 +485,22 @@ function hasRequestInfeasibility(violations) {
       "UNKNOWN_LOCKED_PERFUME",
       "LOCKED_POINTS_EXCEED_BUDGET",
       "INSUFFICIENT_CATALOG_CANDIDATES",
+      "POINTS_FLOOR_UNREACHABLE",
     ].includes(violation.code)
   );
+}
+
+function isBelowPointsFloor(request, perfumes) {
+  if (request.pointsFloor == null) {
+    return false;
+  }
+
+  const totalPoints = perfumes.reduce(
+    (sum, perfume) => sum + (Number.isFinite(perfume?.points) ? perfume.points : 0),
+    0
+  );
+
+  return totalPoints < request.pointsFloor;
 }
 
 function normalizePoints(value) {

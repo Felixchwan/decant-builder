@@ -1,11 +1,20 @@
 import { normalizeComposerRequest } from "./normalizeComposerRequest.js";
 import { requireComposerConfig } from "./requireComposerConfig.js";
+import { evaluatePointsFloorReachability } from "./evaluatePointsFloorReachability.js";
 
 export function evaluateComposerConstraints({
   request,
   candidatePerfumes = [],
   catalog = [],
   config,
+  // Below-floor is an expected, valid INTERMEDIATE state during
+  // construction — it must never make evaluateComposerConstraints reject a
+  // candidate outright (that would break quality evaluability for every
+  // state before the floor is crossed). This flag exists so the one or two
+  // genuine preflight call sites can opt into the (comparatively expensive,
+  // exact) reachability check, without paying that cost on every one of the
+  // many per-move calls made during search.
+  checkPointsFloorReachability = false,
 } = {}) {
   const builderConfig = requireComposerConfig(config);
   const normalizedRequest = isNormalizedComposerRequest(request)
@@ -39,6 +48,13 @@ export function evaluateComposerConstraints({
         : 0,
     lockedCount: normalizedRequest.lockedPerfumeIds.length,
     excludedCount: normalizedRequest.excludedPerfumeIds.length,
+    pointsFloor: normalizedRequest.pointsFloor ?? null,
+    pointsFloorMet:
+      normalizedRequest.pointsFloor == null ? null : totalPoints >= normalizedRequest.pointsFloor,
+    pointsFloorRemaining:
+      normalizedRequest.pointsFloor == null
+        ? null
+        : roundNumber(Math.max(0, normalizedRequest.pointsFloor - totalPoints)),
   };
   const violations = [];
 
@@ -59,11 +75,58 @@ export function evaluateComposerConstraints({
     metrics,
   });
 
+  if (checkPointsFloorReachability) {
+    addPointsFloorReachabilityViolations({
+      violations,
+      request: normalizedRequest,
+      candidateItems,
+      candidateIdSet,
+      catalogItems,
+      metrics,
+    });
+  }
+
   return {
     valid: violations.length === 0,
     violations,
     metrics,
   };
+}
+
+function addPointsFloorReachabilityViolations({
+  violations,
+  request,
+  candidateItems,
+  candidateIdSet,
+  catalogItems,
+  metrics,
+}) {
+  if (request.pointsFloor == null || metrics.pointsFloorMet) {
+    return;
+  }
+
+  const excludedIds = new Set(request.excludedPerfumeIds || []);
+  const legalCandidates = catalogItems.filter(
+    (perfume) =>
+      Number.isInteger(perfume?.id) &&
+      !candidateIdSet.has(perfume.id) &&
+      !excludedIds.has(perfume.id)
+  );
+  const { floorReachable } = evaluatePointsFloorReachability({
+    currentPoints: metrics.totalPoints,
+    legalCandidates,
+    remainingSlots: request.maxSlots - candidateItems.length,
+    remainingBudget: metrics.remainingPoints,
+    pointsFloor: request.pointsFloor,
+  });
+
+  if (!floorReachable) {
+    addViolation(violations, {
+      code: "POINTS_FLOOR_UNREACHABLE",
+      pointsFloor: request.pointsFloor,
+      currentPoints: metrics.totalPoints,
+    });
+  }
 }
 
 function addRequestViolations({ violations, request, catalogById, catalogItems }) {

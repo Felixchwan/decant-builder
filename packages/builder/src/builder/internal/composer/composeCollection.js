@@ -1,4 +1,4 @@
-import { composeCollectionGreedy } from "./composeCollectionGreedy.js";
+import { GREEDY_TERMINATION_REASONS, composeCollectionGreedy } from "./composeCollectionGreedy.js";
 import { COMPOSER_MODES, normalizeComposerMode } from "./composerModes.js";
 import { evaluateComposerConstraints } from "./evaluateComposerConstraints.js";
 import { evaluateCompositionQuality } from "./evaluateCompositionQuality.js";
@@ -25,6 +25,11 @@ export const COMPOSER_TERMINATION_REASONS = Object.freeze({
   REQUEST_INFEASIBLE: "request-infeasible",
   MINIMUM_UNREACHABLE: "minimum-unreachable",
   FINAL_VALIDATION_FAILED: "final-validation-failed",
+  // Mirrors GREEDY_TERMINATION_REASONS.POINTS_FLOOR_REACHED — surfaced at
+  // the top level only when the final collection actually came from
+  // greedy's own extension past its ordinary target (not from refinement,
+  // which gets its own, separate reasons below).
+  POINTS_FLOOR_REACHED: "points-floor-reached",
 });
 
 const FINAL_SOURCES = Object.freeze({
@@ -220,6 +225,22 @@ function getGreedyRefinementEligibility(greedyResult, request) {
     };
   }
 
+  // Refinement is swap-only (see generateRefinementMoves.js) — it can never
+  // add slots, so it can never be the thing that reaches an unmet floor.
+  // Only greedy can do that. Gating eligibility here guarantees refinement
+  // is never invoked on a still-below-floor collection, which is exactly
+  // what lets its own floor rule stay simple: preserve satisfaction once
+  // achieved, nothing more.
+  if (
+    request.pointsFloor != null &&
+    !greedyResult?.finalConstraintResult?.metrics?.pointsFloorMet
+  ) {
+    return {
+      eligible: false,
+      reason: "greedy-below-points-floor",
+    };
+  }
+
   if (greedyResult.status === "impossible") {
     return {
       eligible: false,
@@ -305,6 +326,14 @@ function getComposerStatus({ constraintResult, qualityResult, selectedCount, req
       : COMPOSER_STATUSES.IMPOSSIBLE;
   }
 
+  // An explicitly requested, unmet points floor is never a successful
+  // completion, regardless of slot count — deliberately not folded into
+  // constraintResult.valid (see evaluateComposerConstraints.js), so it is
+  // checked here as its own, final-only condition instead.
+  if (request.pointsFloor != null && !constraintResult.metrics.pointsFloorMet) {
+    return COMPOSER_STATUSES.FAILED;
+  }
+
   if (selectedCount >= request.targetSlots) {
     return COMPOSER_STATUSES.COMPLETED;
   }
@@ -316,7 +345,8 @@ function getComposed({ constraintResult, qualityResult, selectedCount, request }
   return (
     constraintResult.valid &&
     qualityResult.evaluable &&
-    selectedCount >= request.minSlots
+    selectedCount >= request.minSlots &&
+    (request.pointsFloor == null || constraintResult.metrics.pointsFloorMet)
   );
 }
 
@@ -346,6 +376,20 @@ function getTopLevelTerminationReason({
     }
 
     return COMPOSER_TERMINATION_REASONS.FINAL_VALIDATION_FAILED;
+  }
+
+  if (request.pointsFloor != null && !constraintResult.metrics.pointsFloorMet) {
+    // Same bucket as an unreachable slot minimum — both represent "a
+    // required minimum was requested and could not be reached," and the
+    // existing reason already says exactly that honestly.
+    return COMPOSER_TERMINATION_REASONS.MINIMUM_UNREACHABLE;
+  }
+
+  if (
+    finalSource !== FINAL_SOURCES.REFINEMENT &&
+    greedyResult?.terminationReason === GREEDY_TERMINATION_REASONS.POINTS_FLOOR_REACHED
+  ) {
+    return COMPOSER_TERMINATION_REASONS.POINTS_FLOOR_REACHED;
   }
 
   if (mode === COMPOSER_MODES.FAST) {
@@ -382,6 +426,7 @@ function hasRequestInfeasibility(violations) {
       "UNKNOWN_LOCKED_PERFUME",
       "LOCKED_POINTS_EXCEED_BUDGET",
       "INSUFFICIENT_CATALOG_CANDIDATES",
+      "POINTS_FLOOR_UNREACHABLE",
     ].includes(violation.code)
   );
 }

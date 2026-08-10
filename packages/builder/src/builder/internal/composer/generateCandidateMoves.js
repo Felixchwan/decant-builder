@@ -1,4 +1,5 @@
 import { evaluateComposerConstraints } from "./evaluateComposerConstraints.js";
+import { evaluatePointsFloorReachability } from "./evaluatePointsFloorReachability.js";
 import { COMPOSER_MOVE_TYPES } from "./composerMoveTypes.js";
 
 export { COMPOSER_MOVE_TYPES };
@@ -52,7 +53,53 @@ export function generateCandidateMoves({
         excludedIds,
       })
     )
+    .filter((move) =>
+      canStillReachPointsFloor({
+        request,
+        move,
+        catalogPerfumes,
+        excludedIds,
+      })
+    )
     .sort((a, b) => a.perfumeId - b.perfumeId);
+}
+
+// Permissive by design, mirroring canStillReachConstructionMinimum: a move
+// only needs to keep the floor reachable afterward, not reach it itself.
+// This is the only place a below-floor ADD move gets rejected — never via
+// evaluateComposerConstraints's hard validity, which must stay true for
+// every legitimate in-progress state.
+function canStillReachPointsFloor({ request, move, catalogPerfumes, excludedIds }) {
+  const pointsFloor = request?.pointsFloor;
+
+  if (pointsFloor == null) {
+    return true;
+  }
+
+  const resultingPerfumes = move.candidatePerfumes;
+  const resultingIds = new Set(resultingPerfumes.map((perfume) => perfume.id));
+  const currentPoints = resultingPerfumes.reduce(
+    (sum, perfume) => sum + normalizePoints(perfume.points),
+    0
+  );
+  const legalCandidates = catalogPerfumes.filter(
+    (perfume) =>
+      Number.isInteger(perfume?.id) &&
+      !resultingIds.has(perfume.id) &&
+      !excludedIds.has(perfume.id)
+  );
+  const remainingBudget = Number.isFinite(request.maxPoints)
+    ? request.maxPoints - currentPoints
+    : Infinity;
+  const { floorReachable } = evaluatePointsFloorReachability({
+    currentPoints,
+    legalCandidates,
+    remainingSlots: request.maxSlots - resultingPerfumes.length,
+    remainingBudget,
+    pointsFloor,
+  });
+
+  return floorReachable;
 }
 
 function canStillReachConstructionMinimum({

@@ -150,6 +150,41 @@ describe("generateRefinementMoves", () => {
     expect(second).toEqual(first);
   });
 
+  it("rejects swaps that would drop an already-floor-satisfying collection below it", () => {
+    const moves = generateRefinementMoves({
+      request: { ...request({ budget: 500, minSlots: 2, maxSlots: 3 }), pointsFloor: 3 },
+      selectedPerfumes: [catalog[0], catalog[1]], // ids 3(2pts) + 1(1pt) = 3pts, floor already met
+      catalog,
+      config: testConfig,
+    });
+
+    // Swapping out id 3 (2pts) for id 1... already selected; real options
+    // are removing 3 or 1 and adding one of {2,4,5}. Removing 3 (2pts) and
+    // adding 2 (1.5pts) => 1+1.5=2.5 < 3, rejected. Removing 1 (1pt) and
+    // adding 2 (1.5pts) => 2+1.5=3.5 >= 3, kept.
+    expect(moves.some((move) => move.removePerfumeId === 3 && move.addPerfumeId === 2)).toBe(
+      false
+    );
+    expect(moves.some((move) => move.removePerfumeId === 1 && move.addPerfumeId === 2)).toBe(
+      true
+    );
+  });
+
+  it("does not restrict swaps when the starting collection is below an already-supplied floor", () => {
+    const moves = generateRefinementMoves({
+      request: { ...request({ budget: 500, minSlots: 2, maxSlots: 3 }), pointsFloor: 100 },
+      selectedPerfumes: [catalog[1], catalog[2]], // far below an unreachable floor
+      catalog,
+      config: testConfig,
+    });
+
+    // No move can possibly satisfy floor:100, so the "already met" strict
+    // rule must not apply (that would reject every move) -- refinement is
+    // not responsible for reaching an unmet floor, only for not undoing an
+    // already-met one.
+    expect(moves.length).toBeGreaterThan(0);
+  });
+
   it("does not mutate frozen inputs and remains deterministic", () => {
     const frozenRequest = deepFreeze(request({ budget: 500, minSlots: 2 }));
     const frozenSelected = deepFreeze([catalog[1], catalog[2]]);

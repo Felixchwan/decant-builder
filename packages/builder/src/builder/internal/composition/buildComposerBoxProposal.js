@@ -38,11 +38,19 @@ export function buildComposerBoxProposal({
   catalog = [],
   notes = {},
   config,
+  // Generic, opt-in, request-level lower aggregate-points bound. Only the
+  // caller who represents "build a completion-valid box" (see
+  // BuilderRuntime.jsx's handleComposeMyBox) should ever supply this —
+  // never derived here from merchant config, and left absent by every
+  // other Composer call site (recommendation lanes, other merchants that
+  // haven't opted in) preserves their behavior exactly.
+  minimumPoints = null,
 } = {}) {
   const builderConfig = requireComposerConfig(config);
   const safeCatalog = Array.isArray(catalog) ? catalog : [];
   const safeSelectedPerfumes = Array.isArray(selectedPerfumes) ? selectedPerfumes : [];
   const safeExcludedPerfumeIds = normalizeIdList(excludedPerfumeIds);
+  const pointsFloor = normalizePointsFloorValue(minimumPoints);
   const maxCustomerSlots = normalizeSlot(maxSlots, builderConfig.box.maxSelectableSlots);
   const minCustomerSlots = normalizeSlot(minSlots, builderConfig.box.minSelectableSlots);
   const customerTargetSlots = Math.min(
@@ -71,6 +79,7 @@ export function buildComposerBoxProposal({
     vibes: preferences.preferredVibes,
     catalog,
     config: builderConfig,
+    minimumPoints: pointsFloor,
   });
   const selectedValidation = validateCurrentSelections({
     selectedPerfumes: safeSelectedPerfumes,
@@ -88,11 +97,36 @@ export function buildComposerBoxProposal({
       maxSlots: maxCustomerSlots,
       budget,
       pointValue: config.commerce.pointValue,
+      pointsFloor,
       diagnostics: selectedValidation.diagnostics,
     });
   }
 
+  const currentTotalPoints = sumPoints(safeSelectedPerfumes);
+  const currentFloorMet = pointsFloor == null || currentTotalPoints >= pointsFloor;
+
   if (safeSelectedPerfumes.length >= maxCustomerSlots) {
+    // No slots remain, so no further Composer action could ever close an
+    // unmet floor here -- that is an impossible request, not a completed
+    // "box full" one.
+    if (!currentFloorMet) {
+      return unavailableProposal({
+        status: COMPOSER_BOX_PROPOSAL_STATUSES.IMPOSSIBLE,
+        inputKey,
+        selectedPerfumes: safeSelectedPerfumes,
+        targetSlots: customerTargetSlots,
+        minSlots: minCustomerSlots,
+        maxSlots: maxCustomerSlots,
+        budget,
+        pointValue: config.commerce.pointValue,
+        pointsFloor,
+        diagnostics: {
+          reason: "customer-slots-full-below-points-floor",
+          issues: [],
+        },
+      });
+    }
+
     return successfulProposal({
       status: COMPOSER_BOX_PROPOSAL_STATUSES.AT_MAX,
       inputKey,
@@ -103,6 +137,7 @@ export function buildComposerBoxProposal({
       maxSlots: maxCustomerSlots,
       budget,
       pointValue: config.commerce.pointValue,
+      pointsFloor,
       catalog: safeCatalog,
       notes,
       config,
@@ -116,7 +151,11 @@ export function buildComposerBoxProposal({
     });
   }
 
-  if (safeSelectedPerfumes.length >= customerTargetSlots) {
+  // Slots remain up to maxCustomerSlots, so an unmet floor is not
+  // necessarily final here -- fall through to the real composition path
+  // instead of short-circuiting, so the floor-aware search (composeCollection)
+  // gets a chance to extend past customerTargetSlots toward it.
+  if (safeSelectedPerfumes.length >= customerTargetSlots && currentFloorMet) {
     return successfulProposal({
       status: COMPOSER_BOX_PROPOSAL_STATUSES.ALREADY_COMPLETE,
       inputKey,
@@ -127,6 +166,7 @@ export function buildComposerBoxProposal({
       maxSlots: maxCustomerSlots,
       budget,
       pointValue: config.commerce.pointValue,
+      pointsFloor,
       catalog: safeCatalog,
       notes,
       config,
@@ -157,6 +197,7 @@ export function buildComposerBoxProposal({
     collectionStyle,
     preferences,
     excludedPerfumeIds: safeExcludedPerfumeIds,
+    minimumPoints: pointsFloor,
   });
   const compositionResult = composeCollection({
     request: {
@@ -188,6 +229,7 @@ export function buildComposerBoxProposal({
       maxSlots: maxCustomerSlots,
       budget,
       pointValue: config.commerce.pointValue,
+      pointsFloor,
       compositionResult,
       reasoningFacts,
       explanations,
@@ -213,6 +255,7 @@ export function buildComposerBoxProposal({
     maxSlots: maxCustomerSlots,
     budget,
     pointValue: config.commerce.pointValue,
+    pointsFloor,
     catalog: safeCatalog,
     notes,
     config,
@@ -240,6 +283,7 @@ export function buildComposerProposalInputKey({
   vibes = [],
   catalog = [],
   config,
+  minimumPoints = null,
 } = {}) {
   return stableStringify({
     selectedPerfumeIds: uniqueIdsInOrder(
@@ -262,6 +306,7 @@ export function buildComposerProposalInputKey({
     maxSelectableSlots: normalizeNullableNumber(config?.box?.maxSelectableSlots),
     minSelectableSlots: normalizeNullableNumber(config?.box?.minSelectableSlots),
     defaultTargetSlots: normalizeNullableNumber(config?.box?.defaultTargetSlots),
+    minimumPoints: normalizePointsFloorValue(minimumPoints),
   });
 }
 
@@ -361,6 +406,7 @@ function successfulProposal({
   budget,
   collectionStyle,
   pointValue,
+  pointsFloor = null,
   catalog,
   notes,
   config,
@@ -398,7 +444,12 @@ function successfulProposal({
   const orderTotal = roundNumber(totalPoints * computedPointValue);
   const minimumReached = collection.length >= minSlots;
   const targetReached = collection.length >= targetSlots;
-  const applyAvailable = minimumReached && collection.length <= maxSlots;
+  // An explicitly requested, unmet floor is never a successful completion,
+  // regardless of slot count -- gates apply the same way the existing
+  // slot/max checks already do, rather than being folded into a separate
+  // concept the caller would have to remember to check itself.
+  const floorMet = pointsFloor == null || totalPoints >= pointsFloor;
+  const applyAvailable = minimumReached && collection.length <= maxSlots && floorMet;
   const normalizedCollectionStyle =
     collectionStyle || compositionResult?.normalizedRequest?.collectionStyle?.id || "balanced_mix";
 
@@ -419,6 +470,8 @@ function successfulProposal({
     maxSlots,
     minimumReached,
     targetReached,
+    floorRequested: pointsFloor,
+    floorMet: pointsFloor == null ? null : floorMet,
     compositionResult,
     reasoningFacts,
     explanations,
@@ -683,6 +736,7 @@ function unavailableProposal({
   budget,
   collectionStyle,
   pointValue,
+  pointsFloor = null,
   compositionResult = null,
   reasoningFacts = null,
   explanations = null,
@@ -728,6 +782,8 @@ function unavailableProposal({
     maxSlots,
     minimumReached: selectedPerfumes.length >= minSlots,
     targetReached: selectedPerfumes.length >= targetSlots,
+    floorRequested: pointsFloor,
+    floorMet: pointsFloor == null ? null : totalPoints >= pointsFloor,
     compositionResult,
     reasoningFacts,
     explanations,
@@ -903,6 +959,17 @@ function normalizeBudgetValue(value) {
 
 function normalizePoints(value) {
   return Number.isFinite(value) ? value : 0;
+}
+
+function sumPoints(perfumes) {
+  return (Array.isArray(perfumes) ? perfumes : []).reduce(
+    (sum, perfume) => sum + normalizePoints(perfume?.points),
+    0
+  );
+}
+
+function normalizePointsFloorValue(value) {
+  return Number.isFinite(value) && value >= 0 ? value : null;
 }
 
 function roundNumber(value) {

@@ -50,11 +50,49 @@ export function generateRefinementMoves({
       })
     )
     .filter((move) => move.constraintResult.valid)
+    .filter((move) => preservesPointsFloorIfAlreadyMet({ request, currentPerfumes, move }))
     .sort(
       (firstMove, secondMove) =>
         firstMove.removePerfumeId - secondMove.removePerfumeId ||
         firstMove.addPerfumeId - secondMove.addPerfumeId
     );
+}
+
+// Refinement is only ever invoked (see getGreedyRefinementEligibility in
+// composeCollection.js) once the incoming collection already satisfies any
+// requested points floor, or no floor was requested at all — greedy alone
+// is responsible for reaching it, since only greedy can add slots.
+// Refinement's sole responsibility toward the floor is therefore not to
+// undo it: once the starting collection meets it, every swap must keep the
+// resulting total at or above it too. There is nothing to enforce while
+// the starting collection is below the floor, because that state should
+// not reach refinement in the first place.
+function preservesPointsFloorIfAlreadyMet({ request, currentPerfumes, move }) {
+  const pointsFloor = request?.pointsFloor;
+
+  if (pointsFloor == null) {
+    return true;
+  }
+
+  const currentPoints = currentPerfumes.reduce(
+    (sum, perfume) => sum + normalizePoints(perfume.points),
+    0
+  );
+
+  if (currentPoints < pointsFloor) {
+    return true;
+  }
+
+  const resultingPoints = move.candidatePerfumes.reduce(
+    (sum, perfume) => sum + normalizePoints(perfume.points),
+    0
+  );
+
+  return resultingPoints >= pointsFloor;
+}
+
+function normalizePoints(value) {
+  return Number.isFinite(value) ? value : 0;
 }
 
 function buildCatalogById(catalog) {

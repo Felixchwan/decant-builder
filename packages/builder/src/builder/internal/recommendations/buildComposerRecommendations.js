@@ -195,6 +195,13 @@ export function buildComposerRequestFromBuilderState({
   collectionStyle = "balanced_mix",
   preferences = {},
   excludedPerfumeIds = [],
+  // Generic, opt-in, request-level lower aggregate-points bound. Left absent
+  // (null) by every existing caller of this function -- the passive
+  // recommendation lanes (buildComposerRecommendations/buildIntentRecommendations)
+  // never supply it. Only buildComposerBoxProposal.js's "build my box" path
+  // passes a value, so this default preserves every other caller's behavior
+  // exactly.
+  minimumPoints = null,
 } = {}) {
   const builderConfig = requireComposerConfig(config);
   const safeSelectedPerfumes = Array.isArray(selectedPerfumes) ? selectedPerfumes : [];
@@ -217,6 +224,7 @@ export function buildComposerRequestFromBuilderState({
     preferredVibes: preferences.preferredVibes || [],
     strategy,
     collectionStyle,
+    minimumPoints,
   };
 }
 

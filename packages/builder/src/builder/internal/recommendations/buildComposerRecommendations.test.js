@@ -199,6 +199,7 @@ describe("buildComposerRecommendations", () => {
       preferredVibes: ["fresh"],
       strategy: "signature",
       collectionStyle: "balanced_mix",
+      minimumPoints: null,
     });
   });
 

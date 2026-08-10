@@ -72,6 +72,9 @@ describe("evaluateComposerConstraints", () => {
         budgetUtilization: 1,
         lockedCount: 1,
         excludedCount: 0,
+        pointsFloor: null,
+        pointsFloorMet: null,
+        pointsFloorRemaining: null,
       },
     });
   });
@@ -93,6 +96,9 @@ describe("evaluateComposerConstraints", () => {
       budgetUtilization: 0,
       lockedCount: 0,
       excludedCount: 0,
+      pointsFloor: null,
+      pointsFloorMet: null,
+      pointsFloorRemaining: null,
     });
   });
 
@@ -175,6 +181,9 @@ describe("evaluateComposerConstraints", () => {
         budgetUtilization: 2.5,
         lockedCount: 2,
         excludedCount: 1,
+        pointsFloor: null,
+        pointsFloorMet: null,
+        pointsFloorRemaining: null,
       },
     });
   });
@@ -212,6 +221,9 @@ describe("evaluateComposerConstraints", () => {
         budgetUtilization: 0,
         lockedCount: 0,
         excludedCount: 0,
+        pointsFloor: null,
+        pointsFloorMet: null,
+        pointsFloorRemaining: null,
       },
     });
   });
@@ -326,8 +338,82 @@ describe("evaluateComposerConstraints", () => {
         budgetUtilization: 0,
         lockedCount: 0,
         excludedCount: 0,
+        pointsFloor: null,
+        pointsFloorMet: null,
+        pointsFloorRemaining: null,
       },
     });
+  });
+
+  it("reports points-floor metrics without invalidating a below-floor candidate", () => {
+    const result = evaluateComposerConstraints({
+      request: request({ minSlots: 1, minimumPoints: 12 }),
+      candidatePerfumes: [catalog[0]],
+      catalog,
+      config: testConfig,
+    });
+
+    expect(result.valid).toBe(true);
+    expect(result.metrics.pointsFloor).toBe(12);
+    expect(result.metrics.pointsFloorMet).toBe(false);
+    expect(result.metrics.pointsFloorRemaining).toBe(11);
+  });
+
+  it("reports pointsFloorMet true and zero remaining once the floor is reached", () => {
+    const result = evaluateComposerConstraints({
+      request: request({ minSlots: 1, minimumPoints: 4 }),
+      candidatePerfumes: [catalog[4]],
+      catalog,
+      config: testConfig,
+    });
+
+    expect(result.metrics.pointsFloor).toBe(4);
+    expect(result.metrics.pointsFloorMet).toBe(true);
+    expect(result.metrics.pointsFloorRemaining).toBe(0);
+  });
+
+  it("does not check points-floor reachability unless explicitly requested", () => {
+    const result = evaluateComposerConstraints({
+      request: request({ minSlots: 1, maxSlots: 1, minimumPoints: 100 }),
+      candidatePerfumes: [catalog[0]],
+      catalog,
+      config: testConfig,
+    });
+
+    expect(result.valid).toBe(true);
+    expect(result.violations.some((violation) => violation.code === "POINTS_FLOOR_UNREACHABLE")).toBe(
+      false
+    );
+  });
+
+  it("adds POINTS_FLOOR_UNREACHABLE only when checkPointsFloorReachability is true and no legal path exists", () => {
+    const result = evaluateComposerConstraints({
+      request: request({ minSlots: 1, maxSlots: 1, minimumPoints: 100 }),
+      candidatePerfumes: [catalog[0]],
+      catalog,
+      config: testConfig,
+      checkPointsFloorReachability: true,
+    });
+
+    expect(result.valid).toBe(false);
+    expect(result.violations).toContainEqual({
+      code: "POINTS_FLOOR_UNREACHABLE",
+      pointsFloor: 100,
+      currentPoints: 1,
+    });
+  });
+
+  it("does not add POINTS_FLOOR_UNREACHABLE when a legal completion path still exists", () => {
+    const result = evaluateComposerConstraints({
+      request: request({ minSlots: 1, maxSlots: 4, minimumPoints: 6 }),
+      candidatePerfumes: [catalog[0]],
+      catalog,
+      config: testConfig,
+      checkPointsFloorReachability: true,
+    });
+
+    expect(result.valid).toBe(true);
+    expect(result.violations).toEqual([]);
   });
 
   it("is deterministic and does not mutate frozen inputs", () => {
@@ -388,6 +474,9 @@ describe("evaluateComposerConstraints", () => {
         budgetUtilization: 0.6429,
         lockedCount: 2,
         excludedCount: 1,
+        pointsFloor: null,
+        pointsFloorMet: null,
+        pointsFloorRemaining: null,
       },
     });
   });
@@ -460,6 +549,9 @@ describe("evaluateComposerConstraints", () => {
         budgetUtilization: 2.8333,
         lockedCount: 2,
         excludedCount: 2,
+        pointsFloor: null,
+        pointsFloorMet: null,
+        pointsFloorRemaining: null,
       },
     });
   });

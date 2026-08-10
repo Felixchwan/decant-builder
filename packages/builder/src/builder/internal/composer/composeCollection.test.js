@@ -679,6 +679,149 @@ describe("composeCollection", () => {
   });
 });
 
+describe("points floor completion", () => {
+  it("behaves identically to today when no floor is supplied", () => {
+    const withoutField = compose({ minSlots: 2, maxSlots: 4, targetSlots: 2 });
+    const withNullField = compose({
+      minSlots: 2,
+      maxSlots: 4,
+      targetSlots: 2,
+      minimumPoints: null,
+    });
+
+    expect(withoutField.status).toBe(COMPOSER_STATUSES.COMPLETED);
+    expect(withoutField.collection.length).toBe(2);
+    expect(withoutField.constraintResult.metrics.pointsFloor).toBeNull();
+    expect(withNullField).toEqual(withoutField);
+  });
+
+  it("reports impossible/minimum-unreachable when the floor cannot be reached at all", () => {
+    // Max achievable with all 4 selectable catalog items (amber+formal+smoky+sweet)
+    // is 13.5 points, comfortably short of 20.
+    const result = compose({ minSlots: 3, maxSlots: 4, targetSlots: 4, minimumPoints: 20 });
+
+    expect(result.status).toBe(COMPOSER_STATUSES.IMPOSSIBLE);
+    expect(result.terminationReason).toBe(COMPOSER_TERMINATION_REASONS.MINIMUM_UNREACHABLE);
+    expect(result.composed).toBe(false);
+  });
+
+  it("reports impossible when the floor exceeds the budget ceiling itself", () => {
+    // budget=650 with pointValue=100 -> maxPoints=6.5, already below floor=12
+    // regardless of catalog contents.
+    const result = compose({
+      minSlots: 2,
+      maxSlots: 4,
+      targetSlots: 2,
+      budget: 650,
+      minimumPoints: 12,
+    });
+
+    expect(result.status).toBe(COMPOSER_STATUSES.IMPOSSIBLE);
+    expect(result.composed).toBe(false);
+  });
+
+  it("suppresses the quality plateau and extends past targetSlots (not maxSlots) to reach a floor", () => {
+    // The natural (no-floor) balanced_mix result for targetSlots=2 is
+    // [green, smoky] = 5.5pts, below floor=5... no -- picked to sit strictly
+    // above what 2 items alone can reach (5.5) but reachable with a 3rd:
+    // greedy's own floor-safe extension lands on [green, formal, sweet] =
+    // 1.5+2.5+5 = 9pts, and stops there rather than continuing to maxSlots.
+    const result = compose({
+      minSlots: 2,
+      maxSlots: 4,
+      targetSlots: 2,
+      minimumPoints: 8,
+      collectionStyle: "balanced_mix",
+    });
+
+    expect(result.status).toBe(COMPOSER_STATUSES.COMPLETED);
+    expect(result.terminationReason).toBe(COMPOSER_TERMINATION_REASONS.POINTS_FLOOR_REACHED);
+    expect(result.collection.length).toBe(3);
+    expect(result.constraintResult.metrics.totalPoints).toBe(9);
+    expect(result.constraintResult.metrics.pointsFloorMet).toBe(true);
+    expect(result.composed).toBe(true);
+  });
+
+  it("extends all the way to maxSlots when the floor requires it", () => {
+    const result = compose({
+      minSlots: 2,
+      maxSlots: 4,
+      targetSlots: 2,
+      minimumPoints: 13,
+      collectionStyle: "balanced_mix",
+    });
+
+    expect(result.status).toBe(COMPOSER_STATUSES.COMPLETED);
+    expect(result.terminationReason).toBe(COMPOSER_TERMINATION_REASONS.POINTS_FLOOR_REACHED);
+    expect(result.collection.length).toBe(4);
+    expect(result.constraintResult.metrics.totalPoints).toBe(13);
+    expect(result.constraintResult.metrics.totalPoints).toBeGreaterThanOrEqual(13);
+  });
+
+  it("uses the ordinary (non-floor) reason when the floor is already met by the natural result", () => {
+    const withoutFloor = compose({
+      minSlots: 2,
+      maxSlots: 4,
+      targetSlots: 2,
+      collectionStyle: "balanced_mix",
+    });
+    const withAlreadyMetFloor = compose({
+      minSlots: 2,
+      maxSlots: 4,
+      targetSlots: 2,
+      minimumPoints: 2,
+      collectionStyle: "balanced_mix",
+    });
+
+    expect(withAlreadyMetFloor.collectionIds).toEqual(withoutFloor.collectionIds);
+    expect(withAlreadyMetFloor.terminationReason).toBe(withoutFloor.terminationReason);
+    expect(withAlreadyMetFloor.terminationReason).not.toBe(
+      COMPOSER_TERMINATION_REASONS.POINTS_FLOOR_REACHED
+    );
+  });
+
+  it("treats a floor already satisfied by locked perfumes as ordinary, unmodified behavior", () => {
+    const result = compose({
+      minSlots: 1,
+      maxSlots: 4,
+      targetSlots: 1,
+      minimumPoints: 3,
+      lockedPerfumeIds: [6],
+    });
+
+    expect(result.terminationReason).toBe(COMPOSER_TERMINATION_REASONS.GREEDY_TARGET_REACHED);
+    expect(result.collection.length).toBe(1);
+    expect(result.constraintResult.metrics.pointsFloorMet).toBe(true);
+  });
+
+  it("does not affect a request whose natural (no-floor) result already clears the floor", () => {
+    const withoutFloor = composeRealCatalog({});
+
+    expect(withoutFloor.constraintResult.metrics.totalPoints).toBeGreaterThanOrEqual(12);
+
+    const withFloor = composeRealCatalog({ minimumPoints: 12 });
+
+    expect(withFloor.collectionIds).toEqual(withoutFloor.collectionIds);
+  }, 20000);
+
+  it("never lets refinement undo an already-met floor for a higher-quality swap", () => {
+    const result = compose(
+      {
+        minSlots: 2,
+        maxSlots: 4,
+        targetSlots: 3,
+        minimumPoints: 8,
+        collectionStyle: "balanced_mix",
+      },
+      refinementCatalog
+    );
+
+    expect(result.status).toBe(COMPOSER_STATUSES.COMPLETED);
+    expect(result.constraintResult.metrics.pointsFloorMet).toBe(true);
+    expect(result.constraintResult.metrics.totalPoints).toBeGreaterThanOrEqual(8);
+  });
+});
+
 function roundNumber(value) {
   return Math.round(value * 100) / 100;
 }

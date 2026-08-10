@@ -664,4 +664,152 @@ describe("buildComposerBoxProposal", () => {
     expect(firstKey).not.toContain("Any");
     expect(firstKey).not.toBe(clearedKey);
   });
+
+  describe("points floor completion (minimumPoints)", () => {
+    it("leaves floorRequested/floorMet null when no floor is requested", () => {
+      const proposal = build();
+
+      expect(proposal.floorRequested).toBeNull();
+      expect(proposal.floorMet).toBeNull();
+      expect(proposal.proposalAvailable).toBe(true);
+    });
+
+    it("reports floorMet true and keeps normal apply availability when the floor is already satisfied", () => {
+      const proposal = build({ minimumPoints: 3 });
+
+      expect(proposal.status).toBe(COMPOSER_BOX_PROPOSAL_STATUSES.COMPLETED);
+      expect(proposal.floorRequested).toBe(3);
+      expect(proposal.floorMet).toBe(true);
+      expect(proposal.totalPoints).toBe(6.5);
+      expect(proposal.proposalAvailable).toBe(true);
+      expect(proposal.apply.available).toBe(true);
+    });
+
+    it("keeps AT_MAX a real success when the floor is already met", () => {
+      const proposal = build({
+        selectedPerfumes: [fresh, green, amber, formal],
+        targetSlots: 4,
+        minimumPoints: 5,
+      });
+
+      expect(proposal.status).toBe(COMPOSER_BOX_PROPOSAL_STATUSES.AT_MAX);
+      expect(proposal.floorRequested).toBe(5);
+      expect(proposal.floorMet).toBe(true);
+      expect(proposal.proposalAvailable).toBe(true);
+      expect(proposal.apply.available).toBe(true);
+    });
+
+    it("treats AT_MAX with an unmet explicit floor as IMPOSSIBLE, not a false completion", () => {
+      const proposal = build({
+        selectedPerfumes: [fresh, green, amber, formal],
+        targetSlots: 4,
+        minimumPoints: 6,
+      });
+
+      expect(proposal.status).toBe(COMPOSER_BOX_PROPOSAL_STATUSES.IMPOSSIBLE);
+      expect(proposal.floorRequested).toBe(6);
+      expect(proposal.floorMet).toBe(false);
+      expect(proposal.proposalAvailable).toBe(false);
+      expect(proposal.apply.available).toBe(false);
+      expect(proposal.diagnostics.reason).toBe("customer-slots-full-below-points-floor");
+      expectSerializable(proposal);
+    });
+
+    it("falls through past ALREADY_COMPLETE to extend the box when the floor is unmet and slots remain", () => {
+      const extendableConfig = createBuilderConfig({
+        ...config,
+        box: {
+          minSelectableSlots: 3,
+          maxSelectableSlots: 5,
+          defaultTargetSlots: 4,
+        },
+      });
+      const proposal = build({
+        config: extendableConfig,
+        selectedPerfumes: [fresh, green, amber, formal],
+        targetSlots: 4,
+        maxSlots: 5,
+        minimumPoints: 7,
+      });
+
+      expect(proposal.status).toBe(COMPOSER_BOX_PROPOSAL_STATUSES.COMPLETED);
+      expect(proposal.floorRequested).toBe(7);
+      expect(proposal.floorMet).toBe(true);
+      expect(proposal.totalPoints).toBe(8);
+      expect(proposal.collectionIds).toEqual([1, 2, 3, 4, 5]);
+      expect(proposal.addedPerfumes.map((perfume) => perfume.id)).toEqual([5]);
+      expect(proposal.compositionResult.terminationReason).toBe("points-floor-reached");
+      expect(proposal.proposalAvailable).toBe(true);
+      expect(proposal.apply.available).toBe(true);
+    });
+
+    it("treats a genuinely unreachable floor as unavailable, not a false completion", () => {
+      const extendableConfig = createBuilderConfig({
+        ...config,
+        box: {
+          minSelectableSlots: 3,
+          maxSelectableSlots: 5,
+          defaultTargetSlots: 4,
+        },
+      });
+      const proposal = build({
+        config: extendableConfig,
+        selectedPerfumes: [fresh, green, amber, formal],
+        targetSlots: 4,
+        maxSlots: 5,
+        minimumPoints: 100,
+      });
+
+      expect(proposal.floorRequested).toBe(100);
+      expect(proposal.floorMet).toBe(false);
+      expect(proposal.proposalAvailable).toBe(false);
+      expect(proposal.apply.available).toBe(false);
+      expect([COMPOSER_BOX_PROPOSAL_STATUSES.IMPOSSIBLE, COMPOSER_BOX_PROPOSAL_STATUSES.FAILED]).toContain(
+        proposal.status
+      );
+      expectSerializable(proposal);
+    });
+
+    it("keeps floorRequested/floorMet null-shaped on invalid-selection failures", () => {
+      const proposal = build({ selectedPerfumes: [perfume(999)] });
+
+      expect(proposal.status).toBe(COMPOSER_BOX_PROPOSAL_STATUSES.INVALID_SELECTION);
+      expect(proposal.floorRequested).toBeNull();
+      expect(proposal.floorMet).toBeNull();
+    });
+
+    it("includes minimumPoints in the stale-key computation", () => {
+      const baseKey = buildComposerProposalInputKey({
+        selectedPerfumes: [fresh],
+        excludedPerfumeIds: [],
+        strategy: "balanced",
+        budget: null,
+        targetSlots: 4,
+        minSlots: 3,
+        maxSlots: 4,
+        seasons: [],
+        occasions: [],
+        vibes: [],
+        catalog,
+        config,
+      });
+      const floorKey = buildComposerProposalInputKey({
+        selectedPerfumes: [fresh],
+        excludedPerfumeIds: [],
+        strategy: "balanced",
+        budget: null,
+        targetSlots: 4,
+        minSlots: 3,
+        maxSlots: 4,
+        seasons: [],
+        occasions: [],
+        vibes: [],
+        catalog,
+        config,
+        minimumPoints: 5,
+      });
+
+      expect(baseKey).not.toBe(floorKey);
+    });
+  });
 });

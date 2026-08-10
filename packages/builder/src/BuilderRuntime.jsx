@@ -76,6 +76,12 @@ function App({
   assetResolver,
   isDevelopment = false,
   stickySummaryPortalTarget = null,
+  // Generic, opt-in, request-level lower aggregate-points bound for the
+  // "Compose my box" action. null/absent preserves today's behavior exactly
+  // (see buildComposerBoxProposal.js's own minimumPoints doc comment) --
+  // only a host that opts in by passing a value ever changes what counts as
+  // a completed proposal.
+  composerMinimumPoints = null,
 }) {
   const builderConfig = config;
   const builderThemeStyle = useMemo(
@@ -438,6 +444,7 @@ const composerInputKey = useMemo(
       vibes: composerSettings.vibes,
       catalog: perfumes,
       config: builderConfig,
+      minimumPoints: composerMinimumPoints,
     }),
   [
     selectedPerfumes,
@@ -447,6 +454,7 @@ const composerInputKey = useMemo(
     MIN_BOX_SLOTS,
     perfumes,
     builderConfig,
+    composerMinimumPoints,
   ]
 );
 const isComposerProposalStale = isComposerBoxProposalStale(
@@ -716,6 +724,7 @@ const isComposerProposalStale = isComposerBoxProposalStale(
           catalog: perfumes,
           notes,
           config: builderConfig,
+          minimumPoints: composerMinimumPoints,
         });
 
         if (composerGenerationIdRef.current !== generationId) {

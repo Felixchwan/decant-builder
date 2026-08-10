@@ -109,6 +109,37 @@ describe("generateCandidateMoves", () => {
     expect(moves.map((move) => move.perfumeId)).toEqual([1, 2, 3]);
   });
 
+  it("keeps floor-safe moves and rejects moves that would make the floor unreachable", () => {
+    const moves = generateCandidateMoves({
+      request: {
+        ...request({ budget: 900, minSlots: 0, maxSlots: 2, targetSlots: 2 }),
+        pointsFloor: 6,
+      },
+      currentPerfumes: [],
+      catalog,
+      config: testConfig,
+    });
+
+    // With only 2 slots total (maxPoints=9) and catalog points {3:2, 1:1,
+    // 2:1.5, 4:4}: taking perfume 1 (1pt) or 2 (1.5pt) first leaves only one
+    // more slot and a best-remaining-candidate of 4pts, which can't reach
+    // the needed 5pt/4.5pt remainder -> both rejected as floor-unreachable.
+    // Taking 3 (2pt, needs 4 more, 4pt item covers it) or 4 (4pt, needs 2
+    // more, 2pt item covers it) each leave a real path to >=6.
+    expect(moves.map((move) => move.perfumeId)).toEqual([3, 4]);
+  });
+
+  it("does not filter on the points floor when it is absent", () => {
+    const moves = generateCandidateMoves({
+      request: request({ budget: 900, minSlots: 0, maxSlots: 2 }),
+      currentPerfumes: [],
+      catalog,
+      config: testConfig,
+    });
+
+    expect(moves.map((move) => move.perfumeId)).toEqual([1, 2, 3, 4]);
+  });
+
   it("does not mutate frozen inputs", () => {
     const frozenCatalog = deepFreeze([...catalog]);
     const frozenCurrent = deepFreeze([catalog[1]]);

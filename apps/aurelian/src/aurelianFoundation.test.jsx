@@ -259,6 +259,34 @@ describe("Aurelian application foundation", () => {
     expect(readFileSync(join(REPOSITORY_ROOT, ".gitignore"), "utf8")).toContain("/apps/aurelian/public/catalog-assets/");
   });
 
+  it("opts into the Composer completion floor with its own configured minPoints, while Discovery Decants stays unopted-in", () => {
+    // Aurelian intentionally declares this itself (see merchant/config.js) --
+    // no longer just inherited from the shared default -- because it now
+    // changes Composer completion behavior, not only informational copy.
+    expect(aurelianConfig.box.minPoints).toBe(12);
+
+    const experienceSource = readFileSync(
+      join(APP_ROOT, "src", "components", "BuilderExperience.jsx"),
+      "utf8"
+    );
+    // Proves BuilderExperience actually wires the capability, and that the
+    // value threaded through is Aurelian's own config -- not a duplicated
+    // literal -- so aurelianConfig.box.minPoints stays the single source of
+    // truth for this behavior.
+    expect(experienceSource).toContain(
+      "composerMinimumPoints={aurelianConfig.box.minPoints}"
+    );
+
+    const discoveryEntrySource = readFileSync(
+      join(REPOSITORY_ROOT, "src", "app", "DiscoveryDecantsApp.jsx"),
+      "utf8"
+    );
+    // Discovery Decants' real production entry point must never opt in --
+    // its <DiscoveryBoxBuilder> call simply never mentions the prop, so it
+    // stays absent/null and Composer's completion behavior is unchanged.
+    expect(discoveryEntrySource).not.toContain("composerMinimumPoints");
+  });
+
   it("fully retires legacy Vite Aurelian ownership while preserving Discovery bootstrap", () => {
     const mainSource = readFileSync(join(REPOSITORY_ROOT, "src", "main.jsx"), "utf8");
     expect(mainSource).toContain("DiscoveryDecantsApp");

@@ -39,6 +39,7 @@ describe("normalizeComposerRequest", () => {
       currency: "MXN",
       pointValue: 100,
       maxPoints: Infinity,
+      pointsFloor: null,
       minSlots: 6,
       maxSlots: 14,
       targetSlots: 14,
@@ -82,6 +83,7 @@ describe("normalizeComposerRequest", () => {
       currency: "USD",
       pointValue: 50,
       maxPoints: 7.5,
+      pointsFloor: null,
       minSlots: 2,
       maxSlots: 7,
       targetSlots: 6,
@@ -213,6 +215,7 @@ describe("normalizeComposerRequest", () => {
       currency: "MXN",
       pointValue: 100,
       maxPoints: 12.25,
+      pointsFloor: null,
       minSlots: 6,
       maxSlots: 14,
       targetSlots: 12,
@@ -226,5 +229,28 @@ describe("normalizeComposerRequest", () => {
       inputIssues: [],
       lockedExcludedConflicts: [205],
     });
+  });
+
+  it("normalizes raw minimumPoints input into pointsFloor, rejecting invalid values", () => {
+    expect(normalizeWithActiveConfig({ minimumPoints: 12 }).pointsFloor).toBe(12);
+    expect(normalizeWithActiveConfig({ minimumPoints: 12.256 }).pointsFloor).toBe(12.256);
+    expect(normalizeWithActiveConfig({ minimumPoints: 0 }).pointsFloor).toBe(0);
+    expect(normalizeWithActiveConfig({ minimumPoints: -5 }).pointsFloor).toBeNull();
+    expect(normalizeWithActiveConfig({ minimumPoints: "12" }).pointsFloor).toBeNull();
+    expect(normalizeWithActiveConfig({ minimumPoints: NaN }).pointsFloor).toBeNull();
+    expect(normalizeWithActiveConfig({ minimumPoints: null }).pointsFloor).toBeNull();
+    expect(normalizeWithActiveConfig({}).pointsFloor).toBeNull();
+  });
+
+  it("accepts its own previously normalized pointsFloor field idempotently", () => {
+    // composeCollection.js normalizes once, then hands the derived "engine
+    // request" to composeCollectionGreedy/refineCollection, which each
+    // normalize again internally -- pointsFloor is the one field whose
+    // normalized output name differs from its raw input name (minimumPoints),
+    // so a second normalization pass must not silently drop it.
+    const firstPass = normalizeWithActiveConfig({ minimumPoints: 12 });
+    const secondPass = normalizeComposerRequest(firstPass, { config: discoveryDecantsConfig });
+
+    expect(secondPass.pointsFloor).toBe(12);
   });
 });

@@ -79,6 +79,12 @@ export function BuilderExperience({ isDevelopment = false }) {
       finalizationAdapter={finalizationAdapter}
       notes={notes}
       stickySummaryPortalTarget={stickySummaryPortalTarget}
+      // Aurelian's Discovery Box has a fixed minimum-points requirement
+      // (already surfaced informationally elsewhere via box.minPoints, e.g.
+      // buildCollectionSummary.js and the como-funciona copy) -- opting into
+      // composerMinimumPoints makes "Compose my box" actually honor it,
+      // instead of only describing it after the fact.
+      composerMinimumPoints={aurelianConfig.box.minPoints}
     />
   );
 }

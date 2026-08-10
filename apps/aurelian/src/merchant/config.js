@@ -17,7 +17,13 @@ export const aurelianConfig = createBuilderConfig({
   },
   analytics: { merchantId: "aurelian" },
   commerce: { ...localized.commerce, locale },
-  box: { minSelectableSlots: 6, maxSelectableSlots: 14 },
+  // minPoints is a shared-config field with a default (see
+  // defaultBuilderConfig.js) that used to be purely informational for
+  // Aurelian. It now also drives Composer's completion-floor behavior (see
+  // BuilderExperience.jsx's composerMinimumPoints wiring), so Aurelian
+  // declares its own value explicitly here rather than inheriting it
+  // silently -- this is Aurelian's one intentional source of truth for it.
+  box: { minSelectableSlots: 6, maxSelectableSlots: 14, minPoints: 12 },
   theme: {
     colors: {
       background: "#090A09",
