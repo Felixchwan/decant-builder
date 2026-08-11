@@ -104,6 +104,9 @@ export function CatalogExplorer() {
                     >
                       Comparar con otra
                     </Link>
+                    <Link className="product-card__learning-link" href="/mis-descubrimientos">
+                      Ver lo que he notado
+                    </Link>
                   </div>
                 </details>
               </article>

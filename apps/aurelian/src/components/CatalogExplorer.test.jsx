@@ -22,6 +22,7 @@ describe("CatalogExplorer", () => {
     expect(markup).toContain("Explorar esta fragancia");
     expect(markup).toContain("Registrar lo que percibo");
     expect(markup).toContain("Comparar con otra");
+    expect(markup).toContain("Ver lo que he notado");
   });
 
   it("keeps the existing commercial href exactly as before", () => {
@@ -73,6 +74,13 @@ describe("CatalogExplorer", () => {
         `href="/mis-descubrimientos/comparar?fragrance=${encodeURIComponent(item.id)}"`
       );
     }
+  });
+
+  it("points the new learner-record disclosure link at exactly /mis-descubrimientos, with no fragrance param, once per card", () => {
+    const markup = renderToStaticMarkup(<CatalogExplorer />);
+
+    const matches = markup.match(/href="\/mis-descubrimientos"/g);
+    expect(matches?.length).toBe(aurelianCatalog.length);
   });
 
   it("uses native details/summary semantics, not a custom dropdown", () => {

@@ -107,6 +107,7 @@ describe("ComparisonFragrancePicker", () => {
     expect(markup).toContain("Elige la primera fragancia.");
     expect(markup).toContain("Aurelian");
     expect(markup).not.toContain("Primera:");
+    expect(markup).not.toContain("Ver lo que he notado");
   });
 
   it("renders with first-fragrance context for the second-fragrance step", () => {
@@ -192,6 +193,23 @@ describe("ComparisonPromptForm", () => {
 
     expect(markup).not.toMatch(/type="checkbox"|type="radio"|type="range"/);
   });
+
+  it("never renders the learner-record link in the pre-submit prompt, including a failed-submit state (Phase 3.2)", () => {
+    const withError = renderToStaticMarkup(
+      <ComparisonPromptForm
+        firstFragranceName="A"
+        secondFragranceName="B"
+        freeText="algo"
+        onFreeTextChange={() => {}}
+        submitError="No pudimos guardar tu comparación. Intenta de nuevo."
+        canSubmit
+        isSubmitting={false}
+        onSubmit={() => {}}
+      />
+    );
+    expect(withError).not.toContain("Ver lo que he notado");
+    expect(withError).not.toContain('href="/mis-descubrimientos"');
+  });
 });
 
 describe("ComparisonConfirmation", () => {
@@ -211,6 +229,21 @@ describe("ComparisonConfirmation", () => {
     expect(markup).toContain("Comparar otras dos");
     expect(markup).toContain("Listo");
     expect(markup).not.toMatch(/<ul|<ol|historial|anteriores/i);
+  });
+
+  it("links back to the learner record at exactly /mis-descubrimientos (Phase 3.2)", () => {
+    const markup = renderToStaticMarkup(
+      <ComparisonConfirmation
+        firstFragranceName="Aurelian Primera"
+        secondFragranceName="Aurelian Segunda"
+        comparison={{ freeText: "x" }}
+        onCompareAnother={() => {}}
+        onDone={() => {}}
+      />
+    );
+
+    expect(markup).toContain("Ver lo que he notado");
+    expect(markup).toContain('href="/mis-descubrimientos"');
   });
 });
 

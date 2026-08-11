@@ -6,7 +6,9 @@ import {
   ComparisonEvidenceCard,
   EncounterEvidenceCard,
   LearnerRecordContainer,
+  LearnerRecordDeleteControl,
   LearnerRecordView,
+  requestLearnerRecordReset,
 } from "./LearnerRecordView.jsx";
 import {
   PERCEPTUAL_LEARNING_SCHEMA_VERSION,
@@ -72,6 +74,13 @@ describe("LearnerRecordView — empty state", () => {
     for (const phrase of FORBIDDEN_COPY) {
       expect(markup).not.toContain(phrase);
     }
+  });
+
+  it("does not show the delete-all-data control when there is no evidence (Phase 3.2)", () => {
+    const markup = renderToStaticMarkup(<LearnerRecordView learnerRecord={emptyRecord()} />);
+
+    expect(markup).not.toContain("Eliminar mis datos de aprendizaje");
+    expect(markup).not.toMatch(/<button/);
   });
 });
 
@@ -520,11 +529,219 @@ describe("general presentation invariants", () => {
     }
   });
 
-  it("renders no button/form controls -- only navigation links, nothing mutates from this page", () => {
+  it("renders no form controls, and the only buttons present are the approved delete-all trigger -- no individual-delete action exists per encounter/observation/comparison", () => {
     const markup = renderToStaticMarkup(<LearnerRecordView learnerRecord={learnerRecord} />);
 
-    expect(markup).not.toMatch(/<button/);
     expect(markup).not.toMatch(/<form/);
+    // Exactly one button: the delete-all trigger (idle phase, default prop).
+    expect(markup.match(/<button/g)?.length).toBe(1);
+    expect(markup).toContain("Eliminar mis datos de aprendizaje");
+  });
+});
+
+describe("delete-all learning data (Phase 3.2)", () => {
+  const populatedLearnerRecord = {
+    learnerId: "learner-1",
+    hasEvidence: true,
+    encounters: [
+      {
+        encounterInstanceId: "enc-1",
+        fragranceId: 1,
+        fragranceDisplaySnapshot: { fragranceId: 1, name: "Fico di Amalfi", brand: "Aurelian" },
+        createdAt: "2026-08-01T00:00:00.000Z",
+        observations: [
+          { observationId: "obs-1", moment: "initial", freeText: "Muy fresco.", createdAt: "2026-08-01T00:00:00.000Z" },
+        ],
+      },
+    ],
+    comparisons: [],
+  };
+
+  function createTrackingStorage(initial = {}) {
+    const store = new Map(Object.entries(initial));
+    const removedKeys = [];
+    let setItemCalls = 0;
+
+    return {
+      getItem: (key) => (store.has(key) ? store.get(key) : null),
+      setItem: (key, value) => {
+        setItemCalls += 1;
+        store.set(key, value);
+      },
+      removeItem: (key) => {
+        removedKeys.push(key);
+        store.delete(key);
+      },
+      get setItemCalls() {
+        return setItemCalls;
+      },
+      get removedKeys() {
+        return removedKeys;
+      },
+      has: (key) => store.has(key),
+    };
+  }
+
+  describe("visibility (item 1, 2)", () => {
+    it("is visible (idle trigger) when learnerRecord.hasEvidence is true", () => {
+      const markup = renderToStaticMarkup(<LearnerRecordView learnerRecord={populatedLearnerRecord} />);
+
+      expect(markup).toContain("Eliminar mis datos de aprendizaje");
+    });
+
+    it("is entirely absent when learnerRecord.hasEvidence is false, regardless of resetPhase", () => {
+      const markup = renderToStaticMarkup(
+        <LearnerRecordView learnerRecord={emptyRecord()} resetPhase="confirming" />
+      );
+
+      expect(markup).not.toContain("Eliminar mis datos de aprendizaje");
+      expect(markup).not.toContain("Esto eliminará todas tus observaciones y comparaciones");
+    });
+  });
+
+  describe("LearnerRecordDeleteControl phases", () => {
+    it("shows only the trigger in the idle phase", () => {
+      const markup = renderToStaticMarkup(
+        <LearnerRecordDeleteControl phase="idle" onActivate={() => {}} onCancel={() => {}} onConfirm={() => {}} />
+      );
+
+      expect(markup).toContain("Eliminar mis datos de aprendizaje");
+      expect(markup).not.toContain("Esto eliminará");
+    });
+
+    it("shows the explanation and Cancelar/Eliminar definitivamente before any destructive execution occurs (item 3)", () => {
+      const markup = renderToStaticMarkup(
+        <LearnerRecordDeleteControl phase="confirming" onActivate={() => {}} onCancel={() => {}} onConfirm={() => {}} />
+      );
+
+      expect(markup).toContain(
+        "Esto eliminará todas tus observaciones y comparaciones guardadas en este navegador."
+      );
+      expect(markup).toContain("Cancelar");
+      expect(markup).toContain("Eliminar definitivamente");
+      expect(markup).not.toMatch(/<button[^>]*disabled/);
+    });
+
+    it("disables both actions while deleting", () => {
+      const markup = renderToStaticMarkup(
+        <LearnerRecordDeleteControl phase="deleting" onActivate={() => {}} onCancel={() => {}} onConfirm={() => {}} />
+      );
+
+      expect(markup.match(/<button[^>]*disabled/g)?.length).toBe(2);
+    });
+
+    it("shows a retryable inline error, with both actions still enabled, in the error phase (item 9)", () => {
+      const markup = renderToStaticMarkup(
+        <LearnerRecordDeleteControl phase="error" onActivate={() => {}} onCancel={() => {}} onConfirm={() => {}} />
+      );
+
+      expect(markup).toContain("No pudimos eliminar tus datos. Intenta de nuevo.");
+      expect(markup).not.toMatch(/<button[^>]*disabled/);
+    });
+  });
+
+  it("cancelling (resetPhase back to idle) preserves the populated evidence -- resetPhase and learnerRecord are fully independent props (item 4)", () => {
+    const idleMarkup = renderToStaticMarkup(
+      <LearnerRecordView learnerRecord={populatedLearnerRecord} resetPhase="idle" />
+    );
+    const confirmingMarkup = renderToStaticMarkup(
+      <LearnerRecordView learnerRecord={populatedLearnerRecord} resetPhase="confirming" />
+    );
+
+    for (const markup of [idleMarkup, confirmingMarkup]) {
+      expect(markup).toContain("Fico di Amalfi");
+      expect(markup).toContain("Muy fresco.");
+    }
+  });
+
+  it("failed reset (error phase) preserves the populated evidence view (item 8)", () => {
+    const markup = renderToStaticMarkup(
+      <LearnerRecordView learnerRecord={populatedLearnerRecord} resetPhase="error" />
+    );
+
+    expect(markup).toContain("Fico di Amalfi");
+    expect(markup).toContain("Muy fresco.");
+    expect(markup).toContain("No pudimos eliminar tus datos. Intenta de nuevo.");
+  });
+
+  describe("requestLearnerRecordReset (pure)", () => {
+    it("delegates to resetLearningData exactly once, via a single storage.removeItem call (item 5)", () => {
+      const storage = createTrackingStorage({ [PERCEPTUAL_LEARNING_STORAGE_KEY]: "{}" });
+
+      requestLearnerRecordReset({ storage });
+
+      expect(storage.removedKeys).toEqual([PERCEPTUAL_LEARNING_STORAGE_KEY]);
+    });
+
+    it("returns a safe, correctly-shaped empty LearnerRecord on success (item 6)", () => {
+      const storage = createTrackingStorage({ [PERCEPTUAL_LEARNING_STORAGE_KEY]: "{}" });
+
+      const result = requestLearnerRecordReset({ storage });
+
+      expect(result).toEqual({
+        succeeded: true,
+        learnerRecord: { learnerId: null, hasEvidence: false, encounters: [], comparisons: [] },
+      });
+    });
+
+    it("never calls setItem -- no replacement state is written and no new learner id is created (item 7)", () => {
+      const storage = createTrackingStorage({ [PERCEPTUAL_LEARNING_STORAGE_KEY]: "{}" });
+
+      requestLearnerRecordReset({ storage });
+
+      expect(storage.setItemCalls).toBe(0);
+    });
+
+    it("leaves unrelated localStorage keys untouched (item 10)", () => {
+      const storage = createTrackingStorage({
+        [PERCEPTUAL_LEARNING_STORAGE_KEY]: "{}",
+        "aurelian-builder-v1": "some-unrelated-collection-state",
+        "some-other-app-key": "untouched",
+      });
+
+      requestLearnerRecordReset({ storage });
+
+      expect(storage.removedKeys).toEqual([PERCEPTUAL_LEARNING_STORAGE_KEY]);
+      expect(storage.has("aurelian-builder-v1")).toBe(true);
+      expect(storage.getItem("aurelian-builder-v1")).toBe("some-unrelated-collection-state");
+      expect(storage.has("some-other-app-key")).toBe(true);
+    });
+
+    it("returns { succeeded: false } and touches nothing else when storage access throws", () => {
+      const throwingStorage = {
+        getItem: () => null,
+        setItem: () => {},
+        removeItem: () => {
+          throw new Error("blocked");
+        },
+      };
+
+      const result = requestLearnerRecordReset({ storage: throwingStorage });
+
+      expect(result).toEqual({ succeeded: false });
+    });
+  });
+
+  it("exposes no delete action anywhere in the catalog learning disclosure or Observation/Comparison confirmation copy (item 12)", () => {
+    // The three surfaces Phase 3.2 also touches for discoverability must
+    // never gain a delete affordance of their own -- delete-all is
+    // /mis-descubrimientos-only, per the locked product decision.
+    const catalogSource = readFileSync(
+      fileURLToPath(new URL("./CatalogExplorer.jsx", import.meta.url)),
+      "utf8"
+    );
+    const observationSource = readFileSync(
+      fileURLToPath(new URL("./ObservationCaptureFlow.jsx", import.meta.url)),
+      "utf8"
+    );
+    const comparisonSource = readFileSync(
+      fileURLToPath(new URL("./ComparisonCaptureFlow.jsx", import.meta.url)),
+      "utf8"
+    );
+
+    for (const source of [catalogSource, observationSource, comparisonSource]) {
+      expect(source).not.toMatch(/eliminar|resetLearningData/i);
+    }
   });
 });
 

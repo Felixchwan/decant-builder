@@ -163,6 +163,17 @@ h1 { max-width:15ch; margin-bottom:1.4rem; font-size:clamp(2.8rem,7vw,6.4rem); }
 .encounter-evidence-card__actions { display:flex; flex-wrap:wrap; gap:1rem; margin-top:1rem; padding-top:.85rem; border-top:1px solid var(--border); }
 .quiet-link { color:var(--muted); font-size:.78rem; border-bottom:1px solid var(--border); }
 .quiet-link:hover,.quiet-link:focus-visible { color:var(--gold); border-color:var(--gold); }
+.observation-capture__learner-record-link,.comparison-capture__learner-record-link { display:inline-block; margin-top:1rem; }
+.learner-record-delete { margin-top:3rem; padding-top:1.5rem; border-top:1px solid var(--border); }
+.learner-record-delete__trigger { background:none; border:none; padding:0; font:inherit; cursor:pointer; }
+.learner-record-delete--confirming p { max-width:36rem; margin:0 0 1rem; color:var(--secondary); font-size:.85rem; }
+.learner-record-delete__error { color:#d98a7a; }
+.learner-record-delete__actions { display:flex; flex-wrap:wrap; gap:1rem; }
+.learner-record-delete__actions button { min-height:2.75rem; padding:.5rem 1rem; border:1px solid var(--border); background:transparent; color:var(--secondary); font-size:.82rem; }
+.learner-record-delete__actions button:last-child { border-color:#d98a7a; color:#d98a7a; }
+.learner-record-delete__actions button:not(:disabled):hover,.learner-record-delete__actions button:not(:disabled):focus-visible { border-color:var(--gold); color:var(--gold); }
+.learner-record-delete__actions button:last-child:not(:disabled):hover,.learner-record-delete__actions button:last-child:not(:disabled):focus-visible { border-color:#d98a7a; color:#d98a7a; background:rgba(217,138,122,.1); }
+.learner-record-delete__actions button:disabled { opacity:.5; cursor:not-allowed; }
 .process-list { max-width:52rem; margin:4rem 0; }
 .process-list article { display:grid; grid-template-columns:4rem 1fr; padding:2rem 0; border-top:1px solid var(--border); }
 .process-list article > p { grid-column:2; }

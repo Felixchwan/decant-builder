@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { aurelianCatalog } from "../merchant/catalog.js";
 import { filterCatalog } from "../lib/filterCatalog.js";
 import { parseFragranceIntent } from "../lib/parseFragranceIntent.js";
@@ -165,6 +166,9 @@ export function ComparisonConfirmation({
           {COMPARISON_DONE_LABEL}
         </button>
       </div>
+      <Link className="quiet-link comparison-capture__learner-record-link" href="/mis-descubrimientos">
+        Ver lo que he notado
+      </Link>
     </div>
   );
 }

@@ -2,9 +2,14 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { loadPerceptualLearningState } from "../perceptualLearning/perceptualLearningPersistence.js";
+import {
+  loadPerceptualLearningState,
+  resetLearningData,
+} from "../perceptualLearning/perceptualLearningPersistence.js";
 import { buildLearnerRecord } from "../perceptualLearning/learnerRecord.js";
 import { OBSERVATION_MOMENT_COPY } from "../perceptualLearning/momentVocabulary.js";
+
+const RESET_ERROR_COPY = "No pudimos eliminar tus datos. Intenta de nuevo.";
 
 // Local to this page only -- deliberately not extracted alongside
 // ObservationCaptureFlow.jsx's formatObservationTimestamp, which formats
@@ -43,6 +48,33 @@ function getStorage() {
   } catch {
     return null;
   }
+}
+
+// Delegates entirely to the existing resetLearningData capability -- never
+// reimplements storage removal. On success, returns a fresh, safely-derived
+// empty LearnerRecord built from an empty persisted-state shape rather than
+// re-reading storage, since resetLearningData's own contract already
+// guarantees the key is gone. Never writes a replacement state and never
+// resolves/creates a new learner id -- per existing semantics, that only
+// ever happens on the next successful Observation/Comparison submission
+// (see learnerIdentity.js/resolveLearnerId, used by the existing use cases).
+export function requestLearnerRecordReset({ storage }) {
+  const succeeded = resetLearningData({ storage });
+
+  if (!succeeded) {
+    return { succeeded: false };
+  }
+
+  return {
+    succeeded: true,
+    learnerRecord: buildLearnerRecord({
+      learnerId: null,
+      learnerCreatedAt: null,
+      encounterInstances: [],
+      observations: [],
+      comparisons: [],
+    }),
+  };
 }
 
 // Small, prop-driven presentational pieces. Each renders from explicit props
@@ -136,6 +168,51 @@ export function ComparisonEvidenceCard({ comparison }) {
   );
 }
 
+// Pure, prop-driven -- renders the delete-all control in whichever phase the
+// caller specifies. No internal state, no storage access, mirroring every
+// other piece in this file. `phase` is the local confirmation state chosen
+// over a native <details> disclosure (see the Phase 3.2 report): the
+// idle/confirming/deleting/error sequence has more independent states than
+// simple open/closed disclosure, and this codebase's own testing convention
+// (prop-driven pure pieces, no interactive-DOM simulation) fits an explicit
+// status prop more directly than mixing native disclosure state with
+// separate execution/error state.
+export function LearnerRecordDeleteControl({ phase, onActivate, onCancel, onConfirm }) {
+  if (phase === "idle") {
+    return (
+      <div className="learner-record-delete">
+        <button
+          type="button"
+          className="quiet-link learner-record-delete__trigger"
+          onClick={onActivate}
+        >
+          Eliminar mis datos de aprendizaje
+        </button>
+      </div>
+    );
+  }
+
+  const isDeleting = phase === "deleting";
+
+  return (
+    <div
+      className="learner-record-delete learner-record-delete--confirming"
+      data-testid="learner-record-delete-confirm"
+    >
+      <p>Esto eliminará todas tus observaciones y comparaciones guardadas en este navegador.</p>
+      {phase === "error" ? <p className="learner-record-delete__error">{RESET_ERROR_COPY}</p> : null}
+      <div className="learner-record-delete__actions">
+        <button type="button" onClick={onCancel} disabled={isDeleting}>
+          Cancelar
+        </button>
+        <button type="button" onClick={onConfirm} disabled={isDeleting}>
+          Eliminar definitivamente
+        </button>
+      </div>
+    </div>
+  );
+}
+
 // Pure aggregate -- takes an already-derived LearnerRecord and decides only
 // how to lay it out. No storage access, no derivation logic of its own.
 //
@@ -146,7 +223,13 @@ export function ComparisonEvidenceCard({ comparison }) {
 // local to what gets rendered in this one section. Those encounters are
 // still fully represented via the Comparisons section, which resolves
 // against every encounter regardless of Observation count.
-export function LearnerRecordView({ learnerRecord }) {
+export function LearnerRecordView({
+  learnerRecord,
+  resetPhase = "idle",
+  onActivateReset = () => {},
+  onCancelReset = () => {},
+  onConfirmReset = () => {},
+}) {
   const observedEncounters = learnerRecord.encounters.filter(
     (encounter) => encounter.observations.length > 0
   );
@@ -179,6 +262,12 @@ export function LearnerRecordView({ learnerRecord }) {
               </div>
             </section>
           ) : null}
+          <LearnerRecordDeleteControl
+            phase={resetPhase}
+            onActivate={onActivateReset}
+            onCancel={onCancelReset}
+            onConfirm={onConfirmReset}
+          />
         </>
       ) : (
         <LearnerRecordEmptyState />
@@ -190,13 +279,46 @@ export function LearnerRecordView({ learnerRecord }) {
 // Stateful container. Reads storage exactly once, on mount, via a lazy
 // useState initializer -- safe only because this component is always
 // dynamically imported with {ssr:false} (see LearnerRecordMount.jsx), so it
-// never executes during server rendering. No writes, no reset, no catalog
-// lookup; loadPerceptualLearningState already performs the v1->v2 migration
-// entirely in memory, so this single read never triggers a storage write.
+// never executes during server rendering. The only other storage access is
+// the reset request itself, triggered exclusively by the confirmed delete
+// action -- loadPerceptualLearningState already performs the v1->v2
+// migration entirely in memory, so the initial read never triggers a write,
+// and requestLearnerRecordReset never writes a replacement state either.
 export function LearnerRecordContainer() {
-  const [learnerRecord] = useState(() =>
+  const [learnerRecord, setLearnerRecord] = useState(() =>
     buildLearnerRecord(loadPerceptualLearningState({ storage: getStorage() }))
   );
+  const [resetPhase, setResetPhase] = useState("idle");
 
-  return <LearnerRecordView learnerRecord={learnerRecord} />;
+  function handleActivateReset() {
+    setResetPhase("confirming");
+  }
+
+  function handleCancelReset() {
+    setResetPhase("idle");
+  }
+
+  function handleConfirmReset() {
+    setResetPhase("deleting");
+
+    const result = requestLearnerRecordReset({ storage: getStorage() });
+
+    if (!result.succeeded) {
+      setResetPhase("error");
+      return;
+    }
+
+    setLearnerRecord(result.learnerRecord);
+    setResetPhase("idle");
+  }
+
+  return (
+    <LearnerRecordView
+      learnerRecord={learnerRecord}
+      resetPhase={resetPhase}
+      onActivateReset={handleActivateReset}
+      onCancelReset={handleCancelReset}
+      onConfirmReset={handleConfirmReset}
+    />
+  );
 }

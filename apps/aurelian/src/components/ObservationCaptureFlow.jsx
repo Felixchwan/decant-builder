@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { aurelianCatalog } from "../merchant/catalog.js";
 import { filterCatalog } from "../lib/filterCatalog.js";
 import { parseFragranceIntent } from "../lib/parseFragranceIntent.js";
@@ -95,6 +96,9 @@ export function ObservationConfirmation({
           Listo
         </button>
       </div>
+      <Link className="quiet-link observation-capture__learner-record-link" href="/mis-descubrimientos">
+        Ver lo que he notado
+      </Link>
     </div>
   );
 }

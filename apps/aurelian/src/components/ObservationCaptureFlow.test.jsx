@@ -91,6 +91,7 @@ describe("ObservationPicker", () => {
     expect(markup).toContain("observation-picker");
     expect(markup).toContain("Aurelian");
     expect(markup).toContain("No. 1");
+    expect(markup).not.toContain("Ver lo que he notado");
   });
 });
 
@@ -179,6 +180,39 @@ describe("ObservationForm", () => {
     );
     expect(withoutError).not.toContain("No pudimos guardar tu observación");
   });
+
+  it("never renders the learner-record link in the pre-submit form, including a failed-submit state (Phase 3.2)", () => {
+    const withError = renderToStaticMarkup(
+      <ObservationForm
+        fragranceName="X"
+        moment="initial"
+        onMomentChange={() => {}}
+        freeText="algo"
+        onFreeTextChange={() => {}}
+        submitError="No pudimos guardar tu observación. Intenta de nuevo."
+        canSubmit
+        isSubmitting={false}
+        onSubmit={() => {}}
+      />
+    );
+    expect(withError).not.toContain("Ver lo que he notado");
+    expect(withError).not.toContain('href="/mis-descubrimientos"');
+
+    const withoutError = renderToStaticMarkup(
+      <ObservationForm
+        fragranceName="X"
+        moment={null}
+        onMomentChange={() => {}}
+        freeText=""
+        onFreeTextChange={() => {}}
+        submitError={null}
+        canSubmit={false}
+        isSubmitting={false}
+        onSubmit={() => {}}
+      />
+    );
+    expect(withoutError).not.toContain("Ver lo que he notado");
+  });
 });
 
 describe("ObservationConfirmation", () => {
@@ -203,6 +237,24 @@ describe("ObservationConfirmation", () => {
     expect(markup).toContain("Listo");
     // No history/list/older-observations affordance of any kind.
     expect(markup).not.toMatch(/<ul|<ol|historial|anteriores/i);
+  });
+
+  it("links back to the learner record at exactly /mis-descubrimientos (Phase 3.2)", () => {
+    const markup = renderToStaticMarkup(
+      <ObservationConfirmation
+        fragranceName="Aurelian No. 1"
+        observation={{
+          moment: "initial",
+          freeText: "x",
+          createdAt: "2026-08-10T12:30:00.000Z",
+        }}
+        onRegisterAnotherMoment={() => {}}
+        onDone={() => {}}
+      />
+    );
+
+    expect(markup).toContain("Ver lo que he notado");
+    expect(markup).toContain('href="/mis-descubrimientos"');
   });
 });
 
