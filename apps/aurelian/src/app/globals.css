@@ -133,6 +133,18 @@ h1 { max-width:15ch; margin-bottom:1.4rem; font-size:clamp(2.8rem,7vw,6.4rem); }
 .product-card__action { width:100%; min-width:0; min-height:3rem; margin-top:0; padding-inline:.7rem; display:inline-flex; align-items:center; justify-content:center; background:transparent; color:var(--gold); font-size:.78rem; line-height:1.22; }
 .product-card__action:hover,.product-card__action:focus-visible { background:var(--gold); color:var(--ink); }
 .product-card--highlighted { border-color:var(--gold); box-shadow:0 0 0 1px rgba(200,166,101,.38),0 18px 45px rgba(0,0,0,.28); }
+/* Quiet, secondary-tier learning affordance -- deliberately lighter than
+   .product-card__action (no fill, muted resting color) so the commercial CTA
+   above it stays the card's one primary action. Native <details>/<summary>,
+   same disclosure mechanism already trusted in .mobile-menu -- no hover-only
+   reveal, no custom JS state, works identically at every breakpoint. */
+.product-card__learning { margin-top:.65rem; }
+.product-card__learning summary { padding:.35rem 0; list-style:none; color:var(--muted); font-size:.74rem; letter-spacing:.02em; cursor:pointer; }
+.product-card__learning summary::-webkit-details-marker { display:none; }
+.product-card__learning summary:hover,.product-card__learning summary:focus-visible,.product-card__learning[open] summary { color:var(--gold); }
+.product-card__learning-links { display:flex; flex-direction:column; gap:.35rem; margin-top:.5rem; padding-top:.6rem; border-top:1px solid var(--border); }
+.product-card__learning-link { display:inline-flex; align-items:center; min-height:2.75rem; padding:.25rem 0; border-bottom:1px solid rgba(200,166,101,.25); color:var(--secondary); font-size:.76rem; }
+.product-card__learning-link:hover,.product-card__learning-link:focus-visible { border-color:var(--gold); color:var(--gold); }
 .centered-cta { margin-top:4rem; text-align:center; }
 .empty-state { padding:5rem 1rem; border:1px solid var(--border); text-align:center; }
 .process-list { max-width:52rem; margin:4rem 0; }

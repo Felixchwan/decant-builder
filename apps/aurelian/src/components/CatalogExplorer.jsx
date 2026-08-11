@@ -87,6 +87,25 @@ export function CatalogExplorer() {
                   </p>
                   <Link className="button product-card__action" href={`/build-your-box?fragrance=${encodeURIComponent(item.id)}`} aria-label={`Agregar ${item.name} a mi Discovery Box`}>Agregar a mi Discovery Box</Link>
                 </div>
+                <details className="product-card__learning">
+                  <summary aria-label={`Explorar opciones de aprendizaje para ${item.name}`}>Explorar esta fragancia</summary>
+                  <div className="product-card__learning-links">
+                    <Link
+                      className="product-card__learning-link"
+                      href={`/mis-descubrimientos/observar?fragrance=${encodeURIComponent(item.id)}`}
+                      aria-label={`Registrar lo que percibo de ${item.name}`}
+                    >
+                      Registrar lo que percibo
+                    </Link>
+                    <Link
+                      className="product-card__learning-link"
+                      href={`/mis-descubrimientos/comparar?fragrance=${encodeURIComponent(item.id)}`}
+                      aria-label={`Comparar ${item.name} con otra fragancia`}
+                    >
+                      Comparar con otra
+                    </Link>
+                  </div>
+                </details>
               </article>
             );
           })}
