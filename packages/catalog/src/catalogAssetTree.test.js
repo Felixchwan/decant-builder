@@ -14,8 +14,8 @@ import {
 } from "./index.js";
 
 const ASSET_ROOT = fileURLToPath(new URL("../assets/", import.meta.url));
-const APPROVED_FILE_COUNT = 368;
-const APPROVED_TREE_HASH = "ec854bb7f47adda2cd45e8fe94f4d2c22b52c8a8ab788832c9982f22aaf4b9e9";
+const APPROVED_FILE_COUNT = 378;
+const APPROVED_TREE_HASH = "5a6f772bda8b3913a23c88ea0d09a634e7d2ee4ed84951d13db71b720c323c0a";
 
 function walk(directory = ASSET_ROOT, relativeDirectory = "") {
   return readdirSync(directory, { withFileTypes: true })
@@ -75,7 +75,17 @@ describe("catalog package asset tree", () => {
 
   it("retains the intentionally unreferenced catalog asset pending cleanup review", () => {
     expect(files.filter((path) => !new Set(canonicalKeys).has(path))).toEqual([
+      "perfumes/bronze/batch-01/lhomme-ideal-edt.png",
+      "perfumes/bronze/batch-01/montblanc-legend-edt.png",
+      "perfumes/bronze/batch-01/versace-pour-homme.png",
+      "perfumes/bronze/batch-02/jaguar-pace.png",
+      "perfumes/bronze/batch-02/uomo-signature.png",
+      "perfumes/diamond/torino21.png",
+      "perfumes/gold/dior-homme-sport.png",
       "perfumes/platinum/allure-homme-edition-blanche.png",
+      "perfumes/platinum/divine-vanille.png",
+      "perfumes/silver/l-homme.png",
+      "perfumes/silver/le-male-le-parfum.png",
     ]);
   });
 });
