@@ -147,6 +147,22 @@ h1 { max-width:15ch; margin-bottom:1.4rem; font-size:clamp(2.8rem,7vw,6.4rem); }
 .product-card__learning-link:hover,.product-card__learning-link:focus-visible { border-color:var(--gold); color:var(--gold); }
 .centered-cta { margin-top:4rem; text-align:center; }
 .empty-state { padding:5rem 1rem; border:1px solid var(--border); text-align:center; }
+.learner-record-actions { display:flex; flex-wrap:wrap; align-items:center; gap:1rem; margin-top:2rem; }
+.learner-record-empty { margin-top:2rem; }
+.learner-record-empty .learner-record-actions { justify-content:center; margin-top:1.5rem; }
+.learner-record-section { margin-top:3rem; }
+.learner-record-section h2 { margin:0 0 1.25rem; font-family:Georgia,serif; font-size:1.6rem; font-weight:400; }
+.learner-record-list { display:flex; flex-direction:column; gap:1rem; }
+.encounter-evidence-card,.comparison-evidence-card { padding:1.25rem; border:1px solid var(--border); background:var(--surface); }
+.encounter-evidence-card__fragrance,.comparison-evidence-card__pair { margin:0 0 .35rem; font-family:Georgia,serif; font-size:1.1rem; font-weight:400; }
+.encounter-evidence-card__brand { color:var(--secondary); font-size:.82rem; font-family:Inter,ui-sans-serif,system-ui,sans-serif; }
+.encounter-evidence-card__date,.comparison-evidence-card__date { margin:0 0 .85rem; color:var(--muted); font-size:.74rem; letter-spacing:.04em; }
+.encounter-evidence-card__observations { display:flex; flex-direction:column; gap:.75rem; margin:0; padding:0; list-style:none; }
+.encounter-evidence-card__moment { display:block; margin-bottom:.25rem; color:var(--gold); font-size:.72rem; font-weight:700; letter-spacing:.06em; text-transform:uppercase; }
+.encounter-evidence-card__quote,.comparison-evidence-card__quote { margin:0; padding-left:.85rem; border-left:1px solid var(--border); color:var(--text); font-style:normal; }
+.encounter-evidence-card__actions { display:flex; flex-wrap:wrap; gap:1rem; margin-top:1rem; padding-top:.85rem; border-top:1px solid var(--border); }
+.quiet-link { color:var(--muted); font-size:.78rem; border-bottom:1px solid var(--border); }
+.quiet-link:hover,.quiet-link:focus-visible { color:var(--gold); border-color:var(--gold); }
 .process-list { max-width:52rem; margin:4rem 0; }
 .process-list article { display:grid; grid-template-columns:4rem 1fr; padding:2rem 0; border-top:1px solid var(--border); }
 .process-list article > p { grid-column:2; }
