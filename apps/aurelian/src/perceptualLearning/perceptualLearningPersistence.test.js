@@ -7,6 +7,8 @@ import {
   writePerceptualLearningState,
 } from "./perceptualLearningPersistence.js";
 import { createLearnerId } from "./learnerIdentity.js";
+import { createEncounterInstance } from "./encounterInstance.js";
+import { createObservation } from "./observation.js";
 
 function createFakeStorage(initial = {}) {
   const store = new Map(Object.entries(initial));
@@ -44,11 +46,18 @@ describe("perceptualLearningPersistence", () => {
   it("round-trips a valid write through a read", () => {
     const storage = createFakeStorage();
     const learnerId = createLearnerId();
+    const encounter = createEncounterInstance({ learnerId, fragranceId: 42 });
+    const observation = createObservation({
+      encounterInstanceId: encounter.encounterInstanceId,
+      learnerId,
+      moment: "initial",
+      freeText: "Huele a cítrico.",
+    });
     const nextState = {
       learnerId,
       learnerCreatedAt: "2026-08-10T00:00:00.000Z",
-      encounterInstances: [{ encounterInstanceId: "enc-1" }],
-      observations: [{ observationId: "obs-1" }],
+      encounterInstances: [encounter],
+      observations: [observation],
     };
 
     const result = writePerceptualLearningState({ storage, nextState });
@@ -78,18 +87,43 @@ describe("perceptualLearningPersistence", () => {
         nextState: { learnerId: null, encounterInstances: [{ noId: true }], observations: [] },
       })
     ).toThrow();
+    // Structurally shaped like an EncounterInstance but with a status field
+    // that doesn't belong -- must also be rejected by the strengthened check.
+    expect(() =>
+      writePerceptualLearningState({
+        storage,
+        nextState: {
+          learnerId: null,
+          encounterInstances: [
+            {
+              encounterInstanceId: "enc-1",
+              learnerId: "learner-1",
+              fragranceId: 42,
+              fragranceDisplaySnapshot: null,
+              basedOnDesignId: null,
+              designSnapshot: null,
+              createdAt: "2026-08-10T00:00:00.000Z",
+              status: "open",
+            },
+          ],
+          observations: [],
+        },
+      })
+    ).toThrow();
 
     // Confirms the earlier failed calls left nothing behind -- atomicity at
-    // the persistence boundary (this repo's correction #1).
+    // the persistence boundary.
     expect(loadPerceptualLearningState({ storage })).toEqual(EMPTY_STATE);
   });
 
   it("discards the entire payload on a schema version mismatch", () => {
+    const learnerId = createLearnerId();
+    const encounter = createEncounterInstance({ learnerId, fragranceId: 42 });
     const storage = createFakeStorage({
       [PERCEPTUAL_LEARNING_STORAGE_KEY]: JSON.stringify({
         schemaVersion: PERCEPTUAL_LEARNING_SCHEMA_VERSION + 1,
-        learnerId: createLearnerId(),
-        encounterInstances: [{ encounterInstanceId: "enc-1" }],
+        learnerId,
+        encounterInstances: [encounter],
         observations: [],
       }),
     });
@@ -119,36 +153,75 @@ describe("perceptualLearningPersistence", () => {
 
   it("drops individually malformed records without discarding the rest", () => {
     const learnerId = createLearnerId();
+    const validEncounter = createEncounterInstance({ learnerId, fragranceId: 42 });
+    const validObservation = createObservation({
+      encounterInstanceId: validEncounter.encounterInstanceId,
+      learnerId,
+      moment: "initial",
+      freeText: "x",
+    });
     const storage = createFakeStorage({
       [PERCEPTUAL_LEARNING_STORAGE_KEY]: JSON.stringify({
         schemaVersion: PERCEPTUAL_LEARNING_SCHEMA_VERSION,
         learnerId,
         learnerCreatedAt: null,
         encounterInstances: [
-          { encounterInstanceId: "enc-1" },
+          validEncounter,
           { noId: true },
-          { encounterInstanceId: "" },
+          { ...validEncounter, encounterInstanceId: "" },
+          { ...validEncounter, fragranceId: "not-an-integer" },
         ],
-        observations: [{ observationId: "obs-1" }, {}],
+        observations: [
+          validObservation,
+          {},
+          { ...validObservation, moment: "drydown" },
+          { ...validObservation, confidence: "confident" },
+        ],
       }),
     });
 
     expect(loadPerceptualLearningState({ storage })).toEqual({
       learnerId,
       learnerCreatedAt: null,
-      encounterInstances: [{ encounterInstanceId: "enc-1" }],
-      observations: [{ observationId: "obs-1" }],
+      encounterInstances: [validEncounter],
+      observations: [validObservation],
     });
+  });
+
+  it("keeps a persisted EncounterInstance valid even when its fragranceId no longer resolves against any catalog", () => {
+    // This predicate has no catalog dependency at all -- a removed/renamed
+    // catalog item must not invalidate historical evidence. Using a
+    // deliberately absurd fragranceId to make the point unambiguous: this
+    // module never looks it up anywhere.
+    const learnerId = createLearnerId();
+    const encounterForRemovedFragrance = createEncounterInstance({
+      learnerId,
+      fragranceId: 999999999,
+    });
+    const storage = createFakeStorage({
+      [PERCEPTUAL_LEARNING_STORAGE_KEY]: JSON.stringify({
+        schemaVersion: PERCEPTUAL_LEARNING_SCHEMA_VERSION,
+        learnerId,
+        learnerCreatedAt: null,
+        encounterInstances: [encounterForRemovedFragrance],
+        observations: [],
+      }),
+    });
+
+    expect(loadPerceptualLearningState({ storage }).encounterInstances).toEqual([
+      encounterForRemovedFragrance,
+    ]);
   });
 
   it("resets by clearing storage entirely", () => {
     const storage = createFakeStorage();
+    const learnerId = createLearnerId();
     writePerceptualLearningState({
       storage,
       nextState: {
-        learnerId: createLearnerId(),
+        learnerId,
         learnerCreatedAt: null,
-        encounterInstances: [{ encounterInstanceId: "enc-1" }],
+        encounterInstances: [createEncounterInstance({ learnerId, fragranceId: 42 })],
         observations: [],
       },
     });
@@ -191,7 +264,7 @@ describe("perceptualLearningPersistence", () => {
       nextState: {
         learnerId: firstLearnerId,
         learnerCreatedAt: null,
-        encounterInstances: [{ encounterInstanceId: "enc-1" }],
+        encounterInstances: [createEncounterInstance({ learnerId: firstLearnerId, fragranceId: 42 })],
         observations: [],
       },
     });

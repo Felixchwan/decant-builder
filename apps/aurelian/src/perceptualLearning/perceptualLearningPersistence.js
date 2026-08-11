@@ -19,6 +19,8 @@
 // an empty EncounterInstance.
 
 import { isValidLearnerId } from "./learnerIdentity.js";
+import { isValidPersistedEncounterInstance } from "./encounterInstance.js";
+import { isValidPersistedObservation } from "./observation.js";
 
 export const PERCEPTUAL_LEARNING_STORAGE_KEY = "aurelian-perceptual-learning-v1";
 export const PERCEPTUAL_LEARNING_SCHEMA_VERSION = 1;
@@ -120,14 +122,6 @@ function isPlainObject(value) {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
 }
 
-function hasValidStringId(record, idField) {
-  return (
-    isPlainObject(record) &&
-    typeof record[idField] === "string" &&
-    record[idField].trim().length > 0
-  );
-}
-
 // Top-level shape/version mismatches discard the whole payload -- the same
 // all-or-nothing discipline builderPersistence.js already uses, since a
 // version mismatch means the rest of the shape contract is untrustworthy.
@@ -135,10 +129,11 @@ function hasValidStringId(record, idField) {
 // at a time instead, so one corrupted local write doesn't cost someone their
 // entire evidence history.
 //
-// This module only knows the generic shape (an array of records, each with a
-// non-empty string id field) -- it does not validate the full
-// EncounterInstance/Observation domain contract, which belongs to Phase 1's
-// own factories and is out of this module's ownership.
+// Records are validated against their complete Phase-1 domain shapes
+// (isValidPersistedEncounterInstance / isValidPersistedObservation) --
+// deliberately NOT against the live catalog. A fragranceId that no longer
+// resolves to a current catalog item does not invalidate a historical
+// EncounterInstance; that predicate has no catalog dependency at all.
 function readValidatedState(parsed) {
   if (!isPlainObject(parsed) || parsed.schemaVersion !== PERCEPTUAL_LEARNING_SCHEMA_VERSION) {
     return null;
@@ -151,13 +146,16 @@ function readValidatedState(parsed) {
   return {
     learnerId: parsed.learnerId ?? null,
     learnerCreatedAt: typeof parsed.learnerCreatedAt === "string" ? parsed.learnerCreatedAt : null,
-    encounterInstances: sanitizeRecordArray(parsed.encounterInstances, "encounterInstanceId"),
-    observations: sanitizeRecordArray(parsed.observations, "observationId"),
+    encounterInstances: sanitizeRecordArray(
+      parsed.encounterInstances,
+      isValidPersistedEncounterInstance
+    ),
+    observations: sanitizeRecordArray(parsed.observations, isValidPersistedObservation),
   };
 }
 
-function sanitizeRecordArray(value, idField) {
-  return Array.isArray(value) ? value.filter((record) => hasValidStringId(record, idField)) : [];
+function sanitizeRecordArray(value, isValidRecord) {
+  return Array.isArray(value) ? value.filter((record) => isValidRecord(record)) : [];
 }
 
 function assertValidNextState(nextState) {
@@ -179,21 +177,21 @@ function assertValidNextState(nextState) {
 
   if (
     !Array.isArray(nextState.encounterInstances) ||
-    !nextState.encounterInstances.every((record) => hasValidStringId(record, "encounterInstanceId"))
+    !nextState.encounterInstances.every((record) => isValidPersistedEncounterInstance(record))
   ) {
     throw new Error(
       "perceptualLearningPersistence.writePerceptualLearningState: nextState.encounterInstances must be " +
-        "an array of records each with a valid encounterInstanceId."
+        "an array of records each matching the complete EncounterInstance persisted shape."
     );
   }
 
   if (
     !Array.isArray(nextState.observations) ||
-    !nextState.observations.every((record) => hasValidStringId(record, "observationId"))
+    !nextState.observations.every((record) => isValidPersistedObservation(record))
   ) {
     throw new Error(
       "perceptualLearningPersistence.writePerceptualLearningState: nextState.observations must be an " +
-        "array of records each with a valid observationId."
+        "array of records each matching the complete Observation persisted shape."
     );
   }
 }
