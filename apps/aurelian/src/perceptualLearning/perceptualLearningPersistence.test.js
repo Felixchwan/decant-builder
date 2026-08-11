@@ -9,17 +9,23 @@ import {
 import { createLearnerId } from "./learnerIdentity.js";
 import { createEncounterInstance } from "./encounterInstance.js";
 import { createObservation } from "./observation.js";
+import { createComparison } from "./comparison.js";
 
 function createFakeStorage(initial = {}) {
   const store = new Map(Object.entries(initial));
+  let setItemCalls = 0;
 
   return {
     getItem: (key) => (store.has(key) ? store.get(key) : null),
     setItem: (key, value) => {
+      setItemCalls += 1;
       store.set(key, value);
     },
     removeItem: (key) => {
       store.delete(key);
+    },
+    get setItemCalls() {
+      return setItemCalls;
     },
   };
 }
@@ -29,6 +35,7 @@ const EMPTY_STATE = {
   learnerCreatedAt: null,
   encounterInstances: [],
   observations: [],
+  comparisons: [],
 };
 
 describe("perceptualLearningPersistence", () => {
@@ -43,26 +50,39 @@ describe("perceptualLearningPersistence", () => {
     expect(loadPerceptualLearningState({ storage })).toEqual(EMPTY_STATE);
   });
 
-  it("round-trips a valid write through a read", () => {
+  it("current schema version is 2", () => {
+    expect(PERCEPTUAL_LEARNING_SCHEMA_VERSION).toBe(2);
+  });
+
+  it("round-trips a valid v2 write (including a Comparison) through a read", () => {
     const storage = createFakeStorage();
     const learnerId = createLearnerId();
-    const encounter = createEncounterInstance({ learnerId, fragranceId: 42 });
+    const encounterA = createEncounterInstance({ learnerId, fragranceId: 42 });
+    const encounterB = createEncounterInstance({ learnerId, fragranceId: 7 });
     const observation = createObservation({
-      encounterInstanceId: encounter.encounterInstanceId,
+      encounterInstanceId: encounterA.encounterInstanceId,
       learnerId,
       moment: "initial",
       freeText: "Huele a cítrico.",
     });
+    const comparison = createComparison({
+      learnerId,
+      firstEncounterInstanceId: encounterA.encounterInstanceId,
+      secondEncounterInstanceId: encounterB.encounterInstanceId,
+      freeText: "La primera es más fría; la segunda más suave.",
+    });
     const nextState = {
       learnerId,
       learnerCreatedAt: "2026-08-10T00:00:00.000Z",
-      encounterInstances: [encounter],
+      encounterInstances: [encounterA, encounterB],
       observations: [observation],
+      comparisons: [comparison],
     };
 
     const result = writePerceptualLearningState({ storage, nextState });
 
     expect(result.persisted).toBe(true);
+    expect(result.state.schemaVersion).toBe(2);
     expect(loadPerceptualLearningState({ storage })).toEqual(nextState);
   });
 
@@ -72,19 +92,19 @@ describe("perceptualLearningPersistence", () => {
     expect(() =>
       writePerceptualLearningState({
         storage,
-        nextState: { learnerId: null, encounterInstances: [], observations: "not-an-array" },
+        nextState: { learnerId: null, encounterInstances: [], observations: "not-an-array", comparisons: [] },
       })
     ).toThrow();
     expect(() =>
       writePerceptualLearningState({
         storage,
-        nextState: { learnerId: "bad", encounterInstances: [], observations: [] },
+        nextState: { learnerId: "bad", encounterInstances: [], observations: [], comparisons: [] },
       })
     ).toThrow();
     expect(() =>
       writePerceptualLearningState({
         storage,
-        nextState: { learnerId: null, encounterInstances: [{ noId: true }], observations: [] },
+        nextState: { learnerId: null, encounterInstances: [{ noId: true }], observations: [], comparisons: [] },
       })
     ).toThrow();
     // Structurally shaped like an EncounterInstance but with a status field
@@ -107,7 +127,15 @@ describe("perceptualLearningPersistence", () => {
             },
           ],
           observations: [],
+          comparisons: [],
         },
+      })
+    ).toThrow();
+    // comparisons omitted entirely -- required, not defaulted.
+    expect(() =>
+      writePerceptualLearningState({
+        storage,
+        nextState: { learnerId: null, encounterInstances: [], observations: [] },
       })
     ).toThrow();
 
@@ -116,7 +144,7 @@ describe("perceptualLearningPersistence", () => {
     expect(loadPerceptualLearningState({ storage })).toEqual(EMPTY_STATE);
   });
 
-  it("discards the entire payload on a schema version mismatch", () => {
+  it("discards the entire payload on an unrecognized schema version", () => {
     const learnerId = createLearnerId();
     const encounter = createEncounterInstance({ learnerId, fragranceId: 42 });
     const storage = createFakeStorage({
@@ -125,13 +153,14 @@ describe("perceptualLearningPersistence", () => {
         learnerId,
         encounterInstances: [encounter],
         observations: [],
+        comparisons: [],
       }),
     });
 
     expect(loadPerceptualLearningState({ storage })).toEqual(EMPTY_STATE);
   });
 
-  it("discards the entire payload on a malformed top-level shape", () => {
+  it("discards the entire payload on a malformed top-level shape, at either recognized version", () => {
     const arrayShaped = createFakeStorage({
       [PERCEPTUAL_LEARNING_STORAGE_KEY]: JSON.stringify(["not", "an", "object"]),
     });
@@ -140,18 +169,90 @@ describe("perceptualLearningPersistence", () => {
     const corruptJson = createFakeStorage({ [PERCEPTUAL_LEARNING_STORAGE_KEY]: "{not valid json" });
     expect(loadPerceptualLearningState({ storage: corruptJson })).toEqual(EMPTY_STATE);
 
-    const invalidLearnerId = createFakeStorage({
+    const invalidLearnerIdV2 = createFakeStorage({
       [PERCEPTUAL_LEARNING_STORAGE_KEY]: JSON.stringify({
         schemaVersion: PERCEPTUAL_LEARNING_SCHEMA_VERSION,
         learnerId: "x",
         encounterInstances: [],
         observations: [],
+        comparisons: [],
       }),
     });
-    expect(loadPerceptualLearningState({ storage: invalidLearnerId })).toEqual(EMPTY_STATE);
+    expect(loadPerceptualLearningState({ storage: invalidLearnerIdV2 })).toEqual(EMPTY_STATE);
+
+    // A malformed legacy v1 payload retains the same discard behavior --
+    // migration only applies to an otherwise-valid v1 shape.
+    const invalidLearnerIdV1 = createFakeStorage({
+      [PERCEPTUAL_LEARNING_STORAGE_KEY]: JSON.stringify({
+        schemaVersion: 1,
+        learnerId: "x",
+        encounterInstances: [],
+        observations: [],
+      }),
+    });
+    expect(loadPerceptualLearningState({ storage: invalidLearnerIdV1 })).toEqual(EMPTY_STATE);
+
+    const nonObjectV1 = createFakeStorage({
+      [PERCEPTUAL_LEARNING_STORAGE_KEY]: JSON.stringify(null),
+    });
+    expect(loadPerceptualLearningState({ storage: nonObjectV1 })).toEqual(EMPTY_STATE);
   });
 
-  it("drops individually malformed records without discarding the rest", () => {
+  it("migrates a valid legacy v1 payload to the in-memory v2 shape, preserving existing evidence, with zero writes", () => {
+    const learnerId = createLearnerId();
+    const encounter = createEncounterInstance({ learnerId, fragranceId: 42 });
+    const observation = createObservation({
+      encounterInstanceId: encounter.encounterInstanceId,
+      learnerId,
+      moment: "initial",
+      freeText: "Huele a cítrico.",
+    });
+    // A genuine legacy payload: schemaVersion 1, no comparisons field at all.
+    const storage = createFakeStorage({
+      [PERCEPTUAL_LEARNING_STORAGE_KEY]: JSON.stringify({
+        schemaVersion: 1,
+        learnerId,
+        learnerCreatedAt: "2026-01-01T00:00:00.000Z",
+        encounterInstances: [encounter],
+        observations: [observation],
+      }),
+    });
+
+    const loaded = loadPerceptualLearningState({ storage });
+
+    expect(loaded).toEqual({
+      learnerId,
+      learnerCreatedAt: "2026-01-01T00:00:00.000Z",
+      encounterInstances: [encounter],
+      observations: [observation],
+      comparisons: [],
+    });
+    // Loading/migrating must not itself call storage.setItem.
+    expect(storage.setItemCalls).toBe(0);
+  });
+
+  it("persists a migrated legacy state as v2 on the next successful write", () => {
+    const learnerId = createLearnerId();
+    const encounter = createEncounterInstance({ learnerId, fragranceId: 42 });
+    const storage = createFakeStorage({
+      [PERCEPTUAL_LEARNING_STORAGE_KEY]: JSON.stringify({
+        schemaVersion: 1,
+        learnerId,
+        learnerCreatedAt: null,
+        encounterInstances: [encounter],
+        observations: [],
+      }),
+    });
+
+    const loaded = loadPerceptualLearningState({ storage });
+    const result = writePerceptualLearningState({ storage, nextState: loaded });
+
+    expect(result.persisted).toBe(true);
+    expect(result.state.schemaVersion).toBe(2);
+    expect(JSON.parse(storage.getItem(PERCEPTUAL_LEARNING_STORAGE_KEY)).schemaVersion).toBe(2);
+  });
+
+  it("drops individually malformed EncounterInstance/Observation records without discarding the rest", () => {
     const learnerId = createLearnerId();
     const validEncounter = createEncounterInstance({ learnerId, fragranceId: 42 });
     const validObservation = createObservation({
@@ -177,6 +278,7 @@ describe("perceptualLearningPersistence", () => {
           { ...validObservation, moment: "drydown" },
           { ...validObservation, confidence: "confident" },
         ],
+        comparisons: [],
       }),
     });
 
@@ -185,7 +287,63 @@ describe("perceptualLearningPersistence", () => {
       learnerCreatedAt: null,
       encounterInstances: [validEncounter],
       observations: [validObservation],
+      comparisons: [],
     });
+  });
+
+  it("drops an individually malformed Comparison without discarding valid sibling comparisons", () => {
+    const learnerId = createLearnerId();
+    const encounterA = createEncounterInstance({ learnerId, fragranceId: 42 });
+    const encounterB = createEncounterInstance({ learnerId, fragranceId: 7 });
+    const validComparison = createComparison({
+      learnerId,
+      firstEncounterInstanceId: encounterA.encounterInstanceId,
+      secondEncounterInstanceId: encounterB.encounterInstanceId,
+      freeText: "x",
+    });
+    const storage = createFakeStorage({
+      [PERCEPTUAL_LEARNING_STORAGE_KEY]: JSON.stringify({
+        schemaVersion: PERCEPTUAL_LEARNING_SCHEMA_VERSION,
+        learnerId,
+        learnerCreatedAt: null,
+        encounterInstances: [encounterA, encounterB],
+        observations: [],
+        comparisons: [
+          validComparison,
+          { noId: true },
+          { ...validComparison, freeText: "" },
+          { ...validComparison, secondEncounterInstanceId: validComparison.firstEncounterInstanceId },
+        ],
+      }),
+    });
+
+    expect(loadPerceptualLearningState({ storage }).comparisons).toEqual([validComparison]);
+  });
+
+  it("drops an orphaned Comparison on read whose referenced encounter no longer validates", () => {
+    const learnerId = createLearnerId();
+    const encounterA = createEncounterInstance({ learnerId, fragranceId: 42 });
+    const encounterB = createEncounterInstance({ learnerId, fragranceId: 7 });
+    const orphanedComparison = createComparison({
+      learnerId,
+      firstEncounterInstanceId: encounterA.encounterInstanceId,
+      secondEncounterInstanceId: encounterB.encounterInstanceId,
+      freeText: "x",
+    });
+    const storage = createFakeStorage({
+      [PERCEPTUAL_LEARNING_STORAGE_KEY]: JSON.stringify({
+        schemaVersion: PERCEPTUAL_LEARNING_SCHEMA_VERSION,
+        learnerId,
+        learnerCreatedAt: null,
+        // encounterB is deliberately absent -- e.g. dropped for being
+        // individually malformed in some hypothetical earlier corruption.
+        encounterInstances: [encounterA],
+        observations: [],
+        comparisons: [orphanedComparison],
+      }),
+    });
+
+    expect(loadPerceptualLearningState({ storage }).comparisons).toEqual([]);
   });
 
   it("keeps a persisted EncounterInstance valid even when its fragranceId no longer resolves against any catalog", () => {
@@ -205,12 +363,94 @@ describe("perceptualLearningPersistence", () => {
         learnerCreatedAt: null,
         encounterInstances: [encounterForRemovedFragrance],
         observations: [],
+        comparisons: [],
       }),
     });
 
     expect(loadPerceptualLearningState({ storage }).encounterInstances).toEqual([
       encounterForRemovedFragrance,
     ]);
+  });
+
+  it("allows a valid Comparison between two encounters of the same fragrance", () => {
+    const storage = createFakeStorage();
+    const learnerId = createLearnerId();
+    const encounterA = createEncounterInstance({ learnerId, fragranceId: 42 });
+    const encounterB = createEncounterInstance({ learnerId, fragranceId: 42 });
+    const comparison = createComparison({
+      learnerId,
+      firstEncounterInstanceId: encounterA.encounterInstanceId,
+      secondEncounterInstanceId: encounterB.encounterInstanceId,
+      freeText: "Hoy se siente distinto a como lo recordaba.",
+    });
+
+    const result = writePerceptualLearningState({
+      storage,
+      nextState: {
+        learnerId,
+        learnerCreatedAt: null,
+        encounterInstances: [encounterA, encounterB],
+        observations: [],
+        comparisons: [comparison],
+      },
+    });
+
+    expect(result.persisted).toBe(true);
+    expect(loadPerceptualLearningState({ storage }).comparisons).toEqual([comparison]);
+  });
+
+  it("rejects writing a Comparison that references an encounter not present in nextState.encounterInstances", () => {
+    const storage = createFakeStorage();
+    const learnerId = createLearnerId();
+    const encounterA = createEncounterInstance({ learnerId, fragranceId: 42 });
+    const comparison = createComparison({
+      learnerId,
+      firstEncounterInstanceId: encounterA.encounterInstanceId,
+      secondEncounterInstanceId: "does-not-exist",
+      freeText: "x",
+    });
+
+    expect(() =>
+      writePerceptualLearningState({
+        storage,
+        nextState: {
+          learnerId,
+          learnerCreatedAt: null,
+          encounterInstances: [encounterA],
+          observations: [],
+          comparisons: [comparison],
+        },
+      })
+    ).toThrow();
+    expect(loadPerceptualLearningState({ storage })).toEqual(EMPTY_STATE);
+  });
+
+  it("rejects writing a Comparison whose referenced encounters belong to a different learner", () => {
+    const storage = createFakeStorage();
+    const learnerId = createLearnerId();
+    const otherLearnerId = createLearnerId();
+    const encounterA = createEncounterInstance({ learnerId, fragranceId: 42 });
+    const encounterB = createEncounterInstance({ learnerId: otherLearnerId, fragranceId: 7 });
+    const comparison = createComparison({
+      learnerId,
+      firstEncounterInstanceId: encounterA.encounterInstanceId,
+      secondEncounterInstanceId: encounterB.encounterInstanceId,
+      freeText: "x",
+    });
+
+    expect(() =>
+      writePerceptualLearningState({
+        storage,
+        nextState: {
+          learnerId,
+          learnerCreatedAt: null,
+          encounterInstances: [encounterA, encounterB],
+          observations: [],
+          comparisons: [comparison],
+        },
+      })
+    ).toThrow();
+    expect(loadPerceptualLearningState({ storage })).toEqual(EMPTY_STATE);
   });
 
   it("resets by clearing storage entirely", () => {
@@ -223,6 +463,7 @@ describe("perceptualLearningPersistence", () => {
         learnerCreatedAt: null,
         encounterInstances: [createEncounterInstance({ learnerId, fragranceId: 42 })],
         observations: [],
+        comparisons: [],
       },
     });
 
@@ -266,6 +507,7 @@ describe("perceptualLearningPersistence", () => {
         learnerCreatedAt: null,
         encounterInstances: [createEncounterInstance({ learnerId: firstLearnerId, fragranceId: 42 })],
         observations: [],
+        comparisons: [],
       },
     });
 
@@ -285,6 +527,7 @@ describe("perceptualLearningPersistence", () => {
         learnerCreatedAt: null,
         encounterInstances: [],
         observations: [],
+        comparisons: [],
       },
     });
 

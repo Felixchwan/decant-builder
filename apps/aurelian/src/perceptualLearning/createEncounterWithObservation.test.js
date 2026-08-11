@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 import { createEncounterWithObservation } from "./createEncounterWithObservation.js";
 import { loadPerceptualLearningState, writePerceptualLearningState } from "./perceptualLearningPersistence.js";
 import { createLearnerId } from "./learnerIdentity.js";
+import { createEncounterInstance } from "./encounterInstance.js";
+import { createComparison } from "./comparison.js";
 
 function createCountingStorage({ failWrites = 0 } = {}) {
   const store = new Map();
@@ -63,6 +65,7 @@ describe("createEncounterWithObservation", () => {
         learnerCreatedAt: "2026-01-01T00:00:00.000Z",
         encounterInstances: [],
         observations: [],
+        comparisons: [],
       },
     });
 
@@ -96,7 +99,44 @@ describe("createEncounterWithObservation", () => {
       learnerCreatedAt: null,
       encounterInstances: [],
       observations: [],
+      comparisons: [],
     });
+  });
+
+  it("carries an existing learner's comparisons forward unmodified on an ordinary write (ADR-0022)", () => {
+    // Regression coverage for a real bug found while adding schema v2:
+    // this use case constructs nextState by hand-picking fields rather than
+    // spreading currentState, so it must explicitly carry comparisons
+    // forward or it would silently drop them.
+    const storage = createCountingStorage();
+    const learnerId = createLearnerId();
+    const priorEncounterA = createEncounterInstance({ learnerId, fragranceId: 1 });
+    const priorEncounterB = createEncounterInstance({ learnerId, fragranceId: 2 });
+    const priorComparison = createComparison({
+      learnerId,
+      firstEncounterInstanceId: priorEncounterA.encounterInstanceId,
+      secondEncounterInstanceId: priorEncounterB.encounterInstanceId,
+      freeText: "x",
+    });
+    writePerceptualLearningState({
+      storage,
+      nextState: {
+        learnerId,
+        learnerCreatedAt: null,
+        encounterInstances: [priorEncounterA, priorEncounterB],
+        observations: [],
+        comparisons: [priorComparison],
+      },
+    });
+
+    createEncounterWithObservation({
+      storage,
+      fragranceId: 42,
+      moment: "initial",
+      freeText: "Otra fragancia distinta.",
+    });
+
+    expect(loadPerceptualLearningState({ storage }).comparisons).toEqual([priorComparison]);
   });
 
   it("never forwards Phase-2 fields to the factories even if a caller supplies them, and performs zero writes", () => {
@@ -149,6 +189,7 @@ describe("createEncounterWithObservation", () => {
       learnerCreatedAt: null,
       encounterInstances: [],
       observations: [],
+      comparisons: [],
     });
   });
 

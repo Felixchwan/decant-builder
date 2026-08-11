@@ -35,6 +35,7 @@ A subsequent semantic pass renamed ADR-0004 to avoid describing build-time merch
 | [0019](0019-environment-detection-ownership.md) | Environment detection ownership stays with the host, not shared code | Application / Host integration | Mechanism instance of 0008; proven by 0017 |
 | [0020](0020-composer-outcome-contract.md) | Composer reports a three-layer outcome contract, not a success/failure flag | Application | Depends on 0007, 0015 |
 | [0021](0021-perceptual-learning-local-identity-and-persistence.md) | Perceptual Learning v1 is Aurelian-owned, with a local anonymous Learner identity and adapter-based persistence | Application / Host integration | Depends on 0001, 0011; resolves the identity gap in `docs/architecture-gaps.md` |
+| [0022](0022-perceptual-learning-comparison-aggregate.md) | Comparison is a third Perceptual Learning Aggregate Root; persisted schema evolves to v2 with a non-destructive v1 migration | Domain | Extends 0021 |
 
 ## Demoted
 

@@ -52,6 +52,10 @@ export function createEncounterWithObservation({
     learnerCreatedAt,
     encounterInstances: [...currentState.encounterInstances, encounterInstance],
     observations: [...currentState.observations, observation],
+    // Carried forward unmodified (ADR-0022) -- this use case predates
+    // Comparison and never creates one, but must not silently drop a
+    // learner's existing comparisons on an ordinary write.
+    comparisons: currentState.comparisons,
   };
 
   const writeResult = writePerceptualLearningState({ storage, nextState });
