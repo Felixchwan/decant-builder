@@ -9,7 +9,7 @@ import { aurelianConfig } from "./merchant/config.js";
 import { aurelianAvailableIds, aurelianCatalog } from "./merchant/catalog.js";
 import { filterCatalog } from "./lib/filterCatalog.js";
 import HomePage from "./app/page.jsx";
-import { HeroMedia } from "./components/HeroMedia.jsx";
+import { HeroMedia, HERO_MEDIA_SEQUENCE, nextHeroMediaIndex } from "./components/HeroMedia.jsx";
 import HowItWorksPage, { metadata as howMetadata } from "./app/como-funciona/page.jsx";
 import ContactPage, { metadata as contactMetadata } from "./app/contacto/page.jsx";
 import CatalogPage, { metadata as catalogMetadata } from "./app/catalogo/page.jsx";
@@ -107,12 +107,21 @@ describe("Aurelian application foundation", () => {
   it("keeps promotional media decorative, silent, resilient, and motion-aware", () => {
     const markup = renderToStaticMarkup(<HeroMedia />);
     expect(markup).toContain("autoPlay");
-    expect(markup).toContain("loop");
     expect(markup).toContain("muted");
     expect(markup).toContain("playsInline");
     expect(markup).toContain("poster=");
     expect(markup).toContain("/media/torino-21.mp4");
+    expect(markup).not.toContain("/media/summer-hammer.mp4");
+    expect(markup).not.toContain("loop");
+    expect(markup.match(/class="hero-media__frame"/g)).toHaveLength(1);
+    expect(markup.match(/class="hero-media__video"/g)).toHaveLength(1);
     expect(markup).toContain("hero-media__fallback");
+    expect(HERO_MEDIA_SEQUENCE.map(({ src }) => src)).toEqual([
+      "/media/torino-21.mp4",
+      "/media/summer-hammer.mp4",
+    ]);
+    expect(nextHeroMediaIndex(0)).toBe(1);
+    expect(nextHeroMediaIndex(1)).toBe(0);
     const stylesheet = readFileSync(join(APP_ROOT, "src", "app", "globals.css"), "utf8");
     expect(stylesheet).toMatch(/prefers-reduced-motion[\s\S]*\.hero-media__video\s*\{\s*display:none/);
   });
