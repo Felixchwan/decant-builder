@@ -10,7 +10,7 @@ export const metadata = {
 
 export default function CompararPage() {
   return (
-    <section className="comparar-page">
+    <section className="page-shell page-intro comparar-page">
       <ComparisonMount />
     </section>
   );

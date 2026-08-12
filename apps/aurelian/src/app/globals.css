@@ -174,7 +174,7 @@ h1 { max-width:15ch; margin-bottom:1.4rem; font-size:clamp(2.8rem,7vw,6.4rem); }
 .learner-record-delete__actions button:not(:disabled):hover,.learner-record-delete__actions button:not(:disabled):focus-visible { border-color:var(--gold); color:var(--gold); }
 .learner-record-delete__actions button:last-child:not(:disabled):hover,.learner-record-delete__actions button:last-child:not(:disabled):focus-visible { border-color:#d98a7a; color:#d98a7a; background:rgba(217,138,122,.1); }
 .learner-record-delete__actions button:disabled { opacity:.5; cursor:not-allowed; }
-.evidence-revisit { margin-top:2rem; padding-top:1.5rem; border-top:1px solid var(--border); }
+.evidence-revisit { max-width:36rem; margin:2rem auto 0; padding-top:1.5rem; border-top:1px solid var(--border); }
 .evidence-revisit summary { padding:.35rem 0; list-style:none; color:var(--muted); font-size:.82rem; letter-spacing:.02em; cursor:pointer; }
 .evidence-revisit summary::-webkit-details-marker { display:none; }
 .evidence-revisit summary:hover,.evidence-revisit summary:focus-visible,.evidence-revisit[open] summary { color:var(--gold); }
@@ -182,6 +182,45 @@ h1 { max-width:15ch; margin-bottom:1.4rem; font-size:clamp(2.8rem,7vw,6.4rem); }
 .evidence-revisit__section { margin-top:1.5rem; }
 .evidence-revisit__section:first-child { margin-top:0; }
 .evidence-revisit__section h3 { margin:0 0 .85rem; font-family:Georgia,serif; font-size:1.1rem; font-weight:400; color:var(--secondary); }
+/* Shared visual language for the Observation/Comparison capture flows
+   (Presentation Polish 4.1.1). Added ALONGSIDE each flow's existing
+   observation-capture and comparison-capture prefixed classes, which keep
+   their own names and test ids untouched -- this is an additive layer so
+   both flows draw from one small vocabulary instead of drifting into two
+   systems. */
+.learning-capture { max-width:36rem; margin:0 auto; }
+.learning-capture__heading { display:block; margin-bottom:1.5rem; font-family:Georgia,"Times New Roman",serif; font-size:clamp(1.5rem,3vw,2rem); font-weight:400; color:var(--text); }
+.learning-capture__context { margin:0 0 1rem; color:var(--muted); font-size:.78rem; letter-spacing:.04em; text-transform:uppercase; }
+.learning-capture__search-input { width:100%; min-height:3rem; margin-bottom:1.5rem; padding:.6rem .9rem; border:1px solid var(--border); border-radius:0; background:#0d0e0c; color:var(--text); }
+.learning-capture__results { max-height:26rem; margin:0; padding:0; list-style:none; overflow-y:auto; border:1px solid var(--border); background:var(--surface); }
+.learning-capture__results li + li { border-top:1px solid var(--border); }
+.learning-capture__result { display:flex; align-items:center; width:100%; min-height:3rem; padding:.65rem 1rem; border:none; background:transparent; color:var(--text); font-size:.88rem; text-align:left; cursor:pointer; }
+.learning-capture__result:hover,.learning-capture__result:focus-visible { background:rgba(200,166,101,.08); color:var(--gold); }
+.learning-capture__fragrance { margin-bottom:1.75rem; font-family:Georgia,"Times New Roman",serif; font-size:clamp(1.4rem,3vw,1.85rem); font-weight:400; }
+.learning-capture__pair { margin-bottom:1.5rem; font-family:Georgia,"Times New Roman",serif; font-size:clamp(1.25rem,2.6vw,1.6rem); font-weight:400; }
+.comparison-capture__first { color:var(--text); }
+.comparison-capture__second { color:var(--secondary); }
+.learning-capture__fieldset { margin:0 0 1.75rem; padding:0; border:none; }
+.learning-capture__legend { padding:0 0 .85rem; color:var(--muted); font-size:.72rem; font-weight:800; letter-spacing:.16em; text-transform:uppercase; }
+.learning-capture__options { display:flex; flex-wrap:wrap; gap:.75rem; }
+.learning-capture__option { display:inline-flex; align-items:center; gap:.55rem; min-height:2.75rem; padding:.5rem 1.1rem; border:1px solid var(--border); color:var(--secondary); font-size:.84rem; cursor:pointer; transition:border-color .2s ease,color .2s ease; }
+.learning-capture__option input { accent-color:var(--gold); }
+.learning-capture__option:has(input:checked) { border-color:var(--gold); color:var(--gold); }
+.learning-capture__option:hover,.learning-capture__option:focus-within { border-color:var(--gold); }
+.learning-capture__label { display:block; margin-bottom:.6rem; color:var(--muted); font-size:.72rem; font-weight:800; letter-spacing:.16em; text-transform:uppercase; }
+.learning-capture__textarea { width:100%; min-height:8rem; margin-bottom:1.5rem; padding:.85rem 1rem; border:1px solid var(--border); border-radius:0; background:#0d0e0c; color:var(--text); font-family:inherit; font-size:.92rem; line-height:1.6; resize:vertical; }
+.learning-capture__error { margin:0 0 1.25rem; padding-left:.85rem; border-left:1px solid #d98a7a; color:#d98a7a; font-size:.84rem; }
+.learning-capture__submit { width:100%; }
+.learning-capture__submit:disabled { opacity:.45; cursor:not-allowed; }
+.learning-capture__submit:disabled:hover { background:var(--gold); transform:none; }
+.learning-capture__quote { margin:0 0 1.25rem; padding-left:.9rem; border-left:1px solid var(--border); color:var(--text); font-size:1.02rem; font-style:normal; }
+.learning-capture__moment,.learning-capture__timestamp { margin:0 0 .6rem; color:var(--muted); font-size:.76rem; letter-spacing:.04em; }
+.learning-capture__moment { color:var(--gold); font-weight:700; text-transform:uppercase; letter-spacing:.08em; }
+.learning-capture__actions { display:flex; flex-wrap:wrap; gap:1rem; align-items:center; margin:1.75rem 0; }
+.learning-capture__secondary { min-height:2.75rem; padding:.55rem 1.15rem; border:1px solid var(--border); background:transparent; color:var(--secondary); font-size:.84rem; }
+.learning-capture__secondary:hover,.learning-capture__secondary:focus-visible { border-color:var(--gold); color:var(--gold); }
+.learning-capture__quiet { padding:0; border:none; border-bottom:1px solid var(--border); background:none; color:var(--muted); font-size:.82rem; cursor:pointer; }
+.learning-capture__quiet:hover,.learning-capture__quiet:focus-visible { color:var(--gold); border-color:var(--gold); }
 .process-list { max-width:52rem; margin:4rem 0; }
 .process-list article { display:grid; grid-template-columns:4rem 1fr; padding:2rem 0; border-top:1px solid var(--border); }
 .process-list article > p { grid-column:2; }
@@ -247,5 +286,8 @@ body:has(.discovery-intent) #builder-entry-header { display:none; }
   .site-footer nav { justify-content:flex-start; align-items:flex-start; flex-direction:column; gap:.5rem; }
   .site-footer__note { text-align:left; }
   .process-list article { grid-template-columns:3rem 1fr; }
+  .learning-capture__options { flex-direction:column; }
+  .learning-capture__option { width:100%; }
+  .learning-capture__results { max-height:20rem; }
 }
 @media (prefers-reduced-motion:reduce) { html { scroll-behavior:auto; } *,*::before,*::after { scroll-behavior:auto!important; transition-duration:.01ms!important; animation-duration:.01ms!important; animation-iteration-count:1!important; } .hero-media__video { display:none; } .seasonal-card__link { opacity:1!important; } }

@@ -84,22 +84,30 @@ export function ComparisonFragrancePicker({
   onSelect,
 }) {
   return (
-    <div className="comparison-capture comparison-capture--picker" data-testid="comparison-picker">
+    <div
+      className="learning-capture learning-capture--picker comparison-capture comparison-capture--picker"
+      data-testid="comparison-picker"
+    >
       {contextFragranceName ? (
-        <p className="comparison-capture__context">Primera: {contextFragranceName}</p>
+        <p className="learning-capture__context comparison-capture__context">
+          Primera: {contextFragranceName}
+        </p>
       ) : null}
-      <label htmlFor="comparison-picker-query">{label}</label>
+      <label className="learning-capture__heading" htmlFor="comparison-picker-query">
+        {label}
+      </label>
       <input
         id="comparison-picker-query"
+        className="learning-capture__search-input"
         type="text"
         value={query}
         onChange={(event) => onQueryChange(event.target.value)}
         placeholder={COMPARISON_PICKER_QUERY_PLACEHOLDER}
       />
-      <ul className="comparison-capture__picker-results">
+      <ul className="learning-capture__results comparison-capture__picker-results">
         {results.map((item) => (
           <li key={item.id}>
-            <button type="button" onClick={() => onSelect(item)}>
+            <button type="button" className="learning-capture__result" onClick={() => onSelect(item)}>
               {item.brand} — {item.name}
             </button>
           </li>
@@ -120,20 +128,31 @@ export function ComparisonPromptForm({
   onSubmit,
 }) {
   return (
-    <div className="comparison-capture comparison-capture--form" data-testid="comparison-form">
-      <p className="comparison-capture__pair">
+    <div
+      className="learning-capture learning-capture--form comparison-capture comparison-capture--form"
+      data-testid="comparison-form"
+    >
+      <p className="learning-capture__pair comparison-capture__pair">
         <span className="comparison-capture__first">{firstFragranceName}</span>
         {" · "}
         <span className="comparison-capture__second">{secondFragranceName}</span>
       </p>
-      <label htmlFor="comparison-free-text">{COMPARISON_PROMPT_LABEL}</label>
+      <label className="learning-capture__label" htmlFor="comparison-free-text">
+        {COMPARISON_PROMPT_LABEL}
+      </label>
       <textarea
         id="comparison-free-text"
+        className="learning-capture__textarea"
         value={freeText}
         onChange={(event) => onFreeTextChange(event.target.value)}
       />
-      {submitError ? <p className="comparison-capture__error">{submitError}</p> : null}
-      <button type="button" onClick={onSubmit} disabled={!canSubmit || isSubmitting}>
+      {submitError ? <p className="learning-capture__error comparison-capture__error">{submitError}</p> : null}
+      <button
+        type="button"
+        className="button learning-capture__submit"
+        onClick={onSubmit}
+        disabled={!canSubmit || isSubmitting}
+      >
         {COMPARISON_SUBMIT_LABEL}
       </button>
     </div>
@@ -149,20 +168,22 @@ export function ComparisonConfirmation({
 }) {
   return (
     <div
-      className="comparison-capture comparison-capture--confirmed"
+      className="learning-capture learning-capture--confirmed comparison-capture comparison-capture--confirmed"
       data-testid="comparison-confirmation"
     >
-      <p className="comparison-capture__pair">
+      <p className="learning-capture__pair comparison-capture__pair">
         <span className="comparison-capture__first">{firstFragranceName}</span>
         {" · "}
         <span className="comparison-capture__second">{secondFragranceName}</span>
       </p>
-      <blockquote className="comparison-capture__quote">{comparison.freeText}</blockquote>
-      <div className="comparison-capture__actions">
-        <button type="button" onClick={onCompareAnother}>
+      <blockquote className="learning-capture__quote comparison-capture__quote">
+        {comparison.freeText}
+      </blockquote>
+      <div className="learning-capture__actions comparison-capture__actions">
+        <button type="button" className="learning-capture__secondary" onClick={onCompareAnother}>
           {COMPARISON_REGISTER_ANOTHER_LABEL}
         </button>
-        <button type="button" onClick={onDone}>
+        <button type="button" className="learning-capture__quiet" onClick={onDone}>
           {COMPARISON_DONE_LABEL}
         </button>
       </div>
@@ -175,7 +196,10 @@ export function ComparisonConfirmation({
 
 export function ComparisonDoneState() {
   return (
-    <div className="comparison-capture comparison-capture--done" data-testid="comparison-done">
+    <div
+      className="empty-state learning-capture learning-capture--done comparison-capture comparison-capture--done"
+      data-testid="comparison-done"
+    >
       <p>{COMPARISON_DONE_COPY}</p>
     </div>
   );

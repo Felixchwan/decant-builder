@@ -10,7 +10,7 @@ export const metadata = {
 
 export default function ObservarPage() {
   return (
-    <section className="observar-page">
+    <section className="page-shell page-intro observar-page">
       <PerceptualLearningMount />
     </section>
   );

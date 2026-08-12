@@ -89,7 +89,10 @@ export function resolvePriorEvidence({ storage, fragranceId }) {
 
 export function ObservationDoneState() {
   return (
-    <div className="observation-capture observation-capture--done" data-testid="observation-done">
+    <div
+      className="empty-state learning-capture learning-capture--done observation-capture observation-capture--done"
+      data-testid="observation-done"
+    >
       <p>Gracias por registrar lo que notaste.</p>
     </div>
   );
@@ -103,20 +106,24 @@ export function ObservationConfirmation({
 }) {
   return (
     <div
-      className="observation-capture observation-capture--confirmed"
+      className="learning-capture learning-capture--confirmed observation-capture observation-capture--confirmed"
       data-testid="observation-confirmation"
     >
-      <p className="observation-capture__fragrance">{fragranceName}</p>
-      <p className="observation-capture__moment">{OBSERVATION_MOMENT_COPY[observation.moment]}</p>
-      <blockquote className="observation-capture__quote">{observation.freeText}</blockquote>
-      <p className="observation-capture__timestamp">
+      <p className="learning-capture__fragrance observation-capture__fragrance">{fragranceName}</p>
+      <p className="learning-capture__moment observation-capture__moment">
+        {OBSERVATION_MOMENT_COPY[observation.moment]}
+      </p>
+      <blockquote className="learning-capture__quote observation-capture__quote">
+        {observation.freeText}
+      </blockquote>
+      <p className="learning-capture__timestamp observation-capture__timestamp">
         {formatObservationTimestamp(observation.createdAt)}
       </p>
-      <div className="observation-capture__actions">
-        <button type="button" onClick={onRegisterAnotherMoment}>
+      <div className="learning-capture__actions observation-capture__actions">
+        <button type="button" className="learning-capture__secondary" onClick={onRegisterAnotherMoment}>
           Registrar otro momento
         </button>
-        <button type="button" onClick={onDone}>
+        <button type="button" className="learning-capture__quiet" onClick={onDone}>
           Listo
         </button>
       </div>
@@ -158,19 +165,25 @@ export function ObservationConfirmedPhase({
 
 export function ObservationPicker({ query, onQueryChange, results, onSelect }) {
   return (
-    <div className="observation-capture observation-capture--picker" data-testid="observation-picker">
-      <label htmlFor="observation-picker-query">¿Sobre qué fragancia quieres registrar algo?</label>
+    <div
+      className="learning-capture learning-capture--picker observation-capture observation-capture--picker"
+      data-testid="observation-picker"
+    >
+      <label className="learning-capture__heading" htmlFor="observation-picker-query">
+        ¿Sobre qué fragancia quieres registrar algo?
+      </label>
       <input
         id="observation-picker-query"
+        className="learning-capture__search-input"
         type="text"
         value={query}
         onChange={(event) => onQueryChange(event.target.value)}
         placeholder="Buscar por marca o nombre"
       />
-      <ul className="observation-capture__picker-results">
+      <ul className="learning-capture__results observation-capture__picker-results">
         {results.map((item) => (
           <li key={item.id}>
-            <button type="button" onClick={() => onSelect(item)}>
+            <button type="button" className="learning-capture__result" onClick={() => onSelect(item)}>
               {item.brand} — {item.name}
             </button>
           </li>
@@ -192,31 +205,44 @@ export function ObservationForm({
   onSubmit,
 }) {
   return (
-    <div className="observation-capture observation-capture--form" data-testid="observation-form">
-      <p className="observation-capture__fragrance">{fragranceName}</p>
-      <fieldset>
-        <legend>¿Cuándo lo notaste?</legend>
-        {OBSERVATION_MOMENT_VALUES.map((value) => (
-          <label key={value}>
-            <input
-              type="radio"
-              name="moment"
-              value={value}
-              checked={moment === value}
-              onChange={() => onMomentChange(value)}
-            />
-            {OBSERVATION_MOMENT_COPY[value]}
-          </label>
-        ))}
+    <div
+      className="learning-capture learning-capture--form observation-capture observation-capture--form"
+      data-testid="observation-form"
+    >
+      <p className="learning-capture__fragrance observation-capture__fragrance">{fragranceName}</p>
+      <fieldset className="learning-capture__fieldset">
+        <legend className="learning-capture__legend">¿Cuándo lo notaste?</legend>
+        <div className="learning-capture__options">
+          {OBSERVATION_MOMENT_VALUES.map((value) => (
+            <label key={value} className="learning-capture__option">
+              <input
+                type="radio"
+                name="moment"
+                value={value}
+                checked={moment === value}
+                onChange={() => onMomentChange(value)}
+              />
+              {OBSERVATION_MOMENT_COPY[value]}
+            </label>
+          ))}
+        </div>
       </fieldset>
-      <label htmlFor="observation-free-text">¿Qué notas?</label>
+      <label className="learning-capture__label" htmlFor="observation-free-text">
+        ¿Qué notas?
+      </label>
       <textarea
         id="observation-free-text"
+        className="learning-capture__textarea"
         value={freeText}
         onChange={(event) => onFreeTextChange(event.target.value)}
       />
-      {submitError ? <p className="observation-capture__error">{submitError}</p> : null}
-      <button type="button" onClick={onSubmit} disabled={!canSubmit || isSubmitting}>
+      {submitError ? <p className="learning-capture__error observation-capture__error">{submitError}</p> : null}
+      <button
+        type="button"
+        className="button learning-capture__submit"
+        onClick={onSubmit}
+        disabled={!canSubmit || isSubmitting}
+      >
         Guardar
       </button>
     </div>
