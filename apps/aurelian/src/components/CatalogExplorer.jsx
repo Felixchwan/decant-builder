@@ -6,6 +6,9 @@ import { createCatalogAssetResolver } from "@discovery-box/catalog";
 import { aurelianCatalog } from "../merchant/catalog.js";
 import { filterCatalog } from "../lib/filterCatalog.js";
 import { resolveCatalogFragranceIntent } from "../lib/resolveCatalogFragranceIntent.js";
+import { loadPerceptualLearningState } from "../perceptualLearning/perceptualLearningPersistence.js";
+import { buildLearnerRecord } from "../perceptualLearning/learnerRecord.js";
+import { buildEvidenceRevisit } from "../perceptualLearning/evidenceRevisit.js";
 
 const resolveAsset = createCatalogAssetResolver({ basePath: "/catalog-assets" });
 const pointOptions = [...new Set(aurelianCatalog.map((item) => item.points))].sort((a, b) => a - b);
@@ -25,10 +28,61 @@ function getCatalogTierPresentation(id) {
   };
 }
 
+function getStorage() {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  try {
+    return window.localStorage;
+  } catch {
+    return null;
+  }
+}
+
+// Phase 5.0 -- the catalog's entry point into revisiting prior evidence for
+// one fragrance, without requiring a new Observation/Comparison submission.
+// Pure, prop-driven (learnerRecord is passed in, never read here) so it's
+// directly testable with representative props, matching this codebase's
+// established convention. Renders nothing until learnerRecord is resolved
+// (null pre-effect/pre-hydration) and nothing when that fragrance genuinely
+// has no prior evidence -- this is a doorway to evidence the learner already
+// has, never an empty/dead-end affordance. buildEvidenceRevisit is reused
+// exactly as-is; nothing here re-derives or reinterprets its output.
+export function CatalogLearningEvidenceLink({ fragranceId, fragranceName, learnerRecord }) {
+  if (!learnerRecord) {
+    return null;
+  }
+
+  const { hasPriorEvidence } = buildEvidenceRevisit({ learnerRecord, fragranceId });
+  if (!hasPriorEvidence) {
+    return null;
+  }
+
+  return (
+    <Link
+      className="product-card__learning-link"
+      href={`/mis-descubrimientos?fragrance=${encodeURIComponent(fragranceId)}`}
+      aria-label={`Ver lo que noté sobre ${fragranceName}`}
+    >
+      Ver lo que noté sobre esta fragancia
+    </Link>
+  );
+}
+
 export function CatalogExplorer() {
   const [query, setQuery] = useState("");
   const [points, setPoints] = useState("all");
   const [requestedFragrance, setRequestedFragrance] = useState(null);
+  // Starts null (this component is server-rendered, unlike
+  // LearnerRecordContainer/ObservationCaptureFlow/ComparisonCaptureFlow,
+  // which are all {ssr:false}-mounted) and is populated post-mount, same
+  // deferred-to-next-paint discipline as requestedFragrance below -- one
+  // storage read total, regardless of catalog size. Per-card evidence
+  // availability is then derived cheaply, in memory, from this single
+  // LearnerRecord via CatalogLearningEvidenceLink/buildEvidenceRevisit --
+  // never a storage read per card.
+  const [learnerRecord, setLearnerRecord] = useState(null);
   const requestedCardRef = useRef(null);
   const visible = useMemo(() => {
     return filterCatalog(aurelianCatalog, query, points);
@@ -37,6 +91,13 @@ export function CatalogExplorer() {
   useEffect(() => {
     const frame = window.requestAnimationFrame(() => {
       setRequestedFragrance(resolveCatalogFragranceIntent(window.location.search, aurelianCatalog));
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, []);
+
+  useEffect(() => {
+    const frame = window.requestAnimationFrame(() => {
+      setLearnerRecord(buildLearnerRecord(loadPerceptualLearningState({ storage: getStorage() })));
     });
     return () => window.cancelAnimationFrame(frame);
   }, []);
@@ -104,6 +165,11 @@ export function CatalogExplorer() {
                     >
                       Comparar con otra
                     </Link>
+                    <CatalogLearningEvidenceLink
+                      fragranceId={item.id}
+                      fragranceName={item.name}
+                      learnerRecord={learnerRecord}
+                    />
                     <Link className="product-card__learning-link" href="/mis-descubrimientos">
                       Ver lo que he notado
                     </Link>

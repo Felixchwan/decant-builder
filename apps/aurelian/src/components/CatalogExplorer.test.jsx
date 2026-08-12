@@ -1,6 +1,6 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { afterEach, describe, expect, it } from "vitest";
-import { CatalogExplorer } from "./CatalogExplorer.jsx";
+import { CatalogExplorer, CatalogLearningEvidenceLink } from "./CatalogExplorer.jsx";
 import { aurelianCatalog } from "../merchant/catalog.js";
 
 const originalWindow = globalThis.window;
@@ -133,5 +133,76 @@ describe("CatalogExplorer", () => {
     expect(getItemCalls).toBe(0);
     expect(setItemCalls).toBe(0);
     expect(removeItemCalls).toBe(0);
+  });
+
+  it("never renders the evidence-revisit link on a plain render (Phase 5.0) -- learnerRecord resolves post-mount, the same effect-gated timing already established for the highlight-on-deep-link behavior above, and renderToStaticMarkup never runs effects", () => {
+    const markup = renderToStaticMarkup(<CatalogExplorer />);
+
+    expect(markup).not.toContain("Ver lo que noté sobre esta fragancia");
+  });
+});
+
+describe("CatalogLearningEvidenceLink (Phase 5.0)", () => {
+  function learnerRecordWithEvidenceFor(fragranceId) {
+    return {
+      learnerId: "learner-1",
+      hasEvidence: true,
+      encounters: [
+        {
+          encounterInstanceId: "enc-1",
+          fragranceId,
+          fragranceDisplaySnapshot: { fragranceId, name: "X", brand: "Y" },
+          createdAt: "2026-08-01T00:00:00.000Z",
+          observations: [
+            { observationId: "obs-1", moment: "initial", freeText: "Muy fresco.", createdAt: "2026-08-01T00:00:00.000Z" },
+          ],
+        },
+      ],
+      comparisons: [],
+    };
+  }
+
+  it("renders nothing when learnerRecord has not resolved yet (null, the pre-effect/pre-hydration state)", () => {
+    const markup = renderToStaticMarkup(
+      <CatalogLearningEvidenceLink fragranceId={1} fragranceName="Acqua di Gio EDT" learnerRecord={null} />
+    );
+
+    expect(markup).toBe("");
+  });
+
+  it("renders nothing when the fragrance genuinely has no prior evidence", () => {
+    const emptyRecord = { learnerId: null, hasEvidence: false, encounters: [], comparisons: [] };
+
+    const markup = renderToStaticMarkup(
+      <CatalogLearningEvidenceLink fragranceId={1} fragranceName="Acqua di Gio EDT" learnerRecord={emptyRecord} />
+    );
+
+    expect(markup).toBe("");
+  });
+
+  it("renders nothing for this fragrance when a DIFFERENT fragrance has evidence", () => {
+    const markup = renderToStaticMarkup(
+      <CatalogLearningEvidenceLink
+        fragranceId={2}
+        fragranceName="Light Blue Pour Homme EDT"
+        learnerRecord={learnerRecordWithEvidenceFor(1)}
+      />
+    );
+
+    expect(markup).toBe("");
+  });
+
+  it("renders a fragrance-specific link, with a fragrance-specific accessible name, when prior evidence exists", () => {
+    const markup = renderToStaticMarkup(
+      <CatalogLearningEvidenceLink
+        fragranceId={1}
+        fragranceName="Acqua di Gio EDT"
+        learnerRecord={learnerRecordWithEvidenceFor(1)}
+      />
+    );
+
+    expect(markup).toContain('href="/mis-descubrimientos?fragrance=1"');
+    expect(markup).toContain('aria-label="Ver lo que noté sobre Acqua di Gio EDT"');
+    expect(markup).toContain("Ver lo que noté sobre esta fragancia");
   });
 });

@@ -5,10 +5,13 @@ import { afterEach, describe, expect, it } from "vitest";
 import {
   ComparisonEvidenceCard,
   EncounterEvidenceCard,
+  FragranceEvidenceView,
+  LearnerRecordActions,
   LearnerRecordContainer,
   LearnerRecordDeleteControl,
   LearnerRecordView,
   requestLearnerRecordReset,
+  resolveScopedFragrance,
 } from "./LearnerRecordView.jsx";
 import {
   PERCEPTUAL_LEARNING_SCHEMA_VERSION,
@@ -17,10 +20,11 @@ import {
 import { createLearnerId } from "../perceptualLearning/learnerIdentity.js";
 import { createEncounterInstance } from "../perceptualLearning/encounterInstance.js";
 import { createObservation } from "../perceptualLearning/observation.js";
+import { aurelianCatalog } from "../merchant/catalog.js";
 
 const originalWindow = globalThis.window;
 
-function mockWindow({ storage } = {}) {
+function mockWindow({ search = "", storage } = {}) {
   const spyableStorage = storage ?? {
     getItem: () => null,
     setItem: () => {},
@@ -28,7 +32,7 @@ function mockWindow({ storage } = {}) {
   };
 
   globalThis.window = {
-    location: { href: "https://aurelianperfumes.com/mis-descubrimientos", search: "" },
+    location: { href: `https://aurelianperfumes.com/mis-descubrimientos${search}`, search },
     localStorage: spyableStorage,
   };
 
@@ -845,5 +849,396 @@ describe("architecture boundary", () => {
   it("introduces no Builder/Composer/AI coupling in the new Phase 3.1 files", () => {
     const combined = [learnerRecordSource, viewSource, mountSource].join("\n");
     expect(combined).not.toMatch(/@discovery-box\/builder|packages\/builder|composer|openai|anthropic/i);
+  });
+});
+
+describe("resolveScopedFragrance (Phase 5.0)", () => {
+  // A pure function of its argument -- no window access at all, by design
+  // (see the second browser-acceptance defect: it must never read
+  // window.location.search independently of useSearchParams()'s own
+  // value). No window mocking is needed for any of these.
+
+  it("resolves the fragrance for a valid fragrance query value", () => {
+    const fragrance = resolveScopedFragrance("fragrance=1");
+
+    expect(fragrance).not.toBeNull();
+    expect(fragrance.id).toBe(1);
+    expect(fragrance).toBe(aurelianCatalog.find((item) => item.id === 1));
+  });
+
+  it("accepts a leading '?', matching useSearchParams().toString()'s bare form and a literal query string equally", () => {
+    expect(resolveScopedFragrance("?fragrance=1")?.id).toBe(1);
+    expect(resolveScopedFragrance("fragrance=1")?.id).toBe(1);
+  });
+
+  it("returns null when the search is empty, missing, or unresolvable", () => {
+    expect(resolveScopedFragrance("")).toBeNull();
+    expect(resolveScopedFragrance(undefined)).toBeNull();
+    expect(resolveScopedFragrance("fragrance=abc")).toBeNull();
+    expect(resolveScopedFragrance("fragrance=999999999")).toBeNull();
+  });
+});
+
+describe("LearnerRecordActions (Phase 5.0 fragranceId scoping)", () => {
+  it("uses the original unscoped hrefs when fragranceId is omitted (backward-compatible default)", () => {
+    const markup = renderToStaticMarkup(<LearnerRecordActions />);
+
+    expect(markup).toContain('href="/mis-descubrimientos/observar"');
+    expect(markup).toContain('href="/mis-descubrimientos/comparar"');
+  });
+
+  it("scopes both capture links to the given fragranceId", () => {
+    const markup = renderToStaticMarkup(<LearnerRecordActions fragranceId={42} />);
+
+    expect(markup).toContain('href="/mis-descubrimientos/observar?fragrance=42"');
+    expect(markup).toContain('href="/mis-descubrimientos/comparar?fragrance=42"');
+  });
+});
+
+describe("FragranceEvidenceView (Phase 5.0)", () => {
+  const emptyEvidence = { fragranceId: 1, hasPriorEvidence: false, encounters: [], comparisons: [] };
+
+  function evidenceWithObservationsOnly() {
+    return {
+      fragranceId: 1,
+      hasPriorEvidence: true,
+      encounters: [
+        {
+          encounterInstanceId: "enc-1",
+          fragranceId: 1,
+          fragranceDisplaySnapshot: { fragranceId: 1, name: "Fico di Amalfi", brand: "Aurelian" },
+          createdAt: "2026-08-01T00:00:00.000Z",
+          observations: [
+            {
+              observationId: "obs-1",
+              moment: "initial",
+              freeText: "Muy cítrico.",
+              createdAt: "2026-08-01T00:00:00.000Z",
+            },
+          ],
+        },
+      ],
+      comparisons: [],
+    };
+  }
+
+  function evidenceWithComparisonsOnly() {
+    return {
+      fragranceId: 1,
+      hasPriorEvidence: true,
+      encounters: [],
+      comparisons: [
+        {
+          comparisonId: "cmp-1",
+          freeText: "Se siente más fresca.",
+          createdAt: "2026-08-01T00:00:00.000Z",
+          firstEncounter: {
+            encounterInstanceId: "enc-1",
+            fragranceId: 1,
+            fragranceDisplaySnapshot: { fragranceId: 1, name: "Fico di Amalfi", brand: "Aurelian" },
+          },
+          secondEncounter: {
+            encounterInstanceId: "enc-2",
+            fragranceId: 2,
+            fragranceDisplaySnapshot: { fragranceId: 2, name: "Acqua di Gio EDT", brand: "Giorgio Armani" },
+          },
+        },
+      ],
+    };
+  }
+
+  it("renders a heading naming the fragrance, with brand shown", () => {
+    const markup = renderToStaticMarkup(
+      <FragranceEvidenceView
+        fragranceId={1}
+        fragranceName="Fico di Amalfi"
+        fragranceBrand="Aurelian"
+        evidenceRevisit={emptyEvidence}
+      />
+    );
+
+    expect(markup).toContain("Lo que has notado sobre Fico di Amalfi");
+    expect(markup).toContain("Aurelian");
+  });
+
+  it("shows an honest empty message when hasPriorEvidence is false, not a crash or blank sections", () => {
+    const markup = renderToStaticMarkup(
+      <FragranceEvidenceView fragranceId={1} fragranceName="Fico di Amalfi" evidenceRevisit={emptyEvidence} />
+    );
+
+    expect(markup).toContain("Todavía no has registrado nada sobre esta fragancia.");
+    expect(markup).not.toContain("fragrance-evidence-observations");
+    expect(markup).not.toContain("fragrance-evidence-comparisons");
+  });
+
+  it("renders only the Observations section when only Observation evidence exists", () => {
+    const markup = renderToStaticMarkup(
+      <FragranceEvidenceView
+        fragranceId={1}
+        fragranceName="Fico di Amalfi"
+        evidenceRevisit={evidenceWithObservationsOnly()}
+      />
+    );
+
+    expect(markup).toContain("fragrance-evidence-observations");
+    expect(markup).toContain("Muy cítrico.");
+    expect(markup).not.toContain("fragrance-evidence-comparisons");
+  });
+
+  it("renders only the Comparisons section when only Comparison evidence exists", () => {
+    const markup = renderToStaticMarkup(
+      <FragranceEvidenceView
+        fragranceId={1}
+        fragranceName="Fico di Amalfi"
+        evidenceRevisit={evidenceWithComparisonsOnly()}
+      />
+    );
+
+    expect(markup).toContain("fragrance-evidence-comparisons");
+    expect(markup).toContain("Se siente más fresca.");
+    expect(markup).not.toContain("fragrance-evidence-observations");
+  });
+
+  it("renders both sections, independently, when both kinds of evidence exist", () => {
+    const combined = {
+      fragranceId: 1,
+      hasPriorEvidence: true,
+      encounters: evidenceWithObservationsOnly().encounters,
+      comparisons: evidenceWithComparisonsOnly().comparisons,
+    };
+
+    const markup = renderToStaticMarkup(
+      <FragranceEvidenceView fragranceId={1} fragranceName="Fico di Amalfi" evidenceRevisit={combined} />
+    );
+
+    expect(markup).toContain("fragrance-evidence-observations");
+    expect(markup).toContain("fragrance-evidence-comparisons");
+  });
+
+  it("preserves repeated evidence for this fragrance without deduplication", () => {
+    const repeated = {
+      fragranceId: 1,
+      hasPriorEvidence: true,
+      encounters: [
+        {
+          encounterInstanceId: "enc-a",
+          fragranceId: 1,
+          fragranceDisplaySnapshot: { fragranceId: 1, name: "Fico di Amalfi", brand: "Aurelian" },
+          createdAt: "2026-08-05T00:00:00.000Z",
+          observations: [
+            { observationId: "obs-a", moment: "initial", freeText: "First visit.", createdAt: "2026-08-05T00:00:00.000Z" },
+          ],
+        },
+        {
+          encounterInstanceId: "enc-b",
+          fragranceId: 1,
+          fragranceDisplaySnapshot: { fragranceId: 1, name: "Fico di Amalfi", brand: "Aurelian" },
+          createdAt: "2026-08-01T00:00:00.000Z",
+          observations: [
+            { observationId: "obs-b", moment: "initial", freeText: "Second visit.", createdAt: "2026-08-01T00:00:00.000Z" },
+          ],
+        },
+      ],
+      comparisons: [],
+    };
+
+    const markup = renderToStaticMarkup(
+      <FragranceEvidenceView fragranceId={1} fragranceName="Fico di Amalfi" evidenceRevisit={repeated} />
+    );
+
+    expect(markup).toContain("First visit.");
+    expect(markup).toContain("Second visit.");
+    expect(markup.match(/<article class="encounter-evidence-card"/g)?.length).toBe(2);
+  });
+
+  it("scopes the Registrar/Comparar actions to this fragrance and offers ways back to the catalog and the full record", () => {
+    const markup = renderToStaticMarkup(
+      <FragranceEvidenceView fragranceId={7} fragranceName="Fico di Amalfi" evidenceRevisit={emptyEvidence} />
+    );
+
+    expect(markup).toContain('href="/mis-descubrimientos/observar?fragrance=7"');
+    expect(markup).toContain('href="/mis-descubrimientos/comparar?fragrance=7"');
+    expect(markup).toContain('href="/catalogo"');
+    expect(markup).toContain('href="/mis-descubrimientos"');
+    expect(markup).toContain("Ver todo lo que he notado");
+  });
+
+  it("never exposes the delete-all control -- that action is unscoped page's only", () => {
+    const markup = renderToStaticMarkup(
+      <FragranceEvidenceView
+        fragranceId={1}
+        fragranceName="Fico di Amalfi"
+        evidenceRevisit={evidenceWithObservationsOnly()}
+      />
+    );
+
+    expect(markup).not.toContain("Eliminar mis datos de aprendizaje");
+  });
+
+  it("never renders raw internal ids as visible text", () => {
+    const evidence = {
+      fragranceId: 1,
+      hasPriorEvidence: true,
+      encounters: [
+        {
+          encounterInstanceId: "ENCOUNTER_SECRET_777",
+          fragranceId: 1,
+          fragranceDisplaySnapshot: { fragranceId: 1, name: "Fico di Amalfi", brand: "Aurelian" },
+          createdAt: "2026-08-01T00:00:00.000Z",
+          observations: [
+            { observationId: "OBSERVATION_SECRET_888", moment: "initial", freeText: "x", createdAt: "2026-08-01T00:00:00.000Z" },
+          ],
+        },
+      ],
+      comparisons: [],
+    };
+
+    const markup = renderToStaticMarkup(
+      <FragranceEvidenceView fragranceId={1} fragranceName="Fico di Amalfi" evidenceRevisit={evidence} />
+    );
+
+    expect(markup).not.toContain("ENCOUNTER_SECRET_777");
+    expect(markup).not.toContain("OBSERVATION_SECRET_888");
+  });
+
+  it("contains no taste/profile/preference/capability copy", () => {
+    const markup = renderToStaticMarkup(
+      <FragranceEvidenceView
+        fragranceId={1}
+        fragranceName="Fico di Amalfi"
+        evidenceRevisit={evidenceWithObservationsOnly()}
+      />
+    );
+
+    for (const phrase of FORBIDDEN_COPY) {
+      expect(markup).not.toContain(phrase);
+    }
+  });
+});
+
+describe("LearnerRecordContainer scoped mode (Phase 5.0)", () => {
+  // useSearchParams() reads from Next.js's own App Router context
+  // (SearchParamsContext), which this repo's bare renderToStaticMarkup
+  // harness never provides -- so it always returns null here, regardless of
+  // window.location.search. That is precisely correct per the fix (see the
+  // regression describe block below): resolveScopedFragrance must have
+  // exactly one source of truth, useSearchParams()'s own value, and must
+  // never fall back to reading window independently. One consequence is
+  // that LearnerRecordContainer can only be exercised in its unscoped state
+  // through this harness -- mocking window.location.search no longer has
+  // any effect on it, by design. Scope resolution itself remains fully
+  // covered by resolveScopedFragrance's own pure-function tests above;
+  // FragranceEvidenceView's own rendering (given a resolved scope) remains
+  // fully covered by its dedicated describe block; what's covered here is
+  // that the container reaches its unscoped branch and still performs
+  // exactly one storage read, and the wiring itself is covered by the
+  // structural regression tests below.
+  it("renders the unscoped LearnerRecordView (the only state reachable under this harness, useSearchParams() has no App Router context to read)", () => {
+    mockWindow();
+
+    const markup = renderToStaticMarkup(<LearnerRecordContainer />);
+
+    expect(markup).toContain("learner-record-view");
+    expect(markup).not.toContain("fragrance-evidence-view");
+  });
+
+  it("performs exactly one storage read on render, regardless of window.location.search", () => {
+    let getItemCalls = 0;
+    mockWindow({
+      search: "?fragrance=1",
+      storage: {
+        getItem: () => {
+          getItemCalls += 1;
+          return null;
+        },
+        setItem: () => {},
+        removeItem: () => {},
+      },
+    });
+
+    renderToStaticMarkup(<LearnerRecordContainer />);
+
+    expect(getItemCalls).toBe(1);
+  });
+});
+
+describe("LearnerRecordContainer scope source-of-truth (Phase 5.0 second browser-acceptance regression)", () => {
+  // Real-browser defect: clicking a scoped catalog link updates the URL
+  // (Next.js's client router) but the page kept rendering the GLOBAL
+  // learner record; pressing F5 on the identical URL rendered correctly.
+  // The first fix (subscribing to useSearchParams() purely to force a
+  // re-render, while resolveScopedFragrance still independently read
+  // window.location.search) did not resolve this: during a client-router
+  // transition, window.location is not guaranteed to already reflect the
+  // new URL at the exact moment this component re-renders, even though
+  // useSearchParams()'s reactive value already does -- a full page load
+  // has no such race, which is exactly why F5 always worked. Two
+  // independent reads of "the current URL" is the actual bug; there must
+  // be exactly one.
+  //
+  // renderToStaticMarkup cannot reproduce the race itself (it always
+  // performs a single, fresh render), so this asserts the structural
+  // property that prevents it, the same source-inspection technique this
+  // file's own "architecture boundary" tests already use for properties
+  // renderToStaticMarkup can't reach. It specifically verifies the FIX,
+  // not merely that useSearchParams() is called somewhere.
+  const source = readFileSync(
+    fileURLToPath(new URL("./LearnerRecordView.jsx", import.meta.url)),
+    "utf8"
+  );
+
+  it("does not cache scopedFragrance in a mount-only useState lazy initializer", () => {
+    expect(source).toMatch(/useSearchParams\s*\(\s*\)/);
+    expect(source).not.toMatch(/useState\(\s*\(\s*\)\s*=>\s*resolveScopedFragrance\(\)\s*\)/);
+  });
+
+  it("resolveScopedFragrance is a pure function of its argument -- no independent window.location access", () => {
+    const resolverMatch = source.match(
+      /export function resolveScopedFragrance\([^)]*\)\s*\{([\s\S]*?)\n\}/
+    );
+
+    expect(resolverMatch).not.toBeNull();
+    expect(resolverMatch[1]).not.toMatch(/window\.location/);
+  });
+
+  it("feeds useSearchParams()'s own return value directly into resolveScopedFragrance, not a separate window.location read", () => {
+    expect(source).toMatch(/const\s+searchParams\s*=\s*useSearchParams\(\)/);
+    expect(source).toMatch(/resolveScopedFragrance\(\s*searchParams/);
+  });
+});
+
+describe("LearnerRecordContainer scope re-resolution across a reused mount (Phase 5.0 browser-acceptance regression)", () => {
+  // Real-browser defect: a learner visits the unscoped page once, then
+  // clicks a different catalog card's scoped evidence link. Both land on
+  // the exact same pathname (/mis-descubrimientos), differing only by
+  // query string, and neither page.jsx nor LearnerRecordMount.jsx key or
+  // react to that string -- so Next.js's client router can (and did, per
+  // the browser report) reuse the already-mounted LearnerRecordContainer
+  // instance instead of remounting it. A `useState(() => resolveScopedFragrance())`
+  // lazy initializer only ever runs on a component's true first mount, so
+  // it would silently freeze at whatever URL was current then, and every
+  // later same-pathname navigation would keep rendering the stale
+  // (unscoped) view -- exactly the reported symptom.
+  //
+  // renderToStaticMarkup cannot reproduce this directly: it always performs
+  // a genuinely fresh mount per call, so a lazy initializer and a
+  // freshly-recomputed value are indistinguishable under it -- both read
+  // the current window.location.search correctly on that one render. The
+  // component-level scoped/unscoped/fallback tests above remain valid
+  // coverage for "given a resolved scope, does the right view render," but
+  // none of them can catch a regression back to caching that scope in
+  // mount-only state, which is the actual mechanism the browser reproduced.
+  // This asserts the structural property that prevents it, the same
+  // source-inspection technique this file's own "architecture boundary"
+  // tests already use for properties renderToStaticMarkup can't reach.
+  it("computes scopedFragrance directly in the render body via useSearchParams(), never caches it in a mount-only useState initializer", () => {
+    const source = readFileSync(
+      fileURLToPath(new URL("./LearnerRecordView.jsx", import.meta.url)),
+      "utf8"
+    );
+
+    expect(source).toContain('from "next/navigation"');
+    expect(source).toMatch(/useSearchParams\s*\(\s*\)/);
+    expect(source).not.toMatch(/useState\(\s*\(\s*\)\s*=>\s*resolveScopedFragrance\(\)\s*\)/);
   });
 });
