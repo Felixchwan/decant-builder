@@ -3,14 +3,28 @@ import { afterEach, describe, expect, it } from "vitest";
 import {
   ObservationCaptureFlow,
   ObservationConfirmation,
+  ObservationConfirmedPhase,
   ObservationDoneState,
   ObservationForm,
   ObservationPicker,
   canSubmitObservation,
   formatObservationTimestamp,
   resolveInitialFragrance,
+  resolvePriorEvidence,
 } from "./ObservationCaptureFlow.jsx";
 import { aurelianCatalog } from "../merchant/catalog.js";
+import {
+  PERCEPTUAL_LEARNING_SCHEMA_VERSION,
+  PERCEPTUAL_LEARNING_STORAGE_KEY,
+  loadPerceptualLearningState,
+} from "../perceptualLearning/perceptualLearningPersistence.js";
+import { buildLearnerRecord } from "../perceptualLearning/learnerRecord.js";
+import { buildEvidenceRevisit } from "../perceptualLearning/evidenceRevisit.js";
+import { createLearnerId } from "../perceptualLearning/learnerIdentity.js";
+import { createEncounterInstance } from "../perceptualLearning/encounterInstance.js";
+import { createEncounterWithObservation } from "../perceptualLearning/createEncounterWithObservation.js";
+import { createObservation } from "../perceptualLearning/observation.js";
+import { createComparison } from "../perceptualLearning/comparison.js";
 
 const originalWindow = globalThis.window;
 
@@ -311,5 +325,365 @@ describe("ObservationCaptureFlow", () => {
     expect(getItemCalls).toBe(0);
     expect(setItemCalls).toBe(0);
     expect(removeItemCalls).toBe(0);
+  });
+
+  it("never renders prior-evidence content in the pre-submit picker or form states (Phase 4.1)", () => {
+    mockWindow({ search: "" });
+    const pickerMarkup = renderToStaticMarkup(<ObservationCaptureFlow />);
+    expect(pickerMarkup).not.toContain("Revisar lo que había percibido antes");
+
+    mockWindow({ search: "?fragrance=1" });
+    const formMarkup = renderToStaticMarkup(<ObservationCaptureFlow />);
+    expect(formMarkup).not.toContain("Revisar lo que había percibido antes");
+  });
+});
+
+describe("resolvePriorEvidence (Phase 4.1)", () => {
+  function seedStorage(payload) {
+    return {
+      getItem: (key) => (key === PERCEPTUAL_LEARNING_STORAGE_KEY ? JSON.stringify(payload) : null),
+      setItem: () => {},
+      removeItem: () => {},
+    };
+  }
+
+  it("returns hasPriorEvidence false and empty arrays when storage is empty", () => {
+    const storage = { getItem: () => null, setItem: () => {}, removeItem: () => {} };
+
+    const result = resolvePriorEvidence({ storage, fragranceId: 1 });
+
+    expect(result).toEqual({ fragranceId: 1, hasPriorEvidence: false, encounters: [], comparisons: [] });
+  });
+
+  it("resolves real prior Observation evidence for the requested fragrance, through LearnerRecord -> EvidenceRevisit", () => {
+    const learnerId = createLearnerId();
+    const encounter = createEncounterInstance({
+      learnerId,
+      fragranceId: 1,
+      fragranceDisplaySnapshot: { fragranceId: 1, name: "Fico di Amalfi", brand: "Aurelian" },
+    });
+    const observation = createObservation({
+      encounterInstanceId: encounter.encounterInstanceId,
+      learnerId,
+      moment: "initial",
+      freeText: "Huele muy fresco.",
+    });
+    const storage = seedStorage({
+      schemaVersion: PERCEPTUAL_LEARNING_SCHEMA_VERSION,
+      learnerId,
+      learnerCreatedAt: encounter.createdAt,
+      encounterInstances: [encounter],
+      observations: [observation],
+      comparisons: [],
+    });
+
+    const result = resolvePriorEvidence({ storage, fragranceId: 1 });
+
+    expect(result.hasPriorEvidence).toBe(true);
+    expect(result.encounters[0].observations[0].freeText).toBe("Huele muy fresco.");
+  });
+
+  it("excludes evidence belonging to a different fragranceId", () => {
+    const learnerId = createLearnerId();
+    const encounter = createEncounterInstance({ learnerId, fragranceId: 1 });
+    const observation = createObservation({
+      encounterInstanceId: encounter.encounterInstanceId,
+      learnerId,
+      moment: "initial",
+      freeText: "x",
+    });
+    const storage = seedStorage({
+      schemaVersion: PERCEPTUAL_LEARNING_SCHEMA_VERSION,
+      learnerId,
+      learnerCreatedAt: null,
+      encounterInstances: [encounter],
+      observations: [observation],
+      comparisons: [],
+    });
+
+    const result = resolvePriorEvidence({ storage, fragranceId: 999 });
+
+    expect(result).toEqual({ fragranceId: 999, hasPriorEvidence: false, encounters: [], comparisons: [] });
+  });
+
+  it("resolves Comparison-only prior evidence, enabling revisit even with zero prior Observations", () => {
+    const learnerId = createLearnerId();
+    const encounterA = createEncounterInstance({ learnerId, fragranceId: 1 });
+    const encounterB = createEncounterInstance({ learnerId, fragranceId: 2 });
+    const comparison = createComparison({
+      learnerId,
+      firstEncounterInstanceId: encounterA.encounterInstanceId,
+      secondEncounterInstanceId: encounterB.encounterInstanceId,
+      freeText: "A is softer.",
+    });
+    const storage = seedStorage({
+      schemaVersion: PERCEPTUAL_LEARNING_SCHEMA_VERSION,
+      learnerId,
+      learnerCreatedAt: null,
+      encounterInstances: [encounterA, encounterB],
+      observations: [],
+      comparisons: [comparison],
+    });
+
+    const result = resolvePriorEvidence({ storage, fragranceId: 1 });
+
+    expect(result.hasPriorEvidence).toBe(true);
+    expect(result.comparisons).toHaveLength(1);
+    expect(result.encounters[0].observations).toEqual([]);
+  });
+
+  it("naturally treats evidence written by a completed earlier session as prior evidence for a later session (item 12)", () => {
+    // Simulates: session 1 already wrote and persisted an Observation; this
+    // call represents session 2 resolving prior evidence at ITS OWN
+    // pre-write boundary -- it should see everything session 1 completed.
+    const learnerId = createLearnerId();
+    const firstSessionEncounter = createEncounterInstance({
+      learnerId,
+      fragranceId: 1,
+      createdAt: "2026-08-01T00:00:00.000Z",
+    });
+    const firstSessionObservation = createObservation({
+      encounterInstanceId: firstSessionEncounter.encounterInstanceId,
+      learnerId,
+      moment: "initial",
+      freeText: "From the first session.",
+      createdAt: "2026-08-01T00:00:00.000Z",
+    });
+    const storage = seedStorage({
+      schemaVersion: PERCEPTUAL_LEARNING_SCHEMA_VERSION,
+      learnerId,
+      learnerCreatedAt: firstSessionEncounter.createdAt,
+      encounterInstances: [firstSessionEncounter],
+      observations: [firstSessionObservation],
+      comparisons: [],
+    });
+
+    const result = resolvePriorEvidence({ storage, fragranceId: 1 });
+
+    expect(result.hasPriorEvidence).toBe(true);
+    expect(result.encounters[0].observations.map((o) => o.freeText)).toEqual(["From the first session."]);
+  });
+
+  function createMutableStorage(initial = {}) {
+    const store = new Map(Object.entries(initial));
+    return {
+      getItem: (key) => (store.has(key) ? store.get(key) : null),
+      setItem: (key, value) => store.set(key, value),
+      removeItem: (key) => store.delete(key),
+    };
+  }
+
+  // Regression test for the exact browser-acceptance defect report: an
+  // existing fragrance with prior Observation AND Comparison evidence, a
+  // brand-new "later" Observation submitted in a fresh capture session, and
+  // the captured prior-evidence snapshot must exclude that new Observation
+  // entirely while preserving the old evidence verbatim, separately, and in
+  // its original orientation. Uses a genuinely mutable storage (unlike
+  // seedStorage's read-only fake above) so the real write use case actually
+  // mutates it after the capture, proving the capture-then-write ordering
+  // holds against the real persistence layer, not just a hand-built fixture.
+  it("does not include the newly-submitted Observation in the captured prior-evidence projection (regression: browser-acceptance defect, Acqua di Gio EDT)", () => {
+    const learnerId = createLearnerId();
+    const priorEncounter = createEncounterInstance({
+      learnerId,
+      fragranceId: 1,
+      fragranceDisplaySnapshot: { fragranceId: 1, name: "Acqua di Gio EDT", brand: "Giorgio Armani" },
+      createdAt: "2026-08-01T00:00:00.000Z",
+    });
+    const priorObservation = createObservation({
+      encounterInstanceId: priorEncounter.encounterInstanceId,
+      learnerId,
+      moment: "initial",
+      freeText: "primera observación prueba 4.1",
+      createdAt: "2026-08-01T00:00:00.000Z",
+    });
+    const otherEncounter = createEncounterInstance({ learnerId, fragranceId: 2 });
+    const priorComparison = createComparison({
+      learnerId,
+      firstEncounterInstanceId: priorEncounter.encounterInstanceId,
+      secondEncounterInstanceId: otherEncounter.encounterInstanceId,
+      freeText: "Comparación previa entre ambas.",
+      createdAt: "2026-08-02T00:00:00.000Z",
+    });
+    const storage = createMutableStorage({
+      [PERCEPTUAL_LEARNING_STORAGE_KEY]: JSON.stringify({
+        schemaVersion: PERCEPTUAL_LEARNING_SCHEMA_VERSION,
+        learnerId,
+        learnerCreatedAt: priorEncounter.createdAt,
+        encounterInstances: [priorEncounter, otherEncounter],
+        observations: [priorObservation],
+        comparisons: [priorComparison],
+      }),
+    });
+
+    // Step 1: exactly what handleSubmit does -- capture prior evidence
+    // strictly before the write.
+    const capturedPriorEvidence = resolvePriorEvidence({ storage, fragranceId: 1 });
+
+    // Step 2: the real write use case, with the exact reported repro data.
+    const writeResult = createEncounterWithObservation({
+      storage,
+      fragranceId: 1,
+      fragranceDisplaySnapshot: { fragranceId: 1, name: "Acqua di Gio EDT", brand: "Giorgio Armani" },
+      moment: "later",
+      freeText: "segunda observación prueba 4.1",
+    });
+    expect(writeResult.persisted).toBe(true);
+
+    // The newly-created encounter/observation must not appear anywhere in
+    // the captured projection.
+    expect(capturedPriorEvidence.hasPriorEvidence).toBe(true);
+    const capturedText = capturedPriorEvidence.encounters.flatMap((e) =>
+      e.observations.map((o) => o.freeText)
+    );
+    expect(capturedText).not.toContain("segunda observación prueba 4.1");
+    expect(capturedPriorEvidence.encounters.map((e) => e.encounterInstanceId)).not.toContain(
+      writeResult.encounterInstance.encounterInstanceId
+    );
+
+    // Existing prior Observation evidence remains verbatim and present.
+    expect(capturedText).toEqual(["primera observación prueba 4.1"]);
+    expect(capturedPriorEvidence.encounters).toHaveLength(1);
+    expect(capturedPriorEvidence.encounters[0].encounterInstanceId).toBe(priorEncounter.encounterInstanceId);
+
+    // Existing prior Comparison remains verbatim, in original first/second
+    // orientation.
+    expect(capturedPriorEvidence.comparisons).toHaveLength(1);
+    expect(capturedPriorEvidence.comparisons[0].freeText).toBe("Comparación previa entre ambas.");
+    expect(capturedPriorEvidence.comparisons[0].firstEncounter.encounterInstanceId).toBe(
+      priorEncounter.encounterInstanceId
+    );
+    expect(capturedPriorEvidence.comparisons[0].secondEncounter.encounterInstanceId).toBe(
+      otherEncounter.encounterInstanceId
+    );
+
+    // Independently confirm storage now genuinely contains the new
+    // Observation (proving this test isn't passing merely because the write
+    // silently failed) -- re-reading storage fresh must show both.
+    const postWriteLearnerRecord = buildLearnerRecord(loadPerceptualLearningState({ storage }));
+    const postWriteEvidence = buildEvidenceRevisit({ learnerRecord: postWriteLearnerRecord, fragranceId: 1 });
+    const postWriteText = postWriteEvidence.encounters.flatMap((e) => e.observations.map((o) => o.freeText));
+    expect(postWriteText).toEqual(
+      expect.arrayContaining(["primera observación prueba 4.1", "segunda observación prueba 4.1"])
+    );
+  });
+
+  it("the no-prior-evidence case remains unchanged: a brand-new fragrance yields hasPriorEvidence false even after its first write lands in the same storage", () => {
+    const storage = createMutableStorage();
+
+    const capturedPriorEvidence = resolvePriorEvidence({ storage, fragranceId: 42 });
+
+    const writeResult = createEncounterWithObservation({
+      storage,
+      fragranceId: 42,
+      fragranceDisplaySnapshot: { fragranceId: 42, name: "Brand New Fragrance", brand: "Aurelian" },
+      moment: "initial",
+      freeText: "primera vez que la percibo.",
+    });
+    expect(writeResult.persisted).toBe(true);
+
+    expect(capturedPriorEvidence).toEqual({
+      fragranceId: 42,
+      hasPriorEvidence: false,
+      encounters: [],
+      comparisons: [],
+    });
+  });
+});
+
+describe("ObservationConfirmedPhase (Phase 4.1)", () => {
+  const baseObservation = {
+    moment: "initial",
+    freeText: "Ahora noto más madera.",
+    createdAt: "2026-08-10T12:30:00.000Z",
+  };
+
+  it("preserves the existing confirmation content unchanged", () => {
+    const markup = renderToStaticMarkup(
+      <ObservationConfirmedPhase
+        fragranceName="Aurelian No. 1"
+        observation={baseObservation}
+        priorEvidence={null}
+        onRegisterAnotherMoment={() => {}}
+        onDone={() => {}}
+      />
+    );
+
+    expect(markup).toContain("Aurelian No. 1");
+    expect(markup).toContain("Ahora noto más madera.");
+    expect(markup).toContain("Registrar otro momento");
+    expect(markup).toContain("Listo");
+  });
+
+  it("shows no revisit disclosure when priorEvidence is null (e.g. this fragrance had no prior evidence)", () => {
+    const markup = renderToStaticMarkup(
+      <ObservationConfirmedPhase
+        fragranceName="Aurelian No. 1"
+        observation={baseObservation}
+        priorEvidence={null}
+        onRegisterAnotherMoment={() => {}}
+        onDone={() => {}}
+      />
+    );
+
+    expect(markup).not.toContain("Revisar lo que había percibido antes");
+    expect(markup).not.toMatch(/<details/);
+  });
+
+  it("shows no revisit disclosure when priorEvidence.hasPriorEvidence is false", () => {
+    const markup = renderToStaticMarkup(
+      <ObservationConfirmedPhase
+        fragranceName="Aurelian No. 1"
+        observation={baseObservation}
+        priorEvidence={{ fragranceId: 1, hasPriorEvidence: false, encounters: [], comparisons: [] }}
+        onRegisterAnotherMoment={() => {}}
+        onDone={() => {}}
+      />
+    );
+
+    expect(markup).not.toContain("Revisar lo que había percibido antes");
+  });
+
+  it("shows the collapsed revisit disclosure when priorEvidence.hasPriorEvidence is true, without duplicating the new Observation's text inside it (temporal correctness, item 10)", () => {
+    const priorEvidence = {
+      fragranceId: 1,
+      hasPriorEvidence: true,
+      encounters: [
+        {
+          encounterInstanceId: "enc-prior",
+          fragranceId: 1,
+          fragranceDisplaySnapshot: { fragranceId: 1, name: "Fico di Amalfi", brand: "Aurelian" },
+          createdAt: "2026-08-01T00:00:00.000Z",
+          observations: [
+            {
+              observationId: "obs-prior",
+              moment: "initial",
+              freeText: "Me parece muy cítrico.",
+              createdAt: "2026-08-01T00:00:00.000Z",
+            },
+          ],
+        },
+      ],
+      comparisons: [],
+    };
+
+    const markup = renderToStaticMarkup(
+      <ObservationConfirmedPhase
+        fragranceName="Fico di Amalfi"
+        observation={baseObservation}
+        priorEvidence={priorEvidence}
+        onRegisterAnotherMoment={() => {}}
+        onDone={() => {}}
+      />
+    );
+
+    expect(markup).toContain("Revisar lo que había percibido antes");
+    expect(markup).toContain("Me parece muy cítrico.");
+    expect(markup).toContain("Ahora noto más madera.");
+    // The new Observation's own text appears exactly once (inside the fresh
+    // confirmation), not a second time inside the historical section --
+    // proves the two are rendered as genuinely separate evidence, never
+    // merged or duplicated.
+    expect(markup.match(/Ahora noto más madera\./g)?.length).toBe(1);
   });
 });

@@ -1,16 +1,20 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import Link from "next/link";
 import { aurelianCatalog } from "../merchant/catalog.js";
 import { filterCatalog } from "../lib/filterCatalog.js";
 import { parseFragranceIntent } from "../lib/parseFragranceIntent.js";
 import { createEncounterWithObservation } from "../perceptualLearning/createEncounterWithObservation.js";
 import { recordObservation } from "../perceptualLearning/recordObservation.js";
+import { loadPerceptualLearningState } from "../perceptualLearning/perceptualLearningPersistence.js";
+import { buildLearnerRecord } from "../perceptualLearning/learnerRecord.js";
+import { buildEvidenceRevisit } from "../perceptualLearning/evidenceRevisit.js";
 import {
   OBSERVATION_MOMENT_COPY,
   OBSERVATION_MOMENT_VALUES,
 } from "../perceptualLearning/momentVocabulary.js";
+import { EvidenceRevisitView } from "./EvidenceRevisitView.jsx";
 
 const SUBMIT_ERROR_COPY = "No pudimos guardar tu observación. Intenta de nuevo.";
 
@@ -58,6 +62,26 @@ function getStorage() {
   }
 }
 
+// Resolves prior evidence for a fragrance by reading whatever is currently
+// in storage, through the same LearnerRecord -> EvidenceRevisit path every
+// other read surface uses -- never duplicates buildEvidenceRevisit's own
+// filtering/relevance logic here. Exported for direct testability, matching
+// this file's own convention (resolveInitialFragrance, canSubmitObservation).
+//
+// Temporal correctness (Phase 4.1's locked rule) comes entirely from *when*
+// this is called, not from any exclusion logic: handleSubmit calls this
+// strictly before the write that creates the new EncounterInstance/
+// Observation, so the returned projection can never include evidence this
+// same call is about to create. It is captured once per capture session (the
+// first successful write) and then held in React state for the rest of that
+// session -- a later "Registrar otro momento" resubmission within the same
+// session never recomputes it, so it keeps excluding everything written
+// during this session, not just the very first Observation.
+export function resolvePriorEvidence({ storage, fragranceId }) {
+  const learnerRecord = buildLearnerRecord(loadPerceptualLearningState({ storage }));
+  return buildEvidenceRevisit({ learnerRecord, fragranceId });
+}
+
 // Small, prop-driven presentational pieces. Each renders from explicit props
 // only -- no internal state, no storage access -- so each is independently
 // verifiable by rendering it directly with representative props, without
@@ -100,6 +124,35 @@ export function ObservationConfirmation({
         Ver lo que he notado
       </Link>
     </div>
+  );
+}
+
+// The full successful-submit phase: the existing confirmation, unchanged,
+// plus -- only when genuine prior evidence exists -- a collapsed disclosure
+// the learner can choose to open. Kept as its own exported component (rather
+// than inline JSX in the orchestrator's "confirmed" branch) specifically so
+// it's directly testable via renderToStaticMarkup with explicit props, the
+// same way every other phase-specific piece in this file already is; the
+// orchestrator itself can only be rendered at its initial state under this
+// repo's testing conventions (see the file-level comment on
+// ObservationCaptureFlow below).
+export function ObservationConfirmedPhase({
+  fragranceName,
+  observation,
+  priorEvidence,
+  onRegisterAnotherMoment,
+  onDone,
+}) {
+  return (
+    <>
+      <ObservationConfirmation
+        fragranceName={fragranceName}
+        observation={observation}
+        onRegisterAnotherMoment={onRegisterAnotherMoment}
+        onDone={onDone}
+      />
+      {priorEvidence?.hasPriorEvidence ? <EvidenceRevisitView evidenceRevisit={priorEvidence} /> : null}
+    </>
   );
 }
 
@@ -177,9 +230,11 @@ export function ObservationForm({
 //
 // Journey: picker (only when no valid ?fragrance= deep link resolved) ->
 // capture form -> immediate confirmation (quoting only the Observation just
-// created, never a history query) -> "Registrar otro momento" (loops back to
-// the form, same fragrance, same EncounterInstance) or "Listo" (static
-// terminal state -- there is no /mis-descubrimientos to send anyone to yet).
+// created, never a history query), now optionally followed by a collapsed
+// prior-evidence disclosure (Phase 4.1, see ObservationConfirmedPhase) when
+// genuine evidence existed before this submission -> "Registrar otro
+// momento" (loops back to the form, same fragrance, same EncounterInstance)
+// or "Listo" (static terminal state).
 export function ObservationCaptureFlow() {
   const [pickedFragrance, setPickedFragrance] = useState(() => resolveInitialFragrance());
   const [pickerQuery, setPickerQuery] = useState("");
@@ -189,21 +244,38 @@ export function ObservationCaptureFlow() {
   const [learnerId, setLearnerId] = useState(null);
   const [phase, setPhase] = useState("capture");
   const [lastObservation, setLastObservation] = useState(null);
+  const [priorEvidence, setPriorEvidence] = useState(null);
   const [submitError, setSubmitError] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  // Synchronous re-entrancy guard, checked in addition to (not instead of)
+  // the isSubmitting state above. isSubmitting only becomes visible to a new
+  // handleSubmit call once React commits the re-render -- a ref is read/set
+  // immediately, so it closes any window where a second invocation could
+  // still see a stale "not submitting" snapshot and re-derive priorEvidence
+  // from storage a second time, after the first invocation's write has
+  // already landed. See the Phase 4.1 browser-acceptance defect report.
+  const isSubmittingRef = useRef(false);
 
   function handleSubmit() {
-    if (!canSubmitObservation({ moment, freeText }) || isSubmitting || !pickedFragrance) {
+    if (!canSubmitObservation({ moment, freeText }) || isSubmittingRef.current || !pickedFragrance) {
       return;
     }
 
+    isSubmittingRef.current = true;
     setIsSubmitting(true);
     setSubmitError(null);
 
     try {
       if (!encounterInstanceId) {
+        const storage = getStorage();
+        // Captured strictly before the write below, so it can never include
+        // the Observation that write is about to create -- see
+        // resolvePriorEvidence's own comment for why this ordering, not an
+        // exclusion filter, is what makes the temporal boundary correct.
+        const capturedPriorEvidence = resolvePriorEvidence({ storage, fragranceId: pickedFragrance.id });
+
         const result = createEncounterWithObservation({
-          storage: getStorage(),
+          storage,
           fragranceId: pickedFragrance.id,
           fragranceDisplaySnapshot: {
             fragranceId: pickedFragrance.id,
@@ -222,6 +294,7 @@ export function ObservationCaptureFlow() {
         setEncounterInstanceId(result.encounterInstance.encounterInstanceId);
         setLearnerId(result.learnerId);
         setLastObservation(result.observation);
+        setPriorEvidence(capturedPriorEvidence);
         setPhase("confirmed");
         return;
       }
@@ -242,6 +315,7 @@ export function ObservationCaptureFlow() {
       setLastObservation(result.observation);
       setPhase("confirmed");
     } finally {
+      isSubmittingRef.current = false;
       setIsSubmitting(false);
     }
   }
@@ -263,9 +337,10 @@ export function ObservationCaptureFlow() {
 
   if (phase === "confirmed" && lastObservation) {
     return (
-      <ObservationConfirmation
+      <ObservationConfirmedPhase
         fragranceName={pickedFragrance.name}
         observation={lastObservation}
+        priorEvidence={priorEvidence}
         onRegisterAnotherMoment={handleRegisterAnotherMoment}
         onDone={handleDone}
       />
