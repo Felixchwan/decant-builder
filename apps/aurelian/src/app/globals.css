@@ -200,6 +200,12 @@ h1 { max-width:15ch; margin-bottom:1.4rem; font-size:clamp(2.8rem,7vw,6.4rem); }
 .learning-capture__pair { margin-bottom:1.5rem; font-family:Georgia,"Times New Roman",serif; font-size:clamp(1.25rem,2.6vw,1.6rem); font-weight:400; }
 .comparison-capture__first { color:var(--text); }
 .comparison-capture__second { color:var(--secondary); }
+/* Keeps a fragrance-identifying label and its EvidenceRevisitView aligned
+   with the same centered column as the rest of Comparison confirmation --
+   without this, the label (a plain block element with no width of its own)
+   stretches to the page shell's full width while .evidence-revisit's own
+   max-width keeps the disclosure narrow, visually detaching the two. */
+.comparison-capture__evidence-revisit { max-width:36rem; margin:0 auto; }
 .learning-capture__fieldset { margin:0 0 1.75rem; padding:0; border:none; }
 .learning-capture__legend { padding:0 0 .85rem; color:var(--muted); font-size:.72rem; font-weight:800; letter-spacing:.16em; text-transform:uppercase; }
 .learning-capture__options { display:flex; flex-wrap:wrap; gap:.75rem; }

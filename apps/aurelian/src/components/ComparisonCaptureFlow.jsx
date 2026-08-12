@@ -1,11 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import Link from "next/link";
 import { aurelianCatalog } from "../merchant/catalog.js";
 import { filterCatalog } from "../lib/filterCatalog.js";
 import { parseFragranceIntent } from "../lib/parseFragranceIntent.js";
 import { createComparisonWithEncounters } from "../perceptualLearning/createComparisonWithEncounters.js";
+import { loadPerceptualLearningState } from "../perceptualLearning/perceptualLearningPersistence.js";
+import { buildLearnerRecord } from "../perceptualLearning/learnerRecord.js";
+import { buildEvidenceRevisit } from "../perceptualLearning/evidenceRevisit.js";
 import {
   COMPARISON_DONE_COPY,
   COMPARISON_PICKER_FIRST_LABEL,
@@ -17,6 +20,7 @@ import {
   COMPARISON_SUBMIT_LABEL,
   COMPARISON_DONE_LABEL,
 } from "../perceptualLearning/comparisonPromptCopy.js";
+import { EvidenceRevisitView } from "./EvidenceRevisitView.jsx";
 
 // Pure helpers, exported so they're directly testable without needing to
 // simulate a click or a re-render (this repo's test suite renders static
@@ -68,6 +72,28 @@ function getStorage() {
   } catch {
     return null;
   }
+}
+
+// Resolves prior evidence for BOTH fragrances in a Comparison from whatever
+// is currently in storage, through the same LearnerRecord -> EvidenceRevisit
+// path every other read surface uses -- one storage read, one LearnerRecord,
+// two independent buildEvidenceRevisit calls (never a new read-model shape,
+// never a merged/paired projection). Exported for direct testability,
+// mirroring ObservationCaptureFlow's own resolvePriorEvidence -- kept as its
+// own local copy here rather than a cross-import, per this file's own
+// established precedent (resolveInitialFirstFragrance).
+//
+// Temporal correctness comes entirely from *when* this is called, not from
+// any exclusion logic: handleSubmit calls this strictly before the write
+// that creates the new EncounterInstances/Comparison, so neither returned
+// projection can ever include evidence this same call is about to create.
+export function resolvePriorEvidenceForComparison({ storage, firstFragranceId, secondFragranceId }) {
+  const learnerRecord = buildLearnerRecord(loadPerceptualLearningState({ storage }));
+
+  return {
+    first: buildEvidenceRevisit({ learnerRecord, fragranceId: firstFragranceId }),
+    second: buildEvidenceRevisit({ learnerRecord, fragranceId: secondFragranceId }),
+  };
 }
 
 // Small, prop-driven presentational pieces. Each renders from explicit props
@@ -194,6 +220,52 @@ export function ComparisonConfirmation({
   );
 }
 
+// The full successful-submit phase: the existing confirmation, unchanged,
+// plus -- only for whichever side(s) genuinely have prior evidence -- a
+// collapsed disclosure the learner can choose to open. Kept as its own
+// exported component (rather than inline JSX in the orchestrator's
+// "confirmed" branch) specifically so it's directly testable via
+// renderToStaticMarkup with explicit props, mirroring
+// ObservationConfirmedPhase exactly. The two sides are always rendered as
+// independent evidence -- never merged, never compared against each other,
+// never summarized.
+export function ComparisonConfirmedPhase({
+  firstFragranceName,
+  secondFragranceName,
+  comparison,
+  priorEvidence,
+  onCompareAnother,
+  onDone,
+}) {
+  return (
+    <>
+      <ComparisonConfirmation
+        firstFragranceName={firstFragranceName}
+        secondFragranceName={secondFragranceName}
+        comparison={comparison}
+        onCompareAnother={onCompareAnother}
+        onDone={onDone}
+      />
+      {priorEvidence?.first?.hasPriorEvidence ? (
+        <div className="comparison-capture__evidence-revisit">
+          <p className="learning-capture__context comparison-capture__context">
+            Primera: {firstFragranceName}
+          </p>
+          <EvidenceRevisitView evidenceRevisit={priorEvidence.first} />
+        </div>
+      ) : null}
+      {priorEvidence?.second?.hasPriorEvidence ? (
+        <div className="comparison-capture__evidence-revisit">
+          <p className="learning-capture__context comparison-capture__context">
+            Segunda: {secondFragranceName}
+          </p>
+          <EvidenceRevisitView evidenceRevisit={priorEvidence.second} />
+        </div>
+      ) : null}
+    </>
+  );
+}
+
 export function ComparisonDoneState() {
   return (
     <div
@@ -215,11 +287,13 @@ export function ComparisonDoneState() {
 // Journey: first-fragrance picker (skipped when a valid ?fragrance= deep
 // link resolves fragrance A) -> second-fragrance picker (candidates exclude
 // A) -> one contrast prompt -> immediate confirmation (quoting only the
-// Comparison just created, never a history query) -> "Comparar otras dos"
-// (resets into a genuinely fresh session -- the next submit creates two new
-// EncounterInstances and a new Comparison, never reusing the prior pair) or
-// "Listo" (static terminal state -- there is no /mis-descubrimientos to send
-// anyone to yet).
+// Comparison just created, never a history query), now optionally followed
+// by up to two collapsed prior-evidence disclosures (Phase 4.2, see
+// ComparisonConfirmedPhase) when genuine evidence existed for either side
+// before this submission -> "Comparar otras dos" (resets into a genuinely
+// fresh session -- the next submit creates two new EncounterInstances and a
+// new Comparison, never reusing the prior pair) or "Listo" (static terminal
+// state -- there is no /mis-descubrimientos to send anyone to yet).
 export function ComparisonCaptureFlow() {
   const [firstFragrance, setFirstFragrance] = useState(() => resolveInitialFirstFragrance());
   const [secondFragrance, setSecondFragrance] = useState(null);
@@ -228,25 +302,49 @@ export function ComparisonCaptureFlow() {
   const [freeText, setFreeText] = useState("");
   const [phase, setPhase] = useState("capture");
   const [lastComparison, setLastComparison] = useState(null);
+  const [priorEvidence, setPriorEvidence] = useState(null);
   const [submitError, setSubmitError] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  // Synchronous re-entrancy guard, checked in addition to (not instead of)
+  // the isSubmitting state above. isSubmitting only becomes visible to a new
+  // handleSubmit call once React commits the re-render -- a ref is read/set
+  // immediately, so it closes any window where a second invocation could
+  // still see a stale "not submitting" snapshot and re-derive priorEvidence
+  // from storage a second time, after the first invocation's write has
+  // already landed. Ported from ObservationCaptureFlow's Phase 4.1 guard --
+  // now that this flow also reads storage before writing, the same race
+  // window applies here too.
+  const isSubmittingRef = useRef(false);
 
   function handleSubmit() {
     if (
       !canSubmitComparison({ freeText }) ||
-      isSubmitting ||
+      isSubmittingRef.current ||
       !firstFragrance ||
       !secondFragrance
     ) {
       return;
     }
 
+    isSubmittingRef.current = true;
     setIsSubmitting(true);
     setSubmitError(null);
 
     try {
+      const storage = getStorage();
+      // Captured strictly before the write below, so neither returned
+      // projection can ever include the EncounterInstances/Comparison that
+      // write is about to create -- see resolvePriorEvidenceForComparison's
+      // own comment for why this ordering, not an exclusion filter, is what
+      // makes the temporal boundary correct.
+      const capturedPriorEvidence = resolvePriorEvidenceForComparison({
+        storage,
+        firstFragranceId: firstFragrance.id,
+        secondFragranceId: secondFragrance.id,
+      });
+
       const result = createComparisonWithEncounters({
-        storage: getStorage(),
+        storage,
         firstFragranceId: firstFragrance.id,
         firstFragranceDisplaySnapshot: {
           fragranceId: firstFragrance.id,
@@ -268,8 +366,10 @@ export function ComparisonCaptureFlow() {
       }
 
       setLastComparison(result.comparison);
+      setPriorEvidence(capturedPriorEvidence);
       setPhase("confirmed");
     } finally {
+      isSubmittingRef.current = false;
       setIsSubmitting(false);
     }
   }
@@ -280,6 +380,7 @@ export function ComparisonCaptureFlow() {
     setFirstPickerQuery("");
     setSecondPickerQuery("");
     setFreeText("");
+    setPriorEvidence(null);
     setSubmitError(null);
     setPhase("capture");
   }
@@ -294,10 +395,11 @@ export function ComparisonCaptureFlow() {
 
   if (phase === "confirmed" && lastComparison) {
     return (
-      <ComparisonConfirmation
+      <ComparisonConfirmedPhase
         firstFragranceName={firstFragrance.name}
         secondFragranceName={secondFragrance.name}
         comparison={lastComparison}
+        priorEvidence={priorEvidence}
         onCompareAnother={handleCompareAnother}
         onDone={handleDone}
       />
