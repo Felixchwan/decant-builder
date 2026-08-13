@@ -14,6 +14,7 @@ import { BuilderExperience, hasPersistedBox } from "./BuilderExperience.jsx";
 import { aurelianConfig } from "../merchant/config.js";
 import { parseFragranceIntent, FRAGRANCE_QUERY_PARAM } from "../lib/parseFragranceIntent.js";
 import { ENTRY_HEADER_VISIBILITY_SCRIPT } from "../app/build-your-box/page.jsx";
+import { ANALYTICS_EVENTS } from "@discovery-box/builder/analytics";
 
 const originalWindow = globalThis.window;
 
@@ -122,5 +123,69 @@ describe("entry header pre-hydration visibility script", () => {
       // gate have drifted apart.
       expect(scriptHidesHeader, label).toBe(!realGateSkipsIntentScreen);
     });
+  });
+});
+
+describe("environment-based analytics provider selection", () => {
+  // analyticsDebugEnabled arrives as a plain prop from the host page (see
+  // hostEnvironmentBoundary.test.js) -- BuilderExperience itself never
+  // reads process.env, so these tests drive selection by passing the prop
+  // directly rather than mutating the environment. No live vendor provider
+  // is wired today (see apps/aurelian/src/analytics/README.md): the only
+  // provider BuilderExperience ever selects is the console-only
+  // development logger, which is itself a no-op unless explicitly enabled.
+  it("defaults to a silent, disabled logger with no console/network activity (tests/local, no debug flag)", () => {
+    mockWindow({ storedValue: "{}" });
+    const debugSpy = vi.spyOn(console, "debug").mockImplementation(() => {});
+
+    renderToStaticMarkup(<BuilderExperience />);
+    const result = builderCalls[0].analytics.track(ANALYTICS_EVENTS.APP_LOADED, {
+      source: "system",
+    });
+
+    expect(result).toBe(true);
+    expect(debugSpy).not.toHaveBeenCalled();
+    debugSpy.mockRestore();
+  });
+
+  it("selects the console debug logger only when isDevelopment and the debug flag are both set", () => {
+    mockWindow({ storedValue: "{}" });
+    const debugSpy = vi.spyOn(console, "debug").mockImplementation(() => {});
+
+    renderToStaticMarkup(<BuilderExperience isDevelopment analyticsDebugEnabled />);
+    builderCalls[0].analytics.track(ANALYTICS_EVENTS.APP_LOADED, { source: "system" });
+
+    expect(debugSpy).toHaveBeenCalledWith(
+      "[analytics]",
+      ANALYTICS_EVENTS.APP_LOADED,
+      expect.objectContaining({ source: "system" })
+    );
+    debugSpy.mockRestore();
+  });
+
+  it("never enables the debug logger in a non-development environment, even if the debug flag is set", () => {
+    mockWindow({ storedValue: "{}" });
+    const debugSpy = vi.spyOn(console, "debug").mockImplementation(() => {});
+
+    renderToStaticMarkup(<BuilderExperience isDevelopment={false} analyticsDebugEnabled />);
+    builderCalls[0].analytics.track(ANALYTICS_EVENTS.APP_LOADED, { source: "system" });
+
+    expect(debugSpy).not.toHaveBeenCalled();
+    debugSpy.mockRestore();
+  });
+
+  it("still validates and rejects invalid events even with no live provider configured", () => {
+    // Proves the privacy/allowlist boundary is genuinely active -- not
+    // merely skipped because analytics is currently dormant -- by showing
+    // an unknown event is rejected the same way it would be with a real
+    // vendor wired in.
+    mockWindow({ storedValue: "{}" });
+
+    renderToStaticMarkup(<BuilderExperience />);
+
+    expect(builderCalls[0].analytics.track("not_a_real_event", {})).toBe(false);
+    expect(
+      builderCalls[0].analytics.track(ANALYTICS_EVENTS.APP_LOADED, { customerName: "Leaked" })
+    ).toBe(false);
   });
 });

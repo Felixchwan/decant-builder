@@ -7,6 +7,11 @@ const BuilderExperience = dynamic(
   { ssr: false, loading: () => <p className="builder-loading">Preparando tu catálogo…</p> },
 );
 
-export function BuilderMount({ isDevelopment = false }) {
-  return <BuilderExperience isDevelopment={isDevelopment} />;
+export function BuilderMount({ isDevelopment = false, analyticsDebugEnabled = false }) {
+  return (
+    <BuilderExperience
+      isDevelopment={isDevelopment}
+      analyticsDebugEnabled={analyticsDebugEnabled}
+    />
+  );
 }

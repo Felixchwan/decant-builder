@@ -238,7 +238,13 @@ describe("Aurelian application foundation", () => {
     expect(builderSource).toContain("finalizationAdapter");
     expect(builderSource).toContain("createWhatsAppFinalizationAdapter");
     expect(builderSource).toContain("phoneNumber: aurelianConfig.finalization.whatsappNumber");
-    expect(builderSource).toContain("noopAnalytics");
+    // Aurelian now owns a validating analytics wrapper (see
+    // docs/adr/0013-analytics-provider-neutral-allowlist.md's Ownership
+    // Boundary section) instead of passing noopAnalytics unconditionally --
+    // no live vendor is wired today, so the only provider selected is the
+    // console-only development logger (see analytics/README.md).
+    expect(builderSource).toContain("createAnalytics");
+    expect(builderSource).toContain("createDevelopmentAnalytics");
   });
 
   it("consumes package names only and keeps host ownership outside shared packages", () => {
