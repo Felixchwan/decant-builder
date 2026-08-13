@@ -151,6 +151,20 @@ export function LearnerRecordEmptyState() {
 export function EncounterEvidenceCard({ encounter }) {
   const { name, brand } = resolveFragranceDisplay(encounter.fragranceDisplaySnapshot);
   const hasScopedActions = Number.isInteger(encounter.fragranceId);
+  // Phase 6.0 eligibility invariant (an eligible historical encounter
+  // carries at least one learner-authored Observation), checked defensively
+  // here too rather than trusted purely from the caller -- this component
+  // is directly testable with arbitrary props, not only ever reached via
+  // LearnerRecordView's own observedEncounters filter.
+  const isEligibleForTemporalComparison = encounter.observations.length > 0;
+  // encounterInstanceId appears below ONLY inside an href's query string --
+  // pure client-router addressing, the same way fragranceId already
+  // appears in this card's other two links, and never rendered as visible
+  // text a learner would read as "this encounter's identity" (that role is
+  // fragrance name + date, per the Phase 6.0 investigation's explicit
+  // "never expose EncounterInstance IDs as user-facing identity"). See
+  // LearnerRecordView.test.jsx's own "general presentation invariants" for
+  // the boundary this deliberately, narrowly crosses.
 
   return (
     <article className="encounter-evidence-card" data-testid="encounter-evidence-card">
@@ -185,22 +199,76 @@ export function EncounterEvidenceCard({ encounter }) {
           >
             Comparar con otra
           </Link>
+          {isEligibleForTemporalComparison ? (
+            <Link
+              className="quiet-link"
+              href={`/mis-descubrimientos/comparar?encounter=${encodeURIComponent(encounter.encounterInstanceId)}`}
+            >
+              Comparar con otro encuentro
+            </Link>
+          ) : null}
         </div>
       ) : null}
     </article>
   );
 }
 
+// Phase 6.0: a same-fragrance (temporal) Comparison renders both sides with
+// an identical name -- "Acqua di Gio EDT ↔ Acqua di Gio EDT" -- which is
+// genuinely ambiguous with no further information. Appending each side's
+// own encounter date (now available via learnerRecord.js's
+// projectEncounterReference) disambiguates deterministically, using
+// evidence already canonical to each side rather than inventing anything.
+// A different-fragrance pair is unaffected -- the names alone are already
+// unambiguous there, so no date is appended.
+//
+// Includes hour/minute, unlike formatEvidenceDate above: day-level
+// granularity alone is insufficient when TWO encounters of the same
+// fragrance were created on the same calendar day (reproduced live during
+// Phase 6.0 browser acceptance -- two same-day encounters rendered
+// byte-identical labels). formatEvidenceDate itself stays day-level
+// unchanged, since every other caller labels a single card, never
+// disambiguates one sibling from another.
+function formatComparisonSideDate(isoString) {
+  try {
+    return new Intl.DateTimeFormat("es-MX", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    }).format(new Date(isoString));
+  } catch {
+    return "";
+  }
+}
+
+function resolveComparisonSideLabel(encounter, display) {
+  if (!encounter?.createdAt) {
+    return <span>{display.name}</span>;
+  }
+
+  return (
+    <span>
+      {display.name} (<time dateTime={encounter.createdAt}>{formatComparisonSideDate(encounter.createdAt)}</time>)
+    </span>
+  );
+}
+
 export function ComparisonEvidenceCard({ comparison }) {
   const first = resolveFragranceDisplay(comparison.firstEncounter?.fragranceDisplaySnapshot ?? null);
   const second = resolveFragranceDisplay(comparison.secondEncounter?.fragranceDisplaySnapshot ?? null);
+  const isSameFragrancePair =
+    comparison.firstEncounter?.fragranceId !== undefined &&
+    comparison.firstEncounter?.fragranceId !== null &&
+    comparison.firstEncounter?.fragranceId === comparison.secondEncounter?.fragranceId;
 
   return (
     <article className="comparison-evidence-card" data-testid="comparison-evidence-card">
       <p className="comparison-evidence-card__pair">
-        <span>{first.name}</span>
+        {isSameFragrancePair ? resolveComparisonSideLabel(comparison.firstEncounter, first) : <span>{first.name}</span>}
         {" ↔ "}
-        <span>{second.name}</span>
+        {isSameFragrancePair ? resolveComparisonSideLabel(comparison.secondEncounter, second) : <span>{second.name}</span>}
       </p>
       <blockquote className="comparison-evidence-card__quote">{comparison.freeText}</blockquote>
       <p className="comparison-evidence-card__date">{formatEvidenceDate(comparison.createdAt)}</p>

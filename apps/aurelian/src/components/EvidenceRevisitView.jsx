@@ -59,16 +59,63 @@ export function EvidenceRevisitObservationCard({ encounter }) {
   );
 }
 
+// Phase 6.0: a same-fragrance (temporal) Comparison renders both sides with
+// an identical name -- "Acqua di Gio EDT ↔ Acqua di Gio EDT" -- which is
+// genuinely ambiguous with no further information. Appending each side's
+// own encounter date (now available via learnerRecord.js's
+// projectEncounterReference) disambiguates deterministically, using
+// evidence already canonical to each side rather than inventing anything.
+// A different-fragrance pair is unaffected -- the names alone are already
+// unambiguous there, so no date is appended. Mirrors
+// LearnerRecordView.jsx's own identical treatment of ComparisonEvidenceCard,
+// kept as its own local copy per this file's established precedent.
+//
+// Includes hour/minute, unlike formatRevisitDate above: day-level
+// granularity alone is insufficient when TWO encounters of the same
+// fragrance were created on the same calendar day (reproduced live during
+// Phase 6.0 browser acceptance). formatRevisitDate itself stays day-level
+// unchanged, since every other caller labels a single card, never
+// disambiguates one sibling from another.
+function formatComparisonSideDate(isoString) {
+  try {
+    return new Intl.DateTimeFormat("es-MX", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    }).format(new Date(isoString));
+  } catch {
+    return "";
+  }
+}
+
+function resolveComparisonSideLabel(encounter, display) {
+  if (!encounter?.createdAt) {
+    return <span>{display.name}</span>;
+  }
+
+  return (
+    <span>
+      {display.name} (<time dateTime={encounter.createdAt}>{formatComparisonSideDate(encounter.createdAt)}</time>)
+    </span>
+  );
+}
+
 export function EvidenceRevisitComparisonCard({ comparison }) {
   const first = resolveFragranceDisplay(comparison.firstEncounter?.fragranceDisplaySnapshot ?? null);
   const second = resolveFragranceDisplay(comparison.secondEncounter?.fragranceDisplaySnapshot ?? null);
+  const isSameFragrancePair =
+    comparison.firstEncounter?.fragranceId !== undefined &&
+    comparison.firstEncounter?.fragranceId !== null &&
+    comparison.firstEncounter?.fragranceId === comparison.secondEncounter?.fragranceId;
 
   return (
     <article className="comparison-evidence-card" data-testid="evidence-revisit-comparison-card">
       <p className="comparison-evidence-card__pair">
-        <span>{first.name}</span>
+        {isSameFragrancePair ? resolveComparisonSideLabel(comparison.firstEncounter, first) : <span>{first.name}</span>}
         {" ↔ "}
-        <span>{second.name}</span>
+        {isSameFragrancePair ? resolveComparisonSideLabel(comparison.secondEncounter, second) : <span>{second.name}</span>}
       </p>
       <blockquote className="comparison-evidence-card__quote">{comparison.freeText}</blockquote>
       <p className="comparison-evidence-card__date">{formatRevisitDate(comparison.createdAt)}</p>

@@ -246,11 +246,13 @@ describe("buildLearnerRecord", () => {
       encounterInstanceId: first.encounterInstanceId,
       fragranceId: 1,
       fragranceDisplaySnapshot: snapshotFor(1, "Fico di Amalfi"),
+      createdAt: first.createdAt,
     });
     expect(record.comparisons[0].secondEncounter).toEqual({
       encounterInstanceId: second.encounterInstanceId,
       fragranceId: 2,
       fragranceDisplaySnapshot: snapshotFor(2, "Acqua di Gio EDT"),
+      createdAt: second.createdAt,
     });
   });
 
@@ -523,7 +525,7 @@ describe("buildLearnerRecord", () => {
       ["comparisonId", "freeText", "createdAt", "firstEncounter", "secondEncounter"].sort()
     );
     expect(Object.keys(comparisonProjection.firstEncounter).sort()).toEqual(
-      ["encounterInstanceId", "fragranceId", "fragranceDisplaySnapshot"].sort()
+      ["encounterInstanceId", "fragranceId", "fragranceDisplaySnapshot", "createdAt"].sort()
     );
 
     // No known inferred/profile/capability field name anywhere in the record.

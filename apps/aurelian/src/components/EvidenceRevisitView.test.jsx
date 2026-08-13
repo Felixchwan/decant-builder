@@ -137,6 +137,78 @@ describe("EvidenceRevisitComparisonCard", () => {
 
     expect(markup.match(/Una fragancia/g)?.length).toBe(2);
   });
+
+  describe("same-fragrance (temporal) date disambiguation (Phase 6.0)", () => {
+    function sameFragranceComparison(overrides = {}) {
+      return comparison({
+        firstEncounter: {
+          encounterInstanceId: "enc-a",
+          fragranceId: 1,
+          fragranceDisplaySnapshot: snapshotFor(1, "Acqua di Gio EDT", "Giorgio Armani"),
+          createdAt: "2026-08-12T00:00:00.000Z",
+        },
+        secondEncounter: {
+          encounterInstanceId: "enc-b",
+          fragranceId: 1,
+          fragranceDisplaySnapshot: snapshotFor(1, "Acqua di Gio EDT", "Giorgio Armani"),
+          createdAt: "2026-05-03T00:00:00.000Z",
+        },
+        ...overrides,
+      });
+    }
+
+    it("appends each side's own encounter date when both sides share the same fragranceId", () => {
+      const markup = renderToStaticMarkup(
+        <EvidenceRevisitComparisonCard comparison={sameFragranceComparison()} />
+      );
+
+      expect(markup).toContain('<time dateTime="2026-08-12T00:00:00.000Z"');
+      expect(markup).toContain('<time dateTime="2026-05-03T00:00:00.000Z"');
+      expect(markup.match(/Acqua di Gio EDT/g)?.length).toBe(2);
+    });
+
+    it("distinguishes two same-fragrance sides that fall on the same calendar day, different times (same-day disambiguation regression)", () => {
+      const morning = "2026-08-13T10:15:00.000Z";
+      const evening = "2026-08-13T18:40:00.000Z";
+      const markup = renderToStaticMarkup(
+        <EvidenceRevisitComparisonCard
+          comparison={sameFragranceComparison({
+            firstEncounter: {
+              encounterInstanceId: "enc-morning",
+              fragranceId: 1,
+              fragranceDisplaySnapshot: snapshotFor(1, "Acqua di Gio EDT", "Giorgio Armani"),
+              createdAt: morning,
+            },
+            secondEncounter: {
+              encounterInstanceId: "enc-evening",
+              fragranceId: 1,
+              fragranceDisplaySnapshot: snapshotFor(1, "Acqua di Gio EDT", "Giorgio Armani"),
+              createdAt: evening,
+            },
+          })}
+        />
+      );
+
+      expect(markup).toContain(`<time dateTime="${morning}"`);
+      expect(markup).toContain(`<time dateTime="${evening}"`);
+
+      const sideTexts = Array.from(markup.matchAll(/<span>(Acqua di Gio EDT[^<]*<time[^>]*>[^<]*<\/time>\))<\/span>/g)).map(
+        (match) => match[1].replace(/<[^>]+>/g, "")
+      );
+      expect(sideTexts).toHaveLength(2);
+      expect(sideTexts[0]).not.toBe(sideTexts[1]);
+      expect(sideTexts[0]).toMatch(/\d{1,2}:\d{2}/);
+      expect(sideTexts[1]).toMatch(/\d{1,2}:\d{2}/);
+      expect(sideTexts.join(" ")).not.toContain("enc-morning");
+      expect(sideTexts.join(" ")).not.toContain("enc-evening");
+    });
+
+    it("does NOT append a date when the two sides are different fragrances", () => {
+      const markup = renderToStaticMarkup(<EvidenceRevisitComparisonCard comparison={comparison()} />);
+
+      expect(markup).not.toMatch(/<time/);
+    });
+  });
 });
 
 describe("EvidenceRevisitView", () => {

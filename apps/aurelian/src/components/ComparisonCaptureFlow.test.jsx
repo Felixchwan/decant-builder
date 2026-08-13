@@ -9,10 +9,13 @@ import {
   ComparisonDoneState,
   ComparisonFragrancePicker,
   ComparisonPromptForm,
+  EncounterComparisonPicker,
   canSubmitComparison,
   getComparisonCandidates,
+  getTemporalComparisonCandidates,
   resolveInitialFirstFragrance,
   resolvePriorEvidenceForComparison,
+  resolveTemporalFirstEncounter,
 } from "./ComparisonCaptureFlow.jsx";
 import { COMPARISON_PROMPT_LABEL } from "../perceptualLearning/comparisonPromptCopy.js";
 import { aurelianCatalog } from "../merchant/catalog.js";
@@ -80,6 +83,427 @@ describe("resolveInitialFirstFragrance", () => {
     expect(resolveInitialFirstFragrance(undefined)).toBeNull();
     expect(resolveInitialFirstFragrance("?fragrance=abc")).toBeNull();
     expect(resolveInitialFirstFragrance("?fragrance=999999999")).toBeNull();
+  });
+});
+
+describe("resolveTemporalFirstEncounter (Phase 6.0)", () => {
+  function seedStorage(payload) {
+    return {
+      getItem: (key) => (key === PERCEPTUAL_LEARNING_STORAGE_KEY ? JSON.stringify(payload) : null),
+      setItem: () => {},
+      removeItem: () => {},
+    };
+  }
+
+  function buildEligibleEncounter({ learnerId, fragranceId = 1 }) {
+    const encounter = createEncounterInstance({
+      learnerId,
+      fragranceId,
+      fragranceDisplaySnapshot: { fragranceId, name: "Fico di Amalfi", brand: "Aurelian" },
+    });
+    const observation = createObservation({
+      encounterInstanceId: encounter.encounterInstanceId,
+      learnerId,
+      moment: "initial",
+      freeText: "Huele muy fresco.",
+    });
+    return { encounter, observation };
+  }
+
+  it("returns null when no ?encounter= id is present, without touching storage", () => {
+    let getItemCalls = 0;
+    const storage = {
+      getItem: () => {
+        getItemCalls += 1;
+        return null;
+      },
+      setItem: () => {},
+      removeItem: () => {},
+    };
+
+    expect(resolveTemporalFirstEncounter("", { storage })).toBeNull();
+    expect(resolveTemporalFirstEncounter("?fragrance=1", { storage })).toBeNull();
+    expect(getItemCalls).toBe(0);
+  });
+
+  it("resolves the eligible encounter for a valid ?encounter= id", () => {
+    const learnerId = createLearnerId();
+    const { encounter, observation } = buildEligibleEncounter({ learnerId });
+    const storage = seedStorage({
+      schemaVersion: PERCEPTUAL_LEARNING_SCHEMA_VERSION,
+      learnerId,
+      learnerCreatedAt: encounter.createdAt,
+      encounterInstances: [encounter],
+      observations: [observation],
+      comparisons: [],
+    });
+
+    const result = resolveTemporalFirstEncounter(`?encounter=${encounter.encounterInstanceId}`, { storage });
+
+    expect(result).not.toBeNull();
+    expect(result.encounterInstanceId).toBe(encounter.encounterInstanceId);
+    expect(result.observations).toHaveLength(1);
+  });
+
+  it("returns null when the referenced encounter has zero Observations (ineligible)", () => {
+    const learnerId = createLearnerId();
+    const encounter = createEncounterInstance({ learnerId, fragranceId: 1 });
+    const storage = seedStorage({
+      schemaVersion: PERCEPTUAL_LEARNING_SCHEMA_VERSION,
+      learnerId,
+      learnerCreatedAt: encounter.createdAt,
+      encounterInstances: [encounter],
+      observations: [],
+      comparisons: [],
+    });
+
+    expect(resolveTemporalFirstEncounter(`?encounter=${encounter.encounterInstanceId}`, { storage })).toBeNull();
+  });
+
+  it("returns null when the referenced encounter does not exist", () => {
+    const storage = seedStorage({
+      schemaVersion: PERCEPTUAL_LEARNING_SCHEMA_VERSION,
+      learnerId: null,
+      learnerCreatedAt: null,
+      encounterInstances: [],
+      observations: [],
+      comparisons: [],
+    });
+
+    expect(resolveTemporalFirstEncounter("?encounter=does-not-exist", { storage })).toBeNull();
+  });
+});
+
+describe("getTemporalComparisonCandidates (Phase 6.0)", () => {
+  function seedStorage(payload) {
+    return {
+      getItem: (key) => (key === PERCEPTUAL_LEARNING_STORAGE_KEY ? JSON.stringify(payload) : null),
+      setItem: () => {},
+      removeItem: () => {},
+    };
+  }
+
+  it("returns other eligible encounters of the same fragrance, excluding the given one", () => {
+    const learnerId = createLearnerId();
+    const first = createEncounterInstance({ learnerId, fragranceId: 1 });
+    const second = createEncounterInstance({ learnerId, fragranceId: 1 });
+    const observations = [first, second].map((encounter) =>
+      createObservation({
+        encounterInstanceId: encounter.encounterInstanceId,
+        learnerId,
+        moment: "initial",
+        freeText: "x",
+      })
+    );
+    const storage = seedStorage({
+      schemaVersion: PERCEPTUAL_LEARNING_SCHEMA_VERSION,
+      learnerId,
+      learnerCreatedAt: first.createdAt,
+      encounterInstances: [first, second],
+      observations,
+      comparisons: [],
+    });
+
+    const candidates = getTemporalComparisonCandidates({
+      storage,
+      fragranceId: 1,
+      excludedEncounterInstanceId: first.encounterInstanceId,
+    });
+
+    expect(candidates).toHaveLength(1);
+    expect(candidates[0].encounterInstanceId).toBe(second.encounterInstanceId);
+  });
+
+  it("excludes encounters of a different fragrance", () => {
+    const learnerId = createLearnerId();
+    const first = createEncounterInstance({ learnerId, fragranceId: 1 });
+    const other = createEncounterInstance({ learnerId, fragranceId: 2 });
+    const observations = [first, other].map((encounter) =>
+      createObservation({
+        encounterInstanceId: encounter.encounterInstanceId,
+        learnerId,
+        moment: "initial",
+        freeText: "x",
+      })
+    );
+    const storage = seedStorage({
+      schemaVersion: PERCEPTUAL_LEARNING_SCHEMA_VERSION,
+      learnerId,
+      learnerCreatedAt: first.createdAt,
+      encounterInstances: [first, other],
+      observations,
+      comparisons: [],
+    });
+
+    const candidates = getTemporalComparisonCandidates({
+      storage,
+      fragranceId: 1,
+      excludedEncounterInstanceId: first.encounterInstanceId,
+    });
+
+    expect(candidates).toEqual([]);
+  });
+
+  it("excludes zero-Observation (ineligible) encounters of the same fragrance", () => {
+    const learnerId = createLearnerId();
+    const first = createEncounterInstance({ learnerId, fragranceId: 1 });
+    const infrastructureOnly = createEncounterInstance({ learnerId, fragranceId: 1 });
+    const observation = createObservation({
+      encounterInstanceId: first.encounterInstanceId,
+      learnerId,
+      moment: "initial",
+      freeText: "x",
+    });
+    const storage = seedStorage({
+      schemaVersion: PERCEPTUAL_LEARNING_SCHEMA_VERSION,
+      learnerId,
+      learnerCreatedAt: first.createdAt,
+      encounterInstances: [first, infrastructureOnly],
+      observations: [observation],
+      comparisons: [],
+    });
+
+    const candidates = getTemporalComparisonCandidates({
+      storage,
+      fragranceId: 1,
+      excludedEncounterInstanceId: first.encounterInstanceId,
+    });
+
+    expect(candidates).toEqual([]);
+  });
+
+  it("returns an empty array when zero eligible other encounters exist", () => {
+    const learnerId = createLearnerId();
+    const only = createEncounterInstance({ learnerId, fragranceId: 1 });
+    const observation = createObservation({
+      encounterInstanceId: only.encounterInstanceId,
+      learnerId,
+      moment: "initial",
+      freeText: "x",
+    });
+    const storage = seedStorage({
+      schemaVersion: PERCEPTUAL_LEARNING_SCHEMA_VERSION,
+      learnerId,
+      learnerCreatedAt: only.createdAt,
+      encounterInstances: [only],
+      observations: [observation],
+      comparisons: [],
+    });
+
+    expect(
+      getTemporalComparisonCandidates({
+        storage,
+        fragranceId: 1,
+        excludedEncounterInstanceId: only.encounterInstanceId,
+      })
+    ).toEqual([]);
+  });
+
+  it("returns more than two eligible candidates when more than two exist", () => {
+    const learnerId = createLearnerId();
+    const first = createEncounterInstance({ learnerId, fragranceId: 1 });
+    const others = [1, 2, 3].map(() => createEncounterInstance({ learnerId, fragranceId: 1 }));
+    const observations = [first, ...others].map((encounter) =>
+      createObservation({
+        encounterInstanceId: encounter.encounterInstanceId,
+        learnerId,
+        moment: "initial",
+        freeText: "x",
+      })
+    );
+    const storage = seedStorage({
+      schemaVersion: PERCEPTUAL_LEARNING_SCHEMA_VERSION,
+      learnerId,
+      learnerCreatedAt: first.createdAt,
+      encounterInstances: [first, ...others],
+      observations,
+      comparisons: [],
+    });
+
+    const candidates = getTemporalComparisonCandidates({
+      storage,
+      fragranceId: 1,
+      excludedEncounterInstanceId: first.encounterInstanceId,
+    });
+
+    expect(candidates).toHaveLength(3);
+  });
+});
+
+describe("EncounterComparisonPicker (Phase 6.0)", () => {
+  it("renders the empty state and no fieldset when there are zero candidates", () => {
+    const markup = renderToStaticMarkup(
+      <EncounterComparisonPicker
+        contextFragranceName="Fico di Amalfi"
+        contextDate="2026-08-01T00:00:00.000Z"
+        contextObservations={[]}
+        candidates={[]}
+        onSelect={() => {}}
+      />
+    );
+
+    expect(markup).toContain("comparison-encounter-picker-empty");
+    expect(markup).not.toMatch(/<fieldset/);
+  });
+
+  it("renders one radio option per candidate with a unique accessible name (fragrance name + date), inside a fieldset/legend", () => {
+    const markup = renderToStaticMarkup(
+      <EncounterComparisonPicker
+        contextFragranceName="Acqua di Gio EDT"
+        contextDate="2026-08-12T00:00:00.000Z"
+        contextObservations={[]}
+        candidates={[
+          {
+            encounterInstanceId: "enc-a",
+            fragranceId: 1,
+            fragranceDisplaySnapshot: { fragranceId: 1, name: "Acqua di Gio EDT", brand: "Giorgio Armani" },
+            createdAt: "2026-05-03T00:00:00.000Z",
+            observations: [
+              { observationId: "obs-a", moment: "initial", freeText: "Más acuático de lo que recordaba.", createdAt: "2026-05-03T00:00:00.000Z" },
+            ],
+          },
+        ]}
+        onSelect={() => {}}
+      />
+    );
+
+    expect(markup).toContain("<fieldset");
+    expect(markup).toContain("<legend");
+    expect(markup).toMatch(/<input[^>]*type="radio"/);
+    // Both the fragrance name (shared with the context line above) AND the
+    // date appear inside the SAME <label> as the radio input -- native
+    // label association gives the control a unique accessible name (name +
+    // date) without any aria-label duplication.
+    expect(markup).toMatch(/<label[^>]*>[^<]*<input[^>]*type="radio"[^>]*\/>Acqua di Gio EDT[^<]*<time/);
+    expect(markup).toContain("Más acuático de lo que recordaba.");
+  });
+
+  it("wraps every date in a machine-readable <time dateTime> element", () => {
+    const markup = renderToStaticMarkup(
+      <EncounterComparisonPicker
+        contextFragranceName="Acqua di Gio EDT"
+        contextDate="2026-08-12T00:00:00.000Z"
+        contextObservations={[]}
+        candidates={[
+          {
+            encounterInstanceId: "enc-a",
+            fragranceId: 1,
+            fragranceDisplaySnapshot: { fragranceId: 1, name: "Acqua di Gio EDT", brand: "Giorgio Armani" },
+            createdAt: "2026-05-03T00:00:00.000Z",
+            observations: [],
+          },
+        ]}
+        onSelect={() => {}}
+      />
+    );
+
+    expect(markup).toContain('<time dateTime="2026-08-12T00:00:00.000Z"');
+    expect(markup).toContain('<time dateTime="2026-05-03T00:00:00.000Z"');
+  });
+
+  it("renders the context encounter's own Observations verbatim when provided", () => {
+    const markup = renderToStaticMarkup(
+      <EncounterComparisonPicker
+        contextFragranceName="Acqua di Gio EDT"
+        contextDate="2026-08-12T00:00:00.000Z"
+        contextObservations={[
+          { observationId: "obs-ctx", moment: "later", freeText: "Muy cítrico y ligero.", createdAt: "2026-08-12T00:00:00.000Z" },
+        ]}
+        candidates={[]}
+        onSelect={() => {}}
+      />
+    );
+
+    expect(markup).toContain("Muy cítrico y ligero.");
+  });
+
+  it("never infers, ranks, or summarizes -- renders no comparative/inference vocabulary of its own", () => {
+    const markup = renderToStaticMarkup(
+      <EncounterComparisonPicker
+        contextFragranceName="Acqua di Gio EDT"
+        contextDate="2026-08-12T00:00:00.000Z"
+        contextObservations={[]}
+        candidates={[
+          {
+            encounterInstanceId: "enc-a",
+            fragranceId: 1,
+            fragranceDisplaySnapshot: { fragranceId: 1, name: "Acqua di Gio EDT", brand: "Giorgio Armani" },
+            createdAt: "2026-05-03T00:00:00.000Z",
+            observations: [],
+          },
+        ]}
+        onSelect={() => {}}
+      />
+    );
+
+    expect(markup).not.toMatch(/mejor|peor|más desarrollad|más precis|prefier|cambi[oó]/i);
+  });
+
+  // Regression for the browser-acceptance defect: two eligible encounters
+  // of the same fragrance on the same calendar day rendered byte-identical
+  // radio labels at day-only granularity, giving them indistinguishable
+  // accessible names. Fixed by including hour/minute in encounter-identity
+  // date formatting specifically (see formatEncounterDate's own comment).
+  it("gives two same-day candidates of the same fragrance distinct, hour/minute-inclusive accessible labels (same-day disambiguation regression)", () => {
+    const morning = "2026-08-13T10:15:00.000Z";
+    const evening = "2026-08-13T18:40:00.000Z";
+    const markup = renderToStaticMarkup(
+      <EncounterComparisonPicker
+        contextFragranceName="Acqua di Gio EDT"
+        contextDate="2026-08-01T00:00:00.000Z"
+        contextObservations={[]}
+        candidates={[
+          {
+            encounterInstanceId: "enc-morning",
+            fragranceId: 1,
+            fragranceDisplaySnapshot: { fragranceId: 1, name: "Acqua di Gio EDT", brand: "Giorgio Armani" },
+            createdAt: morning,
+            observations: [
+              { observationId: "obs-morning", moment: "initial", freeText: "Cítrico por la mañana.", createdAt: morning },
+            ],
+          },
+          {
+            encounterInstanceId: "enc-evening",
+            fragranceId: 1,
+            fragranceDisplaySnapshot: { fragranceId: 1, name: "Acqua di Gio EDT", brand: "Giorgio Armani" },
+            createdAt: evening,
+            observations: [
+              { observationId: "obs-evening", moment: "initial", freeText: "Más suave por la noche.", createdAt: evening },
+            ],
+          },
+        ]}
+        onSelect={() => {}}
+      />
+    );
+
+    // Both canonical timestamps are preserved exactly, never truncated or
+    // altered -- the <time dateTime> attribute is the machine-readable
+    // source of truth regardless of what the human-visible text says.
+    expect(markup).toContain(`<time dateTime="${morning}"`);
+    expect(markup).toContain(`<time dateTime="${evening}"`);
+
+    // The two radios' accessible names (native label text) are distinct --
+    // this is the actual regression being verified. No opaque encounter id
+    // is needed anywhere in that text.
+    const optionLabels = Array.from(
+      markup.matchAll(/<label class="learning-capture__option">(.*?)<\/label>/g)
+    ).map((match) => match[1].replace(/<[^>]+>/g, "").trim());
+    expect(optionLabels).toHaveLength(2);
+    expect(optionLabels[0]).not.toBe(optionLabels[1]);
+    expect(optionLabels[0]).not.toContain("enc-morning");
+    expect(optionLabels[1]).not.toContain("enc-evening");
+
+    // Both visible identities include hour/minute, not just the calendar
+    // day (the exact granularity fix): the es-MX Intl output for {hour:
+    // "2-digit", minute: "2-digit"} always contains a ":" between the two
+    // digit pairs, regardless of locale-specific am/pm punctuation.
+    expect(optionLabels[0]).toMatch(/\d{1,2}:\d{2}/);
+    expect(optionLabels[1]).toMatch(/\d{1,2}:\d{2}/);
+
+    // Selection semantics unchanged: still exactly two radios in the same
+    // native group, one per candidate, each independently wired to onSelect.
+    expect(markup.match(/type="radio"/g)).toHaveLength(2);
+    expect(markup.match(/name="temporal-second-encounter"/g)).toHaveLength(2);
   });
 });
 
@@ -393,8 +817,84 @@ describe("ComparisonCaptureFlow URL source-of-truth (Phase 5.1 bugfix)", () => {
     expect(source).toMatch(/resolveInitialFirstFragrance\(searchParamsValue\)/);
   });
 
-  it("never overwrites an already-established firstFragrance from a later, unrelated search-param change (e.g. Comparar otras dos leaving the old deep link in the URL)", () => {
-    expect(source).toMatch(/if\s*\(\s*resolved\s*&&\s*!firstFragrance\s*\)\s*\{\s*setFirstFragrance\(resolved\)/);
+  it("never overwrites an already-established firstFragrance/temporalFirstEncounter from a later, unrelated search-param change (e.g. Comparar otras dos leaving the old deep link in the URL)", () => {
+    // Phase 6.0 nests fragrance re-resolution inside a guard that already
+    // requires BOTH firstFragrance and temporalFirstEncounter to still be
+    // unset before attempting anything -- so this outer guard is where the
+    // "never overwrite an active session" invariant now lives structurally,
+    // rather than a second, redundant per-branch check.
+    expect(source).toMatch(/if\s*\(\s*!temporalFirstEncounter\s*&&\s*!firstFragrance\s*\)\s*\{/);
+    expect(source).toMatch(/const\s+resolvedFragrance\s*=\s*resolveInitialFirstFragrance\(searchParamsValue\)/);
+    expect(source).toMatch(/if\s*\(\s*resolvedFragrance\s*\)\s*\{\s*setFirstFragrance\(resolvedFragrance\)/);
+  });
+});
+
+describe("ComparisonCaptureFlow temporal (same-fragrance) mode source contract (Phase 6.0)", () => {
+  // Same source-inspection technique as the describe block above, now
+  // covering the Phase 6.0 additions: an ?encounter= deep link must be
+  // resolved via useSearchParams()'s own reactive value (never
+  // window.location independently), must never freeze in a mount-only
+  // lazy initializer alone, and must never let a later re-render overwrite
+  // an already-active temporal session.
+  const source = readFileSync(
+    fileURLToPath(new URL("./ComparisonCaptureFlow.jsx", import.meta.url)),
+    "utf8"
+  );
+
+  it("resolveTemporalFirstEncounter is fed useSearchParams()'s own value via parseEncounterIntent, never window.location directly", () => {
+    const resolverMatch = source.match(
+      /export function resolveTemporalFirstEncounter\([^)]*\)\s*\{([\s\S]*?)\n\}/
+    );
+
+    expect(resolverMatch).not.toBeNull();
+    expect(resolverMatch[1]).not.toMatch(/window\.location/);
+    expect(resolverMatch[1]).toMatch(/parseEncounterIntent\(/);
+  });
+
+  it("re-resolves temporalFirstEncounter reactively on the same searchParamsValue-change guard as firstFragrance, not a separate mount-only initializer alone", () => {
+    expect(source).toMatch(
+      /const\s+resolvedTemporal\s*=\s*resolveTemporalFirstEncounter\(searchParamsValue,\s*\{\s*storage:\s*getStorage\(\)\s*\}\)/
+    );
+    expect(source).toMatch(/if\s*\(\s*resolvedTemporal\s*\)\s*\{\s*setTemporalFirstEncounter\(resolvedTemporal\)/);
+  });
+
+  it("createComparisonForExistingEncounters is used for temporal submissions, never createComparisonWithEncounters", () => {
+    expect(source).toMatch(/isTemporalMode[\s\S]{0,400}createComparisonForExistingEncounters\(/);
+  });
+
+  it("handleCompareAnother resets both temporalFirstEncounter and temporalSecondEncounter, matching firstFragrance/secondFragrance's own reset", () => {
+    const handlerMatch = source.match(/function handleCompareAnother\(\)\s*\{([\s\S]*?)\n {2}\}/);
+
+    expect(handlerMatch).not.toBeNull();
+    expect(handlerMatch[1]).toMatch(/setTemporalFirstEncounter\(null\)/);
+    expect(handlerMatch[1]).toMatch(/setTemporalSecondEncounter\(null\)/);
+  });
+
+  it("EncounterComparisonPicker never renders encounterInstanceId as visible text -- only fragrance name and date identify a candidate", () => {
+    // Markup-based (not source-regex), matching this codebase's own
+    // "general presentation invariants" precedent (LearnerRecordView.test.jsx):
+    // encounterInstanceId is used as a React `key` here (never rendered to
+    // the DOM at all) -- the only way to prove it never reaches visible
+    // output is to render real markup and inspect it directly.
+    const markup = renderToStaticMarkup(
+      <EncounterComparisonPicker
+        contextFragranceName="Fico di Amalfi"
+        contextDate="2026-08-01T00:00:00.000Z"
+        contextObservations={[]}
+        candidates={[
+          {
+            encounterInstanceId: "ENCOUNTER_SECRET_ID_XYZ",
+            fragranceId: 1,
+            fragranceDisplaySnapshot: { fragranceId: 1, name: "Fico di Amalfi", brand: "Aurelian" },
+            createdAt: "2026-07-01T00:00:00.000Z",
+            observations: [],
+          },
+        ]}
+        onSelect={() => {}}
+      />
+    );
+
+    expect(markup).not.toContain("ENCOUNTER_SECRET_ID_XYZ");
   });
 });
 

@@ -18,3 +18,10 @@ export const COMPARISON_SUBMIT_ERROR_COPY = "No pudimos guardar tu comparación.
 export const COMPARISON_REGISTER_ANOTHER_LABEL = "Comparar otras dos";
 export const COMPARISON_DONE_LABEL = "Listo";
 export const COMPARISON_DONE_COPY = "Gracias por comparar estas dos fragancias.";
+
+// Phase 6.0: copy for the temporal (same-fragrance) comparison picker step.
+// Deliberately still neutral -- "elige" names an action, never implies one
+// encounter is better/more developed/more accurate than the other.
+export const COMPARISON_PICKER_ENCOUNTER_LABEL = "Elige el otro encuentro con esta fragancia.";
+export const COMPARISON_NO_ELIGIBLE_ENCOUNTERS_COPY =
+  "Todavía no tienes otro encuentro registrado con esta fragancia.";

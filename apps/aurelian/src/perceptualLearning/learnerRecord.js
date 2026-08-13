@@ -76,6 +76,12 @@ function projectEncounter(encounter, observationsForEncounter) {
 // filtering should already prevent this in real persisted state, but this
 // function accepts any validated-shaped state, including hand-built test
 // fixtures, and must degrade to null rather than crash.
+//
+// Includes createdAt (Phase 6.0) so presentation can disambiguate a
+// same-fragrance Comparison pair by date -- without it, two sides of a
+// temporal (same-fragrance) Comparison render as visually identical
+// fragrance names with nothing to tell them apart. Purely additive: no
+// existing consumer of this shape reads or is affected by the new field.
 function projectEncounterReference(encounter) {
   if (!encounter) {
     return null;
@@ -85,6 +91,7 @@ function projectEncounterReference(encounter) {
     encounterInstanceId: encounter.encounterInstanceId,
     fragranceId: encounter.fragranceId,
     fragranceDisplaySnapshot: encounter.fragranceDisplaySnapshot,
+    createdAt: encounter.createdAt,
   };
 }
 

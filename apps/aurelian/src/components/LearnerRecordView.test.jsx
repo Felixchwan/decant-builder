@@ -173,6 +173,46 @@ describe("EncounterEvidenceCard", () => {
     expect(markup).toContain('href="/mis-descubrimientos/comparar?fragrance=42"');
     expect(markup).toContain("Comparar con otra");
   });
+
+  describe("Comparar con otro encuentro (Phase 6.0 temporal-comparison entry point)", () => {
+    it("renders the link, scoped by encounterInstanceId, when the encounter has at least one Observation (eligible)", () => {
+      const markup = renderToStaticMarkup(
+        <EncounterEvidenceCard
+          encounter={baseEncounter({
+            encounterInstanceId: "enc-eligible-1",
+            observations: [
+              { observationId: "obs-1", moment: "initial", freeText: "x", createdAt: "2026-08-01T00:00:00.000Z" },
+            ],
+          })}
+        />
+      );
+
+      expect(markup).toContain('href="/mis-descubrimientos/comparar?encounter=enc-eligible-1"');
+      expect(markup).toContain("Comparar con otro encuentro");
+    });
+
+    it("does not render the link when the encounter has zero Observations (ineligible per Phase 6.0's invariant)", () => {
+      const markup = renderToStaticMarkup(<EncounterEvidenceCard encounter={baseEncounter({ observations: [] })} />);
+
+      expect(markup).not.toContain("Comparar con otro encuentro");
+      expect(markup).not.toContain("?encounter=");
+    });
+
+    it("does not render the link when the encounter has no scoped fragranceId (mirrors the other two scoped actions)", () => {
+      const markup = renderToStaticMarkup(
+        <EncounterEvidenceCard
+          encounter={baseEncounter({
+            fragranceId: null,
+            observations: [
+              { observationId: "obs-1", moment: "initial", freeText: "x", createdAt: "2026-08-01T00:00:00.000Z" },
+            ],
+          })}
+        />
+      );
+
+      expect(markup).not.toContain("Comparar con otro encuentro");
+    });
+  });
 });
 
 describe("two encounters of the same fragrance", () => {
@@ -448,6 +488,103 @@ describe("ComparisonEvidenceCard", () => {
 
     expect(markup.match(/Una fragancia/g)?.length).toBe(2);
   });
+
+  describe("same-fragrance (temporal) date disambiguation (Phase 6.0)", () => {
+    function sameFragranceComparison(overrides = {}) {
+      return {
+        comparisonId: "cmp-1",
+        freeText: "Hoy se siente distinto a como lo recordaba.",
+        createdAt: "2026-08-13T00:00:00.000Z",
+        firstEncounter: {
+          encounterInstanceId: "enc-a",
+          fragranceId: 1,
+          fragranceDisplaySnapshot: { fragranceId: 1, name: "Acqua di Gio EDT", brand: "Giorgio Armani" },
+          createdAt: "2026-08-12T00:00:00.000Z",
+        },
+        secondEncounter: {
+          encounterInstanceId: "enc-b",
+          fragranceId: 1,
+          fragranceDisplaySnapshot: { fragranceId: 1, name: "Acqua di Gio EDT", brand: "Giorgio Armani" },
+          createdAt: "2026-05-03T00:00:00.000Z",
+        },
+        ...overrides,
+      };
+    }
+
+    it("appends each side's own encounter date when both sides share the same fragranceId", () => {
+      const markup = renderToStaticMarkup(<ComparisonEvidenceCard comparison={sameFragranceComparison()} />);
+
+      expect(markup).toContain('<time dateTime="2026-08-12T00:00:00.000Z"');
+      expect(markup).toContain('<time dateTime="2026-05-03T00:00:00.000Z"');
+      // Both dates render, distinguishing what would otherwise be two
+      // visually identical "Acqua di Gio EDT" labels.
+      expect(markup.match(/Acqua di Gio EDT/g)?.length).toBe(2);
+    });
+
+    it("distinguishes two same-fragrance sides that fall on the same calendar day, different times (same-day disambiguation regression)", () => {
+      const morning = "2026-08-13T10:15:00.000Z";
+      const evening = "2026-08-13T18:40:00.000Z";
+      const markup = renderToStaticMarkup(
+        <ComparisonEvidenceCard
+          comparison={sameFragranceComparison({
+            firstEncounter: {
+              encounterInstanceId: "enc-morning",
+              fragranceId: 1,
+              fragranceDisplaySnapshot: { fragranceId: 1, name: "Acqua di Gio EDT", brand: "Giorgio Armani" },
+              createdAt: morning,
+            },
+            secondEncounter: {
+              encounterInstanceId: "enc-evening",
+              fragranceId: 1,
+              fragranceDisplaySnapshot: { fragranceId: 1, name: "Acqua di Gio EDT", brand: "Giorgio Armani" },
+              createdAt: evening,
+            },
+          })}
+        />
+      );
+
+      // Canonical timestamps preserved exactly.
+      expect(markup).toContain(`<time dateTime="${morning}"`);
+      expect(markup).toContain(`<time dateTime="${evening}"`);
+
+      const sideTexts = Array.from(markup.matchAll(/<span>(Acqua di Gio EDT[^<]*<time[^>]*>[^<]*<\/time>\))<\/span>/g)).map(
+        (match) => match[1].replace(/<[^>]+>/g, "")
+      );
+      expect(sideTexts).toHaveLength(2);
+      expect(sideTexts[0]).not.toBe(sideTexts[1]);
+      expect(sideTexts[0]).toMatch(/\d{1,2}:\d{2}/);
+      expect(sideTexts[1]).toMatch(/\d{1,2}:\d{2}/);
+      expect(sideTexts.join(" ")).not.toContain("enc-morning");
+      expect(sideTexts.join(" ")).not.toContain("enc-evening");
+    });
+
+    it("does NOT append a date when the two sides are different fragrances (unambiguous already, general journey unaffected)", () => {
+      const markup = renderToStaticMarkup(
+        <ComparisonEvidenceCard
+          comparison={sameFragranceComparison({
+            secondEncounter: {
+              encounterInstanceId: "enc-b",
+              fragranceId: 2,
+              fragranceDisplaySnapshot: { fragranceId: 2, name: "Fico di Amalfi", brand: "Aurelian" },
+              createdAt: "2026-05-03T00:00:00.000Z",
+            },
+          })}
+        />
+      );
+
+      expect(markup).not.toMatch(/<time/);
+    });
+
+    it("does not throw and omits the date when a same-fragrance side's encounter reference is null", () => {
+      expect(() =>
+        renderToStaticMarkup(
+          <ComparisonEvidenceCard
+            comparison={sameFragranceComparison({ firstEncounter: null })}
+          />
+        )
+      ).not.toThrow();
+    });
+  });
 });
 
 describe("comparisons section", () => {
@@ -517,12 +654,31 @@ describe("general presentation invariants", () => {
     comparisons: [comparison],
   };
 
-  it("never renders raw internal ids as visible text", () => {
+  it("never renders observationId/comparisonId anywhere, and never renders encounterInstanceId as visible text (Phase 6.0: only inside the temporal-comparison routing href)", () => {
     const markup = renderToStaticMarkup(<LearnerRecordView learnerRecord={learnerRecord} />);
 
-    expect(markup).not.toContain("ENCOUNTER_SECRET_ID_123");
+    // observationId/comparisonId have no legitimate reason to ever reach
+    // rendered output at all -- unchanged, absolute ban.
     expect(markup).not.toContain("OBSERVATION_SECRET_ID_456");
     expect(markup).not.toContain("COMPARISON_SECRET_ID_789");
+
+    // Phase 6.0: encounterInstanceId now legitimately appears exactly once,
+    // as opaque routing information inside "Comparar con otro encuentro"'s
+    // href -- purely so Next's client router can address the right
+    // encounter, never displayed as text a learner would read as this
+    // encounter's "identity" (that's fragrance name + date, asserted
+    // elsewhere). Strip every href="...ENCOUNTER_SECRET_ID_123..." match
+    // out first, then confirm the id is genuinely absent from what
+    // remains -- i.e. it appears ONLY inside that one attribute, never as
+    // visible prose content anywhere else in the page.
+    const withRoutingHrefsStripped = markup.replace(
+      /href="\/mis-descubrimientos\/comparar\?encounter=ENCOUNTER_SECRET_ID_123"/g,
+      ""
+    );
+    expect(withRoutingHrefsStripped).not.toContain("ENCOUNTER_SECRET_ID_123");
+    // And confirm it really was present before stripping, so this test
+    // can't pass merely because the id never rendered at all.
+    expect(markup).toContain("ENCOUNTER_SECRET_ID_123");
   });
 
   it("contains no taste/profile/preference/capability copy in the populated state", () => {

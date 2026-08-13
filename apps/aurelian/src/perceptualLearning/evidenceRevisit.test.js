@@ -594,7 +594,7 @@ describe("buildEvidenceRevisit", () => {
       ["comparisonId", "freeText", "createdAt", "firstEncounter", "secondEncounter"].sort()
     );
     expect(Object.keys(result.comparisons[0].firstEncounter).sort()).toEqual(
-      ["encounterInstanceId", "fragranceId", "fragranceDisplaySnapshot"].sort()
+      ["encounterInstanceId", "fragranceId", "fragranceDisplaySnapshot", "createdAt"].sort()
     );
   });
 
@@ -652,6 +652,31 @@ describe("buildEvidenceRevisit", () => {
     for (const key of keyNames) {
       expect(forbidden.map((f) => f.toLowerCase())).not.toContain(key.toLowerCase());
     }
+  });
+
+  describe("same-fragrance (temporal) Comparison, both sides matching the queried fragranceId (Phase 6.0)", () => {
+    // The Phase 6.0 investigation verified by direct code reading that
+    // Array.prototype.filter's OR-predicate here cannot duplicate an
+    // element -- this locks that finding in as an explicit regression test
+    // now that a real same-fragrance Comparison is reachable end-to-end.
+    it("includes the Comparison exactly once, never twice, when both firstEncounter and secondEncounter match the queried fragranceId", () => {
+      const encounterA = createEncounterInstance({ learnerId: LEARNER_ID, fragranceId: 1 });
+      const encounterB = createEncounterInstance({ learnerId: LEARNER_ID, fragranceId: 1 });
+      const comparison = createComparison({
+        learnerId: LEARNER_ID,
+        firstEncounterInstanceId: encounterA.encounterInstanceId,
+        secondEncounterInstanceId: encounterB.encounterInstanceId,
+        freeText: "Hoy se siente distinto a como lo recordaba.",
+      });
+      const learnerRecord = buildLearnerRecord(
+        persistedState({ encounterInstances: [encounterA, encounterB], comparisons: [comparison] })
+      );
+
+      const result = buildEvidenceRevisit({ learnerRecord, fragranceId: 1 });
+
+      expect(result.comparisons).toHaveLength(1);
+      expect(result.comparisons[0].comparisonId).toBe(comparison.comparisonId);
+    });
   });
 
   describe("no imports at all -- self-contained, matching learnerRecord.js's own design", () => {

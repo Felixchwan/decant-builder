@@ -6,12 +6,17 @@ import { useSearchParams } from "next/navigation";
 import { aurelianCatalog } from "../merchant/catalog.js";
 import { filterCatalog } from "../lib/filterCatalog.js";
 import { parseFragranceIntent } from "../lib/parseFragranceIntent.js";
+import { parseEncounterIntent } from "../lib/parseEncounterIntent.js";
 import { createComparisonWithEncounters } from "../perceptualLearning/createComparisonWithEncounters.js";
+import { createComparisonForExistingEncounters } from "../perceptualLearning/createComparisonForExistingEncounters.js";
 import { loadPerceptualLearningState } from "../perceptualLearning/perceptualLearningPersistence.js";
 import { buildLearnerRecord } from "../perceptualLearning/learnerRecord.js";
 import { buildEvidenceRevisit } from "../perceptualLearning/evidenceRevisit.js";
+import { OBSERVATION_MOMENT_COPY } from "../perceptualLearning/momentVocabulary.js";
 import {
   COMPARISON_DONE_COPY,
+  COMPARISON_NO_ELIGIBLE_ENCOUNTERS_COPY,
+  COMPARISON_PICKER_ENCOUNTER_LABEL,
   COMPARISON_PICKER_FIRST_LABEL,
   COMPARISON_PICKER_QUERY_PLACEHOLDER,
   COMPARISON_PICKER_SECOND_LABEL,
@@ -45,6 +50,61 @@ export function resolveInitialFirstFragrance(search) {
   }
 
   return aurelianCatalog.find((item) => item.id === fragranceId) ?? null;
+}
+
+// Phase 6.0. Resolves the FIXED first encounter for a temporal
+// (same-fragrance) comparison from an ?encounter=<id> deep link (see
+// EncounterEvidenceCard's "Comparar con otro encuentro" link, the only
+// current source of this deep link). Re-checks the Phase 6.0 eligibility
+// invariant here too -- not merely relying on createComparisonForExistingEncounters.js's
+// own independent enforcement at the use-case boundary -- so an
+// ineligible/missing/foreign encounterInstanceId in the URL degrades
+// cleanly to "not resolved" (falls back to the ordinary picker) rather
+// than entering temporal mode with nothing eligible to show.
+//
+// Unlike resolveInitialFirstFragrance's pure catalog lookup, this reads
+// storage, because "which encounters exist and are eligible" can only be
+// answered from persisted evidence. This is a deliberate, narrow exception
+// to this file's own stated invariant that mounting is silent with
+// respect to persistence: parseEncounterIntent returns null immediately
+// for any URL without an ?encounter= id (the overwhelming majority of
+// mounts, including every existing different-fragrance journey), in which
+// case this returns before ever touching storage -- so the general journey
+// remains exactly as storage-read-free before submit as before.
+export function resolveTemporalFirstEncounter(search, { storage }) {
+  const encounterInstanceId = parseEncounterIntent(search ?? "");
+  if (encounterInstanceId === null) {
+    return null;
+  }
+
+  const learnerRecord = buildLearnerRecord(loadPerceptualLearningState({ storage }));
+  const encounter = learnerRecord.encounters.find(
+    (candidate) => candidate.encounterInstanceId === encounterInstanceId
+  );
+
+  if (!encounter || encounter.observations.length === 0) {
+    return null;
+  }
+
+  return encounter;
+}
+
+// The eligible OTHER encounters of the same fragrance as the fixed first
+// encounter, excluding that encounter itself. Same eligibility rule as
+// resolveTemporalFirstEncounter (>=1 Observation) -- a UI-level
+// convenience filter only, never the sole enforcement point:
+// createComparisonForExistingEncounters.js re-checks eligibility
+// independently at the use-case boundary regardless of what this returns,
+// per the explicit Phase 6.0 amendment.
+export function getTemporalComparisonCandidates({ storage, fragranceId, excludedEncounterInstanceId }) {
+  const learnerRecord = buildLearnerRecord(loadPerceptualLearningState({ storage }));
+
+  return learnerRecord.encounters.filter(
+    (encounter) =>
+      encounter.fragranceId === fragranceId &&
+      encounter.encounterInstanceId !== excludedEncounterInstanceId &&
+      encounter.observations.length > 0
+  );
 }
 
 // Serves both picker steps: the first picker calls this with no exclusion,
@@ -142,6 +202,128 @@ export function ComparisonFragrancePicker({
           </li>
         ))}
       </ul>
+    </div>
+  );
+}
+
+// Phase 6.0. Encounter-identity date formatting -- day-level granularity
+// alone is insufficient here: two eligible encounters of the same
+// fragrance created on the same calendar day (plausible in real use, and
+// reproduced live during browser acceptance) render byte-identical labels
+// at day-level precision, giving their radio controls indistinguishable
+// accessible names. Hour/minute is included specifically because a
+// timestamp is the ONLY thing distinguishing two same-fragrance encounters
+// here -- unlike formatEvidenceDate/formatRevisitDate (LearnerRecordView.jsx/
+// EvidenceRevisitView.jsx), which stay day-level because they label a
+// single card, never disambiguate one sibling from another. Deliberately
+// its own local copy rather than a cross-import, per this file's own
+// established precedent (resolveInitialFirstFragrance).
+function formatEncounterDate(isoString) {
+  try {
+    return new Intl.DateTimeFormat("es-MX", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    }).format(new Date(isoString));
+  } catch {
+    return "";
+  }
+}
+
+// Phase 6.0. Disambiguates a temporal (same-fragrance) encounter for the
+// plain-string firstFragranceName/secondFragranceName props that
+// ComparisonPromptForm/ComparisonConfirmation already accept -- appending
+// the encounter's own date is what actually distinguishes two encounters
+// of an identically-named fragrance (see EncounterComparisonPicker's own
+// comment for why this can't just be the fragrance name alone). Kept as a
+// plain string (not a <time> element) specifically so these two
+// already-shipped, already-tested shared components need no prop-shape
+// change for Phase 6.0 -- their own tests, and the general different-fragrance
+// journey that also uses them, stay completely unaffected. <time dateTime>
+// is used everywhere Phase 6.0 controls its own JSX instead (see
+// EncounterComparisonPicker below and the read-model disambiguation in
+// LearnerRecordView.jsx/EvidenceRevisitView.jsx).
+function formatTemporalEncounterName(encounter) {
+  const name = encounter.fragranceDisplaySnapshot?.name ?? "Una fragancia";
+  return `${name} (${formatEncounterDate(encounter.createdAt)})`;
+}
+
+// Phase 6.0. The second step of a temporal (same-fragrance) comparison:
+// choosing which OTHER already-experienced encounter of the same fragrance
+// to compare against the fixed first one (contextFragranceName/contextDate/
+// contextObservations). Deliberately never renders encounterInstanceId as
+// visible text anywhere -- each candidate's accessible name is its
+// fragrance name plus its own date (native <label> association carries
+// this automatically; no aria-label needed), which is what actually
+// distinguishes two encounters of an identically-named fragrance to the
+// learner, not an opaque id. Native fieldset/legend/radio, mirroring
+// ObservationCaptureFlow's own moment selector -- selecting a candidate
+// advances the flow immediately (no separate "confirm selection" step),
+// mirroring ComparisonFragrancePicker's own click-to-advance pattern.
+// Renders each candidate's verbatim Observation(s) so the learner can
+// distinguish encounters by what they actually wrote, not just by date.
+export function EncounterComparisonPicker({
+  contextFragranceName,
+  contextDate,
+  contextObservations,
+  candidates,
+  onSelect,
+}) {
+  return (
+    <div
+      className="learning-capture learning-capture--picker comparison-capture comparison-capture--encounter-picker"
+      data-testid="comparison-encounter-picker"
+    >
+      <p className="learning-capture__context comparison-capture__context">
+        Primera: {contextFragranceName} ·{" "}
+        <time dateTime={contextDate}>{formatEncounterDate(contextDate)}</time>
+      </p>
+      {contextObservations.length > 0 ? (
+        <ul className="comparison-capture__encounter-observations" data-testid="comparison-encounter-picker-context-observations">
+          {contextObservations.map((observation) => (
+            <li key={observation.observationId} className="comparison-capture__encounter-observation">
+              <span className="encounter-evidence-card__moment">
+                {OBSERVATION_MOMENT_COPY[observation.moment]}
+              </span>
+              <blockquote className="comparison-capture__encounter-quote">{observation.freeText}</blockquote>
+            </li>
+          ))}
+        </ul>
+      ) : null}
+      {candidates.length === 0 ? (
+        <p className="comparison-capture__empty" data-testid="comparison-encounter-picker-empty">
+          {COMPARISON_NO_ELIGIBLE_ENCOUNTERS_COPY}
+        </p>
+      ) : (
+        <fieldset className="learning-capture__fieldset">
+          <legend className="learning-capture__legend">{COMPARISON_PICKER_ENCOUNTER_LABEL}</legend>
+          <div className="learning-capture__options comparison-capture__encounter-options">
+            {candidates.map((candidate) => (
+              <div key={candidate.encounterInstanceId} className="comparison-capture__encounter-option">
+                <label className="learning-capture__option">
+                  <input type="radio" name="temporal-second-encounter" onChange={() => onSelect(candidate)} />
+                  {candidate.fragranceDisplaySnapshot?.name ?? "Una fragancia"} ·{" "}
+                  <time dateTime={candidate.createdAt}>{formatEncounterDate(candidate.createdAt)}</time>
+                </label>
+                <ul className="comparison-capture__encounter-observations">
+                  {candidate.observations.map((observation) => (
+                    <li key={observation.observationId} className="comparison-capture__encounter-observation">
+                      <span className="encounter-evidence-card__moment">
+                        {OBSERVATION_MOMENT_COPY[observation.moment]}
+                      </span>
+                      <blockquote className="comparison-capture__encounter-quote">
+                        {observation.freeText}
+                      </blockquote>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+        </fieldset>
+      )}
     </div>
   );
 }
@@ -297,11 +479,34 @@ export function ComparisonDoneState() {
 // fresh session -- the next submit creates two new EncounterInstances and a
 // new Comparison, never reusing the prior pair) or "Listo" (static terminal
 // state -- there is no /mis-descubrimientos to send anyone to yet).
+//
+// Phase 6.0 adds a second, parallel journey: an ?encounter= deep link
+// (from EncounterEvidenceCard's "Comparar con otro encuentro") fixes A as
+// that specific, already-eligible EncounterInstance instead of an empty
+// picker -> EncounterComparisonPicker (choose eligible encounter B of the
+// same fragrance) -> the same contrast prompt/confirmation, calling
+// createComparisonForExistingEncounters instead of
+// createComparisonWithEncounters. Still true here: nothing writes to
+// storage before submit EXCEPT resolving this one deep link itself, which
+// necessarily reads persisted evidence to know what's eligible -- see
+// resolveTemporalFirstEncounter's own comment.
 export function ComparisonCaptureFlow() {
   const searchParams = useSearchParams();
   const searchParamsValue = searchParams?.toString() ?? "";
   const [firstFragrance, setFirstFragrance] = useState(() => resolveInitialFirstFragrance(searchParamsValue));
   const [secondFragrance, setSecondFragrance] = useState(null);
+  // Phase 6.0. When set, the flow is in temporal (same-fragrance) mode:
+  // temporalFirstEncounter is FIXED by the entry deep link (never
+  // learner-picked from a list, unlike firstFragrance), and
+  // temporalSecondEncounter is chosen from EncounterComparisonPicker.
+  // These are a genuinely different shape (full encounter projections,
+  // not catalog items) from firstFragrance/secondFragrance, kept as
+  // separate state rather than overloaded into the same variables so
+  // neither mode's render/submit logic has to guess which shape it holds.
+  const [temporalFirstEncounter, setTemporalFirstEncounter] = useState(() =>
+    resolveTemporalFirstEncounter(searchParamsValue, { storage: getStorage() })
+  );
+  const [temporalSecondEncounter, setTemporalSecondEncounter] = useState(null);
   const [firstPickerQuery, setFirstPickerQuery] = useState("");
   const [secondPickerQuery, setSecondPickerQuery] = useState("");
   const [freeText, setFreeText] = useState("");
@@ -334,28 +539,50 @@ export function ComparisonCaptureFlow() {
   // already mounted (see resolveInitialFirstFragrance's own comment for the
   // underlying defect). Fires only when searchParamsValue itself has
   // changed since the last render this component reacted to -- never
-  // merely because firstFragrance changed for some other reason, which
-  // matters specifically because "Comparar otras dos" resets firstFragrance
-  // to null while the URL still contains the original deep link, and that
-  // reset must stay reset rather than immediately re-resolving back to the
-  // same fragrance. The `!firstFragrance` guard means this can only ever
-  // fill in a still-empty first-fragrance picker -- it can never silently
-  // switch or discard an already-active session.
+  // merely because firstFragrance/temporalFirstEncounter changed for some
+  // other reason, which matters specifically because "Comparar otras dos"
+  // resets both to null while the URL still contains the original deep
+  // link, and that reset must stay reset rather than immediately
+  // re-resolving back to the same fragrance/encounter. The `!firstFragrance`/
+  // `!temporalFirstEncounter` guards mean this can only ever fill in a
+  // still-empty first-step picker -- it can never silently switch or
+  // discard an already-active session.
+  //
+  // Temporal resolution is attempted first: an ?encounter= id, if present
+  // and eligible, always wins over an ?fragrance= id also being present
+  // (the two links this app itself generates never combine both, but
+  // precedence must still be deterministic for a manually-crafted URL).
+  // resolveTemporalFirstEncounter returns null immediately, before ever
+  // touching storage, when no ?encounter= id is present -- so this branch
+  // costs nothing extra for the ordinary fragrance-only journey.
   if (searchParamsValue !== resolvedSearchParamsValue) {
     setResolvedSearchParamsValue(searchParamsValue);
-    const resolved = resolveInitialFirstFragrance(searchParamsValue);
-    if (resolved && !firstFragrance) {
-      setFirstFragrance(resolved);
+
+    if (!temporalFirstEncounter && !firstFragrance) {
+      const resolvedTemporal = resolveTemporalFirstEncounter(searchParamsValue, { storage: getStorage() });
+      if (resolvedTemporal) {
+        setTemporalFirstEncounter(resolvedTemporal);
+      } else {
+        const resolvedFragrance = resolveInitialFirstFragrance(searchParamsValue);
+        if (resolvedFragrance) {
+          setFirstFragrance(resolvedFragrance);
+        }
+      }
     }
   }
 
   function handleSubmit() {
-    if (
-      !canSubmitComparison({ freeText }) ||
-      isSubmittingRef.current ||
-      !firstFragrance ||
-      !secondFragrance
-    ) {
+    const isTemporalMode = Boolean(temporalFirstEncounter);
+
+    if (!canSubmitComparison({ freeText }) || isSubmittingRef.current) {
+      return;
+    }
+
+    if (isTemporalMode) {
+      if (!temporalSecondEncounter) {
+        return;
+      }
+    } else if (!firstFragrance || !secondFragrance) {
       return;
     }
 
@@ -365,6 +592,39 @@ export function ComparisonCaptureFlow() {
 
     try {
       const storage = getStorage();
+
+      // Phase 6.0 temporal mode: both encounters already exist, so this
+      // calls the dedicated existing-encounters use case instead of
+      // minting two fresh ones. Deliberately does not call
+      // resolvePriorEvidenceForComparison here: since both sides share the
+      // same fragranceId by construction, that call would return the
+      // identical evidence bundle for "first" and "second," which would
+      // render the same encounters' evidence a third time (already shown
+      // once as context in EncounterComparisonPicker's first step, once as
+      // the candidate itself in its second step) under two redundant
+      // "Primera"/"Segunda" labels -- net-negative for clarity rather than
+      // genuinely new information. priorEvidence stays null in this mode,
+      // so ComparisonConfirmedPhase's two disclosure blocks simply don't
+      // render (both guards are `priorEvidence?.first/second?.hasPriorEvidence`).
+      if (isTemporalMode) {
+        const result = createComparisonForExistingEncounters({
+          storage,
+          firstEncounterInstanceId: temporalFirstEncounter.encounterInstanceId,
+          secondEncounterInstanceId: temporalSecondEncounter.encounterInstanceId,
+          freeText,
+        });
+
+        if (!result.persisted) {
+          setSubmitError(COMPARISON_SUBMIT_ERROR_COPY);
+          return;
+        }
+
+        setLastComparison(result.comparison);
+        setPhase("confirmed");
+        return;
+      }
+
+      // General (different-fragrance) mode, unchanged from before Phase 6.0.
       // Captured strictly before the write below, so neither returned
       // projection can ever include the EncounterInstances/Comparison that
       // write is about to create -- see resolvePriorEvidenceForComparison's
@@ -410,6 +670,8 @@ export function ComparisonCaptureFlow() {
   function handleCompareAnother() {
     setFirstFragrance(null);
     setSecondFragrance(null);
+    setTemporalFirstEncounter(null);
+    setTemporalSecondEncounter(null);
     setFirstPickerQuery("");
     setSecondPickerQuery("");
     setFreeText("");
@@ -427,6 +689,19 @@ export function ComparisonCaptureFlow() {
   }
 
   if (phase === "confirmed" && lastComparison) {
+    if (temporalFirstEncounter && temporalSecondEncounter) {
+      return (
+        <ComparisonConfirmedPhase
+          firstFragranceName={formatTemporalEncounterName(temporalFirstEncounter)}
+          secondFragranceName={formatTemporalEncounterName(temporalSecondEncounter)}
+          comparison={lastComparison}
+          priorEvidence={null}
+          onCompareAnother={handleCompareAnother}
+          onDone={handleDone}
+        />
+      );
+    }
+
     return (
       <ComparisonConfirmedPhase
         firstFragranceName={firstFragrance.name}
@@ -435,6 +710,37 @@ export function ComparisonCaptureFlow() {
         priorEvidence={priorEvidence}
         onCompareAnother={handleCompareAnother}
         onDone={handleDone}
+      />
+    );
+  }
+
+  if (temporalFirstEncounter) {
+    if (!temporalSecondEncounter) {
+      return (
+        <EncounterComparisonPicker
+          contextFragranceName={temporalFirstEncounter.fragranceDisplaySnapshot?.name ?? "Una fragancia"}
+          contextDate={temporalFirstEncounter.createdAt}
+          contextObservations={temporalFirstEncounter.observations}
+          candidates={getTemporalComparisonCandidates({
+            storage: getStorage(),
+            fragranceId: temporalFirstEncounter.fragranceId,
+            excludedEncounterInstanceId: temporalFirstEncounter.encounterInstanceId,
+          })}
+          onSelect={setTemporalSecondEncounter}
+        />
+      );
+    }
+
+    return (
+      <ComparisonPromptForm
+        firstFragranceName={formatTemporalEncounterName(temporalFirstEncounter)}
+        secondFragranceName={formatTemporalEncounterName(temporalSecondEncounter)}
+        freeText={freeText}
+        onFreeTextChange={setFreeText}
+        submitError={submitError}
+        canSubmit={canSubmitComparison({ freeText })}
+        isSubmitting={isSubmitting}
+        onSubmit={handleSubmit}
       />
     );
   }
