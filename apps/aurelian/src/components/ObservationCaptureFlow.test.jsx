@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 import { renderToStaticMarkup } from "react-dom/server";
 import { afterEach, describe, expect, it } from "vitest";
 import {
@@ -48,28 +50,30 @@ afterEach(() => {
 });
 
 describe("resolveInitialFragrance", () => {
+  // Pure function of its argument (Phase 5.1 bugfix) -- no window access,
+  // so these pass explicit strings directly rather than mocking window.
+  // Callers feed it useSearchParams()'s own reactive value; see the
+  // "source-of-truth" describe block below for that wiring.
   it("resolves the fragrance for a valid ?fragrance= id", () => {
-    mockWindow({ search: "?fragrance=1" });
-
-    const fragrance = resolveInitialFragrance();
+    const fragrance = resolveInitialFragrance("?fragrance=1");
 
     expect(fragrance).not.toBeNull();
     expect(fragrance.id).toBe(1);
     expect(fragrance).toBe(aurelianCatalog.find((item) => item.id === 1));
   });
 
-  it("returns null when the query param is missing", () => {
-    mockWindow({ search: "" });
+  it("accepts a bare query string with no leading '?', matching useSearchParams().toString()'s form", () => {
+    expect(resolveInitialFragrance("fragrance=1")?.id).toBe(1);
+  });
 
-    expect(resolveInitialFragrance()).toBeNull();
+  it("returns null when the query param is missing", () => {
+    expect(resolveInitialFragrance("")).toBeNull();
+    expect(resolveInitialFragrance(undefined)).toBeNull();
   });
 
   it("returns null when the query param is malformed or unresolvable", () => {
-    mockWindow({ search: "?fragrance=abc" });
-    expect(resolveInitialFragrance()).toBeNull();
-
-    mockWindow({ search: "?fragrance=999999999" });
-    expect(resolveInitialFragrance()).toBeNull();
+    expect(resolveInitialFragrance("?fragrance=abc")).toBeNull();
+    expect(resolveInitialFragrance("?fragrance=999999999")).toBeNull();
   });
 });
 
@@ -283,7 +287,20 @@ describe("ObservationDoneState", () => {
 });
 
 describe("ObservationCaptureFlow", () => {
-  it("renders the picker when no valid fragrance query param is present", () => {
+  // useSearchParams() reads from Next.js's own App Router context
+  // (SearchParamsContext), which this repo's bare renderToStaticMarkup
+  // harness never provides -- so it always returns null here, regardless of
+  // window.location.search. That is precisely correct per the Phase 5.1
+  // bugfix: resolveInitialFragrance must have exactly one source of truth,
+  // useSearchParams()'s own value, and must never fall back to reading
+  // window independently. One consequence is that ObservationCaptureFlow
+  // can only be exercised in its picker (unresolved) state through this
+  // harness -- mocking window.location.search no longer has any effect on
+  // it, by design. Deep-link resolution itself remains fully covered by
+  // resolveInitialFragrance's own pure-function tests above; the reactive
+  // re-resolution and overwrite-guard behavior are covered by the
+  // structural regression tests below.
+  it("renders the picker (the only state reachable under this harness, useSearchParams() has no App Router context to read)", () => {
     mockWindow({ search: "" });
 
     const markup = renderToStaticMarkup(<ObservationCaptureFlow />);
@@ -291,12 +308,12 @@ describe("ObservationCaptureFlow", () => {
     expect(markup).toContain("observation-picker");
   });
 
-  it("renders the form directly when a valid fragrance query param resolves", () => {
+  it("still renders the picker even when window.location.search carries a valid deep link, since the resolver no longer reads window at all", () => {
     mockWindow({ search: "?fragrance=1" });
 
     const markup = renderToStaticMarkup(<ObservationCaptureFlow />);
 
-    expect(markup).toContain("observation-form");
+    expect(markup).toContain("observation-picker");
   });
 
   it("never touches storage on a plain render (mount/abandon invariant)", () => {
@@ -327,14 +344,68 @@ describe("ObservationCaptureFlow", () => {
     expect(removeItemCalls).toBe(0);
   });
 
-  it("never renders prior-evidence content in the pre-submit picker or form states (Phase 4.1)", () => {
+  it("never renders prior-evidence content in the pre-submit picker state (Phase 4.1)", () => {
     mockWindow({ search: "" });
     const pickerMarkup = renderToStaticMarkup(<ObservationCaptureFlow />);
     expect(pickerMarkup).not.toContain("Revisar lo que había percibido antes");
+  });
+});
 
-    mockWindow({ search: "?fragrance=1" });
-    const formMarkup = renderToStaticMarkup(<ObservationCaptureFlow />);
-    expect(formMarkup).not.toContain("Revisar lo que había percibido antes");
+describe("ObservationCaptureFlow URL source-of-truth (Phase 5.1 bugfix)", () => {
+  // Real-browser defect: /observar was already mounted (picker, no query);
+  // a same-pathname client-side navigation changed the URL to
+  // /observar?fragrance=1; the URL was correct but the flow stayed on the
+  // picker instead of moving to the preselected form. F5/full remount made
+  // it work. This is the same failure class as LearnerRecordView's Phase
+  // 5.0 defect: a `useState(() => resolveInitialFragrance())` lazy
+  // initializer only ever runs on true first mount, so Next's client
+  // router reusing an already-mounted instance across a same-pathname
+  // query change left it frozen.
+  //
+  // renderToStaticMarkup cannot reproduce the client-router race itself (it
+  // always performs a single, fresh render, and useSearchParams() has no
+  // App Router context under this harness regardless). This asserts the
+  // structural property that prevents the regression, the same
+  // source-inspection technique already used for LearnerRecordView.jsx's
+  // equivalent fix.
+  const source = readFileSync(
+    fileURLToPath(new URL("./ObservationCaptureFlow.jsx", import.meta.url)),
+    "utf8"
+  );
+
+  it("does not cache pickedFragrance exclusively in a mount-only useState lazy initializer", () => {
+    expect(source).toMatch(/useSearchParams\s*\(\s*\)/);
+    expect(source).not.toMatch(/useState\(\s*\(\s*\)\s*=>\s*resolveInitialFragrance\(\s*\)\s*\)/);
+  });
+
+  it("resolveInitialFragrance is a pure function of its argument -- no independent window.location access", () => {
+    const resolverMatch = source.match(
+      /export function resolveInitialFragrance\([^)]*\)\s*\{([\s\S]*?)\n\}/
+    );
+
+    expect(resolverMatch).not.toBeNull();
+    expect(resolverMatch[1]).not.toMatch(/window\.location/);
+  });
+
+  it("feeds useSearchParams()'s own return value into resolveInitialFragrance, not a separate window.location read", () => {
+    expect(source).toContain('from "next/navigation"');
+    expect(source).toMatch(/const\s+searchParams\s*=\s*useSearchParams\(\)/);
+    expect(source).toMatch(/const\s+searchParamsValue\s*=\s*searchParams\?\.toString\(\)/);
+    expect(source).toMatch(/resolveInitialFragrance\(\s*searchParamsValue\s*\)/);
+  });
+
+  it("reactively re-resolves pickedFragrance from the URL after mount, by comparing searchParamsValue against a tracked previous value during render (not inside a useEffect)", () => {
+    // React's own guidance: adjusting state in response to a changed
+    // prop/value belongs directly in the render body, guarded by a
+    // previous-value comparison -- not in a useEffect, which would commit
+    // one render late. See https://react.dev/learn/you-might-not-need-an-effect#adjusting-some-state-when-a-prop-changes
+    expect(source).not.toMatch(/useEffect\(/);
+    expect(source).toMatch(/if\s*\(\s*searchParamsValue\s*!==\s*resolvedSearchParamsValue\s*\)/);
+    expect(source).toMatch(/resolveInitialFragrance\(searchParamsValue\)/);
+  });
+
+  it("never overwrites an already-established pickedFragrance from a later, unrelated search-param change", () => {
+    expect(source).toMatch(/if\s*\(\s*resolved\s*&&\s*!pickedFragrance\s*\)\s*\{\s*setPickedFragrance\(resolved\)/);
   });
 });
 

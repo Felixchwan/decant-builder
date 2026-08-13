@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { aurelianCatalog } from "../merchant/catalog.js";
 import { filterCatalog } from "../lib/filterCatalog.js";
 import { parseFragranceIntent } from "../lib/parseFragranceIntent.js";
@@ -30,13 +31,15 @@ import { EvidenceRevisitView } from "./EvidenceRevisitView.jsx";
 // Only the first fragrance supports deep-linking in this phase -- see the
 // approved Phase 2.1 plan. Mirrors ObservationCaptureFlow's own
 // resolveInitialFragrance, kept as its own copy here rather than shared,
-// per the explicit instruction not to refactor Phase 1 for DRYness.
-export function resolveInitialFirstFragrance() {
-  if (typeof window === "undefined") {
-    return null;
-  }
-
-  const fragranceId = parseFragranceIntent(window.location.search);
+// per the explicit instruction not to refactor Phase 1 for DRYness --
+// including this pure-function-of-its-argument fix (see
+// resolveInitialFragrance's own comment for the underlying defect: a
+// mount-only lazy useState reading window.location.search independently
+// cannot detect a same-pathname query change on an already-mounted
+// instance). Callers must feed this useSearchParams()'s own reactive
+// value, never window.location.
+export function resolveInitialFirstFragrance(search) {
+  const fragranceId = parseFragranceIntent(search ?? "");
   if (fragranceId === null) {
     return null;
   }
@@ -295,7 +298,9 @@ export function ComparisonDoneState() {
 // new Comparison, never reusing the prior pair) or "Listo" (static terminal
 // state -- there is no /mis-descubrimientos to send anyone to yet).
 export function ComparisonCaptureFlow() {
-  const [firstFragrance, setFirstFragrance] = useState(() => resolveInitialFirstFragrance());
+  const searchParams = useSearchParams();
+  const searchParamsValue = searchParams?.toString() ?? "";
+  const [firstFragrance, setFirstFragrance] = useState(() => resolveInitialFirstFragrance(searchParamsValue));
   const [secondFragrance, setSecondFragrance] = useState(null);
   const [firstPickerQuery, setFirstPickerQuery] = useState("");
   const [secondPickerQuery, setSecondPickerQuery] = useState("");
@@ -315,6 +320,34 @@ export function ComparisonCaptureFlow() {
   // now that this flow also reads storage before writing, the same race
   // window applies here too.
   const isSubmittingRef = useRef(false);
+  // Tracks the search string this component has already reacted to, so a
+  // render can tell a genuine URL change apart from a re-render triggered
+  // by something else entirely (typing in the textarea, "Comparar otras
+  // dos"). React's own recommended pattern for adjusting state in response
+  // to a changed prop/value is to compare against a previous-value tracker
+  // DURING RENDER and call setState there -- never inside a useEffect,
+  // which would run one commit late and risks a visible flash of stale
+  // content (see https://react.dev/learn/you-might-not-need-an-effect#adjusting-some-state-when-a-prop-changes).
+  const [resolvedSearchParamsValue, setResolvedSearchParamsValue] = useState(searchParamsValue);
+
+  // Reactively resolves a deep link that arrives AFTER this component was
+  // already mounted (see resolveInitialFirstFragrance's own comment for the
+  // underlying defect). Fires only when searchParamsValue itself has
+  // changed since the last render this component reacted to -- never
+  // merely because firstFragrance changed for some other reason, which
+  // matters specifically because "Comparar otras dos" resets firstFragrance
+  // to null while the URL still contains the original deep link, and that
+  // reset must stay reset rather than immediately re-resolving back to the
+  // same fragrance. The `!firstFragrance` guard means this can only ever
+  // fill in a still-empty first-fragrance picker -- it can never silently
+  // switch or discard an already-active session.
+  if (searchParamsValue !== resolvedSearchParamsValue) {
+    setResolvedSearchParamsValue(searchParamsValue);
+    const resolved = resolveInitialFirstFragrance(searchParamsValue);
+    if (resolved && !firstFragrance) {
+      setFirstFragrance(resolved);
+    }
+  }
 
   function handleSubmit() {
     if (

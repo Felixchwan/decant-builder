@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { aurelianCatalog } from "../merchant/catalog.js";
 import { filterCatalog } from "../lib/filterCatalog.js";
 import { parseFragranceIntent } from "../lib/parseFragranceIntent.js";
@@ -23,12 +24,17 @@ const SUBMIT_ERROR_COPY = "No pudimos guardar tu observación. Intenta de nuevo.
 // markup for given inputs -- see BuilderExperience.test.jsx / BuilderPanel.test.jsx
 // -- it does not simulate interactive DOM events anywhere).
 
-export function resolveInitialFragrance() {
-  if (typeof window === "undefined") {
-    return null;
-  }
-
-  const fragranceId = parseFragranceIntent(window.location.search);
+// Pure function of its argument -- no window access. Same fix applied to
+// LearnerRecordView.jsx's resolveScopedFragrance: a mount-only lazy
+// useState reading window.location.search independently could not detect a
+// same-pathname query change, because Next's client router can reuse an
+// already-mounted ObservationCaptureFlow instance (confirmed by real
+// browser reproduction: /observar already mounted in picker state,
+// client-side nav to /observar?fragrance=1 left the picker showing until a
+// full reload). Callers must feed this useSearchParams()'s own reactive
+// value, never window.location, so there is exactly one source of truth.
+export function resolveInitialFragrance(search) {
+  const fragranceId = parseFragranceIntent(search ?? "");
   if (fragranceId === null) {
     return null;
   }
@@ -262,7 +268,9 @@ export function ObservationForm({
 // momento" (loops back to the form, same fragrance, same EncounterInstance)
 // or "Listo" (static terminal state).
 export function ObservationCaptureFlow() {
-  const [pickedFragrance, setPickedFragrance] = useState(() => resolveInitialFragrance());
+  const searchParams = useSearchParams();
+  const searchParamsValue = searchParams?.toString() ?? "";
+  const [pickedFragrance, setPickedFragrance] = useState(() => resolveInitialFragrance(searchParamsValue));
   const [pickerQuery, setPickerQuery] = useState("");
   const [moment, setMoment] = useState(null);
   const [freeText, setFreeText] = useState("");
@@ -281,6 +289,33 @@ export function ObservationCaptureFlow() {
   // from storage a second time, after the first invocation's write has
   // already landed. See the Phase 4.1 browser-acceptance defect report.
   const isSubmittingRef = useRef(false);
+  // Tracks the search string this component has already reacted to, so a
+  // render can tell a genuine URL change apart from a re-render triggered
+  // by something else entirely (typing in the textarea, a future "start
+  // over" reset). React's own recommended pattern for adjusting state in
+  // response to a changed prop/value is to compare against a previous-value
+  // tracker DURING RENDER and call setState there -- never inside a
+  // useEffect, which would run one commit late and risks a visible flash of
+  // stale content (see https://react.dev/learn/you-might-not-need-an-effect#adjusting-some-state-when-a-prop-changes).
+  const [resolvedSearchParamsValue, setResolvedSearchParamsValue] = useState(searchParamsValue);
+
+  // Reactively resolves a deep link that arrives AFTER this component was
+  // already mounted (see resolveInitialFragrance's own comment for the
+  // underlying defect). Fires only when searchParamsValue itself has
+  // changed since the last render this component reacted to -- never
+  // merely because pickedFragrance changed for some other reason (e.g. a
+  // future "start over" reset), which matters because such a reset must
+  // stay reset even though the URL still contains the old deep link. The
+  // `!pickedFragrance` guard means this can only ever fill in a still-empty
+  // picker -- it can never silently switch or discard an already-active
+  // session, regardless of how that session was started.
+  if (searchParamsValue !== resolvedSearchParamsValue) {
+    setResolvedSearchParamsValue(searchParamsValue);
+    const resolved = resolveInitialFragrance(searchParamsValue);
+    if (resolved && !pickedFragrance) {
+      setPickedFragrance(resolved);
+    }
+  }
 
   function handleSubmit() {
     if (!canSubmitObservation({ moment, freeText }) || isSubmittingRef.current || !pickedFragrance) {

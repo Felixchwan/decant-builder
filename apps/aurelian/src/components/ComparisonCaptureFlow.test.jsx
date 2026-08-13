@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 import { renderToStaticMarkup } from "react-dom/server";
 import { afterEach, describe, expect, it } from "vitest";
 import {
@@ -57,25 +59,27 @@ describe("comparisonPromptCopy", () => {
 });
 
 describe("resolveInitialFirstFragrance", () => {
+  // Pure function of its argument (Phase 5.1 bugfix) -- no window access,
+  // so these pass explicit strings directly rather than mocking window.
+  // Callers feed it useSearchParams()'s own reactive value; see the
+  // "source-of-truth" describe block below for that wiring.
   it("resolves the fragrance for a valid ?fragrance= id", () => {
-    mockWindow({ search: "?fragrance=1" });
-
-    const fragrance = resolveInitialFirstFragrance();
+    const fragrance = resolveInitialFirstFragrance("?fragrance=1");
 
     expect(fragrance).not.toBeNull();
     expect(fragrance.id).toBe(1);
     expect(fragrance).toBe(aurelianCatalog.find((item) => item.id === 1));
   });
 
+  it("accepts a bare query string with no leading '?', matching useSearchParams().toString()'s form", () => {
+    expect(resolveInitialFirstFragrance("fragrance=1")?.id).toBe(1);
+  });
+
   it("returns null when the query param is missing or unresolvable", () => {
-    mockWindow({ search: "" });
-    expect(resolveInitialFirstFragrance()).toBeNull();
-
-    mockWindow({ search: "?fragrance=abc" });
-    expect(resolveInitialFirstFragrance()).toBeNull();
-
-    mockWindow({ search: "?fragrance=999999999" });
-    expect(resolveInitialFirstFragrance()).toBeNull();
+    expect(resolveInitialFirstFragrance("")).toBeNull();
+    expect(resolveInitialFirstFragrance(undefined)).toBeNull();
+    expect(resolveInitialFirstFragrance("?fragrance=abc")).toBeNull();
+    expect(resolveInitialFirstFragrance("?fragrance=999999999")).toBeNull();
   });
 });
 
@@ -272,7 +276,21 @@ describe("ComparisonDoneState", () => {
 });
 
 describe("ComparisonCaptureFlow", () => {
-  it("renders the first-fragrance picker when no deep link is present", () => {
+  // useSearchParams() reads from Next.js's own App Router context
+  // (SearchParamsContext), which this repo's bare renderToStaticMarkup
+  // harness never provides -- so it always returns null here, regardless of
+  // window.location.search. That is precisely correct per the Phase 5.1
+  // bugfix: resolveInitialFirstFragrance must have exactly one source of
+  // truth, useSearchParams()'s own value, and must never fall back to
+  // reading window independently. One consequence is that
+  // ComparisonCaptureFlow can only be exercised in its first-fragrance
+  // picker (unresolved) state through this harness -- mocking
+  // window.location.search no longer has any effect on it, by design. Deep
+  // link resolution itself remains fully covered by
+  // resolveInitialFirstFragrance's own pure-function tests above; the
+  // reactive re-resolution and overwrite-guard behavior are covered by the
+  // structural regression tests below.
+  it("renders the first-fragrance picker (the only state reachable under this harness, useSearchParams() has no App Router context to read)", () => {
     mockWindow({ search: "" });
 
     const markup = renderToStaticMarkup(<ComparisonCaptureFlow />);
@@ -281,13 +299,12 @@ describe("ComparisonCaptureFlow", () => {
     expect(markup).toContain("Elige la primera fragancia.");
   });
 
-  it("skips straight to the second-fragrance picker when a valid deep link resolves fragrance A", () => {
+  it("still shows the first-fragrance picker even when window.location.search carries a valid deep link, since the resolver no longer reads window at all", () => {
     mockWindow({ search: "?fragrance=1" });
 
     const markup = renderToStaticMarkup(<ComparisonCaptureFlow />);
 
-    expect(markup).toContain("comparison-picker");
-    expect(markup).toContain("Elige la segunda fragancia.");
+    expect(markup).toContain("Elige la primera fragancia.");
   });
 
   it("never touches storage on a plain render (mount/abandon invariant)", () => {
@@ -318,14 +335,66 @@ describe("ComparisonCaptureFlow", () => {
     expect(removeItemCalls).toBe(0);
   });
 
-  it("never renders prior-evidence content in the pre-submit pickers (Phase 4.2)", () => {
+  it("never renders prior-evidence content in the pre-submit first-fragrance picker (Phase 4.2)", () => {
     mockWindow({ search: "" });
-    const firstPickerMarkup = renderToStaticMarkup(<ComparisonCaptureFlow />);
-    expect(firstPickerMarkup).not.toContain("Revisar lo que había percibido antes");
+    const pickerMarkup = renderToStaticMarkup(<ComparisonCaptureFlow />);
+    expect(pickerMarkup).not.toContain("Revisar lo que había percibido antes");
+  });
+});
 
-    mockWindow({ search: "?fragrance=1" });
-    const secondPickerMarkup = renderToStaticMarkup(<ComparisonCaptureFlow />);
-    expect(secondPickerMarkup).not.toContain("Revisar lo que había percibido antes");
+describe("ComparisonCaptureFlow URL source-of-truth (Phase 5.1 bugfix)", () => {
+  // Same failure class as ObservationCaptureFlow's and LearnerRecordView's
+  // Phase 5.0/5.1 defects: a `useState(() => resolveInitialFirstFragrance())`
+  // lazy initializer only ever runs on true first mount, so Next's client
+  // router reusing an already-mounted /comparar instance across a
+  // same-pathname query change would leave it frozen on the first-fragrance
+  // picker.
+  //
+  // renderToStaticMarkup cannot reproduce the client-router race itself (it
+  // always performs a single, fresh render, and useSearchParams() has no
+  // App Router context under this harness regardless). This asserts the
+  // structural property that prevents the regression, the same
+  // source-inspection technique already used for
+  // ObservationCaptureFlow.jsx's and LearnerRecordView.jsx's equivalent
+  // fixes.
+  const source = readFileSync(
+    fileURLToPath(new URL("./ComparisonCaptureFlow.jsx", import.meta.url)),
+    "utf8"
+  );
+
+  it("does not cache firstFragrance exclusively in a mount-only useState lazy initializer", () => {
+    expect(source).toMatch(/useSearchParams\s*\(\s*\)/);
+    expect(source).not.toMatch(/useState\(\s*\(\s*\)\s*=>\s*resolveInitialFirstFragrance\(\s*\)\s*\)/);
+  });
+
+  it("resolveInitialFirstFragrance is a pure function of its argument -- no independent window.location access", () => {
+    const resolverMatch = source.match(
+      /export function resolveInitialFirstFragrance\([^)]*\)\s*\{([\s\S]*?)\n\}/
+    );
+
+    expect(resolverMatch).not.toBeNull();
+    expect(resolverMatch[1]).not.toMatch(/window\.location/);
+  });
+
+  it("feeds useSearchParams()'s own return value into resolveInitialFirstFragrance, not a separate window.location read", () => {
+    expect(source).toContain('from "next/navigation"');
+    expect(source).toMatch(/const\s+searchParams\s*=\s*useSearchParams\(\)/);
+    expect(source).toMatch(/const\s+searchParamsValue\s*=\s*searchParams\?\.toString\(\)/);
+    expect(source).toMatch(/resolveInitialFirstFragrance\(\s*searchParamsValue\s*\)/);
+  });
+
+  it("reactively re-resolves firstFragrance from the URL after mount, by comparing searchParamsValue against a tracked previous value during render (not inside a useEffect)", () => {
+    // React's own guidance: adjusting state in response to a changed
+    // prop/value belongs directly in the render body, guarded by a
+    // previous-value comparison -- not in a useEffect, which would commit
+    // one render late. See https://react.dev/learn/you-might-not-need-an-effect#adjusting-some-state-when-a-prop-changes
+    expect(source).not.toMatch(/useEffect\(/);
+    expect(source).toMatch(/if\s*\(\s*searchParamsValue\s*!==\s*resolvedSearchParamsValue\s*\)/);
+    expect(source).toMatch(/resolveInitialFirstFragrance\(searchParamsValue\)/);
+  });
+
+  it("never overwrites an already-established firstFragrance from a later, unrelated search-param change (e.g. Comparar otras dos leaving the old deep link in the URL)", () => {
+    expect(source).toMatch(/if\s*\(\s*resolved\s*&&\s*!firstFragrance\s*\)\s*\{\s*setFirstFragrance\(resolved\)/);
   });
 });
 
