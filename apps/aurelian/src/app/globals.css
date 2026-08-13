@@ -117,6 +117,18 @@ h1 { max-width:15ch; margin-bottom:1.4rem; font-size:clamp(2.8rem,7vw,6.4rem); }
 .page-intro { padding-block:clamp(3.5rem,7vw,6.5rem) 2.5rem; }
 .page-intro--compact { padding-block:clamp(2.5rem,4vw,3.5rem) 1.75rem; }
 .page-intro h1 { font-size:clamp(2.7rem,6vw,5.5rem); }
+/* Builder intro dismiss/restore (session-only, apps/aurelian-owned -- see
+   components/BuilderIntroHeader.jsx). Scoped to the ID rather than
+   .page-intro--compact generally, since como-funciona and other pages
+   reuse that class without this control. Reduced motion is already
+   covered globally (see the prefers-reduced-motion:reduce block below),
+   so the transition here needs no extra guard of its own. */
+#builder-entry-header { position:relative; }
+.builder-intro-dismiss { position:absolute; top:0; right:0; display:inline-grid; place-items:center; width:1.9rem; height:1.9rem; padding:0; border:1px solid var(--border); background:transparent; color:var(--muted); font-size:.7rem; line-height:1; transition:border-color .2s ease,color .2s ease; }
+.builder-intro-dismiss:hover,.builder-intro-dismiss:focus-visible { border-color:var(--gold); color:var(--gold); }
+.builder-intro-restore-row { width:min(1180px,calc(100% - 2rem)); margin-inline:auto; padding-block:.85rem; }
+.builder-intro-restore { display:inline-flex; align-items:center; gap:.4rem; padding:.4rem .85rem; border:1px solid var(--border); background:transparent; color:var(--muted); font-size:.78rem; font-weight:700; letter-spacing:.02em; transition:border-color .2s ease,color .2s ease; }
+.builder-intro-restore:hover,.builder-intro-restore:focus-visible { border-color:var(--gold); color:var(--gold); }
 .catalog-controls { display:grid; grid-template-columns:1fr 14rem; gap:1rem; margin-top:3.5rem; padding:1.25rem; border:1px solid var(--border); background:var(--surface); }
 .catalog-controls label { color:var(--secondary); font-size:.78rem; font-weight:700; letter-spacing:.04em; }
 .catalog-controls input,.catalog-controls select { width:100%; min-height:3rem; margin-top:.45rem; padding:.6rem .8rem; border:1px solid var(--border); border-radius:0; background:#0d0e0c; color:var(--text); }

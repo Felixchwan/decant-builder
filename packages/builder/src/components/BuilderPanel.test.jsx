@@ -8,6 +8,7 @@ import { buildComposerRecommendations } from "../builder/internal/recommendation
 import { aurelianConfig } from "../../../../apps/aurelian/src/merchant/config.js";
 import { fragrances as perfumes, notes } from "@discovery-box/catalog";
 import { createTranslator } from "../i18n/createTranslator.js";
+import { esMX } from "../i18n/locales/es-MX.js";
 import { buildScentDna } from "../utils/buildScentDna.js";
 import BuilderPanel, { ScentLibraryContent } from "./BuilderPanel.jsx";
 
@@ -643,5 +644,133 @@ describe("BuilderPanel Composer setup launcher", () => {
     });
 
     expect(markup).not.toContain('aria-label="Discovery Box introduction"');
+  });
+});
+
+// isSummaryDocked/isSummaryCollapsed are internal component state driven by
+// an IntersectionObserver effect that never runs under
+// renderToStaticMarkup/SSR (same limitation already accepted elsewhere in
+// this app for usePathname/useSearchParams) -- there is no prop seam to
+// force the docked/collapsed branches into the rendered markup. Coverage
+// here is therefore: (a) the default (non-docked) render never grows any
+// collapse/compact-review footprint at all, and (b) source-contract checks
+// proving the docked/collapsed JSX reuses the exact same isBoxReady/
+// handleOpenReview identifiers as the pre-existing button, never a second
+// implementation, and never touches domain-mutating callbacks. The actual
+// interactive collapse<->expand behavior is verified by browser acceptance.
+describe("BuilderPanel docked-summary collapse/expand", () => {
+  const normalizedPanelSource = builderPanelSource.replace(/\r\n/g, "\n");
+  const stickySummarySource = normalizedPanelSource.slice(
+    normalizedPanelSource.indexOf("const stickySummaryContent"),
+    normalizedPanelSource.indexOf('<aside className="builder-panel"')
+  );
+  const collapsedBranchSource = stickySummarySource.slice(
+    stickySummarySource.indexOf("isDockedAndCollapsed ? ("),
+    stickySummarySource.indexOf("        </div>\n      ) : (")
+  );
+  const summaryRowSource = stickySummarySource.slice(
+    stickySummarySource.indexOf('<div className="builder-panel-summary-row">'),
+    stickySummarySource.indexOf("<BoxSlotTray")
+  );
+
+  it("never renders the collapse toggle or compact Review action when not docked", () => {
+    const markup = renderBuilderPanel();
+    expect(markup).not.toContain("summary-collapse-toggle");
+    expect(markup).not.toContain("box-summary-action");
+    expect(markup).not.toContain("builder-panel-docked-collapsed");
+  });
+
+  it("keeps Review as the fourth segment of the same box-summary-card strip, not a fourth .box-summary-metric", () => {
+    // Regression guard for both density issues browser acceptance found in
+    // turn: Review must live inside the strip (not float outside it as a
+    // separate overlay cluster), but it must never be styled/counted as a
+    // fourth .box-summary-metric -- that selector's equal-width treatment
+    // is reserved for the three real stats.
+    const metricCount = (summaryRowSource.match(/className="box-summary-metric/g) || []).length;
+    expect(metricCount).toBe(3);
+    expect(summaryRowSource).toContain("box-summary-action");
+    expect(summaryRowSource).toContain("reviewCompact");
+    // Review is gated by isSummaryDocked inside the row, and is the last
+    // child of .box-summary-card before the row's tray-scale sibling opens.
+    const boxSummaryCardSource = summaryRowSource.slice(
+      summaryRowSource.indexOf('<div className="box-summary-card"'),
+      summaryRowSource.indexOf('<div className="builder-panel-tray-scale">')
+    );
+    expect(boxSummaryCardSource).toMatch(/\{isSummaryDocked && \([\s\S]*box-summary-action/);
+  });
+
+  it("reuses the exact same eligibility gate and open-review handler for every Review action -- never a second implementation", () => {
+    const reviewActionPairs = builderPanelSource.match(/disabled=\{!isBoxReady\}[\s\S]{0,80}onClick=\{handleOpenReview\}/g) || [];
+    // The original full-width review-action button, the in-strip compact
+    // action, and the collapsed control surface's Review button: three
+    // call sites, one shared prop pair, no local recomputation of
+    // readiness anywhere in this file.
+    expect(reviewActionPairs).toHaveLength(3);
+    expect(builderPanelSource).not.toMatch(/const isBoxReady\s*=/);
+  });
+
+  it("keeps the collapse toggle a separate, absolutely-positioned control that never displaces the strip's metric/action layout", () => {
+    // Collapse toggle is its own isSummaryDocked-gated block, after (not
+    // inside) .builder-panel-summary-row -- CSS positions it out of flow
+    // (summary-collapse-toggle--docked), so it can never compete with the
+    // strip's metrics/Review for space.
+    const afterRowSource = stickySummarySource.slice(stickySummarySource.indexOf("<BoxSlotTray"));
+    expect(afterRowSource).toMatch(/\{isSummaryDocked && \([\s\S]{0,500}summary-collapse-toggle--docked/);
+    expect(appCss).toMatch(/:where\(\.builder-scope\) \.summary-collapse-toggle--docked \{[^}]*position:\s*absolute;/);
+  });
+
+  it("unmounts BoxSlotTray and every domain-mutating callback in the collapsed branch, so collapsing cannot touch box state", () => {
+    // Checks for the JSX tag itself, not the bare word -- this file's own
+    // explanatory comments legitimately mention "BoxSlotTray" in prose.
+    expect(collapsedBranchSource).not.toContain("<BoxSlotTray");
+    expect(collapsedBranchSource).not.toContain("onRemovePerfume");
+    expect(collapsedBranchSource).not.toContain("onReorderPerfumes");
+    expect(collapsedBranchSource).not.toContain("onClearBox");
+    expect(collapsedBranchSource).not.toContain("onAddPerfume");
+  });
+
+  it("gives the collapse and expand controls distinct, localized accessible names, and never persists the preference", () => {
+    expect(builderPanelSource).toContain('t("builder.collapseSummary")');
+    expect(builderPanelSource).toContain('t("builder.expandSummary")');
+    expect(esMX["builder.collapseSummary"]).toBeTruthy();
+    expect(esMX["builder.expandSummary"]).toBeTruthy();
+    expect(esMX["builder.collapseSummary"]).not.toBe(esMX["builder.expandSummary"]);
+
+    const stateDeclarationIndex = normalizedPanelSource.indexOf("const [isSummaryCollapsed");
+    const nearbySource = normalizedPanelSource.slice(stateDeclarationIndex, stateDeclarationIndex + 500);
+    expect(nearbySource).not.toMatch(/localStorage|sessionStorage/);
+  });
+
+  it("respects prefers-reduced-motion for the docked card and collapse toggle transitions", () => {
+    expect(appCss).toMatch(
+      /@media \(prefers-reduced-motion: no-preference\) \{[\s\S]*?:where\(\.builder-scope\) \.summary-collapse-toggle \{[^}]*transition:/
+    );
+    expect(appCss).not.toMatch(/^:where\(\.builder-scope\) \.summary-collapse-toggle \{[^}]*transition:/m);
+  });
+
+  it("keeps the 166px docked ceiling as the true ceiling, and gives collapsed its own smaller cap instead of growing the header slot", () => {
+    expect(appCss).toMatch(/:where\(\.builder-scope\) \.builder-panel-sticky-summary-card\.is-docked \{[^}]*max-height:\s*166px;/);
+    expect(appCss).toMatch(/:where\(\.builder-scope\) \.builder-panel-sticky-summary-card\.is-docked\.is-collapsed \{[^}]*max-height:\s*52px;/);
+  });
+});
+
+describe("Fractional-tier perfume card action row", () => {
+  it("lets the Add-to-box column shrink instead of enforcing a hard floor that could force it wider than the card", () => {
+    expect(appCss).toMatch(/:where\(\.builder-scope\) \.perfume-card-compact-actions \{[^}]*grid-template-columns:\s*auto minmax\(0, 1fr\);/);
+    expect(appCss).not.toMatch(/grid-template-columns:\s*auto minmax\(130px/);
+    expect(appCss).not.toMatch(/grid-template-columns:\s*auto minmax\(64px/);
+  });
+
+  it("keeps the points badge at its full natural width at both breakpoints, so fractional labels are never clipped", () => {
+    const baseRuleMatch = appCss.match(/:where\(\.builder-scope\) \.perfume-card-points \{[^}]*\}/);
+    expect(baseRuleMatch[0]).toMatch(/min-width:\s*max-content;/);
+
+    const mobileBlock = appCss.slice(appCss.indexOf("@media (max-width: 520px)"));
+    const mobileRuleMatch = mobileBlock.match(/:where\(\.builder-scope\) \.perfume-card-points \{[^}]*\}/);
+    expect(mobileRuleMatch[0]).toMatch(/min-width:\s*max-content;/);
+  });
+
+  it("fixes the layout generically, without special-casing any individual tier", () => {
+    expect(appCss).not.toMatch(/silver|platinum/i);
   });
 });

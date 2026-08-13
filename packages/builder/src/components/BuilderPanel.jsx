@@ -194,6 +194,14 @@ const BuilderPanel = forwardRef(function BuilderPanel({
     // the card always renders through summaryAnchorEl, exactly as before this
     // feature existed.
     const [isSummaryDocked, setIsSummaryDocked] = useState(false);
+    // Local, session-only UI state -- never persisted, never read by any
+    // host, and only ever meaningful (and only ever toggleable, since the
+    // controls that flip it only render at all) while the summary is
+    // docked. Undocking never resets it: collapsing is a display
+    // preference, not a fact about the box, so there is no reason to force
+    // it back open just because the card temporarily left the host's
+    // header slot (e.g. scrolling back to the top).
+    const [isSummaryCollapsed, setIsSummaryCollapsed] = useState(false);
     const [summaryAnchorEl, setSummaryAnchorEl] = useState(null);
     const [summarySpacerHeight, setSummarySpacerHeight] = useState(null);
     const summarySentinelRef = useRef(null);
@@ -654,76 +662,160 @@ const BuilderPanel = forwardRef(function BuilderPanel({
       },
       []
     );
+  // Collapse only ever has a visible affordance -- and can therefore only
+  // ever be true -- while docked (see the two isSummaryDocked && guards
+  // below). If the card leaves the host's slot while collapsed (e.g.
+  // scrolling back above the sentinel), this still evaluates false, so the
+  // full expanded content renders automatically -- the non-docked
+  // rendering path is untouched by isSummaryCollapsed entirely.
+  const isDockedAndCollapsed = isSummaryDocked && isSummaryCollapsed;
+  const reviewActionAriaLabel = builderConfig.copy.reviewButtonLabel;
+  const compactReviewButtonClassName = `review-box-button review-box-button--compact ${
+    isCuratorBonusUnlocked ? "is-unlocked" : ""
+  }`;
+
   const stickySummaryContent = (
     <div
-      className={`builder-panel-sticky-summary-card${isSummaryDocked ? " is-docked" : ""}`}
+      className={`builder-panel-sticky-summary-card${isSummaryDocked ? " is-docked" : ""}${
+        isDockedAndCollapsed ? " is-collapsed" : ""
+      }`}
       ref={summaryCardRef}
       role={isSummaryDocked ? "group" : undefined}
       aria-label={isSummaryDocked ? builderConfig.copy.boxPanelTitle : undefined}
     >
-      <div className="panel-header">
-        <div className="builder-box-header-title">
-          <div className="panel-title-row">
-            <h2>{builderConfig.copy.boxPanelTitle}</h2>
-            <button
-              className="info-button"
-              type="button"
-              onClick={() => setIsDiscoveryIntroOpen(true)}
-              aria-label={builderConfig.copy.introButtonAriaLabel}
-            >
-              i
-            </button>
-          </div>
-        </div>
-
-        {totalSlots > 0 && (
-          <button className="ghost-button builder-clear-button" onClick={onClearBox}>
-            {builderConfig.copy.clearBuilderLabel}
+      {isDockedAndCollapsed ? (
+        // Collapsed: box visualization and stats are unmounted, not just
+        // visually hidden -- BoxSlotTray never renders here, so there is no
+        // way this state can touch selection/points/totals/Curator Bonus.
+        // Only two controls exist, exactly as specified: expand, and the
+        // same Review action with the same isBoxReady gate as everywhere
+        // else it appears.
+        <div className="builder-panel-docked-collapsed">
+          <button
+            type="button"
+            className="summary-collapse-toggle"
+            aria-label={t("builder.expandSummary")}
+            aria-expanded="false"
+            onClick={() => setIsSummaryCollapsed(false)}
+          >
+            <span aria-hidden="true">▸</span>
           </button>
-        )}
-      </div>
 
-      {shouldShowDiscoveryIntro && (
-        <DiscoveryBoxCoachmark
-          model={onboardingPathSelection}
-          onDismiss={dismissDiscoveryIntro}
-          onAction={handleOnboardingAction}
-        />
+          <button
+            type="button"
+            className={compactReviewButtonClassName}
+            aria-label={reviewActionAriaLabel}
+            disabled={!isBoxReady}
+            onClick={handleOpenReview}
+          >
+            {t("builder.reviewCompact")}
+          </button>
+        </div>
+      ) : (
+        <>
+          <div className="panel-header">
+            <div className="builder-box-header-title">
+              <div className="panel-title-row">
+                <h2>{builderConfig.copy.boxPanelTitle}</h2>
+                <button
+                  className="info-button"
+                  type="button"
+                  onClick={() => setIsDiscoveryIntroOpen(true)}
+                  aria-label={builderConfig.copy.introButtonAriaLabel}
+                >
+                  i
+                </button>
+              </div>
+            </div>
+
+            {totalSlots > 0 && (
+              <button className="ghost-button builder-clear-button" onClick={onClearBox}>
+                {builderConfig.copy.clearBuilderLabel}
+              </button>
+            )}
+          </div>
+
+          {shouldShowDiscoveryIntro && (
+            <DiscoveryBoxCoachmark
+              model={onboardingPathSelection}
+              onDismiss={dismissDiscoveryIntro}
+              onAction={handleOnboardingAction}
+            />
+          )}
+
+          <div className="builder-panel-summary-row">
+            <div className="box-summary-card" aria-label={t("builder.boxSummary")}>
+              <div className="box-summary-metric">
+                <strong>{totalSlots} / {maxSelectableSlots}</strong>
+                <span>{t("general.slots")}</span>
+              </div>
+
+              <div className="box-summary-metric">
+                <strong>{totalPoints.toFixed(1)}</strong>
+                <span>{t("general.points")}</span>
+              </div>
+
+              <div className="box-summary-metric box-summary-total">
+                <strong>${estimatedValue.toFixed(0)}</strong>
+                <span>{t("general.orderTotalCompact")}</span>
+              </div>
+
+              {isSummaryDocked && (
+                // Fourth segment of the same strip, not a fourth
+                // .box-summary-metric -- deliberately excluded from that
+                // selector so it never gets the metrics' equal-width flex
+                // treatment, and instead carries review-box-button's own
+                // action chrome (color/shape), so it reads as a control
+                // next to the stats rather than a stat itself. Density is
+                // handled by rebalancing the strip itself (narrower
+                // metrics, tighter gaps -- see .box-summary-action and its
+                // neighboring rules in styles.css), not by relocating this
+                // out of the strip.
+                <button
+                  type="button"
+                  className={`box-summary-action ${compactReviewButtonClassName}`}
+                  aria-label={reviewActionAriaLabel}
+                  disabled={!isBoxReady}
+                  onClick={handleOpenReview}
+                >
+                  {t("builder.reviewCompact")}
+                </button>
+              )}
+            </div>
+
+            <div className="builder-panel-tray-scale">
+              <BoxSlotTray
+                selectedPerfumes={selectedPerfumes}
+                maxSlots={maxSlots}
+                maxSelectableSlots={maxSelectableSlots}
+                isCuratorBonusUnlocked={isCuratorBonusUnlocked}
+                nextAvailableSlotIndex={nextAvailableSlotIndex}
+                onNextSlotRecommendation={handleNextSlotRecommendation}
+                onRemovePerfume={onRemovePerfume}
+                onReorderPerfumes={onReorderPerfumes}
+                translator={translator}
+                isCompact={isSummaryDocked}
+              />
+            </div>
+          </div>
+
+          {isSummaryDocked && (
+            // Collapse stays a separate, small chevron at the strip's
+            // edge -- absolutely positioned, out of flow, so it never
+            // competes with the metrics/Review for space inside the strip
+            // and never displaces that layout.
+            <button
+              type="button"
+              className="summary-collapse-toggle summary-collapse-toggle--docked"
+              aria-label={t("builder.collapseSummary")}
+              aria-expanded="true"
+              onClick={() => setIsSummaryCollapsed(true)}
+            >
+              <span aria-hidden="true">▾</span>
+            </button>
+          )}
+        </>
       )}
-
-      <div className="builder-panel-summary-row">
-        <div className="box-summary-card" aria-label={t("builder.boxSummary")}>
-          <div className="box-summary-metric">
-            <strong>{totalSlots} / {maxSelectableSlots}</strong>
-            <span>{t("general.slots")}</span>
-          </div>
-
-          <div className="box-summary-metric">
-            <strong>{totalPoints.toFixed(1)}</strong>
-            <span>{t("general.points")}</span>
-          </div>
-
-          <div className="box-summary-metric box-summary-total">
-            <strong>${estimatedValue.toFixed(0)}</strong>
-            <span>{t("general.orderTotalCompact")}</span>
-          </div>
-        </div>
-
-        <div className="builder-panel-tray-scale">
-          <BoxSlotTray
-            selectedPerfumes={selectedPerfumes}
-            maxSlots={maxSlots}
-            maxSelectableSlots={maxSelectableSlots}
-            isCuratorBonusUnlocked={isCuratorBonusUnlocked}
-            nextAvailableSlotIndex={nextAvailableSlotIndex}
-            onNextSlotRecommendation={handleNextSlotRecommendation}
-            onRemovePerfume={onRemovePerfume}
-            onReorderPerfumes={onReorderPerfumes}
-            translator={translator}
-            isCompact={isSummaryDocked}
-          />
-        </div>
-      </div>
     </div>
   );
 

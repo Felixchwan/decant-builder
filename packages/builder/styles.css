@@ -433,6 +433,9 @@
   padding-top: 10px;
   max-height: 166px;
   overflow: hidden;
+  /* Anchors .summary-collapse-toggle--docked's absolute lower-left
+     position to this card, never to the page. */
+  position: relative;
 }
 
 :where(.builder-scope) .builder-panel-sticky-summary-card.is-docked .panel-header {
@@ -440,6 +443,62 @@
      miniature copy of the whole panel card — the title/clear-button row
      stays available in the card's normal in-panel position. */
   display: none;
+}
+
+:where(.builder-scope) .builder-panel-sticky-summary-card.is-docked.is-collapsed {
+  /* Collapsed drops the 166px ceiling down to just what the compact
+     control surface actually needs -- there is no tray/stats content left
+     to reserve room for. */
+  max-height: 52px;
+  padding: 8px 10px;
+}
+
+:where(.builder-scope) .builder-panel-docked-collapsed {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  height: 100%;
+}
+
+:where(.builder-scope) .summary-collapse-toggle {
+  display: inline-grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 26px;
+  height: 26px;
+  border: 1px solid rgba(250, 204, 21, 0.28);
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.72);
+  color: #fde68a;
+  font-size: var(--builder-unit-078);
+  line-height: 1;
+}
+
+:where(.builder-scope) .summary-collapse-toggle:hover {
+  border-color: rgba(250, 204, 21, 0.44);
+  background: rgba(250, 204, 21, 0.1);
+}
+
+:where(.builder-scope) .summary-collapse-toggle--docked {
+  /* Lower-left corner of the floating/docked card, out of flow -- costs
+     nothing against the 166px height ceiling regardless of DOM position,
+     and never competes with the strip's metrics/Review segment for
+     space, since Review lives inside .box-summary-card, not here. */
+  position: absolute;
+  left: 8px;
+  bottom: 8px;
+  z-index: 1;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  :where(.builder-scope) .summary-collapse-toggle {
+    transition: background 0.15s ease, border-color 0.15s ease;
+  }
+
+  :where(.builder-scope) .builder-panel-sticky-summary-card.is-docked {
+    transition: max-height 0.18s ease;
+  }
 }
 
 :where(.builder-scope) .panel-header {
@@ -1084,8 +1143,15 @@
 
 :where(.builder-scope) .perfume-card-compact-actions {
   display: grid;
-  grid-template-columns: auto minmax(130px, 1fr);
-  gap: 14px;
+  /* The points badge (column 1) keeps min-width:max-content below, so it
+     is never truncated regardless of tier -- readability is non-negotiable.
+     The Add-to-box column no longer carries a hard floor: minmax(0, 1fr)
+     lets it genuinely cede width to a wider badge (e.g. the fractional
+     "1.5 pt"/"2.5 pt" tiers) instead of forcing the row wider than the
+     card. The button's own reduced padding below is what actually absorbs
+     that shrink, so text never needs to wrap or the row to overflow. */
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 6px;
   align-items: stretch;
 }
 
@@ -1097,7 +1163,7 @@
   min-width: max-content;
   min-height: 42px;
   margin: 0;
-  padding: 8px 10px;
+  padding: 6px 8px;
   border: 1px solid currentColor;
   border-radius: 999px;
   color: var(--builder-color-accent, #d9f99d);
@@ -1113,9 +1179,16 @@
 
 :where(.builder-scope) .perfume-card .perfume-card-compact-actions button {
   min-height: 42px;
+  min-width: 0;
   margin: 0;
-  padding: 10px 14px;
-  justify-self: end;
+  padding: 10px 6px;
+  /* stretch (not end): with wrappable text and no fixed width, an
+     end-aligned grid item shrinks to its own wrapped-content preference
+     instead of claiming the track's full available width -- stretch forces
+     it to actually use the room the badge/gap reductions free up, which is
+     what keeps the label on one line. */
+  justify-self: stretch;
+  text-align: center;
   font-size: var(--builder-unit-082);
 }
 
@@ -3267,7 +3340,25 @@
     justify-content: center;
     flex: 1;
     min-width: 0;
-    padding: 0 6px;
+    /* Tightened from 6px so the strip still has room for the fourth
+       (Review) segment below without needing a taller row -- the three
+       metrics stay readable narrower, per the accepted trade-off. */
+    padding: 0 4px;
+  }
+
+  :where(.builder-scope) .builder-panel-sticky-summary-card.is-docked .box-summary-action {
+    /* Fourth segment of the same strip: fixed-content width (never
+       flex:1, never shares the metrics' equal-width treatment) so it
+       reads as an action, not a stat. review-box-button--compact's own
+       pill/gradient chrome already carries that "this is a button, not a
+       label" read; this rule only fits it into the 36px-tall strip. */
+    flex: 0 0 auto;
+    align-self: center;
+    margin: 0 4px 0 2px;
+    padding: 4px 8px;
+    min-height: 0;
+    font-size: var(--builder-unit-064);
+    white-space: nowrap;
   }
 
   :where(.builder-scope) .builder-panel-sticky-summary-card.is-docked .box-summary-metric span {
@@ -3420,7 +3511,8 @@
   }
 
   :where(.builder-scope) .perfume-card-compact-actions {
-    grid-template-columns: auto minmax(64px, 1fr);
+    /* Same shrink-the-button-not-the-badge contract as the base rule. */
+    grid-template-columns: auto minmax(0, 1fr);
     gap: 14px;
     align-items: stretch;
   }
@@ -3428,14 +3520,19 @@
   :where(.builder-scope) .perfume-card-points {
     margin: 0;
     padding: 5px 9px;
-    min-width: 0;
+    /* Was min-width: 0 -- that let the grid compress the badge itself
+       below its own content width, risking a clipped "1.5 pt"/"2.5 pt".
+       max-content matches the base rule: the badge is never the side that
+       shrinks. */
+    min-width: max-content;
     font-size: var(--builder-unit-076);
   }
 
   :where(.builder-scope) .perfume-card .perfume-card-compact-actions button {
     min-height: 42px;
+    min-width: 0;
     margin: 0;
-    padding: 9px 12px;
+    padding: 9px 9px;
     justify-self: end;
   }
 
@@ -3744,6 +3841,22 @@
     linear-gradient(180deg, rgba(253, 230, 138, 0.96), color-mix(in srgb, var(--builder-color-accent, #4ade80) 92%, transparent));
   box-shadow: 0 14px 34px color-mix(in srgb, var(--builder-color-accent, #4ade80) 16%, transparent);
 }
+
+:where(.builder-scope) .review-box-button--compact {
+  /* Same action styling as the full review-box-button (colors, disabled
+     state, is-unlocked state all inherited via the shared class), just
+     sized to sit inline instead of as a full-width block -- used inside
+     the docked floating card, where there is no room for the full-size
+     button. */
+  width: auto;
+  min-width: 0;
+  margin: 0;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: var(--builder-unit-072);
+  white-space: nowrap;
+}
+
 
 :where(.builder-scope) .details-button {
   margin-top: 8px;

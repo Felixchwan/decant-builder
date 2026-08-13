@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { BuilderIntroHeader } from "../../components/BuilderIntroHeader.jsx";
 import { BuilderMount } from "../../components/BuilderMount.jsx";
 import { aurelianConfig } from "../../merchant/config.js";
 import { FRAGRANCE_QUERY_PARAM, FRAGRANCE_ID_PATTERN } from "../../lib/parseFragranceIntent.js";
@@ -66,5 +66,5 @@ export default function BuilderPage() {
   // No production provider config is read here: analyticsDebugEnabled only
   // ever turns on the console-only development logger (never a network
   // call) -- see apps/aurelian/src/analytics/README.md.
-  return <section className="builder-page"><header id="builder-entry-header" className="page-shell page-intro page-intro--compact"><p className="eyebrow">Tu Discovery Box</p><h1>Elige 6–14 fragancias.</h1><p className="lede">Explora el catálogo con calma: no hay una lista de más vendidos, solo lo que quieras comparar. Alcanza un mínimo de 12 puntos y solicita por WhatsApp una revisión de disponibilidad. Aurelian confirmará antes de compartir instrucciones de pago.</p><Link className="text-link" href="/como-funciona">Revisar cómo funciona</Link></header><script dangerouslySetInnerHTML={{ __html: ENTRY_HEADER_VISIBILITY_SCRIPT }} /><BuilderMount isDevelopment={process.env.NODE_ENV === "development"} analyticsDebugEnabled={process.env.NEXT_PUBLIC_ANALYTICS_DEBUG === "true"} /></section>;
+  return <section className="builder-page"><BuilderIntroHeader /><script dangerouslySetInnerHTML={{ __html: ENTRY_HEADER_VISIBILITY_SCRIPT }} /><BuilderMount isDevelopment={process.env.NODE_ENV === "development"} analyticsDebugEnabled={process.env.NEXT_PUBLIC_ANALYTICS_DEBUG === "true"} /></section>;
 }
