@@ -82,6 +82,10 @@ function App({
   // only a host that opts in by passing a value ever changes what counts as
   // a completed proposal.
   composerMinimumPoints = null,
+  // Opt-in suppression of the hero section below, for a host that merges it
+  // into its own dismissible intro experience (see DiscoveryBoxBuilder.jsx's
+  // doc comment). false/absent renders the hero exactly as it always has.
+  isIntroCollapsed = false,
 }) {
   const builderConfig = config;
   const builderThemeStyle = useMemo(
@@ -1044,14 +1048,16 @@ const confirmAddPerfume = () => {
         </p>
       )}
 
-      <section className="hero">
-        <h1>{builderConfig.copy.heroTitle}</h1>
-        <p>
-          {formatConfigCopy(builderConfig.copy.heroDescription, {
-            maxSelectableSlots: MAX_SELECTABLE_SLOTS,
-          })}
-        </p>
-      </section>
+      {!isIntroCollapsed && (
+        <section className="hero">
+          <h1>{builderConfig.copy.heroTitle}</h1>
+          <p>
+            {formatConfigCopy(builderConfig.copy.heroDescription, {
+              maxSelectableSlots: MAX_SELECTABLE_SLOTS,
+            })}
+          </p>
+        </section>
+      )}
 
       <nav className="mobile-builder-tabs" aria-label={t("app.mobileTabs")}>
         <button

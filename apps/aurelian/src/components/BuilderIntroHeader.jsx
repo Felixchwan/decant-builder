@@ -1,31 +1,35 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
+import { useIntroPreference } from "./IntroPreferenceProvider.jsx";
 
 // Aurelian-owned presentation, not shared Builder UI: this is the static
 // intro block above the catalog/Builder (id="builder-entry-header"), a
 // plain Next.js page section with no relationship to packages/builder.
-// The dismiss/restore toggle below is local, session-only React state --
-// never written to storage, never read outside this component, and
-// orthogonal to the existing pre-hydration
-// visibility mechanism in app/build-your-box/page.jsx (which hides this
-// same #builder-entry-header element before hydration for genuine
-// first-time visitors, so it doesn't compete with the Discovery Intent
-// screen). That mechanism runs once, synchronously, before this component
-// ever hydrates; this toggle only ever acts afterward, on a user click, so
-// the two never race.
+// The dismiss/restore toggle is lifted to IntroPreferenceProvider (see
+// app/build-your-box/page.jsx, which wraps this component and BuilderMount
+// in that same provider) -- this header and the Builder's own shared hero
+// section (packages/builder) both react to the one persisted preference it
+// owns, rather than each keeping separate state. This component itself
+// still never touches storage or Builder/domain state directly.
+// Orthogonal to the existing pre-hydration visibility mechanism in
+// app/build-your-box/page.jsx (which hides this same #builder-entry-header
+// element before hydration for genuine first-time visitors, so it doesn't
+// compete with the Discovery Intent screen): that mechanism runs once,
+// synchronously, before this component ever hydrates; this toggle only
+// ever acts afterward, on a user click or the provider's post-mount sync,
+// so the two never race.
 export function BuilderIntroHeader() {
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const { isIntroDismissed, dismissIntro, restoreIntro } = useIntroPreference();
 
-  if (isCollapsed) {
+  if (isIntroDismissed) {
     return (
       <div className="builder-intro-restore-row">
         <button
           type="button"
           className="builder-intro-restore"
           aria-label="Mostrar introducción de Tu Discovery Box"
-          onClick={() => setIsCollapsed(false)}
+          onClick={restoreIntro}
         >
           <span aria-hidden="true">˅</span> Tu Discovery Box
         </button>
@@ -39,7 +43,7 @@ export function BuilderIntroHeader() {
         type="button"
         className="builder-intro-dismiss"
         aria-label="Ocultar introducción de Tu Discovery Box"
-        onClick={() => setIsCollapsed(true)}
+        onClick={dismissIntro}
       >
         <span aria-hidden="true">✕</span>
       </button>

@@ -19,6 +19,7 @@ import { validateBuilderConfig } from "./config/index.js";
  * @param {boolean} props.isDevelopment Host-supplied development capability. Defaults to false.
  * @param {HTMLElement|null} [props.stickySummaryPortalTarget] Optional host-supplied DOM node the compact box summary can relocate into once scrolled to the top of the viewport (e.g. a reserved slot in a host's own sticky page header). The Builder never assumes such a slot exists or where it lives — when omitted, the summary renders inline exactly as it always has.
  * @param {number|null} [props.composerMinimumPoints] Optional, opt-in lower bound on total points the "Compose my box" action must reach before its result counts as a completed proposal. Absent/null by default, which preserves today's Composer behavior exactly (any valid box within budget is a success). The Builder never derives this from its own config — a host that wants "my box isn't done until it hits N points" (e.g. a merchant with a fixed minimum-order requirement) computes N itself and passes it here.
+ * @param {boolean} [props.isIntroCollapsed] Optional, opt-in flag suppressing the Builder's own shared hero section (the title + description above the catalog). Defaults to false, which renders the hero exactly as it always has. A host that wants to merge this hero into its own dismissible intro experience sets this from its own presentation state; the Builder never reads storage or owns this preference itself.
  */
 export default function DiscoveryBoxBuilder({
   catalog,
@@ -33,6 +34,7 @@ export default function DiscoveryBoxBuilder({
   isDevelopment = false,
   stickySummaryPortalTarget = null,
   composerMinimumPoints = null,
+  isIntroCollapsed = false,
 }) {
   if (!config) {
     throw new Error("DiscoveryBoxBuilder requires a normalized builder config.");
@@ -91,6 +93,7 @@ export default function DiscoveryBoxBuilder({
       isDevelopment={isDevelopment}
       stickySummaryPortalTarget={stickySummaryPortalTarget}
       composerMinimumPoints={composerMinimumPoints}
+      isIntroCollapsed={isIntroCollapsed}
     />
   );
 }

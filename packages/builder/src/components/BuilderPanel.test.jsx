@@ -321,7 +321,10 @@ describe("BuilderPanel Composer setup launcher", () => {
     expect(markup).not.toContain("Clear Box");
     expect(markup).not.toContain("Clear Builder");
     expect(markup).toContain("0 / 14");
-    expect(markup).toContain('aria-label="Show Discovery Box introduction"');
+    // Checks the exact rendered attribute, not a bare substring -- the
+    // still-legitimate, unrelated .share-info-button (Collection Card
+    // tooltip) would otherwise false-positive this check.
+    expect(markup).not.toMatch(/class="info-button"/);
   });
 
   it("shows localized Clear Box only when the box is populated", () => {
@@ -659,11 +662,14 @@ describe("BuilderPanel Composer setup launcher", () => {
 // this app for usePathname/useSearchParams) -- there is no prop seam to
 // force the docked/collapsed branches into the rendered markup. Coverage
 // here is therefore: (a) the default (non-docked) render never grows any
-// collapse/compact-review footprint at all, and (b) source-contract checks
-// proving the docked/collapsed JSX reuses the exact same isBoxReady/
-// handleOpenReview identifiers as the pre-existing button, never a second
-// implementation, and never touches domain-mutating callbacks. The actual
-// interactive collapse<->expand behavior is verified by browser acceptance.
+// collapse/Clear/Review footprint at all, and (b) source-contract checks
+// proving the docked/collapsed JSX reuses the exact same onClearBox/
+// isBoxReady/handleOpenReview identifiers as the pre-existing controls,
+// never a second implementation, and never mounts BoxSlotTray or any
+// per-vial callback (the one domain-mutating action collapsed keeps is the
+// same shared Vaciar caja, by design -- see the collapsed-surface test
+// below). The actual interactive collapse<->expand behavior is verified by
+// browser acceptance.
 describe("BuilderPanel docked-summary collapse/expand", () => {
   const stickySummarySource = normalizedPanelSource.slice(
     normalizedPanelSource.indexOf("const stickySummaryContent"),
@@ -680,6 +686,13 @@ describe("BuilderPanel docked-summary collapse/expand", () => {
     stickySummarySource.indexOf('<div className="builder-panel-summary-row">'),
     stickySummarySource.indexOf("<BoxSlotTray")
   );
+  const panelHeaderSource = expandedBranchSource.slice(
+    expandedBranchSource.indexOf('<div className="panel-header">'),
+    expandedBranchSource.indexOf("{shouldShowDiscoveryIntro")
+  );
+  const boxSummaryCardSource = summaryRowSource.slice(
+    summaryRowSource.indexOf('<div className="box-summary-card"')
+  );
 
   it("never renders the collapse toggle or docked-collapsed surface when not docked", () => {
     const markup = renderBuilderPanel();
@@ -687,42 +700,88 @@ describe("BuilderPanel docked-summary collapse/expand", () => {
     expect(markup).not.toContain("builder-panel-docked-collapsed");
   });
 
-  it("never gives the docked summary its own Review action -- the panel's existing review-action button stays the only entry point", () => {
-    // Simplification regression guard: a prior round added a compact
-    // in-strip Review action to the docked summary, then removed it again
-    // to restore the canonical (non-docked) panel composition. Nothing in
-    // BuilderPanel.jsx may reintroduce a second Review call site.
-    expect(stickySummarySource).not.toContain("box-summary-action");
-    expect(stickySummarySource).not.toContain("reviewCompact");
-    expect(summaryRowSource.match(/className="box-summary-metric/g) || []).toHaveLength(3);
-
+  it("gives every Review action -- the header, the collapsed surface, and the panel's own review-action button -- the exact same eligibility gate and handler, never a second implementation", () => {
+    // Three call sites, one shared prop pair: the compact header Revisar,
+    // the collapsed control surface's Revisar, and the original full-width
+    // review-action button below the panel. No local recomputation of
+    // readiness anywhere in this file.
     const reviewActionPairs = builderPanelSource.match(/disabled=\{!isBoxReady\}[\s\S]{0,80}onClick=\{handleOpenReview\}/g) || [];
-    expect(reviewActionPairs).toHaveLength(1);
+    expect(reviewActionPairs).toHaveLength(3);
     expect(builderPanelSource).not.toMatch(/const isBoxReady\s*=/);
   });
 
-  it("places the collapse toggle inside the existing panel-header row, not a separately-positioned control", () => {
-    // The docked summary is meant to reuse the panel's own existing
-    // header layout rather than introduce new absolute-positioning
-    // geometry -- the toggle is just a third, isSummaryDocked-gated child
-    // of the same flex row as the title and Clear button.
-    const panelHeaderSource = expandedBranchSource.slice(
-      expandedBranchSource.indexOf('<div className="panel-header">'),
-      expandedBranchSource.indexOf("{shouldShowDiscoveryIntro")
+  it("keeps Revisar out of the stats strip -- it lives in the header/collapsed control rows only, never as a fourth .box-summary-metric", () => {
+    expect(summaryRowSource).not.toContain("review-box-button");
+    expect(summaryRowSource.match(/className="box-summary-metric/g) || []).toHaveLength(3);
+  });
+
+  it("places the collapse toggle as the stats strip's own first segment, gated to the expanded+docked state only, and never in the header anymore", () => {
+    expect(boxSummaryCardSource).toMatch(
+      /\{isSummaryDocked && \([\s\S]{0,700}summary-collapse-toggle summary-collapse-toggle--strip/
     );
-    expect(panelHeaderSource).toMatch(/\{isSummaryDocked && \([\s\S]{0,600}summary-collapse-toggle/);
-    expect(panelHeaderSource).not.toContain("summary-collapse-toggle--docked");
+    expect(panelHeaderSource).not.toContain("summary-collapse-toggle");
     expect(appCss).not.toMatch(/\.summary-collapse-toggle--docked/);
   });
 
-  it("unmounts BoxSlotTray and every domain-mutating callback in the collapsed branch, so collapsing cannot touch box state", () => {
+  it("sizes the strip arrow's own lane to shrink the three metrics' combined flex:1 share by roughly 15%, without any separate width/padding override on the metrics themselves", () => {
+    // The three .box-summary-metric children stay flex:1 (unmodified,
+    // canonical) in both states -- inserting a fixed-width sibling ahead
+    // of them is what naturally shrinks their combined share of the row,
+    // with no docked-only override needed on the metrics. Measured live
+    // (packages/builder styles.css): docked baseline without the arrow is
+    // ~314px across the three metrics; chevron(26px) + this margin(22px)
+    // = 48px, a ~15% reduction, confirmed via getBoundingClientRect
+    // against the real rendered strip.
+    const chevronWidthMatch = appCss.match(/:where\(\.builder-scope\) \.summary-collapse-toggle \{[^}]*width:\s*(\d+)px;/);
+    const marginMatch = appCss.match(/:where\(\.builder-scope\) \.summary-collapse-toggle--strip \{[^}]*margin-right:\s*(\d+)px;/);
+    const chevronWidth = Number(chevronWidthMatch[1]);
+    const marginRight = Number(marginMatch[1]);
+    expect(chevronWidth + marginRight).toBe(48);
+  });
+
+  it("gives the expanded panel-header's Vaciar caja and Revisar the exact same gate/handler as every other Clear/Review control", () => {
+    expect(panelHeaderSource).toMatch(/\{totalSlots > 0 && \([\s\S]{0,150}onClick=\{onClearBox\}/);
+    expect(panelHeaderSource).toMatch(/disabled=\{!isBoxReady\}[\s\S]{0,80}onClick=\{handleOpenReview\}/);
+  });
+
+  it("preserves Expand, Vaciar caja, and Revisar in the collapsed control surface, but keeps BoxSlotTray and every per-vial callback unmounted", () => {
     // Checks for the JSX tag itself, not the bare word -- this file's own
     // explanatory comments legitimately mention "BoxSlotTray" in prose.
     expect(collapsedBranchSource).not.toContain("<BoxSlotTray");
+    expect(collapsedBranchSource).not.toContain("box-summary-card");
     expect(collapsedBranchSource).not.toContain("onRemovePerfume");
     expect(collapsedBranchSource).not.toContain("onReorderPerfumes");
-    expect(collapsedBranchSource).not.toContain("onClearBox");
     expect(collapsedBranchSource).not.toContain("onAddPerfume");
+
+    expect(collapsedBranchSource).toMatch(/t\("builder\.expandSummary"\)/);
+    // Vaciar caja and Revisar reuse the exact same gate/handler as the
+    // expanded header -- collapsing never introduces a second Clear or
+    // Review implementation, and never touches box contents or Review
+    // eligibility on its own.
+    expect(collapsedBranchSource).toMatch(/\{totalSlots > 0 && \([\s\S]{0,150}onClick=\{onClearBox\}/);
+    expect(collapsedBranchSource).toMatch(/disabled=\{!isBoxReady\}[\s\S]{0,80}onClick=\{handleOpenReview\}/);
+  });
+
+  it("keeps Expand as the collapsed row's own left-anchored child, with Vaciar caja and Revisar grouped together in their own right-aligned action group", () => {
+    // Two flex children only at the outer row: the Expand chevron, then
+    // the whole action group -- this is what lets a plain
+    // justify-content:space-between (no hard-coded positioning) anchor
+    // Expand left and the paired Clear+Review group flush right, with
+    // Revisar terminating near the same right edge the expanded 360px
+    // panel uses, and no leftover space past it.
+    const expandIndex = collapsedBranchSource.indexOf('className="summary-collapse-toggle"');
+    const actionsGroupIndex = collapsedBranchSource.indexOf('className="builder-panel-docked-collapsed-actions"');
+    expect(expandIndex).toBeGreaterThan(-1);
+    expect(actionsGroupIndex).toBeGreaterThan(expandIndex);
+
+    const actionsGroupSource = collapsedBranchSource.slice(actionsGroupIndex);
+    expect(actionsGroupSource).toMatch(/\{totalSlots > 0 && \([\s\S]{0,150}onClick=\{onClearBox\}/);
+    expect(actionsGroupSource).toMatch(/disabled=\{!isBoxReady\}[\s\S]{0,80}onClick=\{handleOpenReview\}/);
+
+    expect(appCss).toMatch(
+      /:where\(\.builder-scope\) \.builder-panel-docked-collapsed \{[^}]*justify-content:\s*space-between;/
+    );
+    expect(appCss).toMatch(/:where\(\.builder-scope\) \.builder-panel-docked-collapsed-actions \{[^}]*display:\s*flex;/);
   });
 
   it("gives the collapse and expand controls distinct, localized accessible names, and never persists the preference", () => {
@@ -731,7 +790,7 @@ describe("BuilderPanel docked-summary collapse/expand", () => {
     expect(esMX["builder.collapseSummary"]).toBeTruthy();
     expect(esMX["builder.expandSummary"]).toBeTruthy();
     expect(esMX["builder.collapseSummary"]).not.toBe(esMX["builder.expandSummary"]);
-    expect(esMX["builder.reviewCompact"]).toBeUndefined();
+    expect(esMX["builder.reviewCompact"]).toBeTruthy();
 
     const stateDeclarationIndex = normalizedPanelSource.indexOf("const [isSummaryCollapsed");
     const nearbySource = normalizedPanelSource.slice(stateDeclarationIndex, stateDeclarationIndex + 500);
@@ -756,7 +815,34 @@ describe("BuilderPanel docked-summary collapse/expand", () => {
     const dockedRuleMatch = appCss.match(/:where\(\.builder-scope\) \.builder-panel-sticky-summary-card\.is-docked \{[^}]*\}/);
     expect(dockedRuleMatch[0]).not.toMatch(/max-height:/);
     expect(dockedRuleMatch[0]).not.toMatch(/width:|padding-left:|padding-right:|font-size:/);
-    expect(appCss).toMatch(/:where\(\.builder-scope\) \.builder-panel-sticky-summary-card\.is-docked\.is-collapsed \{[^}]*max-height:\s*42px;/);
+    expect(appCss).toMatch(/:where\(\.builder-scope\) \.builder-panel-sticky-summary-card\.is-docked\.is-collapsed \{[^}]*max-height:/);
+  });
+});
+
+// Regression guard for the dead "i" info-button next to Mi caja: real-
+// browser acceptance found clicking it provided no useful behavior once a
+// box has items (isDiscoveryIntroOpen could never surface the coachmark
+// again, since shouldShowDiscoveryIntro also always requires an empty
+// box) -- removed entirely rather than left as a decorative no-op control.
+// The coachmark itself is untouched: first-time visitors with an empty box
+// still see it automatically, driven purely by hasSeenDiscoveryIntro.
+describe("Dead Mi caja info-control removal", () => {
+  it("never renders the info icon, and drops every bit of state/copy that existed only for it", () => {
+    // Checks the exact className value, not a bare substring -- the
+    // still-legitimate, unrelated .share-info-button (Collection Card
+    // tooltip) would otherwise false-positive this check.
+    expect(builderPanelSource).not.toMatch(/className="info-button"/);
+    expect(builderPanelSource).not.toContain("isDiscoveryIntroOpen");
+    expect(builderPanelSource).not.toContain("introButtonAriaLabel");
+    expect(appCss).not.toMatch(/\.info-button/);
+    expect(esMX["builder.introButtonAria"]).toBeUndefined();
+  });
+
+  it("keeps the first-time coachmark working, driven purely by hasSeenDiscoveryIntro", () => {
+    const shouldShowIndex = normalizedPanelSource.indexOf("const shouldShowDiscoveryIntro");
+    const nearbySource = normalizedPanelSource.slice(shouldShowIndex, shouldShowIndex + 300);
+    expect(nearbySource).toContain("hasSeenDiscoveryIntro");
+    expect(nearbySource).not.toContain("isDiscoveryIntroOpen");
   });
 });
 
@@ -877,10 +963,12 @@ describe("No docked-only geometry overrides remain", () => {
     expect(appCss).not.toMatch(/\.is-docked \.builder-panel-summary-row \.box-summary-metric/);
   });
 
-  it("removes the compact in-strip Review action and its dedicated styling entirely", () => {
-    expect(appCss).not.toMatch(/\.box-summary-action/);
-    expect(appCss).not.toMatch(/\.review-box-button--compact/);
-    expect(esMX["builder.reviewCompact"]).toBeUndefined();
+  it("keeps .box-summary-action retired -- Review never becomes a fourth .box-summary-metric inside the strip", () => {
+    // review-box-button--compact and builder.reviewCompact are back, but
+    // as the header/collapsed-row Revisar buttons this round adds
+    // deliberately (see "BuilderPanel docked-summary collapse/expand"),
+    // never as an in-strip segment sitting alongside the three stats.
+    expect(appCss).not.toMatch(/\.box-summary-action\b/);
   });
 
   it("removes the collapse chevron's old absolutely-positioned docked gutter", () => {

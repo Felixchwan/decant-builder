@@ -157,7 +157,6 @@ export const defaultBuilderConfig = {
     boxPanelTitle: "My Box",
     clearBuilderLabel: "Clear Box",
     introAriaLabel: "Discovery Box introduction",
-    introButtonAriaLabel: "Show Discovery Box introduction",
     introTitle: "Welcome to Discovery Box",
     introDescription: "Reach 12 points to unlock Curator Bonus selections.",
     onboardingTitle: "Welcome to Discovery Box",

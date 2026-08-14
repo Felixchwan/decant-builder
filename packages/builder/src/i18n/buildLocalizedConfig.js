@@ -11,7 +11,6 @@ export function buildLocalizedConfigOverrides(locale) {
       boxPanelTitle: t("builder.boxPanelTitle"),
       clearBuilderLabel: t("builder.clearBuilder"),
       introAriaLabel: t("builder.introAria"),
-      introButtonAriaLabel: t("builder.introButtonAria"),
       introTitle: t("builder.introTitle"),
       introDescription: t("builder.introLine2"),
       introLine1: t("builder.introLine1"),

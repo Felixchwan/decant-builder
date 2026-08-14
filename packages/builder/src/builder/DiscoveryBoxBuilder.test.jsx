@@ -125,4 +125,22 @@ describe("DiscoveryBoxBuilder asset resolver boundary", () => {
       hint,
     ]);
   });
+
+  it("defaults hero-section suppression to false and forwards an explicit opt-in unchanged", () => {
+    const assetResolver = createCatalogAssetResolver({ basePath: "/merchant-assets" });
+
+    renderToStaticMarkup(
+      <>
+        <DiscoveryBoxBuilder catalog={[]} config={discoveryDecantsConfig} assetResolver={assetResolver} />
+        <DiscoveryBoxBuilder
+          catalog={[]}
+          config={discoveryDecantsConfig}
+          assetResolver={assetResolver}
+          isIntroCollapsed
+        />
+      </>,
+    );
+
+    expect(appCalls.map(({ isIntroCollapsed }) => isIntroCollapsed)).toEqual([false, true]);
+  });
 });

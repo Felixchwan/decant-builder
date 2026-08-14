@@ -12,6 +12,7 @@ import { explainRecommendation } from "../discoveryIntent/recommendationExplanat
 import { createAnalytics, buildAnalyticsContext } from "../analytics/createAnalytics.js";
 import { createDevelopmentAnalytics } from "../analytics/developmentAnalytics.js";
 import { DiscoveryIntentScreen } from "./DiscoveryIntentScreen.jsx";
+import { useIntroPreference } from "./IntroPreferenceProvider.jsx";
 
 const assetResolver = createCatalogAssetResolver({ basePath: "/catalog-assets" });
 const finalizationAdapter = createWhatsAppFinalizationAdapter({
@@ -38,6 +39,15 @@ export function BuilderExperience({
   isDevelopment = false,
   analyticsDebugEnabled = false,
 }) {
+  // Read directly from the provider wrapping this component's own subtree
+  // in app/build-your-box/page.jsx (this component is itself mounted
+  // ssr:false via next/dynamic -- see BuilderMount.jsx -- but that only
+  // controls when it renders, not which context providers still wrap it;
+  // it stays inside IntroPreferenceProvider's tree either way), rather
+  // than threading it through BuilderMount as a prop -- BuilderMount has
+  // nothing else to do with this value, so a pass-through prop there would
+  // just be an extra hop for no benefit.
+  const { isIntroDismissed: isIntroCollapsed } = useIntroPreference();
   const [initialFragranceId] = useState(() =>
     typeof window === "undefined" ? null : parseFragranceIntent(window.location.search),
   );
@@ -109,6 +119,12 @@ export function BuilderExperience({
       finalizationAdapter={finalizationAdapter}
       notes={notes}
       stickySummaryPortalTarget={stickySummaryPortalTarget}
+      // Merges the Builder's own shared hero section into the same
+      // dismissible unit as this app's own #builder-entry-header intro
+      // (see BuilderIntroHeader.jsx / IntroPreferenceProvider.jsx) --
+      // BuilderRuntime only ever receives this plain boolean, never the
+      // storage key or preference logic itself.
+      isIntroCollapsed={isIntroCollapsed}
       // Aurelian's Discovery Box has a fixed minimum-points requirement
       // (already surfaced informationally elsewhere via box.minPoints, e.g.
       // buildCollectionSummary.js and the como-funciona copy) -- opting into

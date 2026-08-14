@@ -440,19 +440,32 @@
   /* Collapsed is the one state with no canonical-panel equivalent to
      match -- the panel itself has no collapsed form, so this size isn't
      "reverted" from anything, it's sized to fit exactly what collapsed
-     now contains: a single 26px Expand chevron plus this rule's own
-     padding. Measured live via scrollHeight/clientHeight on the real
-     rendered collapsed card. */
-  max-height: 42px;
+     now contains: the 26px Expand chevron, Vaciar caja, and Revisar (the
+     tallest of the three, the ghost-button, is ~43px), plus this rule's
+     own padding. Measured live via scrollHeight/clientHeight on the real
+     rendered collapsed card -- was 42px when the chevron was the only
+     control; grew once Vaciar caja/Revisar joined it. */
+  max-height: 60px;
   padding: 8px 10px;
 }
 
 :where(.builder-scope) .builder-panel-docked-collapsed {
+  /* Two flex children only: the Expand chevron, and the Clear+Review
+     action group -- space-between keeps Expand anchored on the left
+     (its approved location, unmoved) and pushes the action group flush
+     to the card's own right edge, with zero wasted space past Revisar.
+     Grouping Clear+Review in their own nested flex row (below) is what
+     keeps them visually paired rather than spread apart by this rule. */
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
   height: 100%;
+}
+
+:where(.builder-scope) .builder-panel-docked-collapsed-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 :where(.builder-scope) .summary-collapse-toggle {
@@ -472,6 +485,20 @@
 :where(.builder-scope) .summary-collapse-toggle:hover {
   border-color: rgba(250, 204, 21, 0.44);
   background: rgba(250, 204, 21, 0.1);
+}
+
+:where(.builder-scope) .summary-collapse-toggle--strip {
+  /* First segment of .box-summary-card's flex row, ahead of the three
+     .box-summary-metric children -- align-self:center overrides the
+     row's own align-items:stretch (the chevron keeps its own fixed 26px
+     height rather than stretching to the row's full height). The right
+     margin is the chevron's own dedicated lane: since the three metrics
+     are flex:1 (dividing whatever's left), this fixed 26px+22px lane is
+     what shrinks their combined footprint by ~15% -- measured live
+     against the canonical (non-docked) 322px-wide strip -- without any
+     separate width/padding override on the metrics themselves. */
+  align-self: center;
+  margin-right: 22px;
 }
 
 @media (prefers-reduced-motion: no-preference) {
@@ -496,29 +523,10 @@
   min-width: 0;
 }
 
-:where(.builder-scope) .panel-title-row {
-  display: inline-flex;
+:where(.builder-scope) .panel-header-actions {
+  display: flex;
   align-items: center;
   gap: 8px;
-}
-
-:where(.builder-scope) .info-button {
-  display: inline-grid;
-  place-items: center;
-  width: 24px;
-  height: 24px;
-  border: 1px solid rgba(250, 204, 21, 0.28);
-  border-radius: 999px;
-  background: rgba(15, 23, 42, 0.72);
-  color: #fde68a;
-  font-size: var(--builder-unit-078);
-  font-weight: 900;
-  line-height: 1;
-}
-
-:where(.builder-scope) .info-button:hover {
-  border-color: rgba(250, 204, 21, 0.44);
-  background: rgba(250, 204, 21, 0.10);
 }
 
 :where(.builder-scope) .panel-header p {
@@ -3001,7 +3009,7 @@
     margin-bottom: 10px;
   }
 
-  :where(.builder-scope) .panel-title-row h2 {
+  :where(.builder-scope) .builder-box-header-title h2 {
     white-space: nowrap;
   }
 
@@ -3705,6 +3713,21 @@
   background:
     linear-gradient(180deg, rgba(253, 230, 138, 0.96), color-mix(in srgb, var(--builder-color-accent, #4ade80) 92%, transparent));
   box-shadow: 0 14px 34px color-mix(in srgb, var(--builder-color-accent, #4ade80) 16%, transparent);
+}
+
+:where(.builder-scope) .review-box-button--compact {
+  /* Same action styling as the full review-box-button (colors, disabled
+     state, is-unlocked state all inherited via the shared class), just
+     sized to sit inline instead of as a full-width block -- used in the
+     box header (next to Vaciar caja) and the collapsed docked control
+     surface, neither of which has room for the full-size button. */
+  width: auto;
+  min-width: 0;
+  margin: 0;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: var(--builder-unit-072);
+  white-space: nowrap;
 }
 
 :where(.builder-scope) .details-button {

@@ -3,21 +3,30 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 
 import { BuilderIntroHeader } from "./BuilderIntroHeader.jsx";
+import { IntroPreferenceContext } from "./IntroPreferenceProvider.jsx";
 
 const componentSource = readFileSync(
   new URL("./BuilderIntroHeader.jsx", import.meta.url),
-  "utf8"
+  "utf8",
 );
 
-// isCollapsed is internal useState -- there is no prop seam, and
-// renderToStaticMarkup renders once, statically, so the collapsed branch
-// (reached only by a post-hydration click) cannot be exercised through
-// this harness. Coverage here is: the default (expanded) render's exact
-// structural contract, and source-contract checks proving the collapsed
-// branch's shape, non-persistence, and domain independence. The actual
-// dismiss->restore interaction is verified by browser acceptance.
+function withPreference(value, children) {
+  return (
+    <IntroPreferenceContext.Provider value={value}>{children}</IntroPreferenceContext.Provider>
+  );
+}
+
+// isIntroDismissed now comes from IntroPreferenceProvider's context, not
+// this component's own state -- both branches are real, directly
+// renderable markup differences driven by a plain prop, so (unlike the
+// scroll/effect-driven isSummaryDocked in BuilderPanel) both are exercised
+// here with renderToStaticMarkup, not just source-contract checks. The
+// actual dismiss->restore click interaction and the persisted-preference
+// pickup on mount still can't run under this harness (no jsdom/testing-
+// library, no real click events) -- those are verified by browser
+// acceptance.
 describe("BuilderIntroHeader", () => {
-  it("renders the original intro content unchanged, with id/classes the pre-hydration script and CSS still depend on", () => {
+  it("renders the original intro content unchanged when not dismissed, with id/classes the pre-hydration script and CSS still depend on", () => {
     const markup = renderToStaticMarkup(<BuilderIntroHeader />);
     expect(markup).toContain('id="builder-entry-header"');
     expect(markup).toContain('class="page-shell page-intro page-intro--compact"');
@@ -27,23 +36,49 @@ describe("BuilderIntroHeader", () => {
     expect(markup).not.toContain("builder-intro-restore");
   });
 
+  it("falls back to the context's own expanded default when rendered outside any provider", () => {
+    const markup = renderToStaticMarkup(<BuilderIntroHeader />);
+    expect(markup).toContain('id="builder-entry-header"');
+  });
+
   it("gives the dismiss control a real button with a localized accessible name", () => {
     const markup = renderToStaticMarkup(<BuilderIntroHeader />);
     expect(markup).toMatch(/<button[^>]*class="builder-intro-dismiss"[^>]*aria-label="Ocultar introducción[^"]*"/);
   });
 
-  it("never persists the collapse preference and never touches Builder/domain state", () => {
-    expect(componentSource).not.toMatch(/localStorage|sessionStorage/);
-    // A pure presentational leaf: no merchant config, catalog, or Builder
-    // imports at all -- collapsing this section cannot reach box/domain
-    // state because there is no code path into it from this file.
-    expect(componentSource).not.toMatch(/aurelianConfig|BuilderExperience|selectedPerfumes|onAddPerfume/);
+  it("renders only the compact restore row when the preference says dismissed, hiding both intro text pieces entirely", () => {
+    const markup = renderToStaticMarkup(
+      withPreference(
+        { isIntroDismissed: true, dismissIntro: () => {}, restoreIntro: () => {} },
+        <BuilderIntroHeader />,
+      ),
+    );
+    expect(markup).toContain("builder-intro-restore-row");
+    expect(markup).toContain("builder-intro-restore");
+    expect(markup).not.toContain('id="builder-entry-header"');
+    expect(markup).not.toContain("Elige 6–14 fragancias.");
+    expect(markup).not.toContain("Revisar cómo funciona");
   });
 
-  it("keeps the restore control compact and distinctly labeled, using the same collapse state rather than a second mechanism", () => {
-    expect(componentSource).toMatch(/const \[isCollapsed, setIsCollapsed\] = useState\(false\)/);
-    expect(componentSource).toMatch(/aria-label="Mostrar introducción[^"]*"/);
-    expect(componentSource).toContain("setIsCollapsed(false)");
-    expect(componentSource).toContain("setIsCollapsed(true)");
+  it("gives the restore control a real button with a distinct, localized accessible name", () => {
+    const markup = renderToStaticMarkup(
+      withPreference(
+        { isIntroDismissed: true, dismissIntro: () => {}, restoreIntro: () => {} },
+        <BuilderIntroHeader />,
+      ),
+    );
+    expect(markup).toMatch(/<button[^>]*class="builder-intro-restore"[^>]*aria-label="Mostrar introducción[^"]*"/);
+  });
+
+  it("wires the dismiss and restore buttons to the context's own actions, never a second, locally-owned mechanism", () => {
+    expect(componentSource).toContain("onClick={dismissIntro}");
+    expect(componentSource).toContain("onClick={restoreIntro}");
+    expect(componentSource).toContain("useIntroPreference()");
+    expect(componentSource).not.toMatch(/useState/);
+  });
+
+  it("never touches storage directly and never imports merchant config or Builder/domain state -- a pure presentational leaf", () => {
+    expect(componentSource).not.toMatch(/localStorage|sessionStorage/);
+    expect(componentSource).not.toMatch(/aurelianConfig|BuilderExperience|selectedPerfumes|onAddPerfume/);
   });
 });

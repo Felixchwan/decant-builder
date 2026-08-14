@@ -1,5 +1,6 @@
 import { BuilderIntroHeader } from "../../components/BuilderIntroHeader.jsx";
 import { BuilderMount } from "../../components/BuilderMount.jsx";
+import { IntroPreferenceProvider } from "../../components/IntroPreferenceProvider.jsx";
 import { aurelianConfig } from "../../merchant/config.js";
 import { FRAGRANCE_QUERY_PARAM, FRAGRANCE_ID_PATTERN } from "../../lib/parseFragranceIntent.js";
 
@@ -66,5 +67,5 @@ export default function BuilderPage() {
   // No production provider config is read here: analyticsDebugEnabled only
   // ever turns on the console-only development logger (never a network
   // call) -- see apps/aurelian/src/analytics/README.md.
-  return <section className="builder-page"><BuilderIntroHeader /><script dangerouslySetInnerHTML={{ __html: ENTRY_HEADER_VISIBILITY_SCRIPT }} /><BuilderMount isDevelopment={process.env.NODE_ENV === "development"} analyticsDebugEnabled={process.env.NEXT_PUBLIC_ANALYTICS_DEBUG === "true"} /></section>;
+  return <section className="builder-page"><IntroPreferenceProvider><BuilderIntroHeader /><script dangerouslySetInnerHTML={{ __html: ENTRY_HEADER_VISIBILITY_SCRIPT }} /><BuilderMount isDevelopment={process.env.NODE_ENV === "development"} analyticsDebugEnabled={process.env.NEXT_PUBLIC_ANALYTICS_DEBUG === "true"} /></IntroPreferenceProvider></section>;
 }
