@@ -221,13 +221,54 @@ describe("Aurelian application foundation", () => {
     // is exactly the regression this test guards against. Taking the slot
     // out of flex flow (position:absolute) is what lets it overlay that
     // already-reserved region instead of reserving it a second time.
-    expect(stylesheet).toContain(".site-header__inner--builder { position:relative; }");
     expect(stylesheet).toMatch(/\.site-header__builder-slot\s*\{\s*position:absolute;/);
     expect(stylesheet).not.toMatch(/\.site-header__builder-slot\s*\{[^}]*align-self/);
+    // The slot's containing block is .site-header itself (via its own
+    // pre-existing position:sticky, asserted below), not a dedicated
+    // position:relative on .site-header__inner--builder. Anchoring to the
+    // narrower, centered .site-header__inner box left the docked card's
+    // right edge misaligned with the actual panel column below at wide
+    // viewports (confirmed live); anchoring to the full-width header
+    // instead keeps them locked together. If .site-header__inner--builder
+    // ever gets its own position:relative back, it would silently become
+    // the nearer containing block again and reintroduce that misalignment.
+    expect(stylesheet).not.toMatch(/\.site-header__inner--builder\s*\{[^}]*position:relative/);
+    expect(stylesheet).toMatch(/\.site-header\s*\{[^}]*position:sticky/);
     // Mobile: the slot has nothing to dock into (no scroll-driven docking
     // there — see BuilderPanel's desktop-only matchMedia gate) and must not
     // occupy any space in the mobile header row, empty or not.
     expect(stylesheet).toMatch(/@media \(max-width:900px\) \{[^}]*\.site-header__builder-slot[^}]*display:none/s);
+  });
+
+  it("keeps the docked slot's right edge locked to the catalog/panel column's own centered-cap math, not a flat viewport-relative offset", () => {
+    const stylesheet = readFileSync(join(APP_ROOT, "src", "app", "globals.css"), "utf8");
+    // .builder-page > .builder-theme-root caps the whole catalog/panel area
+    // at 1440px, centered (margin-inline:auto) -- a real, pre-existing
+    // constraint this app applies on top of the shared package's own .app
+    // container. A plain `right:12px` on the slot only matched the panel's
+    // right edge at the one viewport width where that cap and the raw
+    // viewport happened to coincide; confirmed live it was off by -232px
+    // at 1920px. max(12px, calc(50% - 708px)) reproduces the same
+    // half-the-overflow-past-1440px centering math domain the panel
+    // itself uses, using percentages of the slot's own containing block
+    // (.site-header's real, scrollbar-aware width) rather than 100vw.
+    const slotMatch = stylesheet.match(/\.site-header__builder-slot\s*\{([^}]*)\}/);
+    expect(slotMatch[1]).toMatch(/right:\s*max\(12px,\s*calc\(50% - 708px\)\)/);
+    const capMatch = stylesheet.match(/\.builder-page > \.builder-theme-root\s*\{([^}]*)\}/);
+    expect(capMatch[1]).toMatch(/width:\s*min\(1440px,\s*100%\)/);
+    expect(capMatch[1]).toMatch(/margin-inline:\s*auto/);
+  });
+
+  it("gives the docked card the same background/blur as the header it visually sits inside, not the shared package's default surface", () => {
+    const stylesheet = readFileSync(join(APP_ROOT, "src", "app", "globals.css"), "utf8");
+    const headerMatch = stylesheet.match(/\.site-header\s*\{([^}]*)\}/);
+    const cardMatch = stylesheet.match(
+      /#aurelian-builder-summary-slot \.builder-panel-sticky-summary-card\s*\{([^}]*)\}/
+    );
+    const headerBackground = headerMatch[1].match(/background:\s*([^;]+);/)[1];
+    const headerBlur = headerMatch[1].match(/backdrop-filter:\s*([^;]+);/)[1];
+    expect(cardMatch[1]).toContain(`background:${headerBackground};`);
+    expect(cardMatch[1]).toContain(`backdrop-filter:${headerBlur};`);
   });
 
   it("publishes only the approved WhatsApp contact and enables generic finalization", () => {

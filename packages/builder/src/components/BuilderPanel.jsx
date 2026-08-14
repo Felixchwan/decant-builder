@@ -688,10 +688,6 @@ const BuilderPanel = forwardRef(function BuilderPanel({
   // full expanded content renders automatically -- the non-docked
   // rendering path is untouched by isSummaryCollapsed entirely.
   const isDockedAndCollapsed = isSummaryDocked && isSummaryCollapsed;
-  const reviewActionAriaLabel = builderConfig.copy.reviewButtonLabel;
-  const compactReviewButtonClassName = `review-box-button review-box-button--compact ${
-    isCuratorBonusUnlocked ? "is-unlocked" : ""
-  }`;
 
   const stickySummaryContent = (
     <div
@@ -706,9 +702,11 @@ const BuilderPanel = forwardRef(function BuilderPanel({
         // Collapsed: box visualization and stats are unmounted, not just
         // visually hidden -- BoxSlotTray never renders here, so there is no
         // way this state can touch selection/points/totals/Curator Bonus.
-        // Only two controls exist, exactly as specified: expand, and the
-        // same Review action with the same isBoxReady gate as everywhere
-        // else it appears.
+        // Only one control exists: Expand. Review has no presence in the
+        // docked summary at all (collapsed or expanded) -- the existing
+        // "Revisar mi caja" action in the right-side panel/Review modal
+        // flow remains the only Review entry point; this component never
+        // duplicates it.
         <div className="builder-panel-docked-collapsed">
           <button
             type="button"
@@ -718,16 +716,6 @@ const BuilderPanel = forwardRef(function BuilderPanel({
             onClick={() => setIsSummaryCollapsed(false)}
           >
             <span aria-hidden="true">▸</span>
-          </button>
-
-          <button
-            type="button"
-            className={compactReviewButtonClassName}
-            aria-label={reviewActionAriaLabel}
-            disabled={!isBoxReady}
-            onClick={handleOpenReview}
-          >
-            {t("builder.reviewCompact")}
           </button>
         </div>
       ) : (
@@ -750,6 +738,24 @@ const BuilderPanel = forwardRef(function BuilderPanel({
             {totalSlots > 0 && (
               <button className="ghost-button builder-clear-button" onClick={onClearBox}>
                 {builderConfig.copy.clearBuilderLabel}
+              </button>
+            )}
+
+            {isSummaryDocked && (
+              // Docked-only addition to the panel's own existing header
+              // row -- reuses its already-established flex layout instead
+              // of introducing new absolute-positioning geometry. Expanded
+              // docked is otherwise the exact same panel-header, summary
+              // row, and tray as the non-docked panel; this is the only
+              // extra control docking adds to it.
+              <button
+                type="button"
+                className="summary-collapse-toggle"
+                aria-label={t("builder.collapseSummary")}
+                aria-expanded="true"
+                onClick={() => setIsSummaryCollapsed(true)}
+              >
+                <span aria-hidden="true">▾</span>
               </button>
             )}
           </div>
@@ -778,28 +784,6 @@ const BuilderPanel = forwardRef(function BuilderPanel({
                 <strong>${estimatedValue.toFixed(0)}</strong>
                 <span>{t("general.orderTotalCompact")}</span>
               </div>
-
-              {isSummaryDocked && (
-                // Fourth segment of the same strip, not a fourth
-                // .box-summary-metric -- deliberately excluded from that
-                // selector so it never gets the metrics' equal-width flex
-                // treatment, and instead carries review-box-button's own
-                // action chrome (color/shape), so it reads as a control
-                // next to the stats rather than a stat itself. Density is
-                // handled by rebalancing the strip itself (narrower
-                // metrics, tighter gaps -- see .box-summary-action and its
-                // neighboring rules in styles.css), not by relocating this
-                // out of the strip.
-                <button
-                  type="button"
-                  className={`box-summary-action ${compactReviewButtonClassName}`}
-                  aria-label={reviewActionAriaLabel}
-                  disabled={!isBoxReady}
-                  onClick={handleOpenReview}
-                >
-                  {t("builder.reviewCompact")}
-                </button>
-              )}
             </div>
 
             <div className="builder-panel-tray-scale">
@@ -817,22 +801,6 @@ const BuilderPanel = forwardRef(function BuilderPanel({
               />
             </div>
           </div>
-
-          {isSummaryDocked && (
-            // Collapse stays a separate, small chevron at the strip's
-            // edge -- absolutely positioned, out of flow, so it never
-            // competes with the metrics/Review for space inside the strip
-            // and never displaces that layout.
-            <button
-              type="button"
-              className="summary-collapse-toggle summary-collapse-toggle--docked"
-              aria-label={t("builder.collapseSummary")}
-              aria-expanded="true"
-              onClick={() => setIsSummaryCollapsed(true)}
-            >
-              <span aria-hidden="true">▾</span>
-            </button>
-          )}
         </>
       )}
     </div>

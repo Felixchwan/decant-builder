@@ -421,75 +421,29 @@
 }
 
 :where(.builder-scope) .builder-panel-sticky-summary-card.is-docked {
-  /* Docked means portaled into a host-owned slot outside .builder-panel, so
-     the negative margin that normally pulls the card flush against the
-     panel's own padding would just push it off its host slot instead. The
-     host positions the docked card within its own slot. max-height enforces
-     the locked header footprint at the card level itself, rather than only
-     relying on each child's own dimensions summing correctly — a hard
-     ceiling, not a magic offset, so nothing can visually spill past the
-     reserved header region regardless of any individual child's sizing.
-     198px (was 166px): measured via scrollHeight/clientHeight on the real
-     rendered card that the true content stack (padding-top 10 + tray 122
-     + row gap 4 + the strip's real fixed height 44 + padding-bottom 10)
-     is 190px -- at the old 166px ceiling, 24px of that was being clipped,
-     cutting off part of Review and the metric labels' bottom edge, not
-     just leaving them tight. 190px alone would be zero-overflow with no
-     visible margin left below the strip; 198px leaves ~8px of real,
-     visible breathing room beneath it instead. See .box-summary-card's
-     flex-basis/height below for the matching fixed band-height fix this
-     pairs with (its 36px predecessor was itself being silently overridden
-     by a flex-basis:0% it inherited, so the strip was never actually a
-     fixed height at all until now). */
+  /* Docked means portaled into a host-owned slot outside .builder-panel.
+     margin:0 is the one structural necessity: the base rule's negative
+     margin above exists only to pull the card flush against
+     .builder-panel's own padding, which doesn't apply once portaled
+     outside it -- left in place, it would just push the card off its host
+     slot instead. Nothing else about the card changes: no width, padding,
+     height cap, or font-size overrides. The docked summary is meant to
+     read as the same box moved into the header, not a redesigned compact
+     version of it -- letting the base rule's own padding, border-radius,
+     and every child's normal (non-docked) styling apply unmodified is
+     what guarantees that by construction, rather than by re-deriving a
+     second set of matching numbers. */
   margin: 0;
-  padding-top: 10px;
-  /* Asymmetric on purpose: the base rule's 22px/22px horizontal padding
-     leaves a left gutter narrower than the 26px collapse chevron
-     (.summary-collapse-toggle--docked below), which measured as a real
-     ~12px overlap with the first metric's content -- not merely close, an
-     actual overlap, confirmed via getBoundingClientRect() against the real
-     chevron position. 34px gives the chevron a dedicated lane with ~4px of
-     clearance on both sides; the right side is untouched since nothing
-     else anchors there. See .site-header__builder-slot in
-     apps/aurelian/src/app/globals.css for the slot-width math this pairs
-     with (kept in the same 348px-content-width budget as the metrics/
-     action strip below). */
-  padding-left: 34px;
-  padding-right: 22px;
-  /* Was the base rule's inherited 18px -- at the old 166px ceiling that
-     18px was already being fully consumed by the clipping bug above (and
-     then some), so it was never actually visible as bottom breathing room
-     in practice. 10px, explicit and docked-only, is a deliberate, real,
-     visible margin below the strip instead of a stale inherited value
-     that happened to be silently swallowed. */
-  padding-bottom: 10px;
-  max-height: 198px;
-  overflow: hidden;
-  /* Anchors .summary-collapse-toggle--docked's absolute lower-left
-     position to this card, never to the page. */
-  position: relative;
-}
-
-:where(.builder-scope) .builder-panel-sticky-summary-card.is-docked .panel-header {
-  /* Docked reads as a compact control surface in the header, not a
-     miniature copy of the whole panel card — the title/clear-button row
-     stays available in the card's normal in-panel position. */
-  display: none;
 }
 
 :where(.builder-scope) .builder-panel-sticky-summary-card.is-docked.is-collapsed {
-  /* Collapsed drops the expanded ceiling down to just what the compact
-     control surface actually needs -- there is no tray/stats content left
-     to reserve room for. Was 52px: measured the same way as the expanded
-     strip (scrollHeight vs clientHeight on the real rendered card) and
-     found this collapsed surface has the identical issue -- its own
-     Review button (~40px here, taller than the in-strip one since this
-     branch renders the plain .review-box-button--compact class, not the
-     .box-summary-action override) plus its 8px/8px padding needs ~56px,
-     clipping ~4-5px at 52. 60px removes the clip with a few px of real
-     margin left over, still meaningfully more compact than the expanded
-     ceiling. */
-  max-height: 60px;
+  /* Collapsed is the one state with no canonical-panel equivalent to
+     match -- the panel itself has no collapsed form, so this size isn't
+     "reverted" from anything, it's sized to fit exactly what collapsed
+     now contains: a single 26px Expand chevron plus this rule's own
+     padding. Measured live via scrollHeight/clientHeight on the real
+     rendered collapsed card. */
+  max-height: 42px;
   padding: 8px 10px;
 }
 
@@ -520,29 +474,9 @@
   background: rgba(250, 204, 21, 0.1);
 }
 
-:where(.builder-scope) .summary-collapse-toggle--docked {
-  /* Lower-left corner of the floating/docked card, out of flow -- costs
-     nothing against the expanded height ceiling regardless of DOM
-     position, and never competes with the strip's metrics/Review segment for
-     space, since Review lives inside .box-summary-card, not here.
-     left:4px sits inside the card's own 34px left gutter (see
-     .builder-panel-sticky-summary-card.is-docked) -- at 26px wide this
-     control needs a lane wider than the base rule's 22px padding
-     provided, which is what caused the real overlap this width pairs
-     with fixing. */
-  position: absolute;
-  left: 4px;
-  bottom: 8px;
-  z-index: 1;
-}
-
 @media (prefers-reduced-motion: no-preference) {
   :where(.builder-scope) .summary-collapse-toggle {
     transition: background 0.15s ease, border-color 0.15s ease;
-  }
-
-  :where(.builder-scope) .builder-panel-sticky-summary-card.is-docked {
-    transition: max-height 0.18s ease;
   }
 }
 
@@ -3294,170 +3228,17 @@
   }
 
   :where(.builder-scope).builder-theme-root--custom .builder-panel-summary-row .box-summary-metric + .box-summary-metric {
-    border-left: 1px solid rgba(148, 163, 184, 0.14);
-    border-top: 0;
-    padding-top: 0;
-  }
-
-  :where(.builder-scope) .builder-panel-sticky-summary-card.is-docked .builder-panel-summary-row {
-    /* Docked further compacts the same shared composition above: the
-       4px gap replaces the natural state's roomier 8px. */
-    gap: 4px;
-  }
-
-  :where(.builder-scope) .builder-panel-sticky-summary-card.is-docked .builder-panel-tray-scale {
-    /* 348px = the docked card's full content width (404px header slot minus
-       its own 34px/22px asymmetric horizontal padding -- see
-       .builder-panel-sticky-summary-card.is-docked above) -- kept in
-       lockstep with .site-header__builder-slot's width in
-       apps/aurelian/src/app/globals.css. */
-    width: 348px;
-    height: 122px;
-    overflow: hidden;
-  }
-
-  :where(.builder-scope) .builder-panel-sticky-summary-card.is-docked .builder-panel-tray-scale .box-slot-tray {
-    /* Non-uniform docked layout: the same two-column/eight-row topology as
-       the normal tray, at its own purpose-built dimensions rather than a
-       transform:scale() copy — cells go shorter and wider instead of
-       shrinking uniformly. Column tracks (160px) + channel (12px) sum to
-       the full 348px width (160+12+160=332, plus the 8px/8px padding
-       below); no extra grid gap is needed since the channel track already
-       provides the visual separation. */
-    width: auto;
-    margin: 0;
-    padding: 4px 8px;
-    grid-template-columns: 160px 12px 160px;
-    gap: 0;
-    transform: none;
-  }
-
-  :where(.builder-scope) .builder-panel-sticky-summary-card.is-docked .box-column {
-    gap: 2px;
-    padding: 2px;
-  }
-
-  :where(.builder-scope) .builder-panel-sticky-summary-card.is-docked .box-vial {
-    height: 12px;
-    grid-template-columns: 10px minmax(0, 1fr);
-    overflow: hidden;
-  }
-
-  :where(.builder-scope) .builder-panel-sticky-summary-card.is-docked .vial-cap,
-  :where(.builder-scope) .builder-panel-sticky-summary-card.is-docked .box-vial.filled .vial-cap {
-    width: 8px;
-    height: 12px;
-    overflow: hidden;
-  }
-
-  :where(.builder-scope) .builder-panel-sticky-summary-card.is-docked .vial-body {
-    height: 12px;
-    padding: 0 4px;
-    overflow: hidden;
-  }
-
-  :where(.builder-scope) .builder-panel-sticky-summary-card.is-docked .vial-label {
-    display: none;
-  }
-
-  :where(.builder-scope) .builder-panel-sticky-summary-card.is-docked .bonus-slot-icon {
-    width: 8px;
-    height: 8px;
-  }
-
-  :where(.builder-scope) .builder-panel-sticky-summary-card.is-docked .empty-slot-add {
-    width: 10px;
-    height: 10px;
-    font-size: var(--builder-unit-046);
-  }
-
-  :where(.builder-scope) .builder-panel-sticky-summary-card.is-docked .builder-panel-summary-row .box-summary-card {
-    /* Metrics move from a tall vertical column beside the tray to a short
-       horizontal band beneath it: three equal-width cells + Review.
-       Was 36px -- at that height Review's own rendered button (~36px,
-       including its padding/border/line-height) had only ~1px of
-       clearance top and bottom inside the band, i.e. visually touching
-       its edges. 44px gives real, measured clearance (~4-5px per side
-       around Review, ~9px per side around the shorter metric content)
-       without changing any horizontal proportions. See
-       .builder-panel-sticky-summary-card.is-docked's max-height above for
-       the matching ceiling increase this requires so the taller band
-       isn't clipped.
-       flex: 0 0 44px (not just height:44px) is load-bearing here: the
-       less-specific, shared .builder-panel-summary-row .box-summary-card
-       rule earlier in this same media block sets flex:1, i.e.
-       flex-basis:0% -- for a column-direction flex item, a non-auto
-       flex-basis wins over the height property entirely, so plain
-       height:44px was silently ignored (confirmed live: even height set
-       via an inline priority-forced override had zero effect on the
-       rendered size).
-       flex-basis:44px here overrides that 0% basis directly, and
-       grow:0/shrink:0 keep it fixed rather than re-entering the same
-       grow-to-fill-content behavior that produced the wrong height
-       before. */
-    order: 2;
-    flex: 0 0 44px;
-    height: 44px;
-    flex-direction: row;
-    align-items: stretch;
-    justify-content: stretch;
-    gap: 0;
-    padding: 0;
-    border-top: 1px solid rgba(148, 163, 184, 0.14);
-  }
-
-  :where(.builder-scope) .builder-panel-sticky-summary-card.is-docked .builder-panel-summary-row .box-summary-metric {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    flex: 1;
-    min-width: 0;
-    /* Tightened from 6px so the strip still has room for the fourth
-       (Review) segment below without needing a taller row -- the three
-       metrics stay readable narrower, per the accepted trade-off. */
-    padding: 0 4px;
-  }
-
-  :where(.builder-scope) .builder-panel-sticky-summary-card.is-docked .box-summary-action {
-    /* Fourth segment of the same strip: fixed-content width (never
-       flex:1, never shares the metrics' equal-width treatment) so it
-       reads as an action, not a stat. review-box-button--compact's own
-       pill/gradient chrome already carries that "this is a button, not a
-       label" read; this rule only fits it into the strip's own band
-       height (see .box-summary-card above).
-       padding was 10px/side; real-browser acceptance still found it
-       cramped. 14px/side gives ~14px of measured breathing room per side
-       (button clientWidth minus the label's own natural text width,
-       halved) -- a real, felt increase, not a rounding artifact. The
-       three metrics were separately measured (including worst-case
-       content: 14/14 slots, 24.5 points, $2500 total) at 42-50px of slack
-       each -- comfortable already, so this +8px is dedicated entirely to
-       Review, not spread across the strip. See .site-header__builder-slot
-       in apps/aurelian/src/app/globals.css for the matching +8px
-       slot-width increase this pairs with. */
-    flex: 0 0 auto;
-    align-self: center;
-    margin: 0 6px 0 4px;
-    padding: 4px 14px;
-    min-height: 0;
-    font-size: var(--builder-unit-064);
-    white-space: nowrap;
-  }
-
-  :where(.builder-scope) .builder-panel-sticky-summary-card.is-docked .box-summary-metric span {
-    font-size: var(--builder-unit-046);
-  }
-
-  :where(.builder-scope) .builder-panel-sticky-summary-card.is-docked .box-summary-metric strong {
-    font-size: var(--builder-unit-072);
-  }
-
-  :where(.builder-scope) .builder-panel-sticky-summary-card.is-docked .box-summary-total strong {
-    font-size: var(--builder-unit-082);
-  }
-
-  :where(.builder-scope) .builder-panel-sticky-summary-card.is-docked .builder-panel-summary-row .box-summary-metric + .box-summary-metric {
+    /* Docked deliberately carries no width/height/padding/font-size
+       overrides of its own for the tray, vials, or this stats strip --
+       the docked summary is meant to look like the exact same box moved
+       into the header, so it reuses this same .builder-theme-root--custom
+       composition (this rule and the ones above it) completely unmodified
+       in both states. A prior round gave this whole area a dedicated,
+       narrower geometry to make room for a compact Review button inside
+       the strip; that button has since been removed from the docked
+       summary entirely (the panel's own review-action button remains the
+       only Review entry point), so the pressure that geometry existed for
+       is gone, and with it the need for a second set of magic numbers. */
     border-left: 1px solid rgba(148, 163, 184, 0.14);
     border-top: 0;
     padding-top: 0;
@@ -3925,22 +3706,6 @@
     linear-gradient(180deg, rgba(253, 230, 138, 0.96), color-mix(in srgb, var(--builder-color-accent, #4ade80) 92%, transparent));
   box-shadow: 0 14px 34px color-mix(in srgb, var(--builder-color-accent, #4ade80) 16%, transparent);
 }
-
-:where(.builder-scope) .review-box-button--compact {
-  /* Same action styling as the full review-box-button (colors, disabled
-     state, is-unlocked state all inherited via the shared class), just
-     sized to sit inline instead of as a full-width block -- used inside
-     the docked floating card, where there is no room for the full-size
-     button. */
-  width: auto;
-  min-width: 0;
-  margin: 0;
-  padding: 6px 12px;
-  border-radius: 999px;
-  font-size: var(--builder-unit-072);
-  white-space: nowrap;
-}
-
 
 :where(.builder-scope) .details-button {
   margin-top: 8px;

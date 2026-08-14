@@ -59,7 +59,6 @@ export const enUS = {
   "builder.morePoints": "{count} more point{plural}",
   "builder.requirementConjunction": "{first} and {second}",
   "builder.reviewMyBox": "Review My Box",
-  "builder.reviewCompact": "Review",
   "builder.collapseSummary": "Collapse box",
   "builder.expandSummary": "Expand box",
   "builder.reviewNeed": "Need",

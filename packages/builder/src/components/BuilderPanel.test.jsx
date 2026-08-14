@@ -673,55 +673,46 @@ describe("BuilderPanel docked-summary collapse/expand", () => {
     stickySummarySource.indexOf("isDockedAndCollapsed ? ("),
     stickySummarySource.indexOf("        </div>\n      ) : (")
   );
+  const expandedBranchSource = stickySummarySource.slice(
+    stickySummarySource.indexOf("        </div>\n      ) : (")
+  );
   const summaryRowSource = stickySummarySource.slice(
     stickySummarySource.indexOf('<div className="builder-panel-summary-row">'),
     stickySummarySource.indexOf("<BoxSlotTray")
   );
 
-  it("never renders the collapse toggle or compact Review action when not docked", () => {
+  it("never renders the collapse toggle or docked-collapsed surface when not docked", () => {
     const markup = renderBuilderPanel();
     expect(markup).not.toContain("summary-collapse-toggle");
-    expect(markup).not.toContain("box-summary-action");
     expect(markup).not.toContain("builder-panel-docked-collapsed");
   });
 
-  it("keeps Review as the fourth segment of the same box-summary-card strip, not a fourth .box-summary-metric", () => {
-    // Regression guard for both density issues browser acceptance found in
-    // turn: Review must live inside the strip (not float outside it as a
-    // separate overlay cluster), but it must never be styled/counted as a
-    // fourth .box-summary-metric -- that selector's equal-width treatment
-    // is reserved for the three real stats.
-    const metricCount = (summaryRowSource.match(/className="box-summary-metric/g) || []).length;
-    expect(metricCount).toBe(3);
-    expect(summaryRowSource).toContain("box-summary-action");
-    expect(summaryRowSource).toContain("reviewCompact");
-    // Review is gated by isSummaryDocked inside the row, and is the last
-    // child of .box-summary-card before the row's tray-scale sibling opens.
-    const boxSummaryCardSource = summaryRowSource.slice(
-      summaryRowSource.indexOf('<div className="box-summary-card"'),
-      summaryRowSource.indexOf('<div className="builder-panel-tray-scale">')
-    );
-    expect(boxSummaryCardSource).toMatch(/\{isSummaryDocked && \([\s\S]*box-summary-action/);
-  });
+  it("never gives the docked summary its own Review action -- the panel's existing review-action button stays the only entry point", () => {
+    // Simplification regression guard: a prior round added a compact
+    // in-strip Review action to the docked summary, then removed it again
+    // to restore the canonical (non-docked) panel composition. Nothing in
+    // BuilderPanel.jsx may reintroduce a second Review call site.
+    expect(stickySummarySource).not.toContain("box-summary-action");
+    expect(stickySummarySource).not.toContain("reviewCompact");
+    expect(summaryRowSource.match(/className="box-summary-metric/g) || []).toHaveLength(3);
 
-  it("reuses the exact same eligibility gate and open-review handler for every Review action -- never a second implementation", () => {
     const reviewActionPairs = builderPanelSource.match(/disabled=\{!isBoxReady\}[\s\S]{0,80}onClick=\{handleOpenReview\}/g) || [];
-    // The original full-width review-action button, the in-strip compact
-    // action, and the collapsed control surface's Review button: three
-    // call sites, one shared prop pair, no local recomputation of
-    // readiness anywhere in this file.
-    expect(reviewActionPairs).toHaveLength(3);
+    expect(reviewActionPairs).toHaveLength(1);
     expect(builderPanelSource).not.toMatch(/const isBoxReady\s*=/);
   });
 
-  it("keeps the collapse toggle a separate, absolutely-positioned control that never displaces the strip's metric/action layout", () => {
-    // Collapse toggle is its own isSummaryDocked-gated block, after (not
-    // inside) .builder-panel-summary-row -- CSS positions it out of flow
-    // (summary-collapse-toggle--docked), so it can never compete with the
-    // strip's metrics/Review for space.
-    const afterRowSource = stickySummarySource.slice(stickySummarySource.indexOf("<BoxSlotTray"));
-    expect(afterRowSource).toMatch(/\{isSummaryDocked && \([\s\S]{0,500}summary-collapse-toggle--docked/);
-    expect(appCss).toMatch(/:where\(\.builder-scope\) \.summary-collapse-toggle--docked \{[^}]*position:\s*absolute;/);
+  it("places the collapse toggle inside the existing panel-header row, not a separately-positioned control", () => {
+    // The docked summary is meant to reuse the panel's own existing
+    // header layout rather than introduce new absolute-positioning
+    // geometry -- the toggle is just a third, isSummaryDocked-gated child
+    // of the same flex row as the title and Clear button.
+    const panelHeaderSource = expandedBranchSource.slice(
+      expandedBranchSource.indexOf('<div className="panel-header">'),
+      expandedBranchSource.indexOf("{shouldShowDiscoveryIntro")
+    );
+    expect(panelHeaderSource).toMatch(/\{isSummaryDocked && \([\s\S]{0,600}summary-collapse-toggle/);
+    expect(panelHeaderSource).not.toContain("summary-collapse-toggle--docked");
+    expect(appCss).not.toMatch(/\.summary-collapse-toggle--docked/);
   });
 
   it("unmounts BoxSlotTray and every domain-mutating callback in the collapsed branch, so collapsing cannot touch box state", () => {
@@ -740,27 +731,32 @@ describe("BuilderPanel docked-summary collapse/expand", () => {
     expect(esMX["builder.collapseSummary"]).toBeTruthy();
     expect(esMX["builder.expandSummary"]).toBeTruthy();
     expect(esMX["builder.collapseSummary"]).not.toBe(esMX["builder.expandSummary"]);
+    expect(esMX["builder.reviewCompact"]).toBeUndefined();
 
     const stateDeclarationIndex = normalizedPanelSource.indexOf("const [isSummaryCollapsed");
     const nearbySource = normalizedPanelSource.slice(stateDeclarationIndex, stateDeclarationIndex + 500);
     expect(nearbySource).not.toMatch(/localStorage|sessionStorage/);
   });
 
-  it("respects prefers-reduced-motion for the docked card and collapse toggle transitions", () => {
+  it("respects prefers-reduced-motion for the collapse toggle's transition", () => {
     expect(appCss).toMatch(
       /@media \(prefers-reduced-motion: no-preference\) \{[\s\S]*?:where\(\.builder-scope\) \.summary-collapse-toggle \{[^}]*transition:/
     );
     expect(appCss).not.toMatch(/^:where\(\.builder-scope\) \.summary-collapse-toggle \{[^}]*transition:/m);
+    // The docked card itself no longer has its own transition -- expanded
+    // docked carries no max-height at all, so there is nothing to animate.
+    expect(appCss).not.toMatch(/\.builder-panel-sticky-summary-card\.is-docked \{[^}]*transition:/);
   });
 
-  it("keeps a docked ceiling, and gives collapsed its own smaller cap instead of growing the header slot", () => {
-    // 198px/60px (was 166px/52px): both ceilings were found to actually
-    // clip real content -- confirmed via scrollHeight vs clientHeight on
-    // the rendered card, not just tight spacing -- so both grew by the
-    // measured minimum needed for zero clipping plus a small margin.
-    // Collapsed stays meaningfully smaller than expanded either way.
-    expect(appCss).toMatch(/:where\(\.builder-scope\) \.builder-panel-sticky-summary-card\.is-docked \{[^}]*max-height:\s*198px;/);
-    expect(appCss).toMatch(/:where\(\.builder-scope\) \.builder-panel-sticky-summary-card\.is-docked\.is-collapsed \{[^}]*max-height:\s*60px;/);
+  it("gives expanded-docked no height ceiling of its own, and collapsed a small ceiling sized only for its own compact surface", () => {
+    // Expanded docked reuses the canonical panel composition verbatim, so
+    // it carries no width/height/padding/font-size overrides at all --
+    // no max-height to clip against. Collapsed has no canonical
+    // equivalent to match, so it keeps its own small measured cap.
+    const dockedRuleMatch = appCss.match(/:where\(\.builder-scope\) \.builder-panel-sticky-summary-card\.is-docked \{[^}]*\}/);
+    expect(dockedRuleMatch[0]).not.toMatch(/max-height:/);
+    expect(dockedRuleMatch[0]).not.toMatch(/width:|padding-left:|padding-right:|font-size:/);
+    expect(appCss).toMatch(/:where\(\.builder-scope\) \.builder-panel-sticky-summary-card\.is-docked\.is-collapsed \{[^}]*max-height:\s*42px;/);
   });
 });
 
@@ -825,41 +821,29 @@ describe("Docking boundary trigger", () => {
   });
 });
 
-// Regression coverage for the second real defect found in browser
-// acceptance: the docked strip (Espacios | Puntos | Total | Revisar) was
-// cramped at the original 360px slot width, and separately, the collapse
-// chevron (26px, absolutely positioned at left:4px) needs a left gutter
-// wider than plain padding would give it, or it visually overlaps the
-// first metric's content -- confirmed via getBoundingClientRect() against
-// real DOM before the fix (a true overlap, not just visual closeness).
-// aurelian's globals.css and the shared package's styles.css each hold
-// half of this width math and have no build-time link to each other, so
-// these tests assert the arithmetic relationship directly rather than just
-// the individual literals, to catch future drift between the two files.
-describe("Docked-strip width and collapse-chevron clearance", () => {
-  const dockedCardPaddingMatch = appCss.match(
-    /:where\(\.builder-scope\) \.builder-panel-sticky-summary-card\.is-docked \{[^}]*\}/
-  );
-  const chevronDockedMatch = appCss.match(
-    /:where\(\.builder-scope\) \.summary-collapse-toggle--docked \{[^}]*\}/
-  );
-  const trayScaleDockedMatch = appCss.match(
-    /:where\(\.builder-scope\) \.builder-panel-sticky-summary-card\.is-docked \.builder-panel-tray-scale \{[^}]*\}/
-  );
+// Cross-file lockstep coverage: aurelian's globals.css and the shared
+// package's styles.css each own half of the docked slot's width and have
+// no build-time link to each other. The docked-summary simplification
+// made the invariant simpler than it used to be -- the slot no longer
+// needs to match a docked-only tray-scale width, it just needs to match
+// the same 360px column the panel already renders at in its non-docked
+// state (.layout's own grid-template-columns), since the docked summary
+// now reuses that exact composition unmodified.
+describe("Docked slot width lockstep", () => {
   const slotWidthMatch = aurelianGlobalsCss.match(/\.site-header__builder-slot\s*\{[^}]*width:\s*(\d+)px;/);
   const navMarginMatch = aurelianGlobalsCss.match(/\.desktop-nav\s*\{\s*margin-right:\s*(\d+)px;\s*\}/);
+  // Scoped to the 981px two-column breakpoint specifically (via its
+  // distinguishing 16px gap, not shared by the smaller-viewport base rule's
+  // own 400px/20px-gap layout) -- that's the same breakpoint the docked
+  // header slot only ever applies at.
+  const layoutColumnsMatch = appCss.match(
+    /:where\(\.builder-scope\) \.layout \{\s*grid-template-columns:\s*minmax\(0, 1fr\) (\d+)px;\s*gap:\s*16px;/
+  );
 
-  it("keeps the Aurelian header slot and the shared docked-card content width in lockstep", () => {
-    const paddingLeft = Number(dockedCardPaddingMatch[0].match(/padding-left:\s*(\d+)px;/)[1]);
-    const paddingRight = Number(dockedCardPaddingMatch[0].match(/padding-right:\s*(\d+)px;/)[1]);
+  it("keeps the Aurelian header slot the same width as the panel's own right column", () => {
     const slotWidth = Number(slotWidthMatch[1]);
-    const trayScaleWidth = Number(trayScaleDockedMatch[0].match(/width:\s*(\d+)px;/)[1]);
-
-    // The card's content width (slot minus its own horizontal padding) must
-    // equal the width the tray/metrics-strip is actually built for -- if
-    // one file changes without the other, this is exactly the kind of
-    // cramped-strip regression this whole test exists to catch.
-    expect(slotWidth - paddingLeft - paddingRight).toBe(trayScaleWidth);
+    const panelColumnWidth = Number(layoutColumnsMatch[1]);
+    expect(slotWidth).toBe(panelColumnWidth);
   });
 
   it("reserves the nav's margin-right as exactly the slot width plus a fixed 16px breathing gap", () => {
@@ -867,76 +851,40 @@ describe("Docked-strip width and collapse-chevron clearance", () => {
     const navMargin = Number(navMarginMatch[1]);
     expect(navMargin - slotWidth).toBe(16);
   });
-
-  it("gives the docked collapse chevron a left gutter wider than the chevron itself, with real clearance on both sides", () => {
-    const paddingLeft = Number(dockedCardPaddingMatch[0].match(/padding-left:\s*(\d+)px;/)[1]);
-    const chevronLeft = Number(chevronDockedMatch[0].match(/left:\s*(\d+)px;/)[1]);
-    const chevronWidthMatch = appCss.match(/:where\(\.builder-scope\) \.summary-collapse-toggle \{[^}]*width:\s*(\d+)px;/);
-    const chevronWidth = Number(chevronWidthMatch[1]);
-
-    // This is the exact inequality that was violated before the fix:
-    // chevronLeft(8) + chevronWidth(26) = 34 > the old 22px gutter, a real
-    // ~12px overlap with the first metric's content, not just tight
-    // spacing. Both sides now keep a positive margin.
-    expect(chevronLeft).toBeGreaterThan(0);
-    expect(paddingLeft - (chevronLeft + chevronWidth)).toBeGreaterThan(0);
-  });
 });
 
-// Regression coverage for the vertical defect found after the horizontal
-// fixes: the docked strip's real rendered height was never actually 36px
-// (its declared height) at all -- a less-specific, shared
-// ".builder-panel-summary-row .box-summary-card { flex: 1; ... }" rule
-// earlier in the same media block set flex-basis:0%, which overrides the
-// height property entirely for a column-direction flex item. Confirmed
-// live: even an inline height set via !important had zero effect on the
-// rendered size. The strip's true height was purely content-driven, and
-// when Review's padding grew in the horizontal-fix round, that
-// content-driven height grew enough to clip against the (also
-// content-blind) 166px ceiling -- real clipping, confirmed via
-// scrollHeight vs clientHeight, not just tight spacing.
-describe("Docked strip vertical sizing", () => {
-  const boxSummaryCardDockedMatch = appCss.match(
-    /:where\(\.builder-scope\) \.builder-panel-sticky-summary-card\.is-docked \.builder-panel-summary-row \.box-summary-card \{[^}]*\}/
-  );
-
-  it("fixes the strip's height with an explicit flex-basis, not just the height property alone", () => {
-    // A bare height:44px here would silently repeat the exact bug this
-    // guards against -- the earlier, less-specific flex:1 rule in this
-    // same file sets flex-basis:0%, which wins over height for a
-    // column-direction flex item regardless of what height says.
-    expect(boxSummaryCardDockedMatch[0]).toMatch(/flex:\s*0 0 44px;/);
+// Regression guard for the docked-summary simplification itself: a prior
+// round gave the docked state a dedicated, narrower geometry (tray-scale
+// width, vial/cap/body/label sizing, a flex-basis'd stats strip, an
+// absolutely-positioned collapse chevron, a compact Review button) to make
+// room for an in-strip Review action. That action has since been removed
+// entirely, and with it the pressure that geometry existed for -- the
+// docked summary now reuses the exact same non-docked composition
+// unmodified. These assertions confirm none of that old geometry has been
+// reintroduced.
+describe("No docked-only geometry overrides remain", () => {
+  it("keeps the docked/collapsed selectors free of tray, vial, and strip-sizing overrides", () => {
+    expect(appCss).not.toMatch(/\.is-docked \.builder-panel-tray-scale/);
+    expect(appCss).not.toMatch(/\.is-docked \.box-slot-tray/);
+    expect(appCss).not.toMatch(/\.is-docked \.box-column/);
+    expect(appCss).not.toMatch(/\.is-docked \.box-vial/);
+    expect(appCss).not.toMatch(/\.is-docked \.vial-cap/);
+    expect(appCss).not.toMatch(/\.is-docked \.vial-body/);
+    expect(appCss).not.toMatch(/\.is-docked \.vial-label/);
+    expect(appCss).not.toMatch(/\.is-docked \.bonus-slot-icon/);
+    expect(appCss).not.toMatch(/\.is-docked \.empty-slot-add/);
+    expect(appCss).not.toMatch(/\.is-docked \.builder-panel-summary-row \.box-summary-card/);
+    expect(appCss).not.toMatch(/\.is-docked \.builder-panel-summary-row \.box-summary-metric/);
   });
 
-  it("keeps the expanded and collapsed ceilings tall enough for their real content, not just their old (silently wrong) numbers", () => {
-    const dockedCardMatch = appCss.match(
-      /:where\(\.builder-scope\) \.builder-panel-sticky-summary-card\.is-docked \{[^}]*\}/
-    );
-    const collapsedMatch = appCss.match(
-      /:where\(\.builder-scope\) \.builder-panel-sticky-summary-card\.is-docked\.is-collapsed \{[^}]*\}/
-    );
-    const paddingTop = Number(dockedCardMatch[0].match(/padding-top:\s*(\d+)px;/)[1]);
-    const paddingBottom = Number(dockedCardMatch[0].match(/padding-bottom:\s*(\d+)px;/)[1]);
-    const maxHeight = Number(dockedCardMatch[0].match(/max-height:\s*(\d+)px;/)[1]);
-    const trayHeight = Number(
-      appCss
-        .match(/:where\(\.builder-scope\) \.builder-panel-sticky-summary-card\.is-docked \.builder-panel-tray-scale \{[^}]*\}/)[0]
-        .match(/height:\s*(\d+)px;/)[1]
-    );
-    const rowGap = Number(
-      appCss
-        .match(/:where\(\.builder-scope\) \.builder-panel-sticky-summary-card\.is-docked \.builder-panel-summary-row \{[^}]*\}/)[0]
-        .match(/gap:\s*(\d+)px;/)[1]
-    );
-    const stripHeight = Number(boxSummaryCardDockedMatch[0].match(/flex:\s*0 0 (\d+)px;/)[1]);
-    // Loose (not pixel-exact) lower bound: the declared budget must at
-    // least fit the real stack, with a border-top on the strip and some
-    // slack for the ceiling to still count as "not zero-overflow math".
-    const minimumRequired = paddingTop + trayHeight + rowGap + stripHeight + paddingBottom;
-    expect(maxHeight).toBeGreaterThanOrEqual(minimumRequired);
+  it("removes the compact in-strip Review action and its dedicated styling entirely", () => {
+    expect(appCss).not.toMatch(/\.box-summary-action/);
+    expect(appCss).not.toMatch(/\.review-box-button--compact/);
+    expect(esMX["builder.reviewCompact"]).toBeUndefined();
+  });
 
-    const collapsedMaxHeight = Number(collapsedMatch[0].match(/max-height:\s*(\d+)px;/)[1]);
-    expect(collapsedMaxHeight).toBeLessThan(maxHeight);
+  it("removes the collapse chevron's old absolutely-positioned docked gutter", () => {
+    expect(appCss).not.toMatch(/\.summary-collapse-toggle--docked/);
   });
 });
 

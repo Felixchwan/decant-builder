@@ -59,7 +59,6 @@ export const esMX = {
   "builder.morePoints": "{count} punto{plural}",
   "builder.requirementConjunction": "{first} y {second}",
   "builder.reviewMyBox": "Revisar mi caja",
-  "builder.reviewCompact": "Revisar",
   "builder.collapseSummary": "Colapsar caja",
   "builder.expandSummary": "Expandir caja",
   "builder.reviewNeed": "Falta",

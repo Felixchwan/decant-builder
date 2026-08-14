@@ -24,18 +24,19 @@ button,input,select { font:inherit; }
 /* On the Builder route the header CTA is hidden (redundant with the page the
    user is already on). Reserve that freed space on the right of the nav so
    it doesn't stretch to the header's own edge, and instead ends roughly at
-   the boundary of the Builder's own right panel column. 404px is the
-   docked-summary slot width below (.site-header__builder-slot) plus a 16px
-   breathing gap. Kept as a literal here since this app has no build-time
-   link to the shared Builder package's CSS; if the slot width changes
-   again, this should change with it. Scoped to the Builder's own
+   the boundary of the Builder's own right panel column. 376px is the
+   docked-summary slot width below (.site-header__builder-slot, 360px --
+   the same width as .builder-panel's own rendered column, see below) plus
+   a 16px breathing gap. Kept as a literal here since this app has no
+   build-time link to the shared Builder package's CSS; if the slot width
+   changes again, this should change with it. Scoped to the Builder's own
    two-column breakpoint (981px), not this header's own 900px mobile
    cutoff, since below 981px the Builder has no right panel to align with.
    At 981px (the narrowest width this applies to) the nav still sits real
    clear space from the wordmark, so this reservation has headroom before
    it could ever collide with the rest of the header. */
 @media (min-width:981px) {
-  .site-header__inner--builder .desktop-nav { margin-right:420px; }
+  .site-header__inner--builder .desktop-nav { margin-right:376px; }
 }
 /* Reserved dock for the Builder's compact box summary once it scrolls to
    the top of the viewport (see BuilderPanel.jsx's docking logic, wired via
@@ -44,37 +45,66 @@ button,input,select { font:inherit; }
    The nav's own margin-right (above) is what reserves this horizontal
    region — the slot must NOT reserve it a second time as a flex sibling,
    or the two reservations stack and squeeze the nav into wrapping. Taking
-   the slot out of flex flow entirely (position:absolute) and overlaying it
-   on that same already-reserved region is what keeps it from competing
-   with the nav for width while still landing in the right place; the
-   header gets its own position:relative so the slot's containing block is
-   this row, not some further ancestor. Its own height isn't set — it has
-   no content and therefore no footprint until docked — and once the
-   summary card portals in, the card (position:absolute, see below) is
-   sized by its own content, extending below the header's own height into
-   the page below without growing the header itself. 404px is deliberately
-   wider than .builder-panel's own 360px rendered (undocked) width -- real-
-   browser acceptance found the docked strip's four segments (Espacios /
-   Puntos / Total / Revisar) too cramped at 360px, inspecting the collapse
-   chevron's own footprint (packages/builder styles.css,
-   .summary-collapse-toggle--docked) found it needs a dedicated left gutter
-   wider than plain padding provided, and a further real-browser pass found
-   Review specifically still short on padding at 396px, confirmed by
-   measuring the label's own natural text width against the button's
-   padded content box (only ~10px/side of padding, versus the three
-   metrics' 42-50px of slack at worst-case content) -- this last +8px is
-   dedicated entirely to Review's own padding (packages/builder
-   styles.css, .box-summary-action), not spread across the strip.
-   Matching 360px exactly would require
-   widening the shared .layout grid's fixed panel column instead
-   (packages/builder styles.css), which would also reflow the catalog grid
-   on every host, including Discovery Decants -- a much wider blast radius
-   than this purely cosmetic docked-header spacing fix justifies. The
-   docked card is therefore intentionally wider than the sidebar column it
-   detaches from. */
-.site-header__inner--builder { position:relative; }
-.site-header__builder-slot { position:absolute; top:0; right:0; width:404px; }
-#aurelian-builder-summary-slot .builder-panel-sticky-summary-card { position:absolute; top:0; left:0; right:0; }
+   the slot out of flex flow entirely (position:absolute) is what keeps it
+   from competing with the nav for width while still landing in the right
+   place. Its own height isn't set — it has no content and therefore no
+   footprint until docked — and once the summary card portals in, the card
+   (position:absolute, see below) is sized by its own content, extending
+   below the header's own height into the page below without growing the
+   header itself.
+   Anchored to .site-header (via its own pre-existing position:sticky,
+   which already establishes a containing block -- no position:relative
+   needed here), not .site-header__inner-builder. .site-header__inner is
+   a centered, width-capped box (max 1240px) that stops tracking the
+   viewport's right edge past that cap -- anchoring the slot to it left
+   the docked card's right edge up to ~80-300px short of the actual panel
+   column's right edge at real desktop widths (confirmed live via
+   getBoundingClientRect on both), a real, growing misalignment as the
+   viewport widens past ~1272px.
+   The catalog/panel column below has its own, separate centered cap:
+   .builder-page > .builder-theme-root (this file, further down) is
+   width:min(1440px,100%); margin-inline:auto -- a different value and a
+   different box than .site-header__inner's 1240px cap, then .app inside
+   it (packages/builder styles.css) adds another 12px of its own right
+   inline padding at this same 981px breakpoint before the actual panel
+   column starts. right:12px alone (this rule's first version) only
+   matched that at exactly one viewport width, where the two caps happen
+   to coincide -- confirmed live it was off by -232px at 1920px, since
+   .site-header (uncapped, tracks the raw viewport) and
+   .builder-theme-root (capped at 1440px, centered) diverge once the
+   viewport exceeds that cap. The formula below reproduces
+   .builder-theme-root's own centering math (half the excess over 1440px,
+   floored at 0) directly, using percentages of .site-header's own width
+   (its containing-block percentage basis) rather than 100vw, since vw
+   units include the scrollbar and .site-header's real width does not --
+   confirmed live this keeps the slot's right edge locked to the panel's
+   right edge at 981px, 1440px (the cap boundary), and 1920px, not just
+   the one width a flat px value would happen to match. The nav's own
+   margin-right reservation still has real headroom against the slot's
+   position at every one of those widths; the nav/slot gap is no longer a
+   constant 16px the way it was originally (nav stays inside
+   .site-header__inner's own, differently-capped centered box), but it
+   never goes negative.
+   360px matches .builder-panel's own rendered (undocked) width exactly --
+   a prior round widened this to 404px to fit a compact Review action
+   inside the docked strip; that action has since been removed from the
+   docked summary entirely (the shared Builder package's own component and
+   stylesheet own that removal), so the pressure that width existed for is
+   gone. The docked card is meant to look like the exact same panel moved
+   into the header, not a redesigned, wider version of it -- same width,
+   same left/right edges (via the alignment fix above), no overhang past
+   the panel's own footprint. */
+.site-header__builder-slot { position:absolute; top:0; right:max(12px, calc(50% - 708px)); width:360px; }
+#aurelian-builder-summary-slot .builder-panel-sticky-summary-card {
+  position:absolute; top:0; left:0; right:0;
+  /* Matches .site-header's own background/blur exactly (rgba(9,10,9,.88),
+     blur(18px)) rather than the shared package's default dark-green
+     surface gradient -- the docked card visually sits inside the header,
+     so it should read as part of the same surface, not a distinct panel
+     floating on top of it. */
+  background:rgba(9,10,9,.88);
+  backdrop-filter:blur(18px);
+}
 .button { display:inline-flex; justify-content:center; align-items:center; min-height:3rem; padding:.75rem 1.25rem; border:1px solid var(--gold); background:var(--gold); color:var(--ink); font-weight:750; letter-spacing:.02em; transition:background .2s ease,transform .2s ease; }
 .button:hover { background:#d6b778; transform:translateY(-1px); }
 .button--compact { min-height:2.55rem; padding:.55rem 1rem; font-size:.82rem; }
