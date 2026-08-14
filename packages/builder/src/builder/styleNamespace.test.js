@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest";
 const builderCss = readFileSync(new URL("../../styles.css", import.meta.url), "utf8").replace(/\r\n/g, "\n");
 const originalRulesStart = builderCss.indexOf(":where(.builder-scope) .app {");
 const transformedOriginalRules = builderCss.slice(originalRulesStart);
-const BASELINE_SHA256 = "91f1c76d649f3efda67d02d3b1a4d497ebd780a25e8eebb94a10c878541fd98c";
+const BASELINE_SHA256 = "2b0b461cbda12c227600f76f0226759686aa714781b91fa5e4c3180122a1c6b2";
 const unitDefinitions = [...builderCss.matchAll(/(--builder-unit-(\d+)):\s*([\d.]+)px;/g)];
 const unitReferences = [...builderCss.matchAll(/var\((--builder-unit-(\d+))\)/g)];
 

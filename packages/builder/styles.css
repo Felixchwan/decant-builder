@@ -425,13 +425,45 @@
      the negative margin that normally pulls the card flush against the
      panel's own padding would just push it off its host slot instead. The
      host positions the docked card within its own slot. max-height enforces
-     the locked header footprint (166px) at the card level itself, rather
-     than only relying on each child's own dimensions summing correctly —
-     a hard ceiling, not a magic offset, so nothing can visually spill past
-     the reserved header region regardless of any individual child's sizing. */
+     the locked header footprint at the card level itself, rather than only
+     relying on each child's own dimensions summing correctly — a hard
+     ceiling, not a magic offset, so nothing can visually spill past the
+     reserved header region regardless of any individual child's sizing.
+     198px (was 166px): measured via scrollHeight/clientHeight on the real
+     rendered card that the true content stack (padding-top 10 + tray 122
+     + row gap 4 + the strip's real fixed height 44 + padding-bottom 10)
+     is 190px -- at the old 166px ceiling, 24px of that was being clipped,
+     cutting off part of Review and the metric labels' bottom edge, not
+     just leaving them tight. 190px alone would be zero-overflow with no
+     visible margin left below the strip; 198px leaves ~8px of real,
+     visible breathing room beneath it instead. See .box-summary-card's
+     flex-basis/height below for the matching fixed band-height fix this
+     pairs with (its 36px predecessor was itself being silently overridden
+     by a flex-basis:0% it inherited, so the strip was never actually a
+     fixed height at all until now). */
   margin: 0;
   padding-top: 10px;
-  max-height: 166px;
+  /* Asymmetric on purpose: the base rule's 22px/22px horizontal padding
+     leaves a left gutter narrower than the 26px collapse chevron
+     (.summary-collapse-toggle--docked below), which measured as a real
+     ~12px overlap with the first metric's content -- not merely close, an
+     actual overlap, confirmed via getBoundingClientRect() against the real
+     chevron position. 34px gives the chevron a dedicated lane with ~4px of
+     clearance on both sides; the right side is untouched since nothing
+     else anchors there. See .site-header__builder-slot in
+     apps/aurelian/src/app/globals.css for the slot-width math this pairs
+     with (kept in the same 348px-content-width budget as the metrics/
+     action strip below). */
+  padding-left: 34px;
+  padding-right: 22px;
+  /* Was the base rule's inherited 18px -- at the old 166px ceiling that
+     18px was already being fully consumed by the clipping bug above (and
+     then some), so it was never actually visible as bottom breathing room
+     in practice. 10px, explicit and docked-only, is a deliberate, real,
+     visible margin below the strip instead of a stale inherited value
+     that happened to be silently swallowed. */
+  padding-bottom: 10px;
+  max-height: 198px;
   overflow: hidden;
   /* Anchors .summary-collapse-toggle--docked's absolute lower-left
      position to this card, never to the page. */
@@ -446,10 +478,18 @@
 }
 
 :where(.builder-scope) .builder-panel-sticky-summary-card.is-docked.is-collapsed {
-  /* Collapsed drops the 166px ceiling down to just what the compact
+  /* Collapsed drops the expanded ceiling down to just what the compact
      control surface actually needs -- there is no tray/stats content left
-     to reserve room for. */
-  max-height: 52px;
+     to reserve room for. Was 52px: measured the same way as the expanded
+     strip (scrollHeight vs clientHeight on the real rendered card) and
+     found this collapsed surface has the identical issue -- its own
+     Review button (~40px here, taller than the in-strip one since this
+     branch renders the plain .review-box-button--compact class, not the
+     .box-summary-action override) plus its 8px/8px padding needs ~56px,
+     clipping ~4-5px at 52. 60px removes the clip with a few px of real
+     margin left over, still meaningfully more compact than the expanded
+     ceiling. */
+  max-height: 60px;
   padding: 8px 10px;
 }
 
@@ -482,11 +522,16 @@
 
 :where(.builder-scope) .summary-collapse-toggle--docked {
   /* Lower-left corner of the floating/docked card, out of flow -- costs
-     nothing against the 166px height ceiling regardless of DOM position,
-     and never competes with the strip's metrics/Review segment for
-     space, since Review lives inside .box-summary-card, not here. */
+     nothing against the expanded height ceiling regardless of DOM
+     position, and never competes with the strip's metrics/Review segment for
+     space, since Review lives inside .box-summary-card, not here.
+     left:4px sits inside the card's own 34px left gutter (see
+     .builder-panel-sticky-summary-card.is-docked) -- at 26px wide this
+     control needs a lane wider than the base rule's 22px padding
+     provided, which is what caused the real overlap this width pairs
+     with fixing. */
   position: absolute;
-  left: 8px;
+  left: 4px;
   bottom: 8px;
   z-index: 1;
 }
@@ -3261,7 +3306,12 @@
   }
 
   :where(.builder-scope) .builder-panel-sticky-summary-card.is-docked .builder-panel-tray-scale {
-    width: 316px;
+    /* 348px = the docked card's full content width (404px header slot minus
+       its own 34px/22px asymmetric horizontal padding -- see
+       .builder-panel-sticky-summary-card.is-docked above) -- kept in
+       lockstep with .site-header__builder-slot's width in
+       apps/aurelian/src/app/globals.css. */
+    width: 348px;
     height: 122px;
     overflow: hidden;
   }
@@ -3270,13 +3320,14 @@
     /* Non-uniform docked layout: the same two-column/eight-row topology as
        the normal tray, at its own purpose-built dimensions rather than a
        transform:scale() copy — cells go shorter and wider instead of
-       shrinking uniformly. Column tracks (144px) + channel (12px) sum to
-       the full 316px width; no extra grid gap is needed since the channel
-       track already provides the visual separation. */
+       shrinking uniformly. Column tracks (160px) + channel (12px) sum to
+       the full 348px width (160+12+160=332, plus the 8px/8px padding
+       below); no extra grid gap is needed since the channel track already
+       provides the visual separation. */
     width: auto;
     margin: 0;
     padding: 4px 8px;
-    grid-template-columns: 144px 12px 144px;
+    grid-template-columns: 160px 12px 160px;
     gap: 0;
     transform: none;
   }
@@ -3322,9 +3373,31 @@
 
   :where(.builder-scope) .builder-panel-sticky-summary-card.is-docked .builder-panel-summary-row .box-summary-card {
     /* Metrics move from a tall vertical column beside the tray to a short
-       horizontal band beneath it: ~36px tall, three equal-width cells. */
+       horizontal band beneath it: three equal-width cells + Review.
+       Was 36px -- at that height Review's own rendered button (~36px,
+       including its padding/border/line-height) had only ~1px of
+       clearance top and bottom inside the band, i.e. visually touching
+       its edges. 44px gives real, measured clearance (~4-5px per side
+       around Review, ~9px per side around the shorter metric content)
+       without changing any horizontal proportions. See
+       .builder-panel-sticky-summary-card.is-docked's max-height above for
+       the matching ceiling increase this requires so the taller band
+       isn't clipped.
+       flex: 0 0 44px (not just height:44px) is load-bearing here: the
+       less-specific, shared .builder-panel-summary-row .box-summary-card
+       rule earlier in this same media block sets flex:1, i.e.
+       flex-basis:0% -- for a column-direction flex item, a non-auto
+       flex-basis wins over the height property entirely, so plain
+       height:44px was silently ignored (confirmed live: even height set
+       via an inline priority-forced override had zero effect on the
+       rendered size).
+       flex-basis:44px here overrides that 0% basis directly, and
+       grow:0/shrink:0 keep it fixed rather than re-entering the same
+       grow-to-fill-content behavior that produced the wrong height
+       before. */
     order: 2;
-    height: 36px;
+    flex: 0 0 44px;
+    height: 44px;
     flex-direction: row;
     align-items: stretch;
     justify-content: stretch;
@@ -3351,11 +3424,22 @@
        flex:1, never shares the metrics' equal-width treatment) so it
        reads as an action, not a stat. review-box-button--compact's own
        pill/gradient chrome already carries that "this is a button, not a
-       label" read; this rule only fits it into the 36px-tall strip. */
+       label" read; this rule only fits it into the strip's own band
+       height (see .box-summary-card above).
+       padding was 10px/side; real-browser acceptance still found it
+       cramped. 14px/side gives ~14px of measured breathing room per side
+       (button clientWidth minus the label's own natural text width,
+       halved) -- a real, felt increase, not a rounding artifact. The
+       three metrics were separately measured (including worst-case
+       content: 14/14 slots, 24.5 points, $2500 total) at 42-50px of slack
+       each -- comfortable already, so this +8px is dedicated entirely to
+       Review, not spread across the strip. See .site-header__builder-slot
+       in apps/aurelian/src/app/globals.css for the matching +8px
+       slot-width increase this pairs with. */
     flex: 0 0 auto;
     align-self: center;
-    margin: 0 4px 0 2px;
-    padding: 4px 8px;
+    margin: 0 6px 0 4px;
+    padding: 4px 14px;
     min-height: 0;
     font-size: var(--builder-unit-064);
     white-space: nowrap;

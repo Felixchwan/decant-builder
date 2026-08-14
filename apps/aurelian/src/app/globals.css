@@ -24,15 +24,18 @@ button,input,select { font:inherit; }
 /* On the Builder route the header CTA is hidden (redundant with the page the
    user is already on). Reserve that freed space on the right of the nav so
    it doesn't stretch to the header's own edge, and instead ends roughly at
-   the boundary of the Builder's own right panel column. 360px mirrors the
-   shared Builder package's fixed right-panel column width (packages/builder
-   styles.css, .layout grid-template-columns) — kept as a literal here since
-   this app has no build-time link to that package's CSS; if that column
-   width ever changes, this should change with it. Scoped to the Builder's
-   own two-column breakpoint (981px), not this header's own 900px mobile
-   cutoff, since below 981px the Builder has no right panel to align with. */
+   the boundary of the Builder's own right panel column. 404px is the
+   docked-summary slot width below (.site-header__builder-slot) plus a 16px
+   breathing gap. Kept as a literal here since this app has no build-time
+   link to the shared Builder package's CSS; if the slot width changes
+   again, this should change with it. Scoped to the Builder's own
+   two-column breakpoint (981px), not this header's own 900px mobile
+   cutoff, since below 981px the Builder has no right panel to align with.
+   At 981px (the narrowest width this applies to) the nav still sits real
+   clear space from the wordmark, so this reservation has headroom before
+   it could ever collide with the rest of the header. */
 @media (min-width:981px) {
-  .site-header__inner--builder .desktop-nav { margin-right:376px; }
+  .site-header__inner--builder .desktop-nav { margin-right:420px; }
 }
 /* Reserved dock for the Builder's compact box summary once it scrolls to
    the top of the viewport (see BuilderPanel.jsx's docking logic, wired via
@@ -49,11 +52,28 @@ button,input,select { font:inherit; }
    no content and therefore no footprint until docked — and once the
    summary card portals in, the card (position:absolute, see below) is
    sized by its own content, extending below the header's own height into
-   the page below without growing the header itself. 360px matches
-   .builder-panel's own rendered width, so the docked card reads as the
-   same column, not a resize. */
+   the page below without growing the header itself. 404px is deliberately
+   wider than .builder-panel's own 360px rendered (undocked) width -- real-
+   browser acceptance found the docked strip's four segments (Espacios /
+   Puntos / Total / Revisar) too cramped at 360px, inspecting the collapse
+   chevron's own footprint (packages/builder styles.css,
+   .summary-collapse-toggle--docked) found it needs a dedicated left gutter
+   wider than plain padding provided, and a further real-browser pass found
+   Review specifically still short on padding at 396px, confirmed by
+   measuring the label's own natural text width against the button's
+   padded content box (only ~10px/side of padding, versus the three
+   metrics' 42-50px of slack at worst-case content) -- this last +8px is
+   dedicated entirely to Review's own padding (packages/builder
+   styles.css, .box-summary-action), not spread across the strip.
+   Matching 360px exactly would require
+   widening the shared .layout grid's fixed panel column instead
+   (packages/builder styles.css), which would also reflow the catalog grid
+   on every host, including Discovery Decants -- a much wider blast radius
+   than this purely cosmetic docked-header spacing fix justifies. The
+   docked card is therefore intentionally wider than the sidebar column it
+   detaches from. */
 .site-header__inner--builder { position:relative; }
-.site-header__builder-slot { position:absolute; top:0; right:0; width:360px; }
+.site-header__builder-slot { position:absolute; top:0; right:0; width:404px; }
 #aurelian-builder-summary-slot .builder-panel-sticky-summary-card { position:absolute; top:0; left:0; right:0; }
 .button { display:inline-flex; justify-content:center; align-items:center; min-height:3rem; padding:.75rem 1.25rem; border:1px solid var(--gold); background:var(--gold); color:var(--ink); font-weight:750; letter-spacing:.02em; transition:background .2s ease,transform .2s ease; }
 .button:hover { background:#d6b778; transform:translateY(-1px); }

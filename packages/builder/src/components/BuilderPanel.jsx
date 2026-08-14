@@ -57,6 +57,7 @@ import {
 } from "../builder/presentation/onboardingPathSelection.js";
 import { buildFinalizationModel } from "../builder/internal/finalization/buildFinalizationModel.js";
 import { getTierData } from "../utils/tierUtils";
+import { computeSummaryDockState } from "../utils/computeSummaryDockState.js";
 import CollectionCard from "./CollectionCard";
 import { createTranslator } from "../i18n/createTranslator.js";
 import { ANALYTICS_EVENTS } from "../analytics/events.js";
@@ -216,15 +217,26 @@ const BuilderPanel = forwardRef(function BuilderPanel({
       if (!stickySummaryPortalTarget) {
         return undefined;
       }
-      if (
-        typeof window === "undefined" ||
-        typeof IntersectionObserver === "undefined" ||
-        !summarySentinelRef.current
-      ) {
+      if (typeof window === "undefined" || !summarySentinelRef.current) {
         return undefined;
       }
 
+      // Deliberately not IntersectionObserver: its callback is only
+      // required by spec to fire "eventually", batched on the browser's own
+      // schedule, not synchronously with scroll. In practice that batching
+      // is what produced the reported defect -- docking would sometimes lag
+      // arbitrarily behind the actual scroll position, and only catch up
+      // once some unrelated layout/paint event (e.g. collapsing the intro
+      // hero) forced the browser to recompute. The docking boundary here
+      // needs to be exact and immediate on every crossing, so it's measured
+      // directly off the sentinel's real-time getBoundingClientRect() on
+      // the same rAF-throttled scroll/resize loop every other
+      // scroll-position-driven UI uses, rather than waiting on a
+      // deferred/best-effort intersection callback. computeSummaryDockState
+      // is the actual boundary decision, kept pure and independent of both
+      // primitives so it stays unit-testable on its own.
       const desktopQuery = window.matchMedia("(min-width: 981px)");
+      let rafId = null;
 
       function transitionDocked(nextIsDocked) {
         if (isSummaryDockedRef.current === nextIsDocked) {
@@ -248,16 +260,17 @@ const BuilderPanel = forwardRef(function BuilderPanel({
         setIsSummaryDocked(nextIsDocked);
       }
 
-      function handleIntersect([entry]) {
-        if (!desktopQuery.matches) {
-          transitionDocked(false);
+      function evaluateDockState() {
+        rafId = null;
+        if (!summarySentinelRef.current) {
           return;
         }
-        // A 1px rootMargin buffer (below) keeps this from toggling back and
-        // forth at the exact boundary; boundingClientRect.top < 0 confirms
-        // the sentinel left above the viewport (scrolling down), not below it.
-        const shouldDock = !entry.isIntersecting && entry.boundingClientRect.top < 0;
-        if (shouldDock) {
+        const sentinelTop = summarySentinelRef.current.getBoundingClientRect().top;
+        const shouldDock = computeSummaryDockState({
+          sentinelTop,
+          isDesktopViewport: desktopQuery.matches,
+        });
+        if (shouldDock && !isSummaryDockedRef.current) {
           const height = summaryCardRef.current?.getBoundingClientRect().height;
           if (height) {
             setSummarySpacerHeight(height);
@@ -266,22 +279,28 @@ const BuilderPanel = forwardRef(function BuilderPanel({
         transitionDocked(shouldDock);
       }
 
-      const observer = new IntersectionObserver(handleIntersect, {
-        threshold: 0,
-        rootMargin: "-1px 0px 0px 0px",
-      });
-      observer.observe(summarySentinelRef.current);
-
-      function handleModeChange() {
-        if (!desktopQuery.matches) {
-          transitionDocked(false);
+      function scheduleEvaluate() {
+        if (rafId !== null) {
+          return;
         }
+        rafId = window.requestAnimationFrame(evaluateDockState);
       }
-      desktopQuery.addEventListener("change", handleModeChange);
+
+      // Establishes the correct state immediately on mount (e.g. arriving
+      // already scrolled past the boundary via client-side navigation),
+      // rather than waiting for the first scroll/resize event.
+      evaluateDockState();
+      window.addEventListener("scroll", scheduleEvaluate, { passive: true });
+      window.addEventListener("resize", scheduleEvaluate);
+      desktopQuery.addEventListener("change", scheduleEvaluate);
 
       return () => {
-        observer.disconnect();
-        desktopQuery.removeEventListener("change", handleModeChange);
+        if (rafId !== null) {
+          window.cancelAnimationFrame(rafId);
+        }
+        window.removeEventListener("scroll", scheduleEvaluate);
+        window.removeEventListener("resize", scheduleEvaluate);
+        desktopQuery.removeEventListener("change", scheduleEvaluate);
       };
     }, [stickySummaryPortalTarget]);
 

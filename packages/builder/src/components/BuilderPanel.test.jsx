@@ -14,7 +14,12 @@ import BuilderPanel, { ScentLibraryContent } from "./BuilderPanel.jsx";
 
 const originalWindow = globalThis.window;
 const appCss = readFileSync(new URL("../../styles.css", import.meta.url), "utf8");
+const aurelianGlobalsCss = readFileSync(
+  new URL("../../../../apps/aurelian/src/app/globals.css", import.meta.url),
+  "utf8"
+);
 const builderPanelSource = readFileSync(new URL("./BuilderPanel.jsx", import.meta.url), "utf8");
+const normalizedPanelSource = builderPanelSource.replace(/\r\n/g, "\n");
 
 function simulateFirstVisit() {
   globalThis.window = {
@@ -648,7 +653,8 @@ describe("BuilderPanel Composer setup launcher", () => {
 });
 
 // isSummaryDocked/isSummaryCollapsed are internal component state driven by
-// an IntersectionObserver effect that never runs under
+// a scroll/resize-driven effect (see computeSummaryDockState.js for the
+// actual boundary decision) that never runs under
 // renderToStaticMarkup/SSR (same limitation already accepted elsewhere in
 // this app for usePathname/useSearchParams) -- there is no prop seam to
 // force the docked/collapsed branches into the rendered markup. Coverage
@@ -659,7 +665,6 @@ describe("BuilderPanel Composer setup launcher", () => {
 // implementation, and never touches domain-mutating callbacks. The actual
 // interactive collapse<->expand behavior is verified by browser acceptance.
 describe("BuilderPanel docked-summary collapse/expand", () => {
-  const normalizedPanelSource = builderPanelSource.replace(/\r\n/g, "\n");
   const stickySummarySource = normalizedPanelSource.slice(
     normalizedPanelSource.indexOf("const stickySummaryContent"),
     normalizedPanelSource.indexOf('<aside className="builder-panel"')
@@ -748,9 +753,190 @@ describe("BuilderPanel docked-summary collapse/expand", () => {
     expect(appCss).not.toMatch(/^:where\(\.builder-scope\) \.summary-collapse-toggle \{[^}]*transition:/m);
   });
 
-  it("keeps the 166px docked ceiling as the true ceiling, and gives collapsed its own smaller cap instead of growing the header slot", () => {
-    expect(appCss).toMatch(/:where\(\.builder-scope\) \.builder-panel-sticky-summary-card\.is-docked \{[^}]*max-height:\s*166px;/);
-    expect(appCss).toMatch(/:where\(\.builder-scope\) \.builder-panel-sticky-summary-card\.is-docked\.is-collapsed \{[^}]*max-height:\s*52px;/);
+  it("keeps a docked ceiling, and gives collapsed its own smaller cap instead of growing the header slot", () => {
+    // 198px/60px (was 166px/52px): both ceilings were found to actually
+    // clip real content -- confirmed via scrollHeight vs clientHeight on
+    // the rendered card, not just tight spacing -- so both grew by the
+    // measured minimum needed for zero clipping plus a small margin.
+    // Collapsed stays meaningfully smaller than expanded either way.
+    expect(appCss).toMatch(/:where\(\.builder-scope\) \.builder-panel-sticky-summary-card\.is-docked \{[^}]*max-height:\s*198px;/);
+    expect(appCss).toMatch(/:where\(\.builder-scope\) \.builder-panel-sticky-summary-card\.is-docked\.is-collapsed \{[^}]*max-height:\s*60px;/);
+  });
+});
+
+// Regression coverage for a real runtime defect: docking used to be driven
+// by IntersectionObserver, whose callback is only required by spec to fire
+// "eventually" -- batched on the browser's own schedule, not synchronously
+// with scroll. That produced exactly what was reported: docking sometimes
+// lagged arbitrarily behind the true scroll position, only catching up once
+// some unrelated layout/paint event forced the browser to recompute. These
+// tests can't drive a real scroll/rAF loop under renderToStaticMarkup (no
+// DOM, no compositor -- same limitation as the collapse/expand describe
+// block above), so they guard the two things that actually matter here as
+// source contracts: (a) the mechanism is provably no longer
+// IntersectionObserver, and (b) the pure boundary decision it now delegates
+// to is exercised directly, with real numbers, in
+// utils/computeSummaryDockState.test.js -- which is the part of this fix
+// that a source-contract test alone could never have caught the original
+// bug with.
+describe("Docking boundary trigger", () => {
+  const dockingEffectSource = normalizedPanelSource.slice(
+    normalizedPanelSource.indexOf("useEffect(() => {\n      if (!stickySummaryPortalTarget)"),
+    normalizedPanelSource.indexOf("useLayoutEffect(() => {\n      const fingerprint = pendingSummaryFocusRef")
+  );
+
+  it("no longer uses IntersectionObserver for the docking decision", () => {
+    // Checks the actual construction/config syntax, not the bare words --
+    // the explanatory comment above the effect legitimately discusses why
+    // IntersectionObserver and rootMargin were rejected, in prose.
+    expect(dockingEffectSource).not.toMatch(/new IntersectionObserver\(/);
+    expect(dockingEffectSource).not.toMatch(/rootMargin:/);
+  });
+
+  it("measures the sentinel's real-time position directly and delegates the boundary decision to the pure, independently-tested computeSummaryDockState", () => {
+    expect(dockingEffectSource).toContain("summarySentinelRef.current.getBoundingClientRect()");
+    expect(dockingEffectSource).toContain("computeSummaryDockState({");
+    expect(builderPanelSource).toMatch(
+      /import\s*\{\s*computeSummaryDockState\s*\}\s*from\s*"\.\.\/utils\/computeSummaryDockState\.js";/
+    );
+  });
+
+  it("re-evaluates on every scroll and resize, throttled to at most once per animation frame", () => {
+    expect(dockingEffectSource).toContain('window.addEventListener("scroll", scheduleEvaluate, { passive: true });');
+    expect(dockingEffectSource).toContain('window.addEventListener("resize", scheduleEvaluate);');
+    expect(dockingEffectSource).toContain("window.requestAnimationFrame(evaluateDockState)");
+    expect(dockingEffectSource).toContain("window.cancelAnimationFrame(rafId)");
+  });
+
+  it("establishes the correct docked state immediately when the effect runs, instead of waiting for the first scroll/resize event", () => {
+    const evaluateCallIndex = dockingEffectSource.indexOf("evaluateDockState();");
+    const scrollListenerIndex = dockingEffectSource.indexOf('addEventListener("scroll"');
+    expect(evaluateCallIndex).toBeGreaterThan(-1);
+    expect(scrollListenerIndex).toBeGreaterThan(-1);
+    expect(evaluateCallIndex).toBeLessThan(scrollListenerIndex);
+  });
+
+  it("removes every listener and cancels any pending frame on cleanup, so no stale docking loop survives an unmount", () => {
+    const cleanupSource = dockingEffectSource.slice(dockingEffectSource.indexOf("return () => {"));
+    expect(cleanupSource).toContain('removeEventListener("scroll", scheduleEvaluate)');
+    expect(cleanupSource).toContain('removeEventListener("resize", scheduleEvaluate)');
+    expect(cleanupSource).toContain("desktopQuery.removeEventListener(\"change\", scheduleEvaluate)");
+    expect(cleanupSource).toContain("cancelAnimationFrame(rafId)");
+  });
+});
+
+// Regression coverage for the second real defect found in browser
+// acceptance: the docked strip (Espacios | Puntos | Total | Revisar) was
+// cramped at the original 360px slot width, and separately, the collapse
+// chevron (26px, absolutely positioned at left:4px) needs a left gutter
+// wider than plain padding would give it, or it visually overlaps the
+// first metric's content -- confirmed via getBoundingClientRect() against
+// real DOM before the fix (a true overlap, not just visual closeness).
+// aurelian's globals.css and the shared package's styles.css each hold
+// half of this width math and have no build-time link to each other, so
+// these tests assert the arithmetic relationship directly rather than just
+// the individual literals, to catch future drift between the two files.
+describe("Docked-strip width and collapse-chevron clearance", () => {
+  const dockedCardPaddingMatch = appCss.match(
+    /:where\(\.builder-scope\) \.builder-panel-sticky-summary-card\.is-docked \{[^}]*\}/
+  );
+  const chevronDockedMatch = appCss.match(
+    /:where\(\.builder-scope\) \.summary-collapse-toggle--docked \{[^}]*\}/
+  );
+  const trayScaleDockedMatch = appCss.match(
+    /:where\(\.builder-scope\) \.builder-panel-sticky-summary-card\.is-docked \.builder-panel-tray-scale \{[^}]*\}/
+  );
+  const slotWidthMatch = aurelianGlobalsCss.match(/\.site-header__builder-slot\s*\{[^}]*width:\s*(\d+)px;/);
+  const navMarginMatch = aurelianGlobalsCss.match(/\.desktop-nav\s*\{\s*margin-right:\s*(\d+)px;\s*\}/);
+
+  it("keeps the Aurelian header slot and the shared docked-card content width in lockstep", () => {
+    const paddingLeft = Number(dockedCardPaddingMatch[0].match(/padding-left:\s*(\d+)px;/)[1]);
+    const paddingRight = Number(dockedCardPaddingMatch[0].match(/padding-right:\s*(\d+)px;/)[1]);
+    const slotWidth = Number(slotWidthMatch[1]);
+    const trayScaleWidth = Number(trayScaleDockedMatch[0].match(/width:\s*(\d+)px;/)[1]);
+
+    // The card's content width (slot minus its own horizontal padding) must
+    // equal the width the tray/metrics-strip is actually built for -- if
+    // one file changes without the other, this is exactly the kind of
+    // cramped-strip regression this whole test exists to catch.
+    expect(slotWidth - paddingLeft - paddingRight).toBe(trayScaleWidth);
+  });
+
+  it("reserves the nav's margin-right as exactly the slot width plus a fixed 16px breathing gap", () => {
+    const slotWidth = Number(slotWidthMatch[1]);
+    const navMargin = Number(navMarginMatch[1]);
+    expect(navMargin - slotWidth).toBe(16);
+  });
+
+  it("gives the docked collapse chevron a left gutter wider than the chevron itself, with real clearance on both sides", () => {
+    const paddingLeft = Number(dockedCardPaddingMatch[0].match(/padding-left:\s*(\d+)px;/)[1]);
+    const chevronLeft = Number(chevronDockedMatch[0].match(/left:\s*(\d+)px;/)[1]);
+    const chevronWidthMatch = appCss.match(/:where\(\.builder-scope\) \.summary-collapse-toggle \{[^}]*width:\s*(\d+)px;/);
+    const chevronWidth = Number(chevronWidthMatch[1]);
+
+    // This is the exact inequality that was violated before the fix:
+    // chevronLeft(8) + chevronWidth(26) = 34 > the old 22px gutter, a real
+    // ~12px overlap with the first metric's content, not just tight
+    // spacing. Both sides now keep a positive margin.
+    expect(chevronLeft).toBeGreaterThan(0);
+    expect(paddingLeft - (chevronLeft + chevronWidth)).toBeGreaterThan(0);
+  });
+});
+
+// Regression coverage for the vertical defect found after the horizontal
+// fixes: the docked strip's real rendered height was never actually 36px
+// (its declared height) at all -- a less-specific, shared
+// ".builder-panel-summary-row .box-summary-card { flex: 1; ... }" rule
+// earlier in the same media block set flex-basis:0%, which overrides the
+// height property entirely for a column-direction flex item. Confirmed
+// live: even an inline height set via !important had zero effect on the
+// rendered size. The strip's true height was purely content-driven, and
+// when Review's padding grew in the horizontal-fix round, that
+// content-driven height grew enough to clip against the (also
+// content-blind) 166px ceiling -- real clipping, confirmed via
+// scrollHeight vs clientHeight, not just tight spacing.
+describe("Docked strip vertical sizing", () => {
+  const boxSummaryCardDockedMatch = appCss.match(
+    /:where\(\.builder-scope\) \.builder-panel-sticky-summary-card\.is-docked \.builder-panel-summary-row \.box-summary-card \{[^}]*\}/
+  );
+
+  it("fixes the strip's height with an explicit flex-basis, not just the height property alone", () => {
+    // A bare height:44px here would silently repeat the exact bug this
+    // guards against -- the earlier, less-specific flex:1 rule in this
+    // same file sets flex-basis:0%, which wins over height for a
+    // column-direction flex item regardless of what height says.
+    expect(boxSummaryCardDockedMatch[0]).toMatch(/flex:\s*0 0 44px;/);
+  });
+
+  it("keeps the expanded and collapsed ceilings tall enough for their real content, not just their old (silently wrong) numbers", () => {
+    const dockedCardMatch = appCss.match(
+      /:where\(\.builder-scope\) \.builder-panel-sticky-summary-card\.is-docked \{[^}]*\}/
+    );
+    const collapsedMatch = appCss.match(
+      /:where\(\.builder-scope\) \.builder-panel-sticky-summary-card\.is-docked\.is-collapsed \{[^}]*\}/
+    );
+    const paddingTop = Number(dockedCardMatch[0].match(/padding-top:\s*(\d+)px;/)[1]);
+    const paddingBottom = Number(dockedCardMatch[0].match(/padding-bottom:\s*(\d+)px;/)[1]);
+    const maxHeight = Number(dockedCardMatch[0].match(/max-height:\s*(\d+)px;/)[1]);
+    const trayHeight = Number(
+      appCss
+        .match(/:where\(\.builder-scope\) \.builder-panel-sticky-summary-card\.is-docked \.builder-panel-tray-scale \{[^}]*\}/)[0]
+        .match(/height:\s*(\d+)px;/)[1]
+    );
+    const rowGap = Number(
+      appCss
+        .match(/:where\(\.builder-scope\) \.builder-panel-sticky-summary-card\.is-docked \.builder-panel-summary-row \{[^}]*\}/)[0]
+        .match(/gap:\s*(\d+)px;/)[1]
+    );
+    const stripHeight = Number(boxSummaryCardDockedMatch[0].match(/flex:\s*0 0 (\d+)px;/)[1]);
+    // Loose (not pixel-exact) lower bound: the declared budget must at
+    // least fit the real stack, with a border-top on the strip and some
+    // slack for the ceiling to still count as "not zero-overflow math".
+    const minimumRequired = paddingTop + trayHeight + rowGap + stripHeight + paddingBottom;
+    expect(maxHeight).toBeGreaterThanOrEqual(minimumRequired);
+
+    const collapsedMaxHeight = Number(collapsedMatch[0].match(/max-height:\s*(\d+)px;/)[1]);
+    expect(collapsedMaxHeight).toBeLessThan(maxHeight);
   });
 });
 
