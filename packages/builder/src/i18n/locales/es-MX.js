@@ -44,7 +44,8 @@ export const esMX = {
   "recovery.reload": "Recargar builder",
   "recovery.clearSaved": "Borrar caja guardada y recargar",
 
-  "filter.all": "Todos: {category}",
+  "filter.allValue": "Todas",
+  "filter.sortLabel": "Orden",
   "filter.sort.bestMatch": "Mejor coincidencia",
   "filter.sort.pointsAsc": "Puntos: menor a mayor",
   "filter.sort.pointsDesc": "Puntos: mayor a menor",
@@ -211,7 +212,6 @@ export const esMX = {
   "collectionCard.boxAria": "Discovery Box renderizada",
   "collectionCard.download": "Descargar PNG",
   "collectionCard.share": "Compartir tarjeta",
-  "collectionCard.preview": "Vista previa",
   "collectionCard.generating": "Generando...",
   "collectionCard.downloaded": "Collection Card descargada.",
   "collectionCard.shared": "Collection Card compartida.",

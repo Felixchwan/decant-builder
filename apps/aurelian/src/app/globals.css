@@ -179,9 +179,17 @@ h1 { max-width:15ch; margin-bottom:1.4rem; font-size:clamp(2.8rem,7vw,6.4rem); }
 .builder-intro-restore-row { width:min(1180px,calc(100% - 2rem)); margin-inline:auto; padding-block:.85rem; }
 .builder-intro-restore { display:inline-flex; align-items:center; gap:.4rem; padding:.4rem .85rem; border:1px solid var(--border); background:transparent; color:var(--muted); font-size:.78rem; font-weight:700; letter-spacing:.02em; transition:border-color .2s ease,color .2s ease; }
 .builder-intro-restore:hover,.builder-intro-restore:focus-visible { border-color:var(--gold); color:var(--gold); }
-.catalog-controls { display:grid; grid-template-columns:1fr 14rem; gap:1rem; margin-top:3.5rem; padding:1.25rem; border:1px solid var(--border); background:var(--surface); }
-.catalog-controls label { color:var(--secondary); font-size:.78rem; font-weight:700; letter-spacing:.04em; }
-.catalog-controls input,.catalog-controls select { width:100%; min-height:3rem; margin-top:.45rem; padding:.6rem .8rem; border:1px solid var(--border); border-radius:0; background:#0d0e0c; color:var(--text); }
+/* Scoped to .catalog-page specifically (the standalone /catalogo page's own
+   wrapper -- see app/catalogo/page.jsx) rather than the bare .catalog-controls
+   class: the Builder widget at /build-your-box renders its own, differently-
+   styled .catalog-controls inside .builder-scope, and since that shared
+   package scopes its selectors with :where() (zero specificity by design,
+   see packageBoundary/styleNamespace tests), an unscoped rule here would
+   otherwise win the cascade and override it wherever both stylesheets are
+   loaded on the same page. */
+.catalog-page .catalog-controls { display:grid; grid-template-columns:1fr 14rem; gap:1rem; margin-top:3.5rem; padding:1.25rem; border:1px solid var(--border); background:var(--surface); }
+.catalog-page .catalog-controls label { color:var(--secondary); font-size:.78rem; font-weight:700; letter-spacing:.04em; }
+.catalog-page .catalog-controls input,.catalog-page .catalog-controls select { width:100%; min-height:3rem; margin-top:.45rem; padding:.6rem .8rem; border:1px solid var(--border); border-radius:0; background:#0d0e0c; color:var(--text); }
 .catalog-status { margin:1.5rem 0; display:flex; justify-content:space-between; gap:2rem; color:var(--muted); font-size:.84rem; }
 .catalog-count { margin:0; flex:none; }
 .catalog-status p:last-child { margin:0; max-width:34rem; text-align:right; }
@@ -347,7 +355,7 @@ body:has(.discovery-intent) #builder-entry-header { display:none; }
   .final-cta { padding-block:2.5rem; }
   .feature-grid,.steps,.featured-grid,.catalog-explorer-grid,.discovery-intent__grid { grid-template-columns:1fr; }
   .steps { gap:2.5rem; }
-  .catalog-controls { grid-template-columns:1fr; }
+  .catalog-page .catalog-controls { grid-template-columns:1fr; }
   .catalog-status { align-items:flex-start; flex-direction:column; gap:.35rem; }
   .catalog-status p:last-child { text-align:left; }
   .site-footer { grid-template-columns:1fr; gap:1rem; }

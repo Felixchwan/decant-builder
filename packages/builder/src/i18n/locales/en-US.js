@@ -44,7 +44,8 @@ export const enUS = {
   "recovery.reload": "Reload Builder",
   "recovery.clearSaved": "Clear Saved Box and Reload",
 
-  "filter.all": "All {category}",
+  "filter.allValue": "All",
+  "filter.sortLabel": "Sort",
   "filter.sort.bestMatch": "Best match",
   "filter.sort.pointsAsc": "Points ascending",
   "filter.sort.pointsDesc": "Points descending",
@@ -211,7 +212,6 @@ export const enUS = {
   "collectionCard.boxAria": "Rendered Discovery Box",
   "collectionCard.download": "Download PNG",
   "collectionCard.share": "Share Card",
-  "collectionCard.preview": "Preview Card",
   "collectionCard.generating": "Generating...",
   "collectionCard.downloaded": "Collection Card downloaded.",
   "collectionCard.shared": "Collection Card shared.",

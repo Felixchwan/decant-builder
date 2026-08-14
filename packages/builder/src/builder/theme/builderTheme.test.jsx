@@ -452,8 +452,18 @@ describe("coordinated body scroll locking", () => {
 });
 
 describe("Builder portal architecture", () => {
-  it("routes all eight portal families through the owned target", () => {
+  it("routes every portal family through the owned target", () => {
     const portalSources = `${builderPanelSource}\n${metadataPreviewSource}`;
+    // The dockable summary has two renderOwnedPortal call sites, not one --
+    // the docked-desktop branch (portals to the host header slot) and the
+    // mobile/no-portal-target branch (portals to the local inline anchor)
+    // are two separate ternary arms now that the docked branch no longer
+    // shares a single computed target variable with the other one (see the
+    // isSummaryDocked ? ... : stickySummaryPortalTarget ? ... : ... chain
+    // in BuilderPanel.jsx). The removed Collection Card preview modal
+    // (dev-only "Vista previa" action, since deleted along with the rest
+    // of its support) used to be a ninth family; every remaining family is
+    // otherwise unchanged.
     expect(portalSources.match(/renderOwnedPortal\(/g)).toHaveLength(8);
     expect(portalSources).not.toContain("createPortal(");
     expect(ownedPortalSource).toContain("createPortalLike(content, portalRoot)");
@@ -484,20 +494,20 @@ describe("Builder portal architecture", () => {
     expect(builderPanelSource).not.toMatch(/#[0-9a-fA-F]{3,8}.*isCustomSummaryTheme/);
   });
 
-  it("keeps exactly one summary instance rendered, whichever portal target is active", () => {
-    // activeSummaryPortalTarget resolves to exactly one of (host slot |
-    // local anchor | null) per render, and stickySummaryContent is passed
-    // to a single renderOwnedPortal call gated on that one value — never
-    // rendered a second time as a fallback or duplicate.
+  it("keeps exactly one summary instance rendered, whichever branch is active", () => {
+    // Three mutually exclusive branches -- isSummaryDocked ? (portal to the
+    // host header slot) : stickySummaryPortalTarget ? (portal to the local
+    // inline anchor) : (plain inline render, no portal) -- and exactly one
+    // of them ever renders per pass, since a ternary chain always picks
+    // exactly one arm. stickySummaryContent appears once per branch (three
+    // total in source); renderOwnedPortal is only used by the two portal
+    // branches (the no-target fallback renders inline directly).
     const dockingSection = builderPanelSource.slice(
-      builderPanelSource.indexOf("stickySummaryPortalTarget ?"),
+      builderPanelSource.indexOf("isSummaryDocked ? ("),
       builderPanelSource.indexOf("</aside>"),
     );
-    // Exactly two usages: the portal branch and the no-target fallback
-    // branch — never both rendered in the same pass, since the ternary
-    // that starts this slice picks exactly one.
-    expect(dockingSection.match(/stickySummaryContent/g)?.length).toBe(2);
-    expect(dockingSection.match(/renderOwnedPortal\(/g)?.length).toBe(1);
+    expect(dockingSection.match(/stickySummaryContent/g)?.length).toBe(3);
+    expect(dockingSection.match(/renderOwnedPortal\(/g)?.length).toBe(2);
   });
 
   it("uses the exact supplied root at runtime and never falls back to body", () => {

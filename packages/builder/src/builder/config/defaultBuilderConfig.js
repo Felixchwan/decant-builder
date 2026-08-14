@@ -71,7 +71,6 @@ export const defaultBuilderConfig = {
     exportHeight: 1920,
     downloadLabel: "Download PNG",
     shareLabel: "Share Card",
-    previewLabel: "Preview Card",
     generatingLabel: "Generating...",
     downloadedStatus: "Collection Card downloaded.",
     sharedStatus: "Collection Card shared.",

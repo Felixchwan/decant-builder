@@ -108,21 +108,32 @@ afterEach(() => {
   globalThis.window = originalWindow;
 });
 
-describe("BuilderPanel development capability", () => {
-  it("keeps development-only UI hidden when omitted", () => {
-    expect(renderBuilderPanel()).not.toContain(discoveryDecantsConfig.collectionCard.previewLabel);
+// Regression guard for the removed "Vista previa" / Preview Card action:
+// BuilderPanel no longer accepts an isDevelopment prop at all (it had
+// exactly one consumer, this dev-only preview button, and both are gone
+// together), and the Collection Card action row now has exactly the two
+// real actions.
+describe("Collection Card actions (Vista previa removed)", () => {
+  it("never renders a development-only preview action, and drops the prop that only ever fed it", () => {
+    const markup = renderBuilderPanel();
+    expect(markup).not.toContain("Preview Card");
+    expect(builderPanelSource).not.toMatch(/isDevelopment/);
+    expect(builderPanelSource).not.toContain("isCollectionCardPreviewOpen");
+    expect(builderPanelSource).not.toContain("CollectionCardPreviewModal");
+    expect(builderPanelSource).not.toContain("previewLabel");
+    expect(appCss).not.toMatch(/\.collection-card-preview/);
+    expect(discoveryDecantsConfig.collectionCard.previewLabel).toBeUndefined();
+    expect(esMX["collectionCard.preview"]).toBeUndefined();
   });
 
-  it("keeps development-only UI hidden when explicitly false", () => {
-    expect(renderBuilderPanel({ isDevelopment: false })).not.toContain(
-      discoveryDecantsConfig.collectionCard.previewLabel,
+  it("keeps exactly the download and (when available) native-share actions in the share-box-buttons row", () => {
+    const shareButtonsSource = builderPanelSource.slice(
+      builderPanelSource.indexOf('<div className="share-box-buttons"'),
+      builderPanelSource.indexOf('{shareStatus &&'),
     );
-  });
-
-  it("shows the existing development preview action when enabled", () => {
-    expect(renderBuilderPanel({ isDevelopment: true })).toContain(
-      discoveryDecantsConfig.collectionCard.previewLabel,
-    );
+    expect(shareButtonsSource).toContain("handleDownloadShareImage");
+    expect(shareButtonsSource).toContain("handleNativeShareCard");
+    expect(shareButtonsSource.match(/<button/g)).toHaveLength(2);
   });
 });
 
@@ -205,10 +216,9 @@ describe("BuilderPanel Composer setup launcher", () => {
   });
 
   it("keeps Collection Card share actions and responsive tooltip feedback available", () => {
-    const markup = renderBuilderPanel({ isDevelopment: true });
+    const markup = renderBuilderPanel();
 
     expect(markup).toContain("Download PNG");
-    expect(markup).toContain("Preview Card");
     expect(markup).toContain('aria-describedby="share-box-tooltip"');
     expect(markup).toContain('role="tooltip"');
     expect(markup).toContain("Export an editorial card for your finished Discovery Box.");
@@ -846,64 +856,84 @@ describe("Dead Mi caja info-control removal", () => {
   });
 });
 
-// Regression coverage for a real runtime defect: docking used to be driven
-// by IntersectionObserver, whose callback is only required by spec to fire
-// "eventually" -- batched on the browser's own schedule, not synchronously
-// with scroll. That produced exactly what was reported: docking sometimes
-// lagged arbitrarily behind the true scroll position, only catching up once
-// some unrelated layout/paint event forced the browser to recompute. These
-// tests can't drive a real scroll/rAF loop under renderToStaticMarkup (no
-// DOM, no compositor -- same limitation as the collapse/expand describe
-// block above), so they guard the two things that actually matter here as
-// source contracts: (a) the mechanism is provably no longer
-// IntersectionObserver, and (b) the pure boundary decision it now delegates
-// to is exercised directly, with real numbers, in
-// utils/computeSummaryDockState.test.js -- which is the part of this fix
-// that a source-contract test alone could never have caught the original
-// bug with.
-describe("Docking boundary trigger", () => {
+// Regression coverage for the "always docked on desktop from first render"
+// simplification: the box no longer moves from sidebar to header partway
+// through a scroll -- on desktop it starts in the header slot, full stop.
+// That eliminates the entire reason the old scroll/rAF/sentinel machinery
+// existed (see git history for buildComposerBoxProposal-era
+// computeSummaryDockState.js, now deleted along with its test -- its whole
+// job was answering "has the user scrolled past the boundary yet", a
+// question that no longer has anything to compute). The only transition
+// that can still happen at all is a live window resize crossing the
+// desktop/mobile boundary, which is what's left to guard here. These tests
+// can't drive a real resize/matchMedia-change event under
+// renderToStaticMarkup (no DOM, no compositor -- same limitation as the
+// collapse/expand describe block above), so initial-mount correctness and
+// the absence of the old machinery are source contracts; the live
+// resize-triggered transition is verified by browser acceptance.
+describe("Docked-on-desktop-from-mount (post-scroll-docking simplification)", () => {
   const dockingEffectSource = normalizedPanelSource.slice(
-    normalizedPanelSource.indexOf("useEffect(() => {\n      if (!stickySummaryPortalTarget)"),
+    normalizedPanelSource.indexOf('useEffect(() => {\n      if (!stickySummaryPortalTarget'),
     normalizedPanelSource.indexOf("useLayoutEffect(() => {\n      const fingerprint = pendingSummaryFocusRef")
   );
+  const initialDockStateSource = normalizedPanelSource.slice(
+    normalizedPanelSource.indexOf("function isDesktopSummaryViewport"),
+    normalizedPanelSource.indexOf("const [isSummaryCollapsed")
+  );
 
-  it("no longer uses IntersectionObserver for the docking decision", () => {
-    // Checks the actual construction/config syntax, not the bare words --
-    // the explanatory comment above the effect legitimately discusses why
-    // IntersectionObserver and rootMargin were rejected, in prose.
-    expect(dockingEffectSource).not.toMatch(/new IntersectionObserver\(/);
-    expect(dockingEffectSource).not.toMatch(/rootMargin:/);
+  it("determines the initial docked state synchronously from the viewport alone, with no scroll position involved", () => {
+    expect(initialDockStateSource).toContain(
+      "useState(\n      () => Boolean(stickySummaryPortalTarget) && isDesktopSummaryViewport()"
+    );
+    expect(initialDockStateSource).not.toMatch(/sentinelTop|getBoundingClientRect/);
   });
 
-  it("measures the sentinel's real-time position directly and delegates the boundary decision to the pure, independently-tested computeSummaryDockState", () => {
-    expect(dockingEffectSource).toContain("summarySentinelRef.current.getBoundingClientRect()");
-    expect(dockingEffectSource).toContain("computeSummaryDockState({");
-    expect(builderPanelSource).toMatch(
-      /import\s*\{\s*computeSummaryDockState\s*\}\s*from\s*"\.\.\/utils\/computeSummaryDockState\.js";/
+  it("removes every trace of the old scroll/rAF docking loop -- sentinel ref, spacer height, computeSummaryDockState, and the scroll/resize listeners", () => {
+    expect(builderPanelSource).not.toMatch(/summarySentinelRef|summarySpacerHeight|isSummaryDockedRef|computeSummaryDockState/);
+    expect(builderPanelSource).not.toMatch(/addEventListener\("scroll"/);
+    // Scoped to the docking effect itself, not the whole file -- an
+    // unrelated requestAnimationFrame loop exists elsewhere (share-image
+    // generation) and legitimately has nothing to do with docking.
+    expect(dockingEffectSource).not.toMatch(/requestAnimationFrame|cancelAnimationFrame/);
+    expect(builderPanelSource).not.toMatch(/\.builder-panel-summary-sentinel/);
+    expect(appCss).not.toMatch(/\.builder-panel-summary-sentinel/);
+  });
+
+  it("still reacts to a live desktop/mobile viewport crossing via matchMedia's own change event -- the one transition that still exists", () => {
+    expect(dockingEffectSource).toContain('window.matchMedia("(min-width: 981px)")');
+    expect(dockingEffectSource).toContain('desktopQuery.addEventListener("change", handleViewportChange)');
+    expect(dockingEffectSource).toContain("setIsSummaryDocked(desktopQuery.matches)");
+    const cleanupSource = dockingEffectSource.slice(dockingEffectSource.indexOf("return () =>"));
+    expect(cleanupSource).toContain('desktopQuery.removeEventListener("change", handleViewportChange)');
+  });
+
+  it("still captures a focus fingerprint before that transition, so a viewport-crossing resize can't silently drop focus", () => {
+    expect(dockingEffectSource).toContain("getFocusFingerprint(");
+    expect(normalizedPanelSource).toContain("focusElementFromFingerprint(summaryCardRef.current, fingerprint)");
+  });
+});
+
+// Regression coverage for the docked-summary/panel-overlap fix: because the
+// docked card portals into the host header's absolutely-positioned slot, it
+// never contributes to that header's own layout height, so nothing in
+// .builder-panel's normal flow naturally accounts for it. Expanded needs
+// extra clearance; collapsed must not carry that same clearance forward or
+// it just trades an overlap bug for a dead-space bug.
+describe("Docked-summary panel clearance (expanded overlap fix)", () => {
+  it("adds the clearance class to .builder-panel only while docked and expanded, never while docked and collapsed", () => {
+    expect(normalizedPanelSource).toContain(
+      'className={`builder-panel${isSummaryDocked && !isDockedAndCollapsed ? " builder-panel--docked-expanded" : ""}`}'
     );
   });
 
-  it("re-evaluates on every scroll and resize, throttled to at most once per animation frame", () => {
-    expect(dockingEffectSource).toContain('window.addEventListener("scroll", scheduleEvaluate, { passive: true });');
-    expect(dockingEffectSource).toContain('window.addEventListener("resize", scheduleEvaluate);');
-    expect(dockingEffectSource).toContain("window.requestAnimationFrame(evaluateDockState)");
-    expect(dockingEffectSource).toContain("window.cancelAnimationFrame(rafId)");
-  });
-
-  it("establishes the correct docked state immediately when the effect runs, instead of waiting for the first scroll/resize event", () => {
-    const evaluateCallIndex = dockingEffectSource.indexOf("evaluateDockState();");
-    const scrollListenerIndex = dockingEffectSource.indexOf('addEventListener("scroll"');
-    expect(evaluateCallIndex).toBeGreaterThan(-1);
-    expect(scrollListenerIndex).toBeGreaterThan(-1);
-    expect(evaluateCallIndex).toBeLessThan(scrollListenerIndex);
-  });
-
-  it("removes every listener and cancels any pending frame on cleanup, so no stale docking loop survives an unmount", () => {
-    const cleanupSource = dockingEffectSource.slice(dockingEffectSource.indexOf("return () => {"));
-    expect(cleanupSource).toContain('removeEventListener("scroll", scheduleEvaluate)');
-    expect(cleanupSource).toContain('removeEventListener("resize", scheduleEvaluate)');
-    expect(cleanupSource).toContain("desktopQuery.removeEventListener(\"change\", scheduleEvaluate)");
-    expect(cleanupSource).toContain("cancelAnimationFrame(rafId)");
+  it("defines the clearance as a desktop-scoped padding-top on .builder-panel--docked-expanded, not a generic/unconditional spacer", () => {
+    const desktopBlockStart = appCss.indexOf("@media (min-width: 981px)");
+    const desktopBlockMatch = appCss
+      .slice(desktopBlockStart)
+      .match(/:where\(\.builder-scope\) \.builder-panel--docked-expanded \{[\s\S]*?padding-top:\s*(\d+)px;\s*\}/);
+    expect(desktopBlockMatch).not.toBeNull();
+    expect(Number(desktopBlockMatch[1])).toBeGreaterThan(150);
+    expect(appCss).not.toMatch(/\.builder-panel--docked-collapsed/);
   });
 });
 

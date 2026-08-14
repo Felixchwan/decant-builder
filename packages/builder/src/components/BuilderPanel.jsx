@@ -57,7 +57,6 @@ import {
 } from "../builder/presentation/onboardingPathSelection.js";
 import { buildFinalizationModel } from "../builder/internal/finalization/buildFinalizationModel.js";
 import { getTierData } from "../utils/tierUtils";
-import { computeSummaryDockState } from "../utils/computeSummaryDockState.js";
 import CollectionCard from "./CollectionCard";
 import { createTranslator } from "../i18n/createTranslator.js";
 import { ANALYTICS_EVENTS } from "../analytics/events.js";
@@ -72,14 +71,17 @@ import {
 
 const EMPTY_RECOMMENDATIONS = [];
 
-// Docking relocates the summary card's DOM via a portal-target change (see
-// activeSummaryPortalTarget below), which this codebase couldn't confirm
+// Docking relocates the summary card's DOM via a portal-target change
+// whenever a live viewport resize crosses the desktop/mobile boundary (the
+// only remaining case this can happen at
+// all -- desktop starts docked and mobile never docks, so there's no
+// scroll-driven transition anymore), which this codebase couldn't confirm
 // preserves browser focus in every case without live verification against a
 // real compositor. This fingerprint-based capture/restore is a safety net:
 // harmless if the move turns out to preserve focus on its own, load-bearing
 // if it doesn't. Fingerprints by tag+className+ordinal rather than a ref
-// map, since the summary's interactive elements (info button, clear button,
-// tray vials) don't carry stable ids of their own.
+// map, since the summary's interactive elements (clear button, tray vials)
+// don't carry stable ids of their own.
 function getFocusFingerprint(container, element) {
   if (!container || !element || !container.contains(element)) {
     return null;
@@ -149,7 +151,6 @@ const BuilderPanel = forwardRef(function BuilderPanel({
   onMobileTabChange,
   analytics = noopAnalytics,
   finalizationAdapter,
-  isDevelopment = false,
   stickySummaryPortalTarget = null,
 }, ref) {
     const translator = useMemo(
@@ -170,7 +171,6 @@ const BuilderPanel = forwardRef(function BuilderPanel({
     });
     const [isNotesModalOpen, setIsNotesModalOpen] = useState(false);
     const [isFinalSummaryOpen, setIsFinalSummaryOpen] = useState(false);
-    const [isCollectionCardPreviewOpen, setIsCollectionCardPreviewOpen] = useState(false);
     const [isComposerSetupOpen, setIsComposerSetupOpen] = useState(false);
     const [isCollectionSnapshotOpen, setIsCollectionSnapshotOpen] = useState(false);
     const [selectedDnaAccord, setSelectedDnaAccord] = useState(null);
@@ -186,63 +186,54 @@ const BuilderPanel = forwardRef(function BuilderPanel({
     const balanceLaneEmphasisTimeoutRef = useRef(null);
 
     // Docking: when a host supplies stickySummaryPortalTarget (e.g. a slot
-    // reserved in the host's own page header), the compact summary card can
-    // relocate there once
-    // scrolled to the top of the viewport, instead of staying pinned below the
-    // panel's own content. Hosts that don't supply a target (Discovery
-    // Decants) never dock — summarySentinelRef/summaryCardRef stay inert and
-    // the card always renders through summaryAnchorEl, exactly as before this
-    // feature existed.
-    const [isSummaryDocked, setIsSummaryDocked] = useState(false);
+    // reserved in the host's own page header) and the viewport is desktop-
+    // sized, the compact summary card renders directly into that slot from
+    // the very first render -- permanently, not as a scroll-triggered
+    // transition. A host that never supplies a target never docks --
+    // summaryCardRef stays inert and the card always renders through
+    // summaryAnchorEl, exactly as before this feature existed.
+    // isDesktopSummaryViewport() is read synchronously in the lazy
+    // useState initializer below (no host renders this component on the
+    // server -- every known host either mounts it client-only via a
+    // ssr:false boundary or is itself a client-only SPA -- so there's no
+    // hydration-mismatch risk in reading window directly here), which is
+    // what makes the desktop case available immediately, with no
+    // undocked-then-docked flash to guard against.
+    function isDesktopSummaryViewport() {
+      return typeof window !== "undefined" && window.matchMedia("(min-width: 981px)").matches;
+    }
+    const [isSummaryDocked, setIsSummaryDocked] = useState(
+      () => Boolean(stickySummaryPortalTarget) && isDesktopSummaryViewport()
+    );
     // Local, session-only UI state -- never persisted, never read by any
     // host, and only ever meaningful (and only ever toggleable, since the
     // controls that flip it only render at all) while the summary is
     // docked. Undocking never resets it: collapsing is a display
     // preference, not a fact about the box, so there is no reason to force
-    // it back open just because the card temporarily left the host's
-    // header slot (e.g. scrolling back to the top).
+    // it back open just because the card left the host's header slot (e.g.
+    // resizing down to mobile).
     const [isSummaryCollapsed, setIsSummaryCollapsed] = useState(false);
     const [summaryAnchorEl, setSummaryAnchorEl] = useState(null);
-    const [summarySpacerHeight, setSummarySpacerHeight] = useState(null);
-    const summarySentinelRef = useRef(null);
     const summaryCardRef = useRef(null);
     const pendingSummaryFocusRef = useRef(null);
-    const isSummaryDockedRef = useRef(false);
     const summaryAnchorCallbackRef = useCallback((node) => {
       setSummaryAnchorEl(node);
     }, []);
 
     useEffect(() => {
-      if (!stickySummaryPortalTarget) {
-        return undefined;
-      }
-      if (typeof window === "undefined" || !summarySentinelRef.current) {
+      if (!stickySummaryPortalTarget || typeof window === "undefined") {
         return undefined;
       }
 
-      // Deliberately not IntersectionObserver: its callback is only
-      // required by spec to fire "eventually", batched on the browser's own
-      // schedule, not synchronously with scroll. In practice that batching
-      // is what produced the reported defect -- docking would sometimes lag
-      // arbitrarily behind the actual scroll position, and only catch up
-      // once some unrelated layout/paint event (e.g. collapsing the intro
-      // hero) forced the browser to recompute. The docking boundary here
-      // needs to be exact and immediate on every crossing, so it's measured
-      // directly off the sentinel's real-time getBoundingClientRect() on
-      // the same rAF-throttled scroll/resize loop every other
-      // scroll-position-driven UI uses, rather than waiting on a
-      // deferred/best-effort intersection callback. computeSummaryDockState
-      // is the actual boundary decision, kept pure and independent of both
-      // primitives so it stays unit-testable on its own.
+      // The only remaining trigger for a docked/undocked transition: a live
+      // window resize crossing the desktop/mobile boundary. No scroll
+      // involvement at all -- the initial value above already handles
+      // "which side of the boundary are we on right now".
       const desktopQuery = window.matchMedia("(min-width: 981px)");
-      let rafId = null;
 
-      function transitionDocked(nextIsDocked) {
-        if (isSummaryDockedRef.current === nextIsDocked) {
-          return;
-        }
-        // The move (see activeSummaryPortalTarget) relocates the card's DOM
-        // via a portal-target change, which couldn't be confirmed to
+      function handleViewportChange() {
+        // The move relocates the card's DOM via a portal-target change,
+        // which couldn't be confirmed to
         // preserve focus without a real compositor to test against (see
         // getFocusFingerprint above). Capture before the state flips, so
         // the fingerprint reflects where focus was in the pre-move DOM.
@@ -255,52 +246,11 @@ const BuilderPanel = forwardRef(function BuilderPanel({
             document.activeElement
           );
         }
-        isSummaryDockedRef.current = nextIsDocked;
-        setIsSummaryDocked(nextIsDocked);
+        setIsSummaryDocked(desktopQuery.matches);
       }
 
-      function evaluateDockState() {
-        rafId = null;
-        if (!summarySentinelRef.current) {
-          return;
-        }
-        const sentinelTop = summarySentinelRef.current.getBoundingClientRect().top;
-        const shouldDock = computeSummaryDockState({
-          sentinelTop,
-          isDesktopViewport: desktopQuery.matches,
-        });
-        if (shouldDock && !isSummaryDockedRef.current) {
-          const height = summaryCardRef.current?.getBoundingClientRect().height;
-          if (height) {
-            setSummarySpacerHeight(height);
-          }
-        }
-        transitionDocked(shouldDock);
-      }
-
-      function scheduleEvaluate() {
-        if (rafId !== null) {
-          return;
-        }
-        rafId = window.requestAnimationFrame(evaluateDockState);
-      }
-
-      // Establishes the correct state immediately on mount (e.g. arriving
-      // already scrolled past the boundary via client-side navigation),
-      // rather than waiting for the first scroll/resize event.
-      evaluateDockState();
-      window.addEventListener("scroll", scheduleEvaluate, { passive: true });
-      window.addEventListener("resize", scheduleEvaluate);
-      desktopQuery.addEventListener("change", scheduleEvaluate);
-
-      return () => {
-        if (rafId !== null) {
-          window.cancelAnimationFrame(rafId);
-        }
-        window.removeEventListener("scroll", scheduleEvaluate);
-        window.removeEventListener("resize", scheduleEvaluate);
-        desktopQuery.removeEventListener("change", scheduleEvaluate);
-      };
+      desktopQuery.addEventListener("change", handleViewportChange);
+      return () => desktopQuery.removeEventListener("change", handleViewportChange);
     }, [stickySummaryPortalTarget]);
 
     useLayoutEffect(() => {
@@ -312,11 +262,6 @@ const BuilderPanel = forwardRef(function BuilderPanel({
       focusElementFromFingerprint(summaryCardRef.current, fingerprint);
     }, [isSummaryDocked]);
 
-    const activeSummaryPortalTarget = !stickySummaryPortalTarget
-      ? null
-      : isSummaryDocked
-        ? stickySummaryPortalTarget
-        : summaryAnchorEl;
     // Every :where(.builder-scope) selector in this stylesheet — which is
     // effectively all of them, including every rule the summary card
     // depends on — only matches within a DOM subtree that actually has
@@ -829,31 +774,43 @@ const BuilderPanel = forwardRef(function BuilderPanel({
   );
 
   return (
-    <aside className="builder-panel" ref={ref}>
-      {stickySummaryPortalTarget ? (
-        <>
+    <aside
+      className={`builder-panel${isSummaryDocked && !isDockedAndCollapsed ? " builder-panel--docked-expanded" : ""}`}
+      ref={ref}
+    >
+      {isSummaryDocked ? (
+        // Desktop, host-supplied header slot: portals straight into it with
+        // no wrapper left behind in the panel at all -- no sentinel, no
+        // spacer, nothing to reserve. The panel's own content below (share
+        // actions, Composer, Curator Bonus, ...) starts immediately after
+        // this, exactly as if the summary were never part of this column.
+        renderOwnedPortal(
           <div
-            className="builder-panel-summary-sentinel"
-            ref={summarySentinelRef}
-            aria-hidden="true"
-          />
-          <div
-            className="builder-panel-sticky-summary"
-            ref={summaryAnchorCallbackRef}
-            style={isSummaryDocked ? { height: summarySpacerHeight ?? undefined } : undefined}
+            className={`builder-scope${isCustomSummaryTheme ? " builder-theme-root--custom" : ""}`}
+            style={summaryThemeStyle}
           >
-            {renderOwnedPortal(
-              <div
-                className={`builder-scope${isCustomSummaryTheme ? " builder-theme-root--custom" : ""}`}
-                style={summaryThemeStyle}
-              >
-                {stickySummaryContent}
-              </div>,
-              activeSummaryPortalTarget
-            )}
-          </div>
-        </>
+            {stickySummaryContent}
+          </div>,
+          stickySummaryPortalTarget
+        )
+      ) : stickySummaryPortalTarget ? (
+        // Mobile: the host supplied a header slot, but the viewport is too
+        // narrow to use it (see isDesktopSummaryViewport above) -- render
+        // inline through the same sticky-summary wrapper/anchor this used
+        // before the header-slot feature existed.
+        <div className="builder-panel-sticky-summary" ref={summaryAnchorCallbackRef}>
+          {renderOwnedPortal(
+            <div
+              className={`builder-scope${isCustomSummaryTheme ? " builder-theme-root--custom" : ""}`}
+              style={summaryThemeStyle}
+            >
+              {stickySummaryContent}
+            </div>,
+            summaryAnchorEl
+          )}
+        </div>
       ) : (
+        // No host slot supplied at all: render inline, no portal.
         <div className="builder-panel-sticky-summary">{stickySummaryContent}</div>
       )}
 
@@ -900,15 +857,6 @@ const BuilderPanel = forwardRef(function BuilderPanel({
               disabled={isShareGenerating}
             >
               {activeShareAction === "share" ? builderConfig.collectionCard.generatingLabel : builderConfig.collectionCard.shareLabel}
-            </button>
-          )}
-          {isDevelopment && (
-            <button
-              type="button"
-              onClick={() => setIsCollectionCardPreviewOpen(true)}
-              disabled={isShareGenerating}
-            >
-              {builderConfig.collectionCard.previewLabel}
             </button>
           )}
         </div>
@@ -1196,46 +1144,9 @@ const BuilderPanel = forwardRef(function BuilderPanel({
           }}
         />
       )}
-      {isCollectionCardPreviewOpen && portalRoot && (
-        <CollectionCardPreviewModal
-          cardProps={collectionCardViewModel.cardProps}
-          portalRoot={portalRoot}
-          onClose={() => setIsCollectionCardPreviewOpen(false)}
-        />
-      )}
     </aside>
   );
 });
-
-function CollectionCardPreviewModal({
-  cardProps,
-  portalRoot,
-  onClose,
-}) {
-  return renderOwnedPortal(
-    <div className="modal-overlay final-summary-overlay" onClick={onClose}>
-      <div
-        className="collection-card-preview-modal"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="collection-card-preview-title"
-        onClick={(event) => event.stopPropagation()}
-      >
-        <div className="modal-header collection-card-preview-header">
-          <div>
-            <span>Development Preview</span>
-            <h3 id="collection-card-preview-title">Collection Card</h3>
-          </div>
-
-          <button type="button" onClick={onClose}>Close</button>
-        </div>
-
-        <CollectionCard {...cardProps} />
-      </div>
-    </div>,
-    portalRoot
-  );
-}
 
 const COMPOSER_STRATEGY_OPTIONS = [
   { value: "balanced", labelKey: "composer.strategy.balanced" },

@@ -41,7 +41,10 @@ describe("merchant-localized Builder render", () => {
     const markup = renderBuilder(aurelianConfig);
 
     expect(markup).toContain('value="winter"');
-    expect(markup).toContain(">Invierno</option>");
+    // Every option now carries its own capitalized "Category: Value" prefix
+    // (see FilterBar.jsx) so the closed select is self-describing once a
+    // value is chosen, not just "Invierno" bare.
+    expect(markup).toContain(">Temporadas: Invierno</option>");
     expect(markup).not.toContain('value="Invierno"');
   });
 

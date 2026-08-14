@@ -399,13 +399,14 @@
   margin-top: 16px;
 }
 
-:where(.builder-scope) .builder-panel-summary-sentinel {
-  height: 0;
-  margin: 0;
-  padding: 0;
-}
-
 :where(.builder-scope) .builder-panel-sticky-summary {
+  /* Still load-bearing for two cases that never portal into a host header
+     slot at all: Discovery Decants (no stickySummaryPortalTarget, so this
+     wraps the summary inline unconditionally) and Aurelian mobile (the
+     slot exists but the viewport is too narrow to use it -- see
+     isDesktopSummaryViewport in BuilderPanel.jsx). Desktop Aurelian never
+     renders this wrapper at all anymore: the summary portals straight
+     into the header slot with nothing left behind in the panel. */
   position: sticky;
   top: 12px;
   z-index: 5;
@@ -532,6 +533,15 @@
 :where(.builder-scope) .panel-header p {
   margin: 4px 0 0;
   color: var(--builder-color-text-muted, #94a3b8);
+}
+
+:where(.builder-scope) .catalog-section .panel-header {
+  /* Scoped to the catalog section specifically, not the shared base rule
+     above (also used by the box panel's own "Mi caja" header) -- the
+     catalog heading/search/filters stack sits directly above the grid
+     with nothing else competing for attention, so it doesn't need the
+     same breathing room a header sharing a row with action buttons does. */
+  margin-bottom: 10px;
 }
 
 :where(.builder-scope) .catalog-title-group {
@@ -703,7 +713,7 @@
 :where(.builder-scope) .catalog-controls {
   display: grid;
   grid-template-columns: 1fr;
-  margin-bottom: 10px;
+  margin-bottom: 8px;
 }
 
 :where(.builder-scope) .catalog-controls input,
@@ -713,7 +723,7 @@
   background: var(--builder-color-surface-elevated, rgba(15, 23, 42, 0.72));
   color: var(--builder-color-text, #ecfdf5);
   border-radius: 999px;
-  padding: 10px 14px;
+  padding: 9px 12px;
 }
 
 :where(.builder-scope) .catalog-controls input::placeholder {
@@ -723,8 +733,8 @@
 :where(.builder-scope) .filters {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
-  margin-bottom: 20px;
+  gap: 8px;
+  margin-bottom: 10px;
 }
 
 :where(.builder-scope) .filters select {
@@ -732,7 +742,20 @@
   background: var(--builder-color-surface-elevated, rgba(15, 23, 42, 0.72));
   color: var(--builder-color-text, #ecfdf5);
   border-radius: 999px;
-  padding: 10px 14px;
+  padding: 9px 12px;
+  /* Every option now carries its own "Category: Value" prefix (see
+     FilterBar.jsx), so the longest real option text (the sort select's
+     "Orden: Puntos: menor a mayor") measured live at ~200px against a
+     one-of-four-equal-columns width of ~124px at the narrowest supported
+     desktop viewport (981px) -- padding/gap/width rebalancing alone
+     can't close a gap that size at a legible font size. Ellipsis makes
+     the closed select degrade gracefully instead of clipping mid-
+     character or silently forcing the row wider than its column: the
+     full text is still available in the opened dropdown and as the
+     select's own accessible value either way. */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 :where(.builder-scope) .catalog-grid {
@@ -3085,8 +3108,46 @@
     padding: 18px;
   }
 
+  :where(.builder-scope) .filters {
+    /* Four equal-width tracks instead of flex-wrap: a grid track can never
+       grow past its own column regardless of an option's text length (the
+       "Category: Value" prefix makes every option noticeably longer than
+       before), so all four controls hold one row at this breakpoint's own
+       narrowest supported width without any risk of a 5th-track wrap. */
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    flex-wrap: nowrap;
+  }
+
+  :where(.builder-scope) .filters select {
+    width: 100%;
+    min-width: 0;
+    /* Modest reduction (16px base -> ~14.76px), desktop-only: the
+       ellipsis rule above is what actually keeps the longest option text
+       from forcing a column wider than its share of the row -- this is a
+       secondary assist, not a substitute for it, since font-size alone
+       can't close a ~200px-vs-124px gap at a legible size. Mobile keeps
+       the base size (more room per select there, via the 2-column grid
+       or full-width stack). */
+    font-size: var(--builder-unit-082);
+  }
+
   :where(.builder-scope) .builder-panel-sticky-summary-card {
     padding-bottom: 10px;
+  }
+
+  :where(.builder-scope) .builder-panel--docked-expanded {
+    /* The docked summary portals into the host header's absolutely-
+       positioned slot, so it never contributes to layout height -- nothing
+       here pushes .builder-panel's own content down on its own. This adds
+       just enough padding-top to clear the expanded card's own measured
+       height (322px at this and wider desktop widths, the tallest case,
+       since the tray's row count is fixed by maxSlots rather than by how
+       many perfumes are selected) plus a modest gap matching .layout's own
+       16px column gap. Collapsed never gets this class (see
+       isDockedAndCollapsed in BuilderPanel.jsx), so collapsing reclaims the
+       space immediately rather than leaving an expanded-sized gap behind. */
+    padding-top: 186px;
   }
 
   :where(.builder-scope) .builder-panel-summary-row {
@@ -4659,37 +4720,6 @@
   background: rgba(15, 23, 42, 0.72);
   color: #ecfdf5;
   font-weight: 800;
-}
-
-:where(.builder-scope) .collection-card-preview-modal {
-  width: min(760px, 94vw);
-  max-height: min(880px, 90vh);
-  overflow-y: auto;
-  padding: 24px;
-  border-radius: 24px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  background:
-    radial-gradient(circle at 50% 0, rgba(250, 204, 21, 0.10), transparent 34%),
-    #08110d;
-  box-shadow: 0 28px 90px rgba(0, 0, 0, 0.58);
-}
-
-:where(.builder-scope) .collection-card-preview-header {
-  margin-bottom: 18px;
-}
-
-:where(.builder-scope) .collection-card-preview-header span {
-  display: block;
-  color: var(--builder-color-accent, #86efac);
-  font-size: var(--builder-unit-068);
-  font-weight: 900;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-:where(.builder-scope) .collection-card-preview-header h3 {
-  margin: 4px 0 0;
-  color: #ecfdf5;
 }
 
 :where(.builder-scope) .summary-eyebrow,

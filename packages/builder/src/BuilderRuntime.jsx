@@ -1216,7 +1216,6 @@ const confirmAddPerfume = () => {
             onCancelComposerProposal={handleCancelComposerProposal}
             analytics={analytics}
             finalizationAdapter={finalizationAdapter}
-            isDevelopment={isDevelopment}
             curatorBonusPreference={curatorBonusPreference}
             onCuratorBonusPreferenceChange={setCuratorBonusPreference}
             reviewCustomerInfo={reviewCustomerInfo}

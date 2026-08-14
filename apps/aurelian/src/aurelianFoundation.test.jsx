@@ -343,6 +343,31 @@ describe("Aurelian application foundation", () => {
     expect(discoveryEntrySource).not.toContain("composerMinimumPoints");
   });
 
+  // Regression guard for the catalog-density fix: this page's own
+  // .catalog-controls (a label+input/label+select search-and-filter form)
+  // used to be an unscoped selector. The Builder widget at /build-your-box
+  // renders its own, differently-styled .catalog-controls (just a bare
+  // search input, no label/select pair), scoped with :where(.builder-scope)
+  // -- zero specificity by design (see
+  // packages/builder/src/builder/styleNamespace.test.js). Without a page-
+  // specific scope, this page's rule silently won the cascade wherever both
+  // stylesheets loaded on the same page -- including inside the Builder
+  // widget, which inherited this page's margin-top:3.5rem, 1.25rem padding,
+  // border, and 2-column grid meant for a completely different form.
+  it("never defines an unscoped .catalog-controls rule that could win the cascade inside the Builder widget", () => {
+    const stylesheet = readFileSync(join(APP_ROOT, "src", "app", "globals.css"), "utf8");
+    expect(stylesheet).not.toMatch(/(?<!\.catalog-page )\.catalog-controls\s*\{/);
+    expect(stylesheet).not.toMatch(/(?<!\.catalog-page )\.catalog-controls (?:label|input|select)/);
+  });
+
+  it("keeps the /catalogo page's own catalog-controls styling intact under the .catalog-page scope", () => {
+    const stylesheet = readFileSync(join(APP_ROOT, "src", "app", "globals.css"), "utf8");
+    expect(stylesheet).toContain(
+      ".catalog-page .catalog-controls { display:grid; grid-template-columns:1fr 14rem; gap:1rem; margin-top:3.5rem; padding:1.25rem; border:1px solid var(--border); background:var(--surface); }"
+    );
+    expect(stylesheet).toContain(".catalog-page .catalog-controls { grid-template-columns:1fr; }");
+  });
+
   it("fully retires legacy Vite Aurelian ownership while preserving Discovery bootstrap", () => {
     const mainSource = readFileSync(join(REPOSITORY_ROOT, "src", "main.jsx"), "utf8");
     expect(mainSource).toContain("DiscoveryDecantsApp");
