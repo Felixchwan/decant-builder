@@ -81,10 +81,14 @@ function App({
   // only a host that opts in by passing a value ever changes what counts as
   // a completed proposal.
   composerMinimumPoints = null,
-  // Opt-in suppression of the hero section below, for a host that merges it
-  // into its own dismissible intro experience (see DiscoveryBoxBuilder.jsx's
-  // doc comment). false/absent renders the hero exactly as it always has.
-  isIntroCollapsed = false,
+  // Generic host capability for the Builder's own shared hero section (the
+  // title + description above the catalog). Defaults to true, preserving
+  // existing Builder behavior for any host that doesn't pass this -- a host
+  // renders it unless it explicitly opts out because it has its own intro
+  // presentation above the Builder (see DiscoveryBoxBuilder.jsx's doc
+  // comment). Purely a render switch: the Builder holds no preference state
+  // of its own here, and never reads storage for it.
+  showBuilderHero = true,
   // Opt-in desktop capability: renders a full-height collapse rail at the
   // left edge of the box panel column, letting the catalog reclaim that
   // width when collapsed (see DiscoveryBoxBuilder.jsx's doc comment).
@@ -1019,7 +1023,7 @@ const confirmAddPerfume = () => {
         </p>
       )}
 
-      {!isIntroCollapsed && (
+      {showBuilderHero && (
         <section className="hero">
           <h1>{builderConfig.copy.heroTitle}</h1>
           <p>
@@ -1244,6 +1248,13 @@ const confirmAddPerfume = () => {
   );
 }
 
+function formatConfigCopy(template, values = {}) {
+  return Object.entries(values).reduce(
+    (copy, [key, value]) => copy.replaceAll(`{${key}}`, String(value)),
+    template
+  );
+}
+
 function loadPersistedBuilderState({ builderConfig, perfumes, defaultBuilderState }) {
   return loadPersistedBuilderStateFromStorage({
     storage: getBuilderStorage(),
@@ -1252,13 +1263,6 @@ function loadPersistedBuilderState({ builderConfig, perfumes, defaultBuilderStat
     config: builderConfig,
     defaultBuilderState,
   });
-}
-
-function formatConfigCopy(template, values = {}) {
-  return Object.entries(values).reduce(
-    (copy, [key, value]) => copy.replaceAll(`{${key}}`, String(value)),
-    template
-  );
 }
 
 function parseComposerBudget(value) {

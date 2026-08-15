@@ -179,6 +179,38 @@ h1 { max-width:15ch; margin-bottom:1.4rem; font-size:clamp(2.8rem,7vw,6.4rem); }
 .builder-intro-restore-row { width:min(1180px,calc(100% - 2rem)); margin-inline:auto; padding-block:.85rem; }
 .builder-intro-restore { display:inline-flex; align-items:center; gap:.4rem; padding:.4rem .85rem; border:1px solid var(--border); background:transparent; color:var(--muted); font-size:.78rem; font-weight:700; letter-spacing:.02em; transition:border-color .2s ease,color .2s ease; }
 .builder-intro-restore:hover,.builder-intro-restore:focus-visible { border-color:var(--gold); color:var(--gold); }
+@media (min-width:981px) {
+  /* Constrains the expanded intro to the same horizontal region as the
+     catalog column below it (packages/builder styles.css's .layout), not a
+     guessed width. Reuses the exact 50%-708px anchor already derived and
+     live-tested for .site-header__builder-slot above -- #builder-entry-header
+     and .builder-theme-root (packages/builder styles.css) share the same
+     direct parent (.builder-page), so percentages here resolve against the
+     identical containing-block width .site-header__builder-slot's own
+     formula was built against. .app is width:min(2200px,100%) of
+     .builder-theme-root (itself width:min(1440px,100%) of .builder-page),
+     plus .app's own 12px inline padding at this breakpoint -- that's the
+     50%-708px left/right edge of .app's own content box, mirrored here
+     since a centered box's two margins are equal by construction.
+     .layout's own second grid track is auto-sized to
+     .builder-panel-collapsible-row's rendered width when expanded (the
+     20px rail + 10px internal gap + 360px panel column = 390px -- not
+     just the panel's own 360px, confirmed live via
+     getComputedStyle(...).gridTemplateColumns), plus .layout's own 16px
+     column gap = 406px reserved on the right, so the right margin is that
+     same 708px anchor plus 406px -- ending this header's content box
+     where the catalog column ends when the panel is expanded (the default
+     state), not where the whole .app box ends. Matches the panel's
+     *expanded* width specifically; collapsing the panel afterward widens
+     the catalog underneath without also re-widening this header -- fixing
+     that is out of this fix's scope (see the round's own acceptance
+     criteria, all stated against the expanded-panel case). */
+  #builder-entry-header {
+    width:auto;
+    margin-left:max(12px, calc(50% - 708px));
+    margin-right:max(418px, calc(50% - 302px));
+  }
+}
 /* Scoped to .catalog-page specifically (the standalone /catalogo page's own
    wrapper -- see app/catalogo/page.jsx) rather than the bare .catalog-controls
    class: the Builder widget at /build-your-box renders its own, differently-

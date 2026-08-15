@@ -11,7 +11,6 @@ vi.mock("@discovery-box/builder", () => ({
 }));
 
 import { BuilderExperience, hasPersistedBox } from "./BuilderExperience.jsx";
-import { IntroPreferenceContext } from "./IntroPreferenceProvider.jsx";
 import { aurelianConfig } from "../merchant/config.js";
 import { parseFragranceIntent, FRAGRANCE_QUERY_PARAM } from "../lib/parseFragranceIntent.js";
 import { ENTRY_HEADER_VISIBILITY_SCRIPT } from "../app/build-your-box/page.jsx";
@@ -127,29 +126,18 @@ describe("entry header pre-hydration visibility script", () => {
   });
 });
 
-describe("intro-collapse hero suppression", () => {
-  it("defaults to expanded (hero suppression off) outside any provider, and forwards the real preference when one wraps it", () => {
+describe("shared Builder hero suppression", () => {
+  it("always disables the Builder's own shared hero section, in favor of this app's own #builder-entry-header intro", () => {
     mockWindow({ storedValue: "{}" });
 
-    // No provider: falls back to IntroPreferenceContext's own default value,
-    // same as BuilderIntroHeader does -- this is deliberate, not an
-    // oversight (see IntroPreferenceProvider.jsx's own context default).
     renderToStaticMarkup(<BuilderExperience />);
-    expect(builderCalls[0].isIntroCollapsed).toBe(false);
 
-    // BuilderExperience reads the shared preference straight from context
-    // (see IntroPreferenceProvider.jsx) rather than through a prop threaded
-    // via BuilderMount -- BuilderMount has no other use for the value, so
-    // there is no intermediate to forward it through.
-    builderCalls.length = 0;
-    renderToStaticMarkup(
-      <IntroPreferenceContext.Provider
-        value={{ isIntroDismissed: true, dismissIntro: () => {}, restoreIntro: () => {} }}
-      >
-        <BuilderExperience />
-      </IntroPreferenceContext.Provider>,
-    );
-    expect(builderCalls[0].isIntroCollapsed).toBe(true);
+    expect(builderCalls).toHaveLength(1);
+    expect(builderCalls[0].showBuilderHero).toBe(false);
+    // No leftover isIntroCollapsed plumbing -- Aurelian's own persisted
+    // intro preference (see IntroPreferenceProvider.jsx) now controls only
+    // BuilderIntroHeader, and never reaches the shared Builder at all.
+    expect(builderCalls[0]).not.toHaveProperty("isIntroCollapsed");
   });
 });
 

@@ -126,7 +126,7 @@ describe("DiscoveryBoxBuilder asset resolver boundary", () => {
     ]);
   });
 
-  it("defaults hero-section suppression to false and forwards an explicit opt-in unchanged", () => {
+  it("defaults the shared hero section to visible and forwards an explicit opt-out unchanged", () => {
     const assetResolver = createCatalogAssetResolver({ basePath: "/merchant-assets" });
 
     renderToStaticMarkup(
@@ -136,12 +136,17 @@ describe("DiscoveryBoxBuilder asset resolver boundary", () => {
           catalog={[]}
           config={discoveryDecantsConfig}
           assetResolver={assetResolver}
-          isIntroCollapsed
+          showBuilderHero={false}
         />
       </>,
     );
 
-    expect(appCalls.map(({ isIntroCollapsed }) => isIntroCollapsed)).toEqual([false, true]);
+    expect(appCalls.map(({ showBuilderHero }) => showBuilderHero)).toEqual([true, false]);
+    // Discovery Decants (discoveryDecantsConfig above) never passes
+    // showBuilderHero at all -- the first call above proves it keeps the
+    // hero by default with zero opt-in wiring of its own, same as any
+    // other host that has no intro presentation of its own to substitute.
+    expect(appCalls[0]).not.toHaveProperty("isIntroCollapsed");
   });
 
   it("defaults the collapsible right-panel rail to false and forwards an explicit opt-in unchanged", () => {

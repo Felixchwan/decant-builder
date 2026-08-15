@@ -6,23 +6,27 @@ import { describe, expect, it } from "vitest";
 // away specifically to avoid needing a full, real catalog/config fixture)
 // -- source-contract checks are the established pattern here instead (see
 // stylesOwnership.test.js, which reads this same file for an unrelated
-// boundary). isIntroCollapsed itself is a plain, always-available prop
-// (no scroll/effect-driven state involved, unlike isSummaryDocked), so the
+// boundary). showBuilderHero itself is a plain, always-available prop (no
+// scroll/effect-driven state involved, unlike isSummaryDocked), so the
 // prop-forwarding half of this contract is exercised directly, with real
 // rendering, in DiscoveryBoxBuilder.test.jsx's
-// "defaults hero-section suppression to false..." test.
+// "defaults the shared hero section to visible..." test.
 const runtimeSource = readFileSync(new URL("./BuilderRuntime.jsx", import.meta.url), "utf8");
 
-describe("BuilderRuntime hero-section intro-collapse boundary", () => {
-  it("defaults isIntroCollapsed to false, preserving today's hero rendering for every host that doesn't opt in", () => {
-    expect(runtimeSource).toMatch(/isIntroCollapsed\s*=\s*false,/);
+describe("BuilderRuntime shared hero-section capability boundary", () => {
+  it("defaults showBuilderHero to true, preserving today's hero rendering for every host that doesn't opt out", () => {
+    expect(runtimeSource).toMatch(/showBuilderHero\s*=\s*true,/);
   });
 
-  it("gates the shared hero section behind isIntroCollapsed, never removing it from hosts that never pass the prop", () => {
+  it("gates the shared hero section behind showBuilderHero, rendering it for any host that doesn't pass false", () => {
     const heroIndex = runtimeSource.indexOf('<section className="hero">');
     expect(heroIndex).toBeGreaterThan(-1);
     const beforeHero = runtimeSource.slice(Math.max(0, heroIndex - 40), heroIndex);
-    expect(beforeHero).toMatch(/\{!isIntroCollapsed && \(\s*$/);
+    expect(beforeHero).toMatch(/\{showBuilderHero && \(\s*$/);
+  });
+
+  it("holds no leftover isIntroCollapsed plumbing -- that represented a host's own persisted intro preference, which this generic render capability does not couple to", () => {
+    expect(runtimeSource).not.toMatch(/isIntroCollapsed/);
   });
 });
 

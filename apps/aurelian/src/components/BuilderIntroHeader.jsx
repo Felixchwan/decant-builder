@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useRef } from "react";
 import { useIntroPreference } from "./IntroPreferenceProvider.jsx";
 
 // Aurelian-owned presentation, not shared Builder UI: this is the static
@@ -21,10 +22,39 @@ import { useIntroPreference } from "./IntroPreferenceProvider.jsx";
 // so the two never race.
 export function BuilderIntroHeader() {
   const { isIntroDismissed, dismissIntro, restoreIntro } = useIntroPreference();
+  const measureRef = useRef(null);
+
+  // On desktop, the right-side box panel (packages/builder styles.css's
+  // .builder-panel-collapsible-row) pulls itself up by exactly this much,
+  // so its start position stays independent of this header's own height --
+  // it should read as beginning directly beneath the site's own permanent
+  // header, not shifted around by whichever intro state (expanded vs.
+  // dismissed) currently renders here. Attached to both branches' own root
+  // element below (only one is ever mounted at a time), so this tracks
+  // whichever one is actually taking up page space right now, including
+  // its natural reflow at narrower desktop widths.
+  useEffect(() => {
+    const element = measureRef.current;
+    if (!element || typeof ResizeObserver === "undefined") {
+      return undefined;
+    }
+
+    function recomputeOffset() {
+      document.documentElement.style.setProperty(
+        "--builder-intro-header-offset",
+        `${element.getBoundingClientRect().height}px`
+      );
+    }
+
+    recomputeOffset();
+    const observer = new ResizeObserver(recomputeOffset);
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, [isIntroDismissed]);
 
   if (isIntroDismissed) {
     return (
-      <div className="builder-intro-restore-row">
+      <div className="builder-intro-restore-row" ref={measureRef}>
         <button
           type="button"
           className="builder-intro-restore"
@@ -38,7 +68,11 @@ export function BuilderIntroHeader() {
   }
 
   return (
-    <header id="builder-entry-header" className="page-shell page-intro page-intro--compact">
+    <header
+      id="builder-entry-header"
+      className="page-shell page-intro page-intro--compact"
+      ref={measureRef}
+    >
       <button
         type="button"
         className="builder-intro-dismiss"

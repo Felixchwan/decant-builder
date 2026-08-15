@@ -3145,6 +3145,17 @@
     align-items: stretch;
     gap: 10px;
     min-width: 0;
+    /* --builder-intro-header-offset is a generic, opt-in token: a host
+       that renders its own page-level content above .layout may measure
+       that content's height (e.g. via ResizeObserver) and set this custom
+       property; a host that never sets it gets the 0px fallback below, a
+       no-op. Negative margin pulls this row's own static position back up
+       by whatever normal-flow height that host content contributed, so
+       this column starts at the same place regardless of how tall (or
+       short, or absent) that content currently is -- catalog, the OTHER
+       grid item, is entirely unaffected, since this only changes this
+       row's own box, not .layout's own position. */
+    margin-top: calc(-1 * var(--builder-intro-header-offset, 0px));
   }
 
   :where(.builder-scope) .layout--panel-collapsible:not(.layout--panel-collapsed) .builder-panel-collapsible-row {
