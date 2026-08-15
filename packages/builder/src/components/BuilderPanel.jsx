@@ -4677,12 +4677,36 @@ function BoxSlotTray({
       setActiveSlotIndex((currentIndex) => (currentIndex === index ? null : index));
     }
   };
+  // Compact (header-docked) slots skip the full drag/long-press machinery
+  // (nothing to disambiguate a tap from -- there's no reorder there), but
+  // still need to know mouse vs. touch/pen to decide whether a click should
+  // latch .is-active at all: hover-capable pointers get the reveal for free
+  // from :hover/:focus-within in CSS, so a mouse click on the vial itself
+  // must NOT also toggle active (that would let the × stay revealed after
+  // the pointer moves away, which reads as "latched" rather than
+  // hover-only). recordPointerType reuses the exact same
+  // lastPointerTypeRef the full tray already populates via
+  // handlePointerDown -- just the type-recording half, without triggering
+  // any drag/long-press state.
+  const recordPointerType = (event) => {
+    lastPointerTypeRef.current = event.pointerType;
+  };
+  const handleCompactSlotClick = (index) => {
+    if (lastPointerTypeRef.current === "mouse") {
+      return;
+    }
+
+    if (selectedPerfumes[index]) {
+      setActiveSlotIndex((currentIndex) => (currentIndex === index ? null : index));
+    }
+  };
   const handleRemove = (index) => {
     onRemovePerfume(index);
     setActiveSlotIndex(null);
     setDraggingIndex(null);
     setDragOverIndex(null);
   };
+  const activateSlot = isCompact ? handleCompactSlotClick : handleSlotClick;
 
   return (
     <div className="box-slot-tray interactive-box-slot-tray" aria-label="Interactive Discovery Box slots">
@@ -4707,6 +4731,7 @@ function BoxSlotTray({
               }}
               onDrop={handleDrop}
               onPointerDown={handlePointerDown}
+              onCompactPointerDown={recordPointerType}
               onPointerEnter={() => {
                 if (draggingIndex !== null) {
                   didDragRef.current = draggingIndex !== leftIndex;
@@ -4714,7 +4739,7 @@ function BoxSlotTray({
                 }
               }}
               onPointerUp={handlePointerUp}
-              onClick={handleSlotClick}
+              onClick={activateSlot}
               translator={translator}
               isCompact={isCompact}
             />
@@ -4745,6 +4770,7 @@ function BoxSlotTray({
               }}
               onDrop={handleDrop}
               onPointerDown={handlePointerDown}
+              onCompactPointerDown={recordPointerType}
               onPointerEnter={() => {
                 if (draggingIndex !== null) {
                   didDragRef.current = draggingIndex !== rightIndex;
@@ -4752,7 +4778,7 @@ function BoxSlotTray({
                 }
               }}
               onPointerUp={handlePointerUp}
-              onClick={handleSlotClick}
+              onClick={activateSlot}
               translator={translator}
               isCompact={isCompact}
             />
@@ -4778,6 +4804,7 @@ function BoxVialSlot({
   onDragOver,
   onDrop,
   onPointerDown,
+  onCompactPointerDown,
   onPointerEnter,
   onPointerUp,
   onClick,
@@ -4864,10 +4891,10 @@ function BoxVialSlot({
       }
       onDragOver={isCompact ? undefined : onDragOver}
       onDrop={isCompact ? undefined : (event) => onDrop(event, index)}
-      onPointerDown={isCompact ? undefined : (event) => onPointerDown(event, index, true)}
+      onPointerDown={isCompact ? onCompactPointerDown : (event) => onPointerDown(event, index, true)}
       onPointerEnter={isCompact ? undefined : onPointerEnter}
       onPointerUp={isCompact ? undefined : () => onPointerUp(index)}
-      onClick={isCompact ? undefined : () => onClick(index)}
+      onClick={() => onClick(index)}
       style={{
         "--tier-color": tierData.color,
         "--tier-background": tierData.background,
@@ -4880,22 +4907,20 @@ function BoxVialSlot({
         <span className={`vial-label ${hasCuratedShortName ? "has-short-name" : ""}`}>
           <strong>{slotLabel}</strong>
         </span>
-        {!isCompact && (
-          <button
-            type="button"
-            className="slot-remove-button"
-            onClick={(event) => {
-              event.stopPropagation();
-              onRemove(index);
-            }}
-            aria-label={
-              translator?.t?.("collectionIntelligence.removePerfume", { name: perfume.name }) ||
-              `Remove ${perfume.name}`
-            }
-          >
-            ×
-          </button>
-        )}
+        <button
+          type="button"
+          className="slot-remove-button"
+          onClick={(event) => {
+            event.stopPropagation();
+            onRemove(index);
+          }}
+          aria-label={
+            translator?.t?.("collectionIntelligence.removePerfume", { name: perfume.name }) ||
+            `Remove ${perfume.name}`
+          }
+        >
+          ×
+        </button>
       </span>
       {isActive && !isCompact && (
         <div className="slot-action-popover">

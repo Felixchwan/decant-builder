@@ -143,4 +143,22 @@ describe("DiscoveryBoxBuilder asset resolver boundary", () => {
 
     expect(appCalls.map(({ isIntroCollapsed }) => isIntroCollapsed)).toEqual([false, true]);
   });
+
+  it("defaults the collapsible right-panel rail to false and forwards an explicit opt-in unchanged", () => {
+    const assetResolver = createCatalogAssetResolver({ basePath: "/merchant-assets" });
+
+    renderToStaticMarkup(
+      <>
+        <DiscoveryBoxBuilder catalog={[]} config={discoveryDecantsConfig} assetResolver={assetResolver} />
+        <DiscoveryBoxBuilder
+          catalog={[]}
+          config={discoveryDecantsConfig}
+          assetResolver={assetResolver}
+          enablePanelCollapse
+        />
+      </>,
+    );
+
+    expect(appCalls.map(({ enablePanelCollapse }) => enablePanelCollapse)).toEqual([false, true]);
+  });
 });

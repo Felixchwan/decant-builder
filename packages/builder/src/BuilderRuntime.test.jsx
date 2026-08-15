@@ -25,3 +25,39 @@ describe("BuilderRuntime hero-section intro-collapse boundary", () => {
     expect(beforeHero).toMatch(/\{!isIntroCollapsed && \(\s*$/);
   });
 });
+
+// Same source-contract pattern as above, for the collapsible right-panel
+// rail. Live behavior (natural-scroll-then-bottom-lock via a JS-computed
+// negative top-sticky offset, the header-offset clamp for a short panel,
+// rail top-stick while collapsed, 3->4+ catalog reflow, inert blocking
+// focus/pointer interaction on the hidden panel, focus staying on the rail
+// across a real click, state surviving a collapse/expand cycle,
+// mobile/Discovery-Decants non-regression) was browser-verified directly
+// -- see the session's verification notes -- rather than re-asserted here
+// as markup strings, since none of it is expressible as a static
+// source-contract check the way the hero-collapse boundary above is.
+describe("BuilderRuntime collapsible right-panel boundary", () => {
+  it("defaults enablePanelCollapse to false, so a host that never opts in renders no rail and no extra wrapper DOM", () => {
+    expect(runtimeSource).toMatch(/enablePanelCollapse\s*=\s*false,/);
+  });
+
+  it("gates the entire rail + wrapper behind enablePanelCollapse, falling back to the bare boxPanel element otherwise", () => {
+    expect(runtimeSource).toContain("{enablePanelCollapse ? (");
+    expect(runtimeSource).toContain('className="builder-panel-collapsible-row"');
+    expect(runtimeSource).toContain("builder-panel-collapse-rail");
+    expect(runtimeSource).toMatch(/\) : \(\s*boxPanel\s*\)\}/);
+  });
+
+  it("marks the wrapped panel inert while collapsed -- the single mechanism blocking focus, pointer interaction, and AT exposure at once, while the component stays mounted", () => {
+    expect(runtimeSource).toContain('<div className="builder-panel-column" inert={isPanelCollapsed}>');
+  });
+
+  it("does not add pending-focus-ref/useLayoutEffect machinery -- the rail is the only trigger, so focus already sits on it when collapse fires (confirmed via real-click browser testing, not just assumed)", () => {
+    expect(runtimeSource).not.toMatch(/pendingRailFocusRef|collapseRailRef/);
+  });
+
+  it("keeps isPanelCollapsed local and non-persisted, matching BuilderPanel's own isSummaryCollapsed precedent", () => {
+    expect(runtimeSource).toMatch(/const \[isPanelCollapsed, setIsPanelCollapsed\] = useState\(false\);/);
+    expect(runtimeSource).not.toMatch(/isPanelCollapsed.*localStorage|localStorage.*[Pp]anelCollapse/);
+  });
+});

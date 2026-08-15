@@ -63,6 +63,8 @@ export const esMX = {
   "builder.reviewCompact": "Revisar",
   "builder.collapseSummary": "Colapsar caja",
   "builder.expandSummary": "Expandir caja",
+  "builder.collapsePanel": "Colapsar panel",
+  "builder.expandPanel": "Expandir panel",
   "builder.reviewNeed": "Falta",
   "builder.reviewFallback": "los requisitos mínimos",
   "builder.reviewToReview": "para revisar.",

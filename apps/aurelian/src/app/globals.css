@@ -1,4 +1,4 @@
-:root { color-scheme: dark; --bg:#090a09; --surface:rgba(17,17,15,.94); --elevated:rgba(27,25,21,.96); --text:#f2ebdd; --secondary:#c8bead; --muted:#938b7d; --border:rgba(200,166,101,.22); --gold:#c8a665; --gold-strong:#9f7d43; --ink:#171108; }
+:root { color-scheme: dark; --bg:#090a09; --surface:rgba(17,17,15,.94); --elevated:rgba(27,25,21,.96); --text:#f2ebdd; --secondary:#c8bead; --muted:#938b7d; --border:rgba(200,166,101,.22); --gold:#c8a665; --gold-strong:#9f7d43; --ink:#171108; --site-header-height:4.75rem; --builder-panel-header-offset:calc(var(--site-header-height) + 12px); }
 * { box-sizing:border-box; }
 html { scroll-behavior:smooth; background:var(--bg); }
 body { margin:0; background:radial-gradient(circle at 75% 8%,rgba(159,125,67,.09),transparent 27rem),var(--bg); color:var(--text); font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; line-height:1.6; }
@@ -11,7 +11,7 @@ button,input,select { font:inherit; }
 .skip-link:focus { transform:none; }
 .page-shell { width:min(1180px,calc(100% - 2rem)); margin-inline:auto; }
 .site-header { position:sticky; z-index:50; top:0; border-bottom:1px solid rgba(200,166,101,.13); background:rgba(9,10,9,.88); backdrop-filter:blur(18px); }
-.site-header__inner { width:min(1240px,calc(100% - 2rem)); min-height:4.75rem; margin:auto; display:flex; align-items:center; gap:2rem; }
+.site-header__inner { width:min(1240px,calc(100% - 2rem)); min-height:var(--site-header-height); margin:auto; display:flex; align-items:center; gap:2rem; }
 .wordmark { display:flex; flex-direction:column; line-height:1; letter-spacing:.22em; }
 .wordmark span { font-family:Georgia,"Times New Roman",serif; font-size:1rem; }
 .wordmark small { margin-top:.35rem; color:var(--gold); font-size:.55rem; letter-spacing:.42em; }
@@ -346,7 +346,7 @@ body:has(.discovery-intent) #builder-entry-header { display:none; }
 }
 @media (max-width:560px) {
   .page-shell,.site-header__inner,.site-footer { width:min(100% - 1.25rem,1180px); }
-  .site-header__inner { min-height:4.25rem; }
+  :root { --site-header-height:4.25rem; }
   h1 { font-size:2.8rem; }
   .button-row { align-items:flex-start; flex-direction:column; }
   .aurelian-hero__copy { padding-block:3rem 2.5rem; }

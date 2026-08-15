@@ -63,6 +63,8 @@ export const enUS = {
   "builder.reviewCompact": "Review",
   "builder.collapseSummary": "Collapse box",
   "builder.expandSummary": "Expand box",
+  "builder.collapsePanel": "Collapse panel",
+  "builder.expandPanel": "Expand panel",
   "builder.reviewNeed": "Need",
   "builder.reviewFallback": "minimum requirements",
   "builder.reviewToReview": "to review.",

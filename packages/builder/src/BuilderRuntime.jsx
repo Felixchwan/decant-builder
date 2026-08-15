@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { getTierData } from "./utils/tierUtils";
 import PerfumeCard from "./components/PerfumeCard";
 import FilterBar from "./components/FilterBar";
@@ -8,7 +8,6 @@ import { buildScentDna } from "./utils/buildScentDna";
 import { buildCatalogView } from "./builder/internal/catalog/buildCatalogView.js";
 import { buildCollectionSummary } from "./builder/internal/intelligence/buildCollectionSummary.js";
 import { deriveDefaultComposerBudget } from "./builder/internal/composer/deriveDefaultComposerBudget.js";
-import { computeCatalogReflowSplit } from "./builder/internal/layout/computeCatalogReflowSplit.js";
 import {
   clearPersistedBuilderState,
   createBuilderPersistencePayload,
@@ -86,6 +85,12 @@ function App({
   // into its own dismissible intro experience (see DiscoveryBoxBuilder.jsx's
   // doc comment). false/absent renders the hero exactly as it always has.
   isIntroCollapsed = false,
+  // Opt-in desktop capability: renders a full-height collapse rail at the
+  // left edge of the box panel column, letting the catalog reclaim that
+  // width when collapsed (see DiscoveryBoxBuilder.jsx's doc comment).
+  // false/absent renders the box panel column exactly as it always has --
+  // no rail, no extra wrapper, no grid-track changes.
+  enablePanelCollapse = false,
 }) {
   const builderConfig = config;
   const builderThemeStyle = useMemo(
@@ -163,6 +168,13 @@ function App({
   const [activeMobileTab, setActiveMobileTab] = useState(
     initialFragranceIntent && initialFragranceIntent.status !== "unavailable" ? "box" : "catalog"
   );
+  // Local, non-persisted -- resets every mount, same as BuilderPanel's own
+  // isSummaryCollapsed. Only meaningful when enablePanelCollapse is true;
+  // the rail/collapsible wrapper below don't render at all otherwise, so
+  // this has zero effect for a host that never opts in.
+  const [isPanelCollapsed, setIsPanelCollapsed] = useState(false);
+  const panelRowRef = useRef(null);
+  const [panelStickyTop, setPanelStickyTop] = useState(0);
   const [activeFilters, setActiveFilters] = useState({
     seasons: "",
     occasions: "",
@@ -255,135 +267,6 @@ function App({
   );
   const filterOptions = catalogView.filterOptions;
   const visiblePerfumes = catalogView.visiblePerfumes;
-
-  // Once the sticky right panel's own content ends, the catalog below that
-  // point should reclaim the panel's column width instead of leaving it
-  // empty for the rest of the scroll. catalogSplitIndex is the number of
-  // cards that stay in the narrow, panel-constrained grid; the remainder
-  // render in a second, full-width grid after .layout. null means "no
-  // split" (render everything in one grid — current/legacy behavior),
-  // which is also the safe fallback whenever measurement isn't possible
-  // (SSR, no ResizeObserver, narrower-than-desktop viewport, or an empty
-  // catalog).
-  const catalogPanelRef = useRef(null);
-  const catalogGridRef = useRef(null);
-  const [catalogSplitIndex, setCatalogSplitIndex] = useState(null);
-
-  useLayoutEffect(() => {
-    if (typeof window === "undefined" || typeof ResizeObserver === "undefined") {
-      return undefined;
-    }
-
-    const desktopQuery = window.matchMedia("(min-width: 981px)");
-
-    function recomputeCatalogSplit() {
-      if (!desktopQuery.matches || visiblePerfumes.length === 0) {
-        setCatalogSplitIndex(null);
-        return;
-      }
-
-      const panelEl = catalogPanelRef.current;
-      const gridEl = catalogGridRef.current;
-      const sectionEl = gridEl?.closest(".catalog-section");
-      if (!panelEl || !gridEl || !sectionEl || gridEl.children.length === 0) {
-        setCatalogSplitIndex(null);
-        return;
-      }
-
-      const gridStyle = window.getComputedStyle(gridEl);
-      const columnCount = gridStyle
-        .getPropertyValue("grid-template-columns")
-        .split(" ")
-        .filter(Boolean).length;
-      const rowGap = parseFloat(gridStyle.rowGap || gridStyle.gap || "0") || 0;
-
-      // The grid the split renders into is nested inside .catalog-section,
-      // below the panel-header/search/filter chrome and the section's own
-      // padding — .builder-panel has no such offset (it's the grid item
-      // itself). Measuring that reserved height directly (rather than
-      // assuming a fixed value) keeps this correct if that chrome ever
-      // changes, and is what the panel height actually needs to be
-      // compared against for the two grid items to end at the same point.
-      const reservedSectionHeight =
-        sectionEl.getBoundingClientRect().height - gridEl.getBoundingClientRect().height;
-      const availableGridHeight =
-        panelEl.getBoundingClientRect().height - reservedSectionHeight;
-
-      // Anchor to the real, currently-rendered rows first (exact — no
-      // assumptions) instead of trusting a single uniform row-height
-      // estimate for the whole available height. Rows aren't uniform: a
-      // two-line perfume name stretches its whole row via the grid's
-      // default align-items:stretch, and an estimate compounded across
-      // many rows can drift by more than one row's worth of height,
-      // especially when several such rows fall inside the same estimate.
-      // Only the portion beyond what's currently rendered (room for the
-      // panel to still grow into) falls back to an estimate, and that
-      // estimate now only has to cover the leftover gap, not the whole
-      // available height — bounding its worst case to roughly one row
-      // either way.
-      const rows = getGridRows(gridEl);
-      let confirmedRows = 0;
-      let confirmedHeight = 0;
-      for (let i = 0; i < rows.length; i += 1) {
-        const addition = (i === 0 ? 0 : rowGap) + rows[i].height;
-        if (confirmedHeight + addition > availableGridHeight) break;
-        confirmedHeight += addition;
-        confirmedRows += 1;
-      }
-
-      let splitIndex = Math.min(confirmedRows * columnCount, visiblePerfumes.length);
-
-      const allRenderedRowsFit = confirmedRows === rows.length;
-      if (allRenderedRowsFit && splitIndex < visiblePerfumes.length) {
-        const additional = computeCatalogReflowSplit({
-          panelHeight: availableGridHeight - confirmedHeight,
-          cardHeight: getModeCardHeight(gridEl),
-          columnCount,
-          rowGap,
-          totalCount: visiblePerfumes.length - splitIndex,
-        });
-        splitIndex = Math.min(splitIndex + additional, visiblePerfumes.length);
-      }
-
-      setCatalogSplitIndex(splitIndex >= visiblePerfumes.length ? null : splitIndex);
-    }
-
-    recomputeCatalogSplit();
-
-    const observer = new ResizeObserver(recomputeCatalogSplit);
-    if (catalogPanelRef.current) observer.observe(catalogPanelRef.current);
-    desktopQuery.addEventListener("change", recomputeCatalogSplit);
-    window.addEventListener("resize", recomputeCatalogSplit);
-
-    return () => {
-      observer.disconnect();
-      desktopQuery.removeEventListener("change", recomputeCatalogSplit);
-      window.removeEventListener("resize", recomputeCatalogSplit);
-    };
-    // ResizeObserver is the general-purpose signal (it also catches panel-
-    // height changes this component can't otherwise see, e.g. the Collection
-    // Snapshot's own internal expand/collapse toggle). The state values below
-    // are listed too, as a direct, synchronous fallback for the height
-    // changes this component *does* know about, since ResizeObserver
-    // callbacks land on their own async schedule.
-  }, [
-    // The array reference (not just its length), since a search/filter
-    // change can swap in a same-length but different set of cards whose
-    // rendered heights differ from the previous set.
-    visiblePerfumes,
-    totalSlots,
-    missingSlots,
-    missingPoints,
-    isBoxReady,
-    composerProposal,
-    isComposerGenerating,
-    curatorBonusPreference,
-  ]);
-
-  const catalogSplitPerfumes =
-    catalogSplitIndex === null ? visiblePerfumes : visiblePerfumes.slice(0, catalogSplitIndex);
-  const catalogOverflowPerfumes =
-    catalogSplitIndex === null ? [] : visiblePerfumes.slice(catalogSplitIndex);
 
   const detailPerfumeIndex = detailPerfume
     ? visiblePerfumes.findIndex((perfume) => perfume.id === detailPerfume.id)
@@ -553,6 +436,43 @@ const isComposerProposalStale = isComposerBoxProposalStale(
       }
     };
   }, []);
+
+  useEffect(() => {
+    if (!enablePanelCollapse) {
+      return undefined;
+    }
+    const rowElement = panelRowRef.current;
+    if (!rowElement) {
+      return undefined;
+    }
+
+    // Raw, unclamped bottom-lock geometry -- CSS applies min() against
+    // --builder-panel-header-offset (see styles.css) so a short panel isn't
+    // pushed down by this value; this effect only ever supplies the number
+    // a tall panel actually needs. Negative for any panel taller than the
+    // viewport (by design: the panel scrolls naturally until its own bottom
+    // is bottomGap px above the viewport's bottom edge, then holds there).
+    // No scroll listener -- position:sticky owns the actual scroll-driven
+    // positioning; this only recomputes the target when the panel's own
+    // height or the viewport's height changes.
+    const bottomGap = 12;
+
+    function recomputeStickyTop() {
+      const panelHeight = rowElement.getBoundingClientRect().height;
+      setPanelStickyTop(window.innerHeight - panelHeight - bottomGap);
+    }
+
+    recomputeStickyTop();
+
+    const resizeObserver = new ResizeObserver(recomputeStickyTop);
+    resizeObserver.observe(rowElement);
+    window.addEventListener("resize", recomputeStickyTop);
+
+    return () => {
+      resizeObserver.disconnect();
+      window.removeEventListener("resize", recomputeStickyTop);
+    };
+  }, [enablePanelCollapse]);
 
   function scrollToRef(ref) {
     ref.current?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -1034,6 +954,57 @@ const confirmAddPerfume = () => {
     );
   }
 
+  const boxPanel = (
+    <BuilderPanel
+      builderConfig={builderConfig}
+      assetResolver={assetResolver}
+      portalRoot={portalRoot}
+      totalSlots={totalSlots}
+      maxSlots={MAX_BOX_SLOTS}
+      maxSelectableSlots={MAX_SELECTABLE_SLOTS}
+      totalPoints={totalPoints}
+      estimatedValue={estimatedValue}
+      selectedPerfumes={selectedPerfumes}
+      catalogPerfumes={perfumes}
+      notes={notes}
+      boxSummary={boxSummary}
+      onClearBox={clearBox}
+      onRemovePerfume={removePerfume}
+      onReorderPerfumes={reorderPerfumes}
+      minSlots={MIN_BOX_SLOTS}
+      missingSlots={missingSlots}
+      missingPoints={missingPoints}
+      coverageSummary={coverageSummary}
+      recommendations={recommendations}
+      scentDna={scentDna}
+      isBoxReady={isBoxReady}
+      onAddPerfume={addPerfume}
+      composerSettings={composerSettings}
+      composerOptions={filterOptions}
+      minimumComposerBudget={minimumComposerBudget}
+      composerProposal={composerProposal}
+      isComposerGenerating={isComposerGenerating}
+      composerStatusMessage={composerStatusMessage}
+      isComposerProposalStale={isComposerProposalStale}
+      onComposerSettingChange={handleComposerSettingChange}
+      onRefreshComposerBudgetDefault={refreshComposerBudgetDefault}
+      onComposerPreferenceToggle={handleComposerPreferenceToggle}
+      onComposerPreferenceClear={handleComposerPreferenceClear}
+      onComposeMyBox={handleComposeMyBox}
+      onApplyComposerProposal={handleApplyComposerProposal}
+      onMoveComposerProposalAlternative={handleMoveComposerProposalAlternative}
+      onCancelComposerProposal={handleCancelComposerProposal}
+      analytics={analytics}
+      finalizationAdapter={finalizationAdapter}
+      curatorBonusPreference={curatorBonusPreference}
+      onCuratorBonusPreferenceChange={setCuratorBonusPreference}
+      reviewCustomerInfo={reviewCustomerInfo}
+      onReviewCustomerInfoChange={setReviewCustomerInfo}
+      onMobileTabChange={setActiveMobileTab}
+      stickySummaryPortalTarget={stickySummaryPortalTarget}
+    />
+  );
+
   return (
     <div
       ref={builderRootRef}
@@ -1081,7 +1052,13 @@ const confirmAddPerfume = () => {
         </button>
       </nav>
 
-      <section className="layout">
+      <section
+        className={`layout${
+          enablePanelCollapse
+            ? ` layout--panel-collapsible${isPanelCollapsed ? " layout--panel-collapsed" : ""}`
+            : ""
+        }`}
+      >
         <div
           id="catalog-panel"
           className={`mobile-tab-panel ${
@@ -1162,8 +1139,8 @@ const confirmAddPerfume = () => {
               setSortOption={handleSortChange}
             />
 
-            <div className="catalog-grid" ref={catalogGridRef}>
-              {catalogSplitPerfumes.map(renderCatalogCard)}
+            <div className="catalog-grid">
+              {visiblePerfumes.map(renderCatalogCard)}
             </div>
           </section>
         </div>
@@ -1174,65 +1151,33 @@ const confirmAddPerfume = () => {
             activeMobileTab === "box" ? "is-active" : ""
           }`}
         >
-          <BuilderPanel
-            ref={catalogPanelRef}
-            builderConfig={builderConfig}
-            assetResolver={assetResolver}
-            portalRoot={portalRoot}
-            totalSlots={totalSlots}
-            maxSlots={MAX_BOX_SLOTS}
-            maxSelectableSlots={MAX_SELECTABLE_SLOTS}
-            totalPoints={totalPoints}
-            estimatedValue={estimatedValue}
-            selectedPerfumes={selectedPerfumes}
-            catalogPerfumes={perfumes}
-            notes={notes}
-            boxSummary={boxSummary}
-            onClearBox={clearBox}
-            onRemovePerfume={removePerfume}
-            onReorderPerfumes={reorderPerfumes}
-            minSlots={MIN_BOX_SLOTS}
-            missingSlots={missingSlots}
-            missingPoints={missingPoints}
-            coverageSummary={coverageSummary}
-            recommendations={recommendations}
-            scentDna={scentDna}
-            isBoxReady={isBoxReady}
-            onAddPerfume={addPerfume}
-            composerSettings={composerSettings}
-            composerOptions={filterOptions}
-            minimumComposerBudget={minimumComposerBudget}
-            composerProposal={composerProposal}
-            isComposerGenerating={isComposerGenerating}
-            composerStatusMessage={composerStatusMessage}
-            isComposerProposalStale={isComposerProposalStale}
-            onComposerSettingChange={handleComposerSettingChange}
-            onRefreshComposerBudgetDefault={refreshComposerBudgetDefault}
-            onComposerPreferenceToggle={handleComposerPreferenceToggle}
-            onComposerPreferenceClear={handleComposerPreferenceClear}
-            onComposeMyBox={handleComposeMyBox}
-            onApplyComposerProposal={handleApplyComposerProposal}
-            onMoveComposerProposalAlternative={handleMoveComposerProposalAlternative}
-            onCancelComposerProposal={handleCancelComposerProposal}
-            analytics={analytics}
-            finalizationAdapter={finalizationAdapter}
-            curatorBonusPreference={curatorBonusPreference}
-            onCuratorBonusPreferenceChange={setCuratorBonusPreference}
-            reviewCustomerInfo={reviewCustomerInfo}
-            onReviewCustomerInfoChange={setReviewCustomerInfo}
-            onMobileTabChange={setActiveMobileTab}
-            stickySummaryPortalTarget={stickySummaryPortalTarget}
-          />
+          {enablePanelCollapse ? (
+            <div
+              ref={panelRowRef}
+              className="builder-panel-collapsible-row"
+              style={{ "--builder-panel-sticky-top": `${panelStickyTop}px` }}
+            >
+              <button
+                type="button"
+                className="builder-panel-collapse-rail"
+                onClick={() => setIsPanelCollapsed((collapsed) => !collapsed)}
+                aria-expanded={!isPanelCollapsed}
+                aria-label={
+                  isPanelCollapsed ? t("builder.expandPanel") : t("builder.collapsePanel")
+                }
+              >
+                <span aria-hidden="true">{isPanelCollapsed ? "◂" : "▸"}</span>
+              </button>
+
+              <div className="builder-panel-column" inert={isPanelCollapsed}>
+                {boxPanel}
+              </div>
+            </div>
+          ) : (
+            boxPanel
+          )}
         </div>
       </section>
-
-      {catalogOverflowPerfumes.length > 0 && (
-        <section className="catalog-section catalog-section--reflow">
-          <div className="catalog-grid">
-            {catalogOverflowPerfumes.map(renderCatalogCard)}
-          </div>
-        </section>
-      )}
     </main>
     {detailPerfume && (
       <PerfumeDetailsModal
@@ -1297,46 +1242,6 @@ const confirmAddPerfume = () => {
 )}
     </div>
   );
-}
-
-function getGridRows(gridEl) {
-  const gridTop = gridEl.getBoundingClientRect().top;
-  const rows = [];
-
-  for (const card of gridEl.children) {
-    const rect = card.getBoundingClientRect();
-    const relativeTop = Math.round(rect.top - gridTop);
-    const height = Math.round(rect.height);
-    if (height <= 0) continue;
-
-    const currentRow = rows[rows.length - 1];
-    if (currentRow && Math.abs(currentRow.top - relativeTop) < 2) {
-      currentRow.height = Math.max(currentRow.height, height);
-    } else {
-      rows.push({ top: relativeTop, height });
-    }
-  }
-
-  return rows;
-}
-
-function getModeCardHeight(gridEl) {
-  const counts = new Map();
-  let mode = null;
-  let modeCount = 0;
-
-  for (const card of gridEl.children) {
-    const height = Math.round(card.getBoundingClientRect().height);
-    if (height <= 0) continue;
-    const count = (counts.get(height) || 0) + 1;
-    counts.set(height, count);
-    if (count > modeCount) {
-      modeCount = count;
-      mode = height;
-    }
-  }
-
-  return mode;
 }
 
 function loadPersistedBuilderState({ builderConfig, perfumes, defaultBuilderState }) {

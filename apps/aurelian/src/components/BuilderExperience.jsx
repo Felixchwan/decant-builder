@@ -131,6 +131,10 @@ export function BuilderExperience({
       // composerMinimumPoints makes "Compose my box" actually honor it,
       // instead of only describing it after the fact.
       composerMinimumPoints={aurelianConfig.box.minPoints}
+      // Aurelian desktop only opts into the collapsible right-panel rail;
+      // Discovery Decants never passes this, so it keeps today's
+      // permanently-visible panel column unchanged by default.
+      enablePanelCollapse
     />
   );
 }

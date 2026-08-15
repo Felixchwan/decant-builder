@@ -395,10 +395,6 @@
   backdrop-filter: blur(18px);
 }
 
-:where(.builder-scope) .catalog-section--reflow {
-  margin-top: 16px;
-}
-
 :where(.builder-scope) .builder-panel-sticky-summary {
   /* Still load-bearing for two cases that never portal into a host header
      slot at all: Discovery Decants (no stickySummaryPortalTarget, so this
@@ -3012,6 +3008,21 @@
     display: block;
   }
 
+  :where(.builder-scope) .builder-panel-collapse-rail {
+    /* The collapse rail is a desktop-only affordance -- mobile already
+       uses the tab switcher above for the catalog/box split -- and
+       .layout is display:block here regardless of enablePanelCollapse. */
+    display: none;
+  }
+
+  :where(.builder-scope) .builder-panel-collapsible-row {
+    display: contents;
+  }
+
+  :where(.builder-scope) .builder-panel-column {
+    opacity: 1;
+  }
+
   :where(.builder-scope) .builder-panel-sticky-summary {
     position: static;
     height: auto;
@@ -3101,6 +3112,180 @@
   :where(.builder-scope) .layout {
     grid-template-columns: minmax(0, 1fr) 360px;
     gap: 16px;
+  }
+
+  :where(.builder-scope) .layout.layout--panel-collapsible {
+    /* Opt-in only via BuilderRuntime.jsx's enablePanelCollapse -- .layout's
+       base 2-track rule above is untouched so a host that never opts in
+       (Discovery Decants today) renders byte-for-byte what it always has.
+       The second track is auto-sized to fit .builder-panel-collapsible-row's
+       own current width rather than a fixed/calc'd length: that row's
+       width is driven entirely by animating .builder-panel-column's own
+       width below so this track just follows it every frame with no
+       grid-template-columns transition of its own needed. Deliberately --
+       animating grid-template-columns directly was tried first and hit a
+       real rendering-engine bug: once a transition started on that
+       property the browser stopped applying ANY further value to it at
+       all -- including plain non-animated inline-style overrides forced
+       to top priority -- confirmed via direct DOM testing. Width
+       transitions on a flex child have none of that risk so the whole
+       effect is achieved through that instead. */
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  :where(.builder-scope) .builder-panel-collapsible-row {
+    /* .mobile-tab-panel is display:contents, so this row is what actually
+       occupies .layout's second grid track directly -- a grid item's
+       containing block for position:sticky purposes is its grid AREA
+       (the track), not its own possibly-shorter rendered box, so this
+       already has the catalog-height room sticky needs without any extra
+       stretched wrapper (a previous round added one; verified unnecessary
+       here and removed). */
+    display: flex;
+    align-items: stretch;
+    gap: 10px;
+    min-width: 0;
+  }
+
+  :where(.builder-scope) .layout--panel-collapsible:not(.layout--panel-collapsed) .builder-panel-collapsible-row {
+    /* Natural scroll -> bottom lock, via a *negative* top offset rather
+       than bottom:<gap> -- position:sticky with only `bottom` set proved
+       unreliable in real Chrome (verified live: the row simply scrolled
+       away with no lock at all, despite computed styles looking correct).
+       top-sticky is the well-supported primitive, so BuilderRuntime.jsx
+       computes the negative offset a top-sticky rule needs to reproduce
+       the same visual result: stickyTop = viewportHeight - panelHeight -
+       bottomGap. For a panel taller than the viewport this is negative,
+       which is exactly the point -- the row scrolls normally (its natural
+       top is far less negative than the target) until enough of it has
+       passed that continuing to scroll would push its top above that
+       line, at which point sticky holds it with its bottom bottomGap
+       above the viewport's own bottom edge. min() against
+       --builder-panel-header-offset (an Aurelian-owned token, generic
+       default here since Discovery Decants never sets it) is what stops a
+       panel that's SHORTER than the viewport from computing a large
+       positive offset that would park it artificially far down the page
+       -- whichever value is smaller (more negative, or less positive)
+       wins, so a short panel falls back to a normal small offset below
+       the host's own sticky header instead. Recalculated by BuilderRuntime
+       via ResizeObserver + a resize listener only -- no scroll listener,
+       since CSS sticky still owns all scroll-driven positioning. */
+    position: sticky;
+    top: min(var(--builder-panel-sticky-top, 12px), var(--builder-panel-header-offset, 12px));
+    z-index: 5;
+  }
+
+  :where(.builder-scope) .layout.layout--panel-collapsed .builder-panel-collapsible-row {
+    gap: 0;
+  }
+
+  :where(.builder-scope) .layout--panel-collapsible.layout--panel-collapsed .builder-panel-collapsible-row {
+    /* Collapsed doesn't need the bottom-lock math at all -- the panel
+       column is gone (width/max-height:0 below), so the row's own height
+       is just the rail's small natural height, and the rail only needs a
+       conventional, reachable top-stick below the host's own header. */
+    position: sticky;
+    top: var(--builder-panel-header-offset, 12px);
+    z-index: 5;
+  }
+
+  :where(.builder-scope) .builder-panel-collapse-rail {
+    /* Deliberately narrow -- reads as the panel's own interactive left
+       edge, not a third sidebar. The full column height (from the flex
+       row above) is still the real hit target, so this doesn't need
+       extra width for touch/click purposes. min-width:0 overrides a
+       flex item's default min-width:auto (its own min-content size,
+       otherwise an unconditional floor under flex-basis regardless of
+       flex-shrink), and padding:0 removes the browser's own default
+       <button> padding -- without both, the chevron glyph's intrinsic
+       min-content size silently won past flex-basis, measured live at
+       25px actual vs. this 20px target. */
+    flex: 0 0 20px;
+    min-width: 0;
+    display: grid;
+    place-items: center;
+    padding: 0;
+    border: 1px solid rgba(148, 163, 184, 0.24);
+    border-radius: 8px;
+    background: rgba(15, 23, 42, 0.72);
+    color: #94a3b8;
+    font-size: var(--builder-unit-076);
+  }
+
+  :where(.builder-scope) .builder-panel-collapse-rail:hover,
+  :where(.builder-scope) .builder-panel-collapse-rail:focus-visible {
+    border-color: rgba(250, 204, 21, 0.32);
+    color: #fde68a;
+  }
+
+  :where(.builder-scope) .layout--panel-collapsed .builder-panel-collapse-rail {
+    /* Collapsed only -- expanded still relies on align-items:stretch (the
+       rule above) to match the panel's own real height, unchanged. Here
+       the panel column is gone (width/max-height:0), so without this the
+       rail's height collapses to its own tiny chevron-glyph content
+       (~28px, matched to the sticky-summary row's font-size), reading as
+       a small square adrift in the reclaimed catalog space rather than a
+       deliberate handle. An explicit height (not a min-height, since
+       there's no taller sibling left to need one) wins over the inherited
+       stretch, and .builder-panel-collapsible-row's own height simply
+       follows since the rail is its only real content now. */
+    height: 84px;
+  }
+
+  :where(.builder-scope) .builder-panel-column {
+    /* flex:0 0 auto (not 1 1 360px) -- width is the single source of
+       truth for this box's size, driven explicitly below, not derived
+       from flex-basis math. The docked header slot's width-match
+       invariant (see aurelianFoundation.test.jsx) depends on this
+       staying exactly 360px whenever expanded. */
+    flex: 0 0 auto;
+    width: 360px;
+    min-width: 0;
+    overflow: hidden;
+  }
+
+  :where(.builder-scope) .layout--panel-collapsible.layout--panel-collapsed .builder-panel-column {
+    /* max-height:0 alongside width:0 -- without it, the panel's own
+       content keeps rendering internally at width:0 (only inert and
+       overflow:hidden, never display:none, so the width transition has
+       something to animate), and text reflowing into a zero-width column
+       wraps onto its own line per word, ballooning this box's intrinsic
+       height well past its expanded height (measured live: 2301px
+       expanded -> 3325px collapsed). .builder-panel-collapsible-row's
+       align-items:stretch would then stretch the rail to match that
+       inflated height -- exactly the "artificially page-height rail" this
+       round exists to fix. Capping height here (not weakening the
+       stretch itself, still wanted for the expanded pairing above) is
+       the smallest fix scoped to the one state that actually has the
+       problem. */
+    width: 0;
+    max-height: 0;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    :where(.builder-scope) .layout.layout--panel-collapsible .builder-panel-collapsible-row {
+      transition: gap 220ms ease;
+    }
+
+    :where(.builder-scope) .builder-panel-column {
+      /* Opacity reaches 0 well before the width transition finishes, so
+         the intermediate frames where 360px of real content would
+         otherwise be visibly crushed into a narrowing box never become
+         visible -- by the time the box is actually mid-collapse, the
+         content underneath it is already fully transparent. Reduced
+         motion needs no such guard: with no transition at all, the
+         width/opacity values below just snap directly, so there's never
+         a squash frame to hide in the first place. */
+      transition: width 220ms ease, opacity 120ms ease;
+    }
+  }
+
+  :where(.builder-scope) .layout--panel-collapsible:not(.layout--panel-collapsed) .builder-panel-column {
+    opacity: 1;
+  }
+
+  :where(.builder-scope) .layout--panel-collapsible.layout--panel-collapsed .builder-panel-column {
+    opacity: 0;
   }
 
   :where(.builder-scope) .catalog-section,
@@ -3324,17 +3509,33 @@
     gap: 20px;
   }
 
-  :where(.builder-scope).builder-theme-root--custom .catalog-section--reflow .catalog-grid {
-    /* The full-width continuation grid (rendered after .layout's right
-       panel ends, so it has more available width than the constrained
-       grid above) must keep the same preferred card width rather than
-       stretching into the reclaimed space — reclaimed width buys more
-       columns, not wider cards. Same values as the rule above, restated
-       with higher specificity so this surface is unambiguously covered
-       regardless of its wider container. */
-    grid-template-columns: repeat(auto-fit, minmax(220px, 237px));
+  :where(.builder-scope) .layout.layout--panel-collapsible:not(.layout--panel-collapsed) .catalog-grid {
+    /* enablePanelCollapse only (see .layout--panel-collapsible above) --
+       3 classes' worth of specificity, so this and the collapsed rule
+       below win over the .builder-theme-root--custom rule above
+       regardless of source order, with no need to also repeat that
+       --custom class here. Neither rule can ever apply to a host that
+       doesn't opt into the rail (Discovery Decants today), since .layout
+       never carries these modifier classes there.
+       Expanded: deliberately fixed at exactly 3 columns -- not
+       auto-fit-computed -- so the count can't silently drift with minor
+       width changes. Same per-card width/centering as the rule above,
+       just with an explicit, guaranteed count instead of a responsive
+       one. */
+    grid-template-columns: repeat(3, minmax(220px, 237px));
     justify-content: center;
-    gap: 20px;
+  }
+
+  :where(.builder-scope) .layout.layout--panel-collapsed .catalog-grid {
+    /* Collapsed reclaims the panel's width for the catalog -- letting it
+       fall back to the same natural auto-fill/minmax behavior every other
+       catalog surface already uses (the shared base .catalog-grid rule
+       this host's own --custom override normally replaces) is what
+       actually takes advantage of that reclaimed width, rather than
+       staying capped at a column count sized for the narrower,
+       panel-constrained layout. */
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    justify-content: normal;
   }
 }
 

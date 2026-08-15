@@ -343,6 +343,25 @@ describe("Aurelian application foundation", () => {
     expect(discoveryEntrySource).not.toContain("composerMinimumPoints");
   });
 
+  it("opts into the collapsible right-panel rail on desktop, while Discovery Decants stays unopted-in and mobile is untouched", () => {
+    // Same opt-in-boundary shape as composerMinimumPoints above: the
+    // capability lives in packages/builder (generic layout behavior), but
+    // only Aurelian turns it on -- see BuilderExperience.jsx's own comment
+    // for why (Discovery Decants keeps today's permanently-visible panel
+    // column by simply never mentioning the prop).
+    const experienceSource = readFileSync(
+      join(APP_ROOT, "src", "components", "BuilderExperience.jsx"),
+      "utf8"
+    );
+    expect(experienceSource).toContain("enablePanelCollapse");
+
+    const discoveryEntrySource = readFileSync(
+      join(REPOSITORY_ROOT, "src", "app", "DiscoveryDecantsApp.jsx"),
+      "utf8"
+    );
+    expect(discoveryEntrySource).not.toContain("enablePanelCollapse");
+  });
+
   // Regression guard for the catalog-density fix: this page's own
   // .catalog-controls (a label+input/label+select search-and-filter form)
   // used to be an unscoped selector. The Builder widget at /build-your-box
