@@ -95,6 +95,13 @@ function App({
   // false/absent renders the box panel column exactly as it always has --
   // no rail, no extra wrapper, no grid-track changes.
   enablePanelCollapse = false,
+  // Generic, opt-in presentation hook for the catalog heading row: absent
+  // by default, which renders the row exactly as it always has -- no
+  // button, no extra DOM. A host that wants a compact affordance there
+  // (e.g. to restore its own dismissed intro presentation) passes a
+  // handler; the Builder never interprets what the click means, only
+  // renders the control and relays the click, same as explainRecommendation.
+  onCatalogInfoRequest,
 }) {
   const builderConfig = config;
   const builderThemeStyle = useMemo(
@@ -1075,6 +1082,19 @@ const confirmAddPerfume = () => {
                 <h2>{t("general.catalog")}</h2>
                 <p>{t("general.perfumesAvailable", { count: visiblePerfumes.length })}</p>
               </div>
+
+              {onCatalogInfoRequest && (
+                <div className="panel-header-actions">
+                  <button
+                    type="button"
+                    className="catalog-info-button"
+                    aria-label={t("general.catalogInfoAria")}
+                    onClick={onCatalogInfoRequest}
+                  >
+                    i
+                  </button>
+                </div>
+              )}
             </div>
 
             {hasIntentRecommendations && (

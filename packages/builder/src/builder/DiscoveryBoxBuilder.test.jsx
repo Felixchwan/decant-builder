@@ -149,6 +149,26 @@ describe("DiscoveryBoxBuilder asset resolver boundary", () => {
     expect(appCalls[0]).not.toHaveProperty("isIntroCollapsed");
   });
 
+  it("leaves onCatalogInfoRequest undefined by default and forwards an explicit handler unchanged", () => {
+    const assetResolver = createCatalogAssetResolver({ basePath: "/merchant-assets" });
+    const handleCatalogInfoRequest = () => {};
+
+    renderToStaticMarkup(
+      <>
+        <DiscoveryBoxBuilder catalog={[]} config={discoveryDecantsConfig} assetResolver={assetResolver} />
+        <DiscoveryBoxBuilder
+          catalog={[]}
+          config={discoveryDecantsConfig}
+          assetResolver={assetResolver}
+          onCatalogInfoRequest={handleCatalogInfoRequest}
+        />
+      </>,
+    );
+
+    expect(appCalls[0].onCatalogInfoRequest).toBeUndefined();
+    expect(appCalls[1].onCatalogInfoRequest).toBe(handleCatalogInfoRequest);
+  });
+
   it("defaults the collapsible right-panel rail to false and forwards an explicit opt-in unchanged", () => {
     const assetResolver = createCatalogAssetResolver({ basePath: "/merchant-assets" });
 

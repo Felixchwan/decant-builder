@@ -12,6 +12,7 @@ import { explainRecommendation } from "../discoveryIntent/recommendationExplanat
 import { createAnalytics, buildAnalyticsContext } from "../analytics/createAnalytics.js";
 import { createDevelopmentAnalytics } from "../analytics/developmentAnalytics.js";
 import { DiscoveryIntentScreen } from "./DiscoveryIntentScreen.jsx";
+import { useIntroPreference } from "./IntroPreferenceProvider.jsx";
 
 const assetResolver = createCatalogAssetResolver({ basePath: "/catalog-assets" });
 const finalizationAdapter = createWhatsAppFinalizationAdapter({
@@ -45,6 +46,14 @@ export function BuilderExperience({
     () => initialFragranceId !== null || hasPersistedBox(),
   );
   const [selectedIntentId, setSelectedIntentId] = useState(null);
+  // Read directly from the provider wrapping this component's own subtree
+  // in app/build-your-box/page.jsx (see BuilderIntroHeader.jsx, the other
+  // consumer) rather than threading it through BuilderMount as a prop --
+  // BuilderMount has nothing else to do with this value. Only restoreIntro
+  // is used here: the catalog-header info button below exists purely to
+  // undo a dismissal, so it only ever renders once dismissed, and never
+  // needs to read isIntroDismissed for anything else.
+  const { isIntroDismissed, restoreIntro } = useIntroPreference();
   // SiteHeader (a sibling tree, not an ancestor of this component — see
   // app/layout.jsx) reserves this slot in its own right-hand region whenever
   // the current route is the Builder. Looked up by id, lazily on first
@@ -113,6 +122,11 @@ export function BuilderExperience({
       // (#builder-entry-header, see BuilderIntroHeader.jsx), so it opts out
       // of the Builder's own shared hero section rather than showing both.
       showBuilderHero={false}
+      // Only passed once the intro is actually dismissed -- the catalog
+      // header's compact info button (packages/builder) only renders when
+      // this handler is present, so presence itself is the visibility
+      // gate; the Builder never needs a separate boolean for it.
+      onCatalogInfoRequest={isIntroDismissed ? restoreIntro : undefined}
       // Aurelian's Discovery Box has a fixed minimum-points requirement
       // (already surfaced informationally elsewhere via box.minPoints, e.g.
       // buildCollectionSummary.js and the como-funciona copy) -- opting into

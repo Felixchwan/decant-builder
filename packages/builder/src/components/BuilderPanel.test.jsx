@@ -919,21 +919,90 @@ describe("Docked-on-desktop-from-mount (post-scroll-docking simplification)", ()
 // .builder-panel's normal flow naturally accounts for it. Expanded needs
 // extra clearance; collapsed must not carry that same clearance forward or
 // it just trades an overlap bug for a dead-space bug.
-describe("Docked-summary panel clearance (expanded overlap fix)", () => {
-  it("adds the clearance class to .builder-panel only while docked and expanded, never while docked and collapsed", () => {
-    expect(normalizedPanelSource).toContain(
-      'className={`builder-panel${isSummaryDocked && !isDockedAndCollapsed ? " builder-panel--docked-expanded" : ""}`}'
+// Replaces a prior fixed-padding clearance (.builder-panel--docked-expanded,
+// a one-time-measured 186px hardcode that drifted stale as soon as the
+// summary card's real height changed) with a fully dynamic mechanism: the
+// card's own real rendered height is measured live and exposed as a plain
+// CSS custom property, and the host derives how much clearance its own
+// layout actually needs from that -- see --builder-docked-summary-height
+// below and --builder-docked-summary-overflow in aurelian's globals.css.
+describe("Docked-summary panel clearance (dynamic, measured)", () => {
+  it("holds no leftover fixed-padding clearance class or rule", () => {
+    expect(normalizedPanelSource).not.toMatch(/builder-panel--docked-expanded/);
+    expect(appCss).not.toMatch(/builder-panel--docked-expanded/);
+  });
+
+  it("renders .builder-panel with a plain, unconditional class name", () => {
+    expect(normalizedPanelSource).toContain('<aside className="builder-panel" ref={ref}>');
+  });
+
+  it("measures the docked summary card's own real height via ResizeObserver only while docked, resetting to 0px whenever nothing is being measured", () => {
+    const effectStart = normalizedPanelSource.indexOf(
+      "const element = isSummaryDocked ? summaryCardRef.current : null;"
+    );
+    const effectEndMarker = "}, [isSummaryDocked, isSummaryCollapsed]);";
+    const effectEnd = normalizedPanelSource.indexOf(effectEndMarker, effectStart);
+    const effectSource = normalizedPanelSource.slice(effectStart, effectEnd + effectEndMarker.length);
+    expect(effectSource).toContain('document.documentElement.style.setProperty("--builder-docked-summary-height", "0px");');
+    expect(effectSource).toContain("new ResizeObserver(recomputeHeight)");
+    expect(effectSource).toContain("element.getBoundingClientRect().height");
+    expect(effectSource).toContain("observer.disconnect()");
+  });
+
+  it("re-runs on the collapse/expand transition itself, not only on the initial dock, so the synchronous recompute on setup catches a real state change even if a later resize event never fires", () => {
+    expect(normalizedPanelSource).toContain("}, [isSummaryDocked, isSummaryCollapsed]);");
+  });
+
+  it("derives the actual clearance from the measured height, not a guessed constant, in the host stylesheet that owns its own header geometry", () => {
+    expect(aurelianGlobalsCss).toMatch(
+      /--builder-docked-summary-overflow:max\(0px, calc\(var\(--builder-docked-summary-height, 0px\) - var\(--builder-panel-header-offset\)\)\);/
     );
   });
 
-  it("defines the clearance as a desktop-scoped padding-top on .builder-panel--docked-expanded, not a generic/unconditional spacer", () => {
-    const desktopBlockStart = appCss.indexOf("@media (min-width: 981px)");
-    const desktopBlockMatch = appCss
-      .slice(desktopBlockStart)
-      .match(/:where\(\.builder-scope\) \.builder-panel--docked-expanded \{[\s\S]*?padding-top:\s*(\d+)px;\s*\}/);
-    expect(desktopBlockMatch).not.toBeNull();
-    expect(Number(desktopBlockMatch[1])).toBeGreaterThan(150);
-    expect(appCss).not.toMatch(/\.builder-panel--docked-collapsed/);
+  it("applies the derived overflow as an additive push on the same shared row the intro-header offset already pulls up, so both compose without a second wrapper", () => {
+    expect(appCss).toContain(
+      "margin-top: calc(var(--builder-docked-summary-overflow, 0px) - var(--builder-intro-header-offset, 0px));"
+    );
+  });
+});
+
+// Regression guard for a distinct overlap: the collapsed-rail's sticky
+// threshold is a separate CSS declaration from the expanded row's
+// margin-top above -- both need to grow with the docked summary's real
+// overflow, or an expanded Mi caja can still cover whichever one was
+// missed. Asserted as a relationship to the same generic token (not a
+// snapshot of any particular measured height), so this stays valid
+// regardless of how tall a real card ever renders.
+describe("Collapsed-rail sticky threshold clears an expanded docked summary", () => {
+  const collapsedRailRuleMatch = appCss.match(
+    /:where\(\.builder-scope\) \.layout--panel-collapsible\.layout--panel-collapsed \.builder-panel-collapsible-row \{[^}]*\}/
+  );
+
+  it("finds exactly one collapsed-row sticky-position rule to check", () => {
+    expect(collapsedRailRuleMatch).not.toBeNull();
+  });
+
+  it("adds --builder-docked-summary-overflow on top of the static header-offset baseline, not in place of it", () => {
+    const rule = collapsedRailRuleMatch[0];
+    expect(rule).toContain("position: sticky;");
+    expect(rule).toContain(
+      "top: calc(var(--builder-panel-header-offset, 12px) + var(--builder-docked-summary-overflow, 0px));"
+    );
+  });
+
+  it("never hardcodes a measured pixel value for this threshold", () => {
+    const rule = collapsedRailRuleMatch[0];
+    expect(rule).not.toMatch(/top:\s*\d/);
+  });
+
+  it("leaves the approved collapsed handle height and chevron centering untouched", () => {
+    expect(appCss).toContain("height: 84px;");
+    const railRuleMatch = appCss.match(
+      /:where\(\.builder-scope\) \.builder-panel-collapse-rail \{[^}]*flex: 0 0 20px;[^}]*\}/
+    );
+    expect(railRuleMatch).not.toBeNull();
+    expect(railRuleMatch[0]).toContain("display: grid;");
+    expect(railRuleMatch[0]).toContain("place-items: center;");
   });
 });
 

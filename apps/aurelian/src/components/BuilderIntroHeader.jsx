@@ -7,12 +7,13 @@ import { useIntroPreference } from "./IntroPreferenceProvider.jsx";
 // Aurelian-owned presentation, not shared Builder UI: this is the static
 // intro block above the catalog/Builder (id="builder-entry-header"), a
 // plain Next.js page section with no relationship to packages/builder.
-// The dismiss/restore toggle is lifted to IntroPreferenceProvider (see
+// The dismiss toggle is lifted to IntroPreferenceProvider (see
 // app/build-your-box/page.jsx, which wraps this component and BuilderMount
-// in that same provider) -- this header and the Builder's own shared hero
-// section (packages/builder) both react to the one persisted preference it
-// owns, rather than each keeping separate state. This component itself
-// still never touches storage or Builder/domain state directly.
+// in that same provider) -- restoring is handled elsewhere entirely, by a
+// compact info button integrated into the Builder's own catalog heading
+// row once dismissed (a generic, opt-in presentation hook the Builder
+// exposes), not by this component. This component itself still never
+// touches storage or Builder/domain state directly.
 // Orthogonal to the existing pre-hydration visibility mechanism in
 // app/build-your-box/page.jsx (which hides this same #builder-entry-header
 // element before hydration for genuine first-time visitors, so it doesn't
@@ -21,21 +22,25 @@ import { useIntroPreference } from "./IntroPreferenceProvider.jsx";
 // ever acts afterward, on a user click or the provider's post-mount sync,
 // so the two never race.
 export function BuilderIntroHeader() {
-  const { isIntroDismissed, dismissIntro, restoreIntro } = useIntroPreference();
+  const { isIntroDismissed, dismissIntro } = useIntroPreference();
   const measureRef = useRef(null);
 
   // On desktop, the right-side box panel (packages/builder styles.css's
   // .builder-panel-collapsible-row) pulls itself up by exactly this much,
   // so its start position stays independent of this header's own height --
   // it should read as beginning directly beneath the site's own permanent
-  // header, not shifted around by whichever intro state (expanded vs.
-  // dismissed) currently renders here. Attached to both branches' own root
-  // element below (only one is ever mounted at a time), so this tracks
-  // whichever one is actually taking up page space right now, including
-  // its natural reflow at narrower desktop widths.
+  // header, not shifted around by whichever intro state (visible vs.
+  // dismissed) currently renders here. Once dismissed this component
+  // renders nothing at all (see below), so there is no element left to
+  // measure -- the offset explicitly resets to 0px in that branch, rather
+  // than silently keeping whatever value was last measured before
+  // dismissal (a real, previously-caught bug: ResizeObserver never fires
+  // again for an element that no longer exists, so without this explicit
+  // reset the property would stay stuck at the expanded intro's height).
   useEffect(() => {
     const element = measureRef.current;
     if (!element || typeof ResizeObserver === "undefined") {
+      document.documentElement.style.setProperty("--builder-intro-header-offset", "0px");
       return undefined;
     }
 
@@ -53,18 +58,7 @@ export function BuilderIntroHeader() {
   }, [isIntroDismissed]);
 
   if (isIntroDismissed) {
-    return (
-      <div className="builder-intro-restore-row" ref={measureRef}>
-        <button
-          type="button"
-          className="builder-intro-restore"
-          aria-label="Mostrar introducción de Tu Discovery Box"
-          onClick={restoreIntro}
-        >
-          <span aria-hidden="true">˅</span> Tu Discovery Box
-        </button>
-      </div>
-    );
+    return null;
   }
 
   return (

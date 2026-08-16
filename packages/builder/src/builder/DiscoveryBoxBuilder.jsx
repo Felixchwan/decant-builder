@@ -21,6 +21,7 @@ import { validateBuilderConfig } from "./config/index.js";
  * @param {number|null} [props.composerMinimumPoints] Optional, opt-in lower bound on total points the "Compose my box" action must reach before its result counts as a completed proposal. Absent/null by default, which preserves today's Composer behavior exactly (any valid box within budget is a success). The Builder never derives this from its own config — a host that wants "my box isn't done until it hits N points" (e.g. a merchant with a fixed minimum-order requirement) computes N itself and passes it here.
  * @param {boolean} [props.showBuilderHero] Generic host capability for the Builder's own shared hero section (the title + description above the catalog). Defaults to true, which renders it exactly as it always has. A host with its own intro presentation above the Builder passes false to suppress this section entirely; the Builder holds no preference state of its own here and never reads storage for it.
  * @param {boolean} [props.enablePanelCollapse] Optional, opt-in desktop capability: renders a full-height collapse rail at the left edge of the box panel column, letting a user hide it so the catalog can reclaim that width. Defaults to false, which renders the box panel column exactly as it always has -- no rail, no extra DOM, no grid-track changes. Purely a local, non-persisted layout preference; the Builder never derives this from config or storage.
+ * @param {() => void} [props.onCatalogInfoRequest] Optional, opt-in presentation hook: when supplied, renders a compact accessible info button at the end of the catalog heading row and calls this handler on click. Absent by default, which renders the row exactly as it always has -- no button, no extra DOM. The Builder never interprets what the click should do; a host wires this to whatever local presentation concern it owns (e.g. restoring a dismissed intro block).
  */
 export default function DiscoveryBoxBuilder({
   catalog,
@@ -37,6 +38,7 @@ export default function DiscoveryBoxBuilder({
   composerMinimumPoints = null,
   showBuilderHero = true,
   enablePanelCollapse = false,
+  onCatalogInfoRequest,
 }) {
   if (!config) {
     throw new Error("DiscoveryBoxBuilder requires a normalized builder config.");
@@ -97,6 +99,7 @@ export default function DiscoveryBoxBuilder({
       composerMinimumPoints={composerMinimumPoints}
       showBuilderHero={showBuilderHero}
       enablePanelCollapse={enablePanelCollapse}
+      onCatalogInfoRequest={onCatalogInfoRequest}
     />
   );
 }

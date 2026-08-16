@@ -262,6 +262,47 @@ const BuilderPanel = forwardRef(function BuilderPanel({
       focusElementFromFingerprint(summaryCardRef.current, fingerprint);
     }, [isSummaryDocked]);
 
+    // Generic, opt-in measurement: while docked, a host's own slot for this
+    // card (stickySummaryPortalTarget) may not reserve enough space for the
+    // card's real rendered height -- expanding/collapsing the summary
+    // changes that height, and only the host knows how much room it
+    // actually set aside. Exposing the card's own real height as a plain
+    // CSS custom property lets a host compute the gap itself (see
+    // .builder-panel-collapsible-row's margin-top below, which stays a
+    // no-op via its own fallback for any host that never sets this).
+    // Explicitly reset to 0px whenever nothing is being measured (not
+    // docked, or the ref briefly has no element) rather than leaving a
+    // stale value in place -- ResizeObserver never fires again once its
+    // target is gone, so without this a host could stay pushed down after
+    // undocking (e.g. resizing to mobile) forever.
+    // isSummaryCollapsed is listed as a dependency alongside isSummaryDocked
+    // specifically so the collapse/expand toggle -- a discrete state
+    // transition, not a continuous resize -- re-runs this effect and gets
+    // its own synchronous recompute on setup, the same way
+    // BuilderIntroHeader's own offset effect keys off its dismissed/visible
+    // transition. ResizeObserver still covers any other cause of height
+    // change (viewport-driven reflow, copy-length differences, ...) on top
+    // of that, rather than being the only path a real transition relies on.
+    useEffect(() => {
+      const element = isSummaryDocked ? summaryCardRef.current : null;
+      if (!element || typeof ResizeObserver === "undefined") {
+        document.documentElement.style.setProperty("--builder-docked-summary-height", "0px");
+        return undefined;
+      }
+
+      function recomputeHeight() {
+        document.documentElement.style.setProperty(
+          "--builder-docked-summary-height",
+          `${element.getBoundingClientRect().height}px`
+        );
+      }
+
+      recomputeHeight();
+      const observer = new ResizeObserver(recomputeHeight);
+      observer.observe(element);
+      return () => observer.disconnect();
+    }, [isSummaryDocked, isSummaryCollapsed]);
+
     // Every :where(.builder-scope) selector in this stylesheet — which is
     // effectively all of them, including every rule the summary card
     // depends on — only matches within a DOM subtree that actually has
@@ -774,10 +815,7 @@ const BuilderPanel = forwardRef(function BuilderPanel({
   );
 
   return (
-    <aside
-      className={`builder-panel${isSummaryDocked && !isDockedAndCollapsed ? " builder-panel--docked-expanded" : ""}`}
-      ref={ref}
-    >
+    <aside className="builder-panel" ref={ref}>
       {isSummaryDocked ? (
         // Desktop, host-supplied header slot: portals straight into it with
         // no wrapper left behind in the panel at all -- no sentinel, no

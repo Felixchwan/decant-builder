@@ -46,33 +46,22 @@ describe("BuilderIntroHeader", () => {
     expect(markup).toMatch(/<button[^>]*class="builder-intro-dismiss"[^>]*aria-label="Ocultar introducción[^"]*"/);
   });
 
-  it("renders only the compact restore row when the preference says dismissed, hiding both intro text pieces entirely", () => {
+  it("renders nothing at all when the preference says dismissed -- restoring is owned elsewhere now", () => {
     const markup = renderToStaticMarkup(
       withPreference(
         { isIntroDismissed: true, dismissIntro: () => {}, restoreIntro: () => {} },
         <BuilderIntroHeader />,
       ),
     );
-    expect(markup).toContain("builder-intro-restore-row");
-    expect(markup).toContain("builder-intro-restore");
+    expect(markup).toBe("");
     expect(markup).not.toContain('id="builder-entry-header"');
     expect(markup).not.toContain("Elige 6–14 fragancias.");
     expect(markup).not.toContain("Revisar cómo funciona");
   });
 
-  it("gives the restore control a real button with a distinct, localized accessible name", () => {
-    const markup = renderToStaticMarkup(
-      withPreference(
-        { isIntroDismissed: true, dismissIntro: () => {}, restoreIntro: () => {} },
-        <BuilderIntroHeader />,
-      ),
-    );
-    expect(markup).toMatch(/<button[^>]*class="builder-intro-restore"[^>]*aria-label="Mostrar introducción[^"]*"/);
-  });
-
-  it("wires the dismiss and restore buttons to the context's own actions, never a second, locally-owned mechanism", () => {
+  it("wires the dismiss button to the context's own action, never a second, locally-owned mechanism, and no longer reads restoreIntro at all", () => {
     expect(componentSource).toContain("onClick={dismissIntro}");
-    expect(componentSource).toContain("onClick={restoreIntro}");
+    expect(componentSource).not.toContain("restoreIntro");
     expect(componentSource).toContain("useIntroPreference()");
     expect(componentSource).not.toMatch(/useState/);
   });

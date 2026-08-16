@@ -23,6 +23,7 @@ export const esMX = {
   "general.added": "Agregado",
   "general.boxFull": "Caja llena",
   "general.perfumesAvailable": "{count} fragancias disponibles",
+  "general.catalogInfoAria": "Mostrar información de Discovery Box",
 
   "app.intentRecommendationsTitle": "Recomendado para ti",
   "app.intentRecommendationsNav": "Recomendado para ti",

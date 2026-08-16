@@ -30,6 +30,27 @@ describe("BuilderRuntime shared hero-section capability boundary", () => {
   });
 });
 
+// onCatalogInfoRequest itself is a plain, always-available prop, same as
+// showBuilderHero above -- the prop-forwarding half of this contract is
+// exercised directly, with real rendering, in DiscoveryBoxBuilder.test.jsx's
+// "renders a compact info button..." test.
+describe("BuilderRuntime catalog-header info affordance boundary", () => {
+  it("has no default value -- absent by default, rendering the catalog heading row exactly as it always has", () => {
+    expect(runtimeSource).toMatch(/onCatalogInfoRequest,\s*\n\}\) \{/);
+  });
+
+  it("gates the info button behind onCatalogInfoRequest, inside the catalog panel-header row, never a second copy of the heading", () => {
+    const panelHeaderIndex = runtimeSource.indexOf('<div className="catalog-title-group">');
+    expect(panelHeaderIndex).toBeGreaterThan(-1);
+    const panelHeaderSource = runtimeSource.slice(panelHeaderIndex, panelHeaderIndex + 700);
+    expect(panelHeaderSource).toContain("{onCatalogInfoRequest && (");
+    expect(panelHeaderSource).toContain('className="panel-header-actions"');
+    expect(panelHeaderSource).toContain('className="catalog-info-button"');
+    expect(panelHeaderSource).toContain('aria-label={t("general.catalogInfoAria")}');
+    expect(panelHeaderSource).toContain("onClick={onCatalogInfoRequest}");
+  });
+});
+
 // Same source-contract pattern as above, for the collapsible right-panel
 // rail. Live behavior (natural-scroll-then-bottom-lock via a JS-computed
 // negative top-sticky offset, the header-offset clamp for a short panel,

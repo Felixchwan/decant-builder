@@ -23,6 +23,7 @@ export const enUS = {
   "general.added": "Added",
   "general.boxFull": "Box full",
   "general.perfumesAvailable": "{count} perfumes available",
+  "general.catalogInfoAria": "Show Discovery Box information",
 
   "app.intentRecommendationsTitle": "Recommended for you",
   "app.intentRecommendationsNav": "Recommended for you",

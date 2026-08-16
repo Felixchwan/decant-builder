@@ -550,6 +550,29 @@
   margin: 0;
 }
 
+:where(.builder-scope) .catalog-info-button {
+  display: inline-grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: 1px solid rgba(250, 204, 21, 0.20);
+  border-radius: 999px;
+  background: rgba(250, 204, 21, 0.07);
+  color: rgba(254, 243, 199, 0.74);
+  font-size: var(--builder-unit-072);
+  font-weight: 900;
+  line-height: 1;
+}
+
+:where(.builder-scope) .catalog-info-button:hover,
+:where(.builder-scope) .catalog-info-button:focus-visible {
+  border-color: rgba(250, 204, 21, 0.42);
+  background: rgba(250, 204, 21, 0.14);
+  color: #fef3c7;
+  outline: none;
+}
+
 :where(.builder-scope) .discovery-coachmark {
   position: relative;
   display: grid;
@@ -3154,8 +3177,19 @@
        this column starts at the same place regardless of how tall (or
        short, or absent) that content currently is -- catalog, the OTHER
        grid item, is entirely unaffected, since this only changes this
-       row's own box, not .layout's own position. */
-    margin-top: calc(-1 * var(--builder-intro-header-offset, 0px));
+       row's own box, not .layout's own position.
+       --builder-docked-summary-overflow is the opposite direction: a host
+       that docks the box summary into its own page-level slot (see
+       BuilderPanel.jsx's stickySummaryPortalTarget) may derive, from the
+       generic --builder-docked-summary-height this package also exposes,
+       how much taller that summary currently renders than the room the
+       host actually reserved for it -- a host that never docks, or never
+       computes this, gets the 0px fallback, a no-op. Positive margin
+       pushes this row's static position down by exactly that overflow, so
+       this column starts below the summary's real bottom edge instead of
+       being covered by it, and moves back up automatically once the
+       summary shrinks (collapses) again. */
+    margin-top: calc(var(--builder-docked-summary-overflow, 0px) - var(--builder-intro-header-offset, 0px));
   }
 
   :where(.builder-scope) .layout--panel-collapsible:not(.layout--panel-collapsed) .builder-panel-collapsible-row {
@@ -3194,9 +3228,18 @@
     /* Collapsed doesn't need the bottom-lock math at all -- the panel
        column is gone (width/max-height:0 below), so the row's own height
        is just the rail's small natural height, and the rail only needs a
-       conventional, reachable top-stick below the host's own header. */
+       conventional, reachable top-stick below the host's own header.
+       --builder-docked-summary-overflow (see .builder-panel-collapsible-row's
+       base rule above, where the same token pushes the EXPANDED row down)
+       is added here too: without it, this stuck threshold stays pinned to
+       the static --builder-panel-header-offset baseline regardless of the
+       docked summary's real height, so once scrolled far enough to engage
+       sticky, the collapsed rail locks directly under an expanded summary
+       card instead of below it. A host that never docks, or whose summary
+       is currently minimized, gets the 0px fallback -- a no-op, same
+       upper position as before. */
     position: sticky;
-    top: var(--builder-panel-header-offset, 12px);
+    top: calc(var(--builder-panel-header-offset, 12px) + var(--builder-docked-summary-overflow, 0px));
     z-index: 5;
   }
 
@@ -3330,20 +3373,6 @@
 
   :where(.builder-scope) .builder-panel-sticky-summary-card {
     padding-bottom: 10px;
-  }
-
-  :where(.builder-scope) .builder-panel--docked-expanded {
-    /* The docked summary portals into the host header's absolutely-
-       positioned slot, so it never contributes to layout height -- nothing
-       here pushes .builder-panel's own content down on its own. This adds
-       just enough padding-top to clear the expanded card's own measured
-       height (322px at this and wider desktop widths, the tallest case,
-       since the tray's row count is fixed by maxSlots rather than by how
-       many perfumes are selected) plus a modest gap matching .layout's own
-       16px column gap. Collapsed never gets this class (see
-       isDockedAndCollapsed in BuilderPanel.jsx), so collapsing reclaims the
-       space immediately rather than leaving an expanded-sized gap behind. */
-    padding-top: 186px;
   }
 
   :where(.builder-scope) .builder-panel-summary-row {

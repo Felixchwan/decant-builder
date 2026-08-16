@@ -11,6 +11,7 @@ vi.mock("@discovery-box/builder", () => ({
 }));
 
 import { BuilderExperience, hasPersistedBox } from "./BuilderExperience.jsx";
+import { IntroPreferenceContext } from "./IntroPreferenceProvider.jsx";
 import { aurelianConfig } from "../merchant/config.js";
 import { parseFragranceIntent, FRAGRANCE_QUERY_PARAM } from "../lib/parseFragranceIntent.js";
 import { ENTRY_HEADER_VISIBILITY_SCRIPT } from "../app/build-your-box/page.jsx";
@@ -138,6 +139,31 @@ describe("shared Builder hero suppression", () => {
     // intro preference (see IntroPreferenceProvider.jsx) now controls only
     // BuilderIntroHeader, and never reaches the shared Builder at all.
     expect(builderCalls[0]).not.toHaveProperty("isIntroCollapsed");
+  });
+});
+
+describe("catalog-header info restore wiring", () => {
+  it("leaves onCatalogInfoRequest undefined while the intro is still visible, and wires it to the real restoreIntro once dismissed", () => {
+    mockWindow({ storedValue: "{}" });
+
+    // No provider: falls back to IntroPreferenceContext's own default value
+    // (isIntroDismissed: false), same as BuilderIntroHeader does.
+    renderToStaticMarkup(<BuilderExperience />);
+    expect(builderCalls[0].onCatalogInfoRequest).toBeUndefined();
+
+    builderCalls.length = 0;
+    const restoreIntro = () => {};
+    renderToStaticMarkup(
+      <IntroPreferenceContext.Provider
+        value={{ isIntroDismissed: true, dismissIntro: () => {}, restoreIntro }}
+      >
+        <BuilderExperience />
+      </IntroPreferenceContext.Provider>,
+    );
+    // The real restoreIntro reference is forwarded unwrapped -- the catalog
+    // info button's click handler is exactly the same action the old
+    // restore control used, not a second, re-implemented path.
+    expect(builderCalls[0].onCatalogInfoRequest).toBe(restoreIntro);
   });
 });
 
