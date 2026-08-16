@@ -703,7 +703,12 @@ const BuilderPanel = forwardRef(function BuilderPanel({
             aria-expanded="false"
             onClick={() => setIsSummaryCollapsed(false)}
           >
-            <span aria-hidden="true">▸</span>
+            {/* Collapsed -> points down: the action this control performs
+                is "expand", and down is where the revealed content would
+                appear. Vertical only -- this is not the left/right
+                .builder-panel-collapse-rail control below, which legitimately
+                points horizontally because it slides the panel sideways. */}
+            <span aria-hidden="true">▾</span>
           </button>
 
           <div className="builder-panel-docked-collapsed-actions">
@@ -777,7 +782,11 @@ const BuilderPanel = forwardRef(function BuilderPanel({
                   aria-expanded="true"
                   onClick={() => setIsSummaryCollapsed(true)}
                 >
-                  <span aria-hidden="true">▾</span>
+                  {/* Expanded -> points up: the action this control performs
+                      is "collapse", and up is the direction the content
+                      folds away toward. Same vertical-only rationale as the
+                      collapsed-state toggle above. */}
+                  <span aria-hidden="true">▴</span>
                 </button>
               )}
 
@@ -4902,7 +4911,16 @@ function BoxVialSlot({
   }
 
   if (!perfume) {
-    const isInteractiveNextAvailable = isNextAvailable && !isCompact;
+    // isCompact intentionally does NOT gate this: it only ever turns off
+    // the docked strip's drag/long-press/popover machinery below (there's
+    // nothing to reorder in the compact view). The next-available action
+    // itself -- scrolling to and focusing the existing individual
+    // recommendation lane via onNextSlotRecommendation -- is equally valid
+    // whether the tray is compact (docked) or full-size, and the vial
+    // already renders its "next available" glow affordance in both cases;
+    // gating only the click/keyboard handler here would make that glow
+    // falsely promise an action the compact tray can't perform.
+    const isInteractiveNextAvailable = isNextAvailable;
     const EmptySlotElement = isInteractiveNextAvailable ? "button" : "div";
     const handleNextSlotKeyDown = (event) => {
       if (!isInteractiveNextAvailable || (event.key !== "Enter" && event.key !== " ")) {

@@ -1185,3 +1185,106 @@ describe("Composer season pills: canonical order, icons, semantic color", () => 
     expect(normalizedPanelSource.slice(groupStart, groupEnd)).not.toMatch(/Primavera|Verano|Otoño|Invierno/);
   });
 });
+
+// Regression for a real chevron-semantics bug: the docked summary's two
+// .summary-collapse-toggle buttons had their glyphs backwards (collapsed
+// showed a right-pointing triangle, expanded showed down), so the icon
+// never actually pointed toward what the click would do. Direction is now
+// tied directly to the action: collapsed -> down (expand reveals content
+// below/toward the pointer), expanded -> up (collapse folds it away). Both
+// reuse the same small-triangle glyph family already used elsewhere in this
+// file (▸/▾), just the vertical members of it -- no icon library added.
+// aria-label/aria-expanded semantics and click handlers are untouched by
+// this fix, so they're intentionally not re-asserted here (already covered
+// by the "BuilderPanel docked-summary collapse/expand" describe block
+// above); this block covers only the glyph-direction regression itself.
+describe("Docked summary collapse toggle: chevron points toward its own action", () => {
+  it("points down on the collapsed (Expand) control and up on the expanded (Collapse) control -- never a left/right chevron", () => {
+    const collapsedToggleLabelIndex = normalizedPanelSource.indexOf('aria-label={t("builder.expandSummary")}');
+    const collapsedToggleSource = normalizedPanelSource.slice(collapsedToggleLabelIndex, collapsedToggleLabelIndex + 800);
+    expect(collapsedToggleSource).toContain('<span aria-hidden="true">▾</span>');
+
+    const expandedToggleLabelIndex = normalizedPanelSource.indexOf('aria-label={t("builder.collapseSummary")}');
+    const expandedToggleSource = normalizedPanelSource.slice(expandedToggleLabelIndex, expandedToggleLabelIndex + 800);
+    expect(expandedToggleSource).toContain('<span aria-hidden="true">▴</span>');
+
+    expect(normalizedPanelSource).not.toMatch(/summary-collapse-toggle[\s\S]{0,400}<span aria-hidden="true">[◂▸◀▶‹›]<\/span>/);
+  });
+
+  it("leaves the separate right-panel collapse rail on its own legitimate horizontal glyphs, unchanged", () => {
+    const runtimeSource = readFileSync(new URL("../BuilderRuntime.jsx", import.meta.url), "utf8");
+    expect(runtimeSource).toContain('className="builder-panel-collapse-rail"');
+    expect(runtimeSource).toContain('{isPanelCollapsed ? "◂" : "▸"}');
+  });
+});
+
+// Regression for the empty "+" vial slot's recommendation shortcut going
+// dead. The mechanism itself (onNextSlotRecommendation, wired all the way
+// through to handleNextSlotRecommendation's scroll+focus of the existing
+// "To Balance Your Box" recommendation lane below) was never removed -- see
+// balanceLaneRef and handleNextSlotRecommendation above, both untouched by
+// this fix. What broke it: BoxVialSlot's own
+// `isNextAvailable && !isCompact` gate, which silently disabled the
+// click/keyboard handlers whenever the tray rendered in its compact form.
+// That compact form used to be a transient scroll-triggered state, but a
+// later change made docking (and therefore isCompact) permanent on desktop
+// -- so the interactive affordance was permanently off on desktop even
+// though the vial's "next available" glow still rendered, promising an
+// action it no longer performed. The fix removes the `!isCompact` half of
+// that condition; nothing else about isCompact's other, legitimate uses
+// (disabling drag-reorder in the compact strip) changed.
+describe("Restored empty next-available vial slot recommendation action", () => {
+  const boxVialSlotSource = normalizedPanelSource.slice(
+    normalizedPanelSource.indexOf("function BoxVialSlot("),
+    normalizedPanelSource.indexOf("function getShortPerfumeName(")
+  );
+
+  it("renders the next-available empty slot as a real, keyboard-reachable button with the existing localized recommendation label -- not a passive div", () => {
+    const markup = renderBuilderPanel({ selectedPerfumes: [] });
+    const vialMatch = markup.match(/<(button|div)[^>]*data-slot-index="0"[^>]*>/);
+
+    expect(vialMatch).not.toBeNull();
+    expect(vialMatch[1]).toBe("button");
+    expect(vialMatch[0]).toContain("next-available");
+    expect(vialMatch[0]).toContain('type="button"');
+    expect(vialMatch[0]).toContain('aria-label="View recommendations for the next box slot"');
+  });
+
+  it("no longer gates the next-available action on isCompact -- the same interactive mechanism now applies whether the tray is docked/compact or full-size", () => {
+    expect(boxVialSlotSource).toContain("const isInteractiveNextAvailable = isNextAvailable;");
+    expect(boxVialSlotSource).not.toMatch(/isInteractiveNextAvailable\s*=\s*isNextAvailable\s*&&\s*!isCompact/);
+  });
+
+  it("keeps isCompact governing only the drag/reorder machinery it always governed, not this action", () => {
+    expect(boxVialSlotSource).toContain("onDragOver={isCompact ? undefined : onDragOver}");
+    expect(boxVialSlotSource).toContain("onDrop={isCompact ? undefined : (event) => onDrop(event, index)}");
+  });
+
+  it("triggers the exact same onNextSlotRecommendation callback on Enter/Space as on click -- no second recommendation implementation", () => {
+    expect(boxVialSlotSource).toContain(
+      'if (!isInteractiveNextAvailable || (event.key !== "Enter" && event.key !== " ")) {'
+    );
+    expect(boxVialSlotSource).toContain("onNextSlotRecommendation?.();");
+    expect(boxVialSlotSource).toContain("onClick={isInteractiveNextAvailable ? onNextSlotRecommendation : undefined}");
+  });
+
+  it("threads the one BuilderPanel-level handler through unconditionally, and that handler still scrolls to and focuses the existing recommendation lane", () => {
+    expect(normalizedPanelSource).toContain("onNextSlotRecommendation={handleNextSlotRecommendation}");
+    expect((normalizedPanelSource.match(/const handleNextSlotRecommendation = /g) || [])).toHaveLength(1);
+
+    const handlerIndex = normalizedPanelSource.indexOf("const handleNextSlotRecommendation = ");
+    const handlerSource = normalizedPanelSource.slice(handlerIndex, handlerIndex + 400);
+    expect(handlerSource).toContain("balanceLaneRef.current.scrollIntoView({");
+    expect(handlerSource).toContain("showBalanceLaneEmphasis();");
+    expect(handlerSource).toContain("focusBalanceLane");
+  });
+
+  it("adds no click/keyboard action to reserved (Curator Bonus) slots -- they never had one, and still don't", () => {
+    const reservedBranchSource = boxVialSlotSource.slice(
+      boxVialSlotSource.indexOf("if (isReserved) {"),
+      boxVialSlotSource.indexOf("if (!perfume) {")
+    );
+    expect(reservedBranchSource).not.toMatch(/onClick=/);
+    expect(reservedBranchSource).not.toMatch(/onKeyDown=/);
+  });
+});
