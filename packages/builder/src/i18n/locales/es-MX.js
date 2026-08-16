@@ -455,7 +455,7 @@ export const esMX = {
   "taxonomy.office": "Oficina",
   "taxonomy.casual": "Casual",
   "taxonomy.date": "Cita",
-  "taxonomy.evening": "Noche",
+  "taxonomy.evening": "Atardecer",
   "taxonomy.formal": "Formal",
   "taxonomy.gym": "Gimnasio",
   "taxonomy.club": "Club",

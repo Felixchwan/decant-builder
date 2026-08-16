@@ -34,7 +34,10 @@ import {
   getComposerProposalItemReasonLabels,
   getComposerTradeoffLabel,
 } from "../builder/presentation/composerAlternativeTradeoffLabels.js";
-import { buildSeasonProfileViewModel } from "../builder/presentation/seasonProfileViewModel.js";
+import {
+  buildSeasonProfileViewModel,
+  SEASON_AXIS_ORDER,
+} from "../builder/presentation/seasonProfileViewModel.js";
 import {
   getBalanceDimensionLabel,
   getBoxIntelligenceCoverageLabel,
@@ -1172,6 +1175,7 @@ const BuilderPanel = forwardRef(function BuilderPanel({
           minimumComposerBudget={minimumComposerBudget}
           isGenerating={isComposerGenerating}
           portalRoot={portalRoot}
+          assetResolver={assetResolver}
           onSettingChange={onComposerSettingChange}
           onPreferenceToggle={onComposerPreferenceToggle}
           onPreferenceClear={onComposerPreferenceClear}
@@ -1246,6 +1250,7 @@ function ComposerSetupModal({
   minimumComposerBudget,
   isGenerating,
   portalRoot,
+  assetResolver,
   onSettingChange,
   onPreferenceToggle,
   onPreferenceClear,
@@ -1378,6 +1383,7 @@ function ComposerSetupModal({
               options={safeOptions.seasons}
               onToggle={onPreferenceToggle}
               onClear={onPreferenceClear}
+              assetResolver={assetResolver}
             />
 
             <ComposePreferenceGroup
@@ -1425,10 +1431,23 @@ function ComposePreferenceGroup({
   onToggle,
   onClear,
   density = "wrap",
+  assetResolver,
 }) {
   const t = translator?.t || ((key) => key);
   const selectedValues = Array.isArray(values) ? values : [];
-  const availableOptions = Array.isArray(options) ? options : [];
+  const rawOptions = Array.isArray(options) ? options : [];
+  // Seasons are the one field with a fixed real-world order (not a set of
+  // interchangeable tags the way occasions/vibes are) -- reuses the same
+  // canonical spring/summer/fall/winter sequence already established for
+  // the season radar chart (seasonProfileViewModel.js's SEASON_AXIS_ORDER),
+  // rather than a second, redundant ordering defined here. options itself
+  // (buildFilterOptions) stays alphabetical for every field, since that's
+  // the right default for occasions/vibes -- this only reorders the array
+  // this component renders from, never the source data.
+  const availableOptions =
+    field === "seasons"
+      ? [...rawOptions].sort((a, b) => SEASON_AXIS_ORDER.indexOf(a) - SEASON_AXIS_ORDER.indexOf(b))
+      : rawOptions;
   const selectedSummary =
     selectedValues.length > 0 ? t("composer.selectedCount", { count: selectedValues.length }) : t("composer.any");
 
@@ -1448,15 +1467,31 @@ function ComposePreferenceGroup({
       <div className="compose-preference-chips">
         {availableOptions.map((option) => {
           const isSelected = selectedValues.includes(option);
+          // Season pills are the only ones with a per-option icon and
+          // semantic color -- both keyed off the canonical option ID via
+          // data-season-id, never the translated label, so styling/asset
+          // lookup stays correct across locales. metadataAssets already
+          // ships a real, distinct icon per season (reused from the same
+          // asset set MetadataSummaryChip uses elsewhere); assetResolver is
+          // the same host-supplied resolver already threaded through this
+          // component for perfume imagery, not a new asset mechanism.
+          const isSeason = field === "seasons";
+          const iconAssetKey = isSeason ? metadataAssets.seasons?.[option] : null;
+          const iconSrc = iconAssetKey && assetResolver ? assetResolver(iconAssetKey) : null;
+          const chipClassName = [isSeason ? "compose-preference-chip--season" : "", isSelected ? "is-selected" : ""]
+            .filter(Boolean)
+            .join(" ");
 
           return (
             <button
               key={option}
               type="button"
-              className={isSelected ? "is-selected" : ""}
+              className={chipClassName}
+              data-season-id={isSeason ? option : undefined}
               aria-pressed={isSelected}
               onClick={() => onToggle(field, option)}
             >
+              {iconSrc && <img src={iconSrc} alt="" aria-hidden="true" />}
               {translator?.label?.(field, option) || option}
             </button>
           );

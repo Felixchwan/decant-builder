@@ -1095,3 +1095,93 @@ describe("Fractional-tier perfume card action row", () => {
     expect(appCss).not.toMatch(/silver|platinum/i);
   });
 });
+
+// ComposePreferenceGroup is never exported (same source-contract precedent
+// as the docking/collapse boundaries above) -- isComposerSetupOpen is
+// internal state with no prop seam to force the modal open under
+// renderToStaticMarkup, so real rendering isn't available here either.
+describe("Composer season pills: canonical order, icons, semantic color", () => {
+  it("imports the canonical season order from the existing season radar mechanism, rather than defining a second one", () => {
+    expect(normalizedPanelSource).toMatch(
+      /import\s*\{\s*\n?\s*buildSeasonProfileViewModel,\s*\n?\s*SEASON_AXIS_ORDER,?\s*\n?\s*\}\s*from\s*"..\/builder\/presentation\/seasonProfileViewModel\.js";/
+    );
+    expect(normalizedPanelSource).not.toMatch(/const SEASON_AXIS_ORDER\s*=/);
+  });
+
+  it("sorts only the seasons field by that canonical order, leaving occasions/vibes on the alphabetical options array unchanged", () => {
+    const sortStart = normalizedPanelSource.indexOf('field === "seasons"\n      ? [...rawOptions].sort');
+    expect(sortStart).toBeGreaterThan(-1);
+    const sortSnippet = normalizedPanelSource.slice(sortStart, sortStart + 200);
+    expect(sortSnippet).toContain("SEASON_AXIS_ORDER.indexOf(a) - SEASON_AXIS_ORDER.indexOf(b)");
+    expect(sortSnippet).toContain(": rawOptions;");
+  });
+
+  it("renders a season's icon only for the seasons field, via the same metadataAssets + assetResolver mechanism MetadataSummaryChip already uses elsewhere -- never a new asset system", () => {
+    const groupStart = normalizedPanelSource.indexOf("function ComposePreferenceGroup(");
+    const groupEnd = normalizedPanelSource.indexOf("function ComposerProposalModal(");
+    const groupSource = normalizedPanelSource.slice(groupStart, groupEnd);
+
+    expect(groupSource).toContain('const isSeason = field === "seasons";');
+    expect(groupSource).toContain("metadataAssets.seasons?.[option]");
+    expect(groupSource).toContain("assetResolver(iconAssetKey)");
+    expect(groupSource).toContain('<img src={iconSrc} alt="" aria-hidden="true" />');
+    expect(groupSource).toContain('data-season-id={isSeason ? option : undefined}');
+  });
+
+  it("only the seasons ComposePreferenceGroup call is given assetResolver -- occasions and vibes stay icon-less and untouched", () => {
+    const seasonsCallStart = normalizedPanelSource.indexOf('field="seasons"');
+    const occasionsCallStart = normalizedPanelSource.indexOf('field="occasions"');
+    const vibesCallStart = normalizedPanelSource.indexOf('field="vibes"');
+    const seasonsCall = normalizedPanelSource.slice(seasonsCallStart - 200, seasonsCallStart + 300);
+    const occasionsCall = normalizedPanelSource.slice(occasionsCallStart - 200, occasionsCallStart + 300);
+    const vibesCall = normalizedPanelSource.slice(vibesCallStart - 200, vibesCallStart + 300);
+
+    expect(seasonsCall).toContain("assetResolver={assetResolver}");
+    expect(occasionsCall).not.toContain("assetResolver={assetResolver}");
+    expect(vibesCall).not.toContain("assetResolver={assetResolver}");
+  });
+
+  it("threads assetResolver from BuilderPanel's own prop through ComposerSetupModal, not a new host dependency", () => {
+    expect(normalizedPanelSource).toContain("<ComposerSetupModal");
+    const modalCallStart = normalizedPanelSource.indexOf("<ComposerSetupModal");
+    const modalCallSource = normalizedPanelSource.slice(modalCallStart, modalCallStart + 400);
+    expect(modalCallSource).toContain("assetResolver={assetResolver}");
+  });
+
+  it("defines exactly one semantic color per season, keyed by data-season-id, matching the palette brief (green/gold/pumpkin/ice)", () => {
+    const seasonColors = { spring: "#86efac", summer: "#facc15", fall: "#ea580c", winter: "#93c5fd" };
+    for (const [season, hex] of Object.entries(seasonColors)) {
+      const unselectedMatch = appCss.match(
+        new RegExp(`:where\\(\\.builder-scope\\) \\.compose-preference-chip--season\\[data-season-id="${season}"\\] \\{[^}]*${hex}[^}]*\\}`)
+      );
+      expect(unselectedMatch, `${season} unselected rule`).not.toBeNull();
+    }
+  });
+
+  it("gives the selected state higher specificity than the pre-existing Aurelian accent-gold override, so a selected season pill keeps its own color instead of reverting to generic gold", () => {
+    const auralianOverrideIndex = appCss.indexOf(
+      ":where(.builder-scope).builder-theme-root--custom .compose-preference-chips button.is-selected"
+    );
+    expect(auralianOverrideIndex).toBeGreaterThan(-1);
+
+    for (const season of ["spring", "summer", "fall", "winter"]) {
+      expect(appCss).toContain(
+        `:where(.builder-scope) .compose-preference-chips button.compose-preference-chip--season[data-season-id="${season}"].is-selected`
+      );
+    }
+  });
+
+  it("never colors occasion or vibe chips by category -- the season selector family is the only per-option color mechanism in this modal", () => {
+    expect(appCss).not.toMatch(/compose-preference-chip--occasion/);
+    expect(appCss).not.toMatch(/compose-preference-chip--vibe/);
+    expect(appCss).not.toMatch(/data-occasion-id/);
+    expect(appCss).not.toMatch(/data-vibe-id/);
+  });
+
+  it("never keys season styling to a translated label string -- selectors and lookups use the canonical option ID only", () => {
+    expect(appCss).not.toMatch(/Primavera|Verano|Otoño|Invierno/);
+    const groupStart = normalizedPanelSource.indexOf("function ComposePreferenceGroup(");
+    const groupEnd = normalizedPanelSource.indexOf("function ComposerProposalModal(");
+    expect(normalizedPanelSource.slice(groupStart, groupEnd)).not.toMatch(/Primavera|Verano|Otoño|Invierno/);
+  });
+});

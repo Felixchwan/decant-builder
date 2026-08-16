@@ -1,4 +1,4 @@
-const SEASON_AXIS_ORDER = ["spring", "summer", "fall", "winter"];
+export const SEASON_AXIS_ORDER = ["spring", "summer", "fall", "winter"];
 const SEASON_AXIS_POINTS = {
   spring: { x: 50, y: 10 },
   summer: { x: 90, y: 50 },

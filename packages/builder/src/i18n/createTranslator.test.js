@@ -43,4 +43,26 @@ describe("createTranslator", () => {
 
     expect(dictionaryValues).not.toMatch(/Discovery Decants|Aurelian/);
   });
+
+  // Regression for a real duplicate-pill bug: "night" and "evening" are two
+  // genuinely distinct canonical occasion values (both present as separate
+  // tags on real catalog perfumes -- one perfume even carries both at once
+  // -- each with its own dedicated metadata icon), correctly distinguished
+  // in English ("Night" vs "Evening") but both mistranslated to the same
+  // "Noche" in es-MX, so Composer rendered two pills with an identical
+  // label under Ocasión. The fix belongs at this locale-mapping layer, not
+  // by deduping at render time -- the two options must stay genuinely
+  // distinct (different keys, different values), just no longer sharing
+  // one Spanish word.
+  it("gives night and evening distinct es-MX labels, not a collapsed duplicate", () => {
+    const translator = createTranslator("es-MX");
+
+    const night = translator.label("occasions", "night");
+    const evening = translator.label("occasions", "evening");
+
+    expect(night).toBe("Noche");
+    expect(evening).not.toBe("Noche");
+    expect(evening).not.toBe(night);
+    expect(evening).toBe("Atardecer");
+  });
 });

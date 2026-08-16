@@ -5434,6 +5434,108 @@
   color: #dcfce7;
 }
 
+:where(.builder-scope) .compose-preference-chip--season {
+  /* Season pills are the only Composer preference chips with per-option
+     semantic color -- keyed off data-season-id (the canonical option ID
+     ComposePreferenceGroup already renders), never the translated label,
+     so this holds across locales. Occasion/vibe chips are deliberately
+     left on the generic, host-accent-themed rules above -- this whole
+     family only ever matches [data-season-id], so it can't bleed onto
+     them. Fixed hex per season rather than --builder-color-accent: these
+     are calendar-season colors (real-world green/gold/pumpkin/ice), not a
+     merchant brand color, so they stay constant regardless of which host
+     theme is active. Chosen to match the same four season badge icons
+     rendered inside these pills (metadataAssets.seasons), for visual
+     cohesion between icon and chip. */
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+:where(.builder-scope) .compose-preference-chip--season img {
+  width: 14px;
+  height: 14px;
+  flex: none;
+  border-radius: 50%;
+}
+
+:where(.builder-scope) .compose-preference-chip--season[data-season-id="spring"] {
+  border-color: color-mix(in srgb, #86efac 38%, transparent);
+  background: color-mix(in srgb, #86efac 11%, transparent);
+  color: #bbf7d0;
+}
+
+:where(.builder-scope) .compose-preference-chip--season[data-season-id="spring"]:hover {
+  border-color: color-mix(in srgb, #86efac 55%, transparent);
+  background: color-mix(in srgb, #86efac 18%, transparent);
+}
+
+:where(.builder-scope) .compose-preference-chips button.compose-preference-chip--season[data-season-id="spring"].is-selected {
+  /* button + .compose-preference-chips prefix (not just the season class
+     and attribute) is deliberate specificity, not decoration: it must
+     outweigh the pre-existing .builder-theme-root--custom
+     .compose-preference-chips button.is-selected override above
+     (Aurelian's generic accent-gold selected style), so a selected season
+     pill keeps its own season color instead of reverting to gold on
+     Aurelian specifically. DD has no --custom class, so nothing there
+     ever competes. Same specificity bump repeated on the other three
+     seasons below, for the same reason. */
+  border-color: color-mix(in srgb, #86efac 74%, transparent);
+  background: color-mix(in srgb, #86efac 34%, transparent);
+  color: #f0fdf4;
+}
+
+:where(.builder-scope) .compose-preference-chip--season[data-season-id="summer"] {
+  border-color: color-mix(in srgb, #facc15 38%, transparent);
+  background: color-mix(in srgb, #facc15 11%, transparent);
+  color: #fde68a;
+}
+
+:where(.builder-scope) .compose-preference-chip--season[data-season-id="summer"]:hover {
+  border-color: color-mix(in srgb, #facc15 55%, transparent);
+  background: color-mix(in srgb, #facc15 18%, transparent);
+}
+
+:where(.builder-scope) .compose-preference-chips button.compose-preference-chip--season[data-season-id="summer"].is-selected {
+  border-color: color-mix(in srgb, #facc15 74%, transparent);
+  background: color-mix(in srgb, #facc15 34%, transparent);
+  color: #fef9c3;
+}
+
+:where(.builder-scope) .compose-preference-chip--season[data-season-id="fall"] {
+  border-color: color-mix(in srgb, #ea580c 38%, transparent);
+  background: color-mix(in srgb, #ea580c 11%, transparent);
+  color: #fdba74;
+}
+
+:where(.builder-scope) .compose-preference-chip--season[data-season-id="fall"]:hover {
+  border-color: color-mix(in srgb, #ea580c 55%, transparent);
+  background: color-mix(in srgb, #ea580c 18%, transparent);
+}
+
+:where(.builder-scope) .compose-preference-chips button.compose-preference-chip--season[data-season-id="fall"].is-selected {
+  border-color: color-mix(in srgb, #ea580c 74%, transparent);
+  background: color-mix(in srgb, #ea580c 34%, transparent);
+  color: #ffedd5;
+}
+
+:where(.builder-scope) .compose-preference-chip--season[data-season-id="winter"] {
+  border-color: color-mix(in srgb, #93c5fd 38%, transparent);
+  background: color-mix(in srgb, #93c5fd 11%, transparent);
+  color: #bfdbfe;
+}
+
+:where(.builder-scope) .compose-preference-chip--season[data-season-id="winter"]:hover {
+  border-color: color-mix(in srgb, #93c5fd 55%, transparent);
+  background: color-mix(in srgb, #93c5fd 18%, transparent);
+}
+
+:where(.builder-scope) .compose-preference-chips button.compose-preference-chip--season[data-season-id="winter"].is-selected {
+  border-color: color-mix(in srgb, #93c5fd 74%, transparent);
+  background: color-mix(in srgb, #93c5fd 34%, transparent);
+  color: #eff6ff;
+}
+
 :where(.builder-scope) .composer-budget-warning {
   display: block;
   color: #fca5a5;
