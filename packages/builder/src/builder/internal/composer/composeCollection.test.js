@@ -560,14 +560,18 @@ describe("composeCollection", () => {
       preferredVibes: ["fresh", "clean", "warm", "elegant"],
     };
 
+    // Recomputed after adding 3 new real catalog entries (ids 35, 214, 410):
+    // Graphite (35, bronze) legitimately outcompetes some previously-picked
+    // items on this budget/preference scenario -- a real, expected
+    // consequence of adding new inventory that fits, not a regression.
     expect(
       composeRealCatalog({ ...baseRequest, collectionStyle: "premium_focus" }, "best")
         .collectionIds
-    ).toEqual([23, 111, 204, 208, 302, 407, 409]);
+    ).toEqual([35, 109, 208, 210, 302, 407, 409]);
     expect(
       composeRealCatalog({ ...baseRequest, collectionStyle: "more_variety" }, "best")
         .collectionIds
-    ).toEqual([1, 8, 10, 11, 15, 16, 18, 19, 23, 30, 33, 118, 207, 302]);
+    ).toEqual([1, 7, 8, 10, 11, 15, 19, 23, 26, 30, 35, 118, 207, 302]);
   }, 20000);
 
   it("keeps collection-style counts ordered across a compact real-catalog matrix", () => {

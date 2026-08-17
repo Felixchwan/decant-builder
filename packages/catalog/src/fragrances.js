@@ -814,6 +814,47 @@ occasions: ["daily", "office", "casual"],
 vibes: ["fresh", "clean", "bright", "versatile"]
 },
 {
+  id: 35,
+  name: "Graphite",
+  shortName: "Graphite",
+  brand: "Bath & Body Works",
+  points: 1,
+  imageAssetKey: "perfumes/bronze/graphite.png",
+
+  accords: [
+    "aromatic",
+    "woody",
+    "warm spicy",
+    "leather",
+    "earthy",
+  ],
+
+  generalNotes: [
+    "bergamot",
+    "sage",
+    "spices",
+    "leatherwood",
+  ],
+
+  seasons: [
+    "fall",
+    "winter",
+  ],
+
+  occasions: [
+    "daily",
+    "casual",
+    "office",
+  ],
+
+  vibes: [
+    "warm",
+    "earthy",
+    "masculine",
+    "approachable",
+  ],
+},
+{
   id: 100,
   name: "Arancia di Capri",
   shortName: "Arancia",
@@ -1703,6 +1744,57 @@ baseNotes: ["caramel", "musk"],
     "clean",
     "elegant",
     "sophisticated",
+    "soft",
+  ],
+},
+
+{
+  id: 214,
+  name: "Prada L'Homme L'Eau",
+  shortName: "Prada L'Homme L'Eau",
+  brand: "Prada",
+  points: 2,
+  imageAssetKey: "perfumes/gold/prada-l-homme-l-eau.png",
+
+  accords: [
+    "powdery",
+    "amber",
+    "iris",
+    "aromatic",
+    "clean",
+  ],
+
+  topNotes: [
+    "neroli",
+    "ginger",
+  ],
+
+  middleNotes: [
+    "iris",
+    "amber",
+  ],
+
+  baseNotes: [
+    "powderyNotes",
+    "sandalwood",
+    "cedar",
+  ],
+
+  seasons: [
+    "spring",
+    "summer",
+  ],
+
+  occasions: [
+    "daily",
+    "office",
+    "casual",
+  ],
+
+  vibes: [
+    "fresh",
+    "clean",
+    "elegant",
     "soft",
   ],
 },
@@ -2789,6 +2881,61 @@ baseNotes: ["caramel", "musk"],
 },
 
 {
+  id: 410,
+  name: "Il Padrino",
+  shortName: "Il Padrino",
+  brand: "Sospiro Perfumes",
+  points: 4,
+  imageAssetKey: "perfumes/diamond/il-padrino.png",
+
+  accords: [
+    "sweet",
+    "vanilla",
+    "amber",
+    "warm spicy",
+    "patchouli",
+  ],
+
+  topNotes: [
+    "blackCurrant",
+    "rum",
+    "amaretto",
+    "bergamot",
+  ],
+
+  middleNotes: [
+    "amber",
+    "patchouli",
+    "sandalwood",
+  ],
+
+  baseNotes: [
+    "vanilla",
+    "siamBenzoin",
+    "labdanum",
+  ],
+
+  seasons: [
+    "fall",
+    "winter",
+    "spring",
+  ],
+
+  occasions: [
+    "night",
+    "date",
+    "special",
+  ],
+
+  vibes: [
+    "luxurious",
+    "seductive",
+    "warm",
+    "mysterious",
+  ],
+},
+
+{
   id: 500,
   name: "Squid",
   shortName: "Squid",
@@ -2940,6 +3087,7 @@ const SEASON_WEIGHTS_BY_ID = {
   32: { spring: 4, summer: 1, fall: 8, winter: 8 },
   33: { spring: 8, summer: 7, fall: 5, winter: 2 },
   34: { spring: 8, summer: 8, fall: 4, winter: 1 },
+  35: { spring: 3, summer: 1, fall: 8, winter: 9 },
   100: { spring: 8, summer: 10, fall: 2, winter: 0 },
   101: { spring: 8, summer: 10, fall: 2, winter: 0 },
   102: { spring: 9, summer: 10, fall: 2, winter: 0 },
@@ -2973,6 +3121,7 @@ const SEASON_WEIGHTS_BY_ID = {
   211: { spring: 7, summer: 6, fall: 7, winter: 4 },
   212: { spring: 2, summer: 0, fall: 9, winter: 10 },
   213: { spring: 8, summer: 7, fall: 7, winter: 5 },
+  214: { spring: 8, summer: 10, fall: 2, winter: 0 },
   301: { spring: 8, summer: 8, fall: 5, winter: 2 },
   302: { spring: 8, summer: 9, fall: 4, winter: 1 },
   303: { spring: 8, summer: 7, fall: 6, winter: 3 },
@@ -2988,6 +3137,7 @@ const SEASON_WEIGHTS_BY_ID = {
   407: { spring: 8, summer: 10, fall: 3, winter: 1 },
   408: { spring: 9, summer: 9, fall: 4, winter: 1 },
   409: { spring: 7, summer: 4, fall: 8, winter: 6 },
+  410: { spring: 4, summer: 1, fall: 9, winter: 8 },
   500: { spring: 2, summer: 1, fall: 8, winter: 9 },
   501: { spring: 4, summer: 1, fall: 9, winter: 8 },
 };

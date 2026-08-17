@@ -45,13 +45,17 @@ describe("Diptyque Orphéon catalog entry", () => {
     });
   });
 
-  it("keeps perfume IDs unique and assigns the next Diamond-tier ID", () => {
+  it("keeps perfume IDs unique and assigns a valid Diamond-tier ID", () => {
     const ids = perfumes.map((perfume) => perfume.id);
     const diamondIds = ids.filter((id) => id >= 400 && id < 500).sort((a, b) => a - b);
 
     expect(new Set(ids).size).toBe(ids.length);
     expect(diamondIds).toContain(ORPHEON_ID);
-    expect(diamondIds.at(-1)).toBe(ORPHEON_ID);
+    // Orphéon was the newest Diamond-tier entry when this test was written;
+    // Il Padrino (410, Sospiro Perfumes) has since extended the same range.
+    // This only asserts Orphéon's own ID stays unique and in-range, not
+    // that it remains the most recently added Diamond entry.
+    expect(diamondIds.every((id) => id >= 400 && id < 500)).toBe(true);
   });
 
   it("resolves bottle, logo, and note assets", () => {

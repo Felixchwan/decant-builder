@@ -542,4 +542,31 @@ plum: { name: "Plum", family: "fruity", noteImageAssetKey: "notes/plum.jpg" },
 spicyNotes: { name: "Spicy Notes", family: "spicy", noteImageAssetKey: "notes/spicyNotes.jpg" },
 truffle: { name: "Truffle", family: "earthy", noteImageAssetKey: "notes/truffle.jpg" },
 whiteLotus: { name: "White Lotus", family: "floral", noteImageAssetKey: "notes/whiteLotus.jpg" },
+
+// "Spices" is Fragrantica's distinct whole/ground-spice note, not the same
+// canonical entry as the existing collective "Spicy Notes" (spicyNotes)
+// above -- kept separate rather than merged, matching how this dictionary
+// already keeps other closely-related concepts (e.g. sandalwood vs.
+// australianSandalwood) as their own keys. No bespoke photo exists for it
+// yet, so it reuses nutmeg.jpg (an existing warm-spice image) the same way
+// texasCedar already reuses cedar.jpg elsewhere in this file.
+spices: { name: "Spices", family: "spicy", noteImageAssetKey: "notes/nutmeg.jpg" },
+
+// Distinct from the existing generic "leather" note -- Leatherwood is its
+// own real Fragrantica note (a specific woody/leather-adjacent material),
+// not an alias. Reuses leather.jpg as the closest existing visual match.
+leatherwood: { name: "Leatherwood", family: "woody", noteImageAssetKey: "notes/leather.jpg" },
+
+// Rum (the spirit) is genuinely absent from this dictionary, and no
+// existing asset actually depicts it -- given a dedicated photo instead of
+// reusing an unrelated ingredient image. Source: "A glass of rum.jpg" by
+// Linus Bohman (Flickr), via Wikimedia Commons, CC BY 2.0
+// (https://commons.wikimedia.org/wiki/File:A_glass_of_rum.jpg), cropped
+// square to match this dictionary's note-thumbnail framing.
+rum: { name: "Rum", family: "sweet", noteImageAssetKey: "notes/rum.jpg" },
+
+// Amaretto (almond liqueur) is a distinct Fragrantica note from the
+// existing "almond" (the raw nut) -- kept separate rather than merged,
+// reusing almond.jpg as the closest existing visual match.
+amaretto: { name: "Amaretto", family: "sweet", noteImageAssetKey: "notes/almond.jpg" },
 };

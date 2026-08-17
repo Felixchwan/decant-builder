@@ -47,10 +47,10 @@ describe("Aurelian application foundation", () => {
     expect(aurelianConfig.finalization.customerFieldLabels.city).toBe("Municipio");
   });
 
-  it("owns an explicit 84-ID manifest and canonical projection", () => {
-    expect(aurelianAvailableIds).toHaveLength(84);
-    expect(new Set(aurelianAvailableIds).size).toBe(84);
-    expect(aurelianCatalog).toHaveLength(84);
+  it("owns an explicit 87-ID manifest and canonical projection", () => {
+    expect(aurelianAvailableIds).toHaveLength(87);
+    expect(new Set(aurelianAvailableIds).size).toBe(87);
+    expect(aurelianCatalog).toHaveLength(87);
     const projection = createMerchantCatalog({ source: fragrances, availableIds: aurelianAvailableIds });
     projection.forEach((record, index) => expect(record).toBe(aurelianCatalog[index]));
   });

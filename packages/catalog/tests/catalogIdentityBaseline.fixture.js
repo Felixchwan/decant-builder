@@ -7,7 +7,7 @@ export const CATALOG_IDENTITY_BASELINE = Object.freeze([
   [32, "Bronze", 1], [21, "Bronze", 1], [22, "Bronze", 1], [23, "Bronze", 1],
   [24, "Bronze", 1], [25, "Bronze", 1], [26, "Bronze", 1], [27, "Bronze", 1],
   [28, "Bronze", 1], [29, "Bronze", 1], [30, "Bronze", 1], [31, "Bronze", 1],
-  [33, "Bronze", 1], [34, "Bronze", 1],
+  [33, "Bronze", 1], [34, "Bronze", 1], [35, "Bronze", 1],
   [100, "Silver", 1.5], [101, "Silver", 1.5], [102, "Silver", 1.5],
   [103, "Silver", 1.5], [119, "Silver", 1.5], [104, "Silver", 1.5],
   [105, "Silver", 1.5], [106, "Silver", 1.5], [107, "Silver", 1.5],
@@ -17,6 +17,7 @@ export const CATALOG_IDENTITY_BASELINE = Object.freeze([
   [117, "Silver", 1.5], [118, "Silver", 1.5],
   [201, "Gold", 2], [202, "Gold", 2], [203, "Gold", 2], [204, "Gold", 2],
   [205, "Gold", 2], [206, "Gold", 2], [207, "Gold", 2], [208, "Gold", 2],
+  [214, "Gold", 2],
   [209, "Gold", 2], [210, "Gold", 2], [211, "Gold", 2], [212, "Gold", 2],
   [213, "Gold", 2],
   [301, "Platinum", 2.5], [302, "Platinum", 2.5], [303, "Platinum", 2.5],
@@ -24,5 +25,6 @@ export const CATALOG_IDENTITY_BASELINE = Object.freeze([
   [401, "Diamond", 4], [402, "Diamond", 4], [403, "Diamond", 4.5],
   [404, "Diamond", 4], [405, "Diamond", 4], [406, "Diamond", 4],
   [407, "Diamond", 4], [408, "Diamond", 4], [409, "Diamond", 4],
+  [410, "Diamond", 4],
   [500, "Mythic", 5], [501, "Mythic", 5],
 ].map(Object.freeze));
