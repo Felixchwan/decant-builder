@@ -436,7 +436,7 @@ function getVibeRecommendationCopy(vibe, translator) {
   );
 }
 
-function getAccordRecommendationCopy(accord, translator) {
+export function getAccordRecommendationCopy(accord, translator) {
   const copy = {
     citrus: "Adds citrus brightness",
     fresh: "Adds fresh brightness",

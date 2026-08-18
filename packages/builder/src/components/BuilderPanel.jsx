@@ -21,6 +21,7 @@ import { buildScentLibraryViewModel } from "../builder/internal/intelligence/bui
 import { isCuratorBonusUnlocked as deriveCuratorBonusUnlocked } from "../builder/internal/curatorBonus/isCuratorBonusUnlocked.js";
 import { buildBuilderThemeStyle, hasCustomBuilderTheme } from "../builder/theme/builderTheme.js";
 import {
+  getAccordRecommendationCopy,
   getRecommendationConfidence,
   getRecommendationConfidenceLabel,
   getRecommendationDisplayReasons,
@@ -3169,7 +3170,7 @@ function DiscoveryBoxReviewModal({
   const [fallbackWhatsAppUrl, setFallbackWhatsAppUrl] = useState("");
   const [isFinalizing, setIsFinalizing] = useState(false);
   const finalizationInFlightRef = useRef(false);
-  const collectionIdentity = getCollectionIdentity(boxSummary);
+  const collectionIdentity = getCollectionIdentity(boxSummary, t);
   const curatorPreferenceLabel =
     builderConfig.curatorBonus.preferences[curatorBonusPreference]?.label;
   const seasonRows = buildCollectionCardSeasonRows(
@@ -3183,6 +3184,8 @@ function DiscoveryBoxReviewModal({
     seasonRows,
     collectionIdentity,
     curatorInsight,
+    t,
+    translator,
   });
   const strengths = collectionReview.strengths;
   const opportunities = collectionReview.opportunities;
@@ -3382,15 +3385,21 @@ function DiscoveryBoxReviewModal({
           <h5>{t("review.seasonCoverage")}</h5>
 
           <div className="season-coverage-bars">
-            {seasonRows.map((season) => (
-              <div className="season-coverage-row" key={season.id}>
-                <span>{season.label}</span>
-                <div className="season-coverage-track" aria-label={`${season.label} coverage`}>
-                  <i style={{ width: `${season.percent}%` }} />
+            {seasonRows.map((season) => {
+              const seasonLabel = translator?.label?.("seasons", season.id) || season.label;
+              return (
+                <div className="season-coverage-row" key={season.id}>
+                  <span>{seasonLabel}</span>
+                  <div
+                    className="season-coverage-track"
+                    aria-label={t("review.seasonCoverageAria", { season: seasonLabel })}
+                  >
+                    <i style={{ width: `${season.percent}%` }} />
+                  </div>
+                  <strong>{season.count}</strong>
                 </div>
-                <strong>{season.count}</strong>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </section>
 
@@ -3554,7 +3563,10 @@ function buildCuratedCollectionReview({
   seasonRows,
   collectionIdentity,
   curatorInsight,
+  t,
+  translator,
 }) {
+  const translate = t || ((key) => key);
   const selectedCount = selectedPerfumes.length;
   const occasionCounts = boxSummary.occasionCounts || {};
   const vibeCounts = boxSummary.vibeCounts || {};
@@ -3625,27 +3637,30 @@ function buildCuratedCollectionReview({
     coverageSummary,
     strengthItems
   );
-  const assessmentBadge = getAssessmentBadge({
+  const assessmentBadgeKey = getAssessmentBadge({
     collectionIdentity,
     ...reviewSignals,
     strengthKeys: strengthItems.map((item) => item.key),
     opportunityCount: opportunityItems.length,
   });
+  const assessmentBadge = translate(`review.badge.${assessmentBadgeKey}`);
   const assessmentSummary = getAssessmentSummary({
     collectionIdentity,
     strengths: strengthItems,
     opportunities: opportunityItems,
     ...reviewSignals,
+    t: translate,
   });
   const curatorNote = buildCuratorNote({
     collectionIdentity,
     strengths: strengthItems,
     primaryOpportunity: opportunityItems[0],
     ...reviewSignals,
+    t: translate,
   });
   const semanticAudit = {
-    identity: collectionIdentity.name,
-    badge: assessmentBadge,
+    identity: collectionIdentity.enName,
+    badge: assessmentBadgeKey,
     strengthKeys: strengthItems.map((item) => item.key),
     opportunityKeys: opportunityItems.map((item) => item.key),
     curatorNoteOpportunityKey: opportunityItems[0]?.key || "none",
@@ -3657,11 +3672,33 @@ function buildCuratedCollectionReview({
     assessmentSummary: normalizeSentence(assessmentSummary),
     strengths:
       strengthItems.length > 0
-        ? strengthItems.map((item) => normalizeListItem(item.text))
-        : ["A clear collection profile is beginning to take shape"],
-    opportunities: opportunityItems.map((item) => normalizeListItem(item.text)),
+        ? strengthItems.map((item) =>
+            normalizeListItem(resolveReviewItemText(item, "strength", translate, translator))
+          )
+        : [translate("review.strength.emptyStrengths")],
+    opportunities: opportunityItems.map((item) =>
+      normalizeListItem(resolveReviewItemText(item, "opportunity", translate, translator))
+    ),
     curatorNote: normalizeParagraph(curatorNote),
   };
+}
+
+// Resolves the display text for a strength/opportunity item in the active
+// locale. `item.key` drives scoring/dedup/conflict logic (unchanged, always
+// English internally); `item.displayKey` (defaults to `item.key`) is the
+// locale-lookup id, kept distinct where two different code paths produce the
+// same `key` with different English text. Falls back to the item's own
+// (English) text if the active locale genuinely has no entry -- a safety net,
+// not the primary path.
+function resolveReviewItemText(item, namespace, translate, translator) {
+  if (namespace === "opportunity" && item.displayKey?.startsWith("__accordDepth:")) {
+    const phrase = item.displayKey.slice("__accordDepth:".length);
+    return getAccordRecommendationCopy(phrase, translator) || item.text;
+  }
+
+  const key = `review.${namespace}.${item.displayKey || item.key}`;
+  const translated = translate(key);
+  return translated === key ? item.text : translated;
 }
 
 function getAssessmentBadge({
@@ -3678,41 +3715,46 @@ function getAssessmentBadge({
   strengthKeys,
   opportunityCount,
 }) {
+  // Branches test against `collectionIdentity.enName` -- the identity's
+  // English title, always computed regardless of active locale -- so branch
+  // selection stays identical to before this file gained locale support for
+  // every merchant/locale combination. Only the returned value changed: a
+  // stable key instead of a literal English string.
   if (selectedCount < 4) {
-    return "Developing Collection";
+    return "developingCollection";
   }
 
-  if (/evening/i.test(collectionIdentity.name) && eveningSignals >= 3) {
+  if (/evening/i.test(collectionIdentity.enName) && eveningSignals >= 3) {
     return warmSignals + darkSignals >= freshSignals
-      ? "Confident Evening Character"
-      : "Versatile After-Dark Profile";
+      ? "confidentEveningCharacter"
+      : "versatileAfterDarkProfile";
   }
 
-  if (/fresh|daily|versatile/i.test(collectionIdentity.name) && dailySignals >= 4) {
-    return polishedSignals >= 3 ? "Refined Daily Wear" : "Strong Daily Rotation";
+  if (/fresh|daily|versatile/i.test(collectionIdentity.enName) && dailySignals >= 4) {
+    return polishedSignals >= 3 ? "refinedDailyWear" : "strongDailyRotation";
   }
 
-  if (/balanced/i.test(collectionIdentity.name) && seasonBalance >= 0.58 && uniqueOccasionCount >= 4) {
-    return "Excellent Balance";
+  if (/balanced/i.test(collectionIdentity.enName) && seasonBalance >= 0.58 && uniqueOccasionCount >= 4) {
+    return "excellentBalance";
   }
 
   if (strengthKeys.includes("dailyVersatility")) {
-    return "Highly Versatile";
+    return "highlyVersatile";
   }
 
   if (polishedSignals >= 4 || darkSignals >= 3) {
-    return "Distinctive Character";
+    return "distinctiveCharacter";
   }
 
   if (uniqueOccasionCount >= 4) {
-    return "Highly Versatile";
+    return "highlyVersatile";
   }
 
   if (seasonBalance >= 0.62 && uniqueOccasionCount >= 5 && opportunityCount <= 1) {
-    return "Excellent Balance";
+    return "excellentBalance";
   }
 
-  return "Well Rounded";
+  return "wellRounded";
 }
 
 function getAssessmentSummary({
@@ -3724,28 +3766,39 @@ function getAssessmentSummary({
   dailySignals,
   uniqueOccasionCount,
   strengths,
+  t,
 }) {
+  const translate = t || ((key) => key);
   const character = getCollectionCharacterPhrase({
     freshSignals,
     warmSignals,
     polishedSignals,
     eveningSignals,
+    t: translate,
   });
-  const performance =
+  const performanceKey =
     dailySignals >= 4 && eveningSignals >= 2
-      ? "moving comfortably from daytime wear into evening use"
+      ? "dayToEvening"
       : dailySignals >= 4
-        ? "built for reliable everyday wear"
+        ? "reliableDaily"
         : eveningSignals >= 3
-          ? "with a clear after-dark point of view"
+          ? "afterDarkFocus"
           : uniqueOccasionCount >= 4
-            ? "with enough range for varied settings"
-            : "with a focused but still flexible profile";
+            ? "variedRange"
+            : "focusedFlexible";
+  const performance = translate(`review.performance.${performanceKey}`);
   const strengthPhrase = strengths[0]
-    ? ` The strongest impression is ${lowercaseFirst(strengths[0].text)}.`
+    ? translate("review.strengthPhrase", {
+        strength: lowercaseFirst(resolveReviewItemText(strengths[0], "strength", translate)),
+      })
     : "";
 
-  return `${sentenceCase(`${getArticle(collectionIdentity.name)} ${collectionIdentity.name.toLowerCase()}`)} with ${character}, ${performance}.${strengthPhrase}`;
+  return translate("review.assessmentSummary", {
+    identityPhrase: collectionIdentity.articledLower,
+    character,
+    performance,
+    strengthPhrase,
+  });
 }
 
 function getCollectionStrengths(signals, curatorInsight) {
@@ -3864,11 +3917,11 @@ function rewriteReviewStrength(strength) {
   }
 
   if (/cold|winter|warm/.test(normalized)) {
-    return createReviewItem("warmCoolBalance", "Strong cool-weather depth", 66);
+    return createReviewItem("warmCoolBalance", "Strong cool-weather depth", 66, "coolWeatherDepth");
   }
 
   if (/formal|office/.test(normalized)) {
-    return createReviewItem("officeWear", "Strong office and dressed-up rotation", 66);
+    return createReviewItem("officeWear", "Strong office and dressed-up rotation", 66, "officeWearEvening");
   }
 
   return createReviewItem(getReviewItemTopic(safeStrength), sentenceCase(safeStrength), 50);
@@ -3884,16 +3937,17 @@ function rewriteReviewOpportunity(opportunity) {
     return createReviewItem(
       `${phrase || "textural"}Depth`,
       `Could benefit from greater ${phrase} depth`,
-      64
+      64,
+      `__accordDepth:${phrase || "textural"}`
     );
   }
 
   if (/cold|winter|warm/.test(normalized)) {
-    return createReviewItem("spicyWarmth", "Could use richer evening warmth", 62);
+    return createReviewItem("spicyWarmth", "Could use richer evening warmth", 62, "coldWeatherWarmth");
   }
 
   if (/summer|fresh/.test(normalized)) {
-    return createReviewItem("freshContrast", "Could use brighter fresh contrast", 66);
+    return createReviewItem("freshContrast", "Could use brighter fresh contrast", 66, "brighterFreshContrast");
   }
 
   if (/evening|date|night/.test(normalized)) {
@@ -3901,7 +3955,7 @@ function rewriteReviewOpportunity(opportunity) {
   }
 
   if (/woody|leather|earth/.test(normalized)) {
-    return createReviewItem("earthyDepth", "Could benefit from darker earthy depth", 62);
+    return createReviewItem("earthyDepth", "Could benefit from darker earthy depth", 62, "earthyDepthPlain");
   }
 
   if (/formal|office/.test(normalized)) {
@@ -3914,10 +3968,10 @@ function rewriteReviewOpportunity(opportunity) {
 function rewriteCoverageGap(gap) {
   if (gap.category === "seasons") {
     const copy = {
-      spring: createReviewItem("greenFreshness", "Could use more green aromatic lift", 46),
-      summer: createReviewItem("freshContrast", "Could use brighter fresh contrast", 48),
-      fall: createReviewItem("spicyWarmth", "Could use richer textured warmth", 46),
-      winter: createReviewItem("earthyDepth", "Could use deeper cold-weather character", 48),
+      spring: createReviewItem("greenFreshness", "Could use more green aromatic lift", 46, "greenAromaticLift"),
+      summer: createReviewItem("freshContrast", "Could use brighter fresh contrast", 48, "brighterFreshContrast"),
+      fall: createReviewItem("spicyWarmth", "Could use richer textured warmth", 46, "texturedWarmth"),
+      winter: createReviewItem("earthyDepth", "Could use deeper cold-weather character", 48, "coldWeatherCharacter"),
     };
 
     return copy[gap.target] || null;
@@ -3933,33 +3987,33 @@ function buildCuratorNote({
   dailySignals,
   uniqueOccasionCount,
   selectedCount,
+  t,
 }) {
-  const opening =
-    selectedCount >= 10
-      ? "This is the kind of box that should feel satisfying over repeated wear, with enough range to avoid becoming predictable."
-      : selectedCount >= 6
-        ? "This box should feel easy to live with, giving you several reliable moods without asking you to overthink the choice."
-        : "This box should feel like a clear starting point, with enough personality to make each wear feel intentional.";
-  const performance =
+  const translate = t || ((key) => key);
+  const openingKey = selectedCount >= 10 ? "large" : selectedCount >= 6 ? "medium" : "small";
+  const opening = translate(`review.curatorNote.opening.${openingKey}`);
+  const performanceKey =
     dailySignals >= 4 && eveningSignals >= 2
-      ? "You will likely reach for it across office, casual and date-night situations, which is where its range starts to show."
+      ? "dayToEvening"
       : dailySignals >= 4
-        ? "Its most natural strength is day-to-day wear: polished, dependable and easy to return to."
+        ? "daily"
         : eveningSignals >= 3
-          ? "It will feel most at home after dark, where texture and presence matter more than simple freshness."
+          ? "evening"
           : uniqueOccasionCount >= 4
-            ? "There is enough flexibility here to move across several settings while still feeling considered."
-            : "It remains focused for now, which gives future additions a clear role rather than adding noise.";
+            ? "varied"
+            : "focused";
+  const performance = translate(`review.curatorNote.performance.${performanceKey}`);
   const texture =
     strengths[0]?.text && selectedCount >= 6
-      ? ` The collection's quiet advantage is ${lowercaseFirst(strengths[0].text)}.`
+      ? translate("review.curatorNoteTexture", {
+          strength: lowercaseFirst(resolveReviewItemText(strengths[0], "strength", translate)),
+        })
       : "";
-  const opportunitySentence =
-    primaryOpportunity
-      ? getOpportunitySentence(primaryOpportunity)
-      : "Future additions can be chosen for personal taste rather than correcting a major gap.";
+  const opportunitySentence = primaryOpportunity
+    ? getOpportunitySentence(primaryOpportunity, translate)
+    : translate("review.curatorNote.defaultOpportunity");
 
-  return `${opening} ${performance}${texture} ${opportunitySentence}`;
+  return translate("review.curatorNote", { opening, performance, texture, opportunitySentence });
 }
 
 function getCollectionCharacterPhrase({
@@ -3967,50 +4021,54 @@ function getCollectionCharacterPhrase({
   warmSignals,
   polishedSignals,
   eveningSignals,
+  t,
 }) {
+  const translate = t || ((key) => key);
+
   if (freshSignals >= warmSignals + 2 && polishedSignals >= 2) {
-    return "a polished fresh character and clean versatility";
+    return translate("review.character.polishedFreshVersatility");
   }
 
   if (warmSignals >= freshSignals + 2 && eveningSignals >= 2) {
-    return "warm texture, evening depth and a confident signature";
+    return translate("review.character.warmEveningSignature");
   }
 
   if (polishedSignals >= 4) {
-    return "refined structure, elegance and signature-scent potential";
+    return translate("review.character.refinedSignature");
   }
 
   if (eveningSignals >= 3) {
-    return "a clear evening character and enough depth for after-dark wear";
+    return translate("review.character.eveningDepthCharacter");
   }
 
   if (freshSignals >= warmSignals + 1) {
-    return "freshness, clarity and easy daily wear";
+    return translate("review.character.freshDailyEase");
   }
 
-  return "balanced freshness and warmth";
+  return translate("review.character.balancedFreshWarmth");
 }
 
-function getOpportunitySentence(opportunity) {
+function getOpportunitySentence(opportunity, t) {
+  const translate = t || ((key) => key);
   const normalized = getReviewItemText(opportunity).toLowerCase();
 
   if (["freshContrast", "greenFreshness"].includes(opportunity?.key)) {
-    return "For future growth, a brighter fresh fragrance would add lift and keep the rotation from feeling too concentrated.";
+    return translate("review.opportunitySentence.freshLift");
   }
 
   if (["spicyWarmth", "earthyDepth"].includes(opportunity?.key)) {
-    return "For future growth, a richer textured fragrance would add shadow and make the wardrobe feel more dimensional.";
+    return translate("review.opportunitySentence.texturedShadow");
   }
 
   if (opportunity?.key === "formalElegance") {
-    return "For future growth, a more formal fragrance would add polish for dinners, events and dressed-up occasions.";
+    return translate("review.opportunitySentence.formalPolish");
   }
 
   if (/citrus|fresh|green/.test(normalized)) {
-    return "For future growth, a brighter fresh fragrance would add lift and keep the rotation from feeling too concentrated.";
+    return translate("review.opportunitySentence.freshLift");
   }
 
-  return "For future growth, one more contrasting fragrance would broaden the wardrobe without disturbing its current mood.";
+  return translate("review.opportunitySentence.contrastBroaden");
 }
 
 function removeSimilarReviewItems(items) {
@@ -4028,11 +4086,17 @@ function removeSimilarReviewItems(items) {
   });
 }
 
-function createReviewItem(key, text, score = 50) {
+function createReviewItem(key, text, score = 50, displayKey) {
+  const safeKey = toSafeString(key) || "general";
   return {
-    key: toSafeString(key) || "general",
+    key: safeKey,
     text: normalizeListItem(text),
     score,
+    // Locale-lookup id. Defaults to `key`; only diverges where two different
+    // call sites produce the same `key` with different English text, so each
+    // gets its own translation entry without disturbing scoring/dedup (which
+    // key exclusively).
+    displayKey: toSafeString(displayKey) || safeKey,
   };
 }
 
@@ -4075,10 +4139,6 @@ function getReviewItemTopic(item) {
   if (/warm|spicy|smoky|earthy|depth/.test(normalized)) return "depth";
 
   return normalized.replace(/[^a-z0-9]+/g, "-");
-}
-
-function getArticle(phrase) {
-  return /^[aeiou]/i.test(toSafeString(phrase).trim()) ? "an" : "a";
 }
 
 function lowercaseFirst(value) {
@@ -4399,11 +4459,19 @@ function SummaryStat({ label, value }) {
   );
 }
 
-function getCollectionIdentity(boxSummary) {
+function getCollectionIdentity(boxSummary, t) {
   const profile = getCollectionIdentityProfile(boxSummary);
+  const translate = t || ((key) => key);
+
   return {
-    name: profile.title,
-    description: profile.subtitle,
+    id: profile.id,
+    name: translate(`identity.${profile.id}.title`),
+    description: translate(`identity.${profile.id}.subtitle`),
+    articledLower: translate(`identity.${profile.id}.articledLower`),
+    // English name, always in English regardless of active locale -- used only
+    // for internal branch selection (getAssessmentBadge's regex checks), never
+    // rendered. Preserves exact existing branch behavior for every locale.
+    enName: profile.title,
   };
 }
 

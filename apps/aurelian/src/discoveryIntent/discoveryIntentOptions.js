@@ -1,3 +1,5 @@
+import { aurelianCatalog } from "../merchant/catalog.js";
+
 // Aurelian-owned Discovery Intent identity/copy. Not shared Builder config,
 // not merchant config, and never imported by @discovery-box/builder. What an
 // intent means for recommendations lives separately, in
@@ -22,6 +24,6 @@ export const DISCOVERY_INTENT_OPTIONS = Object.freeze([
   Object.freeze({
     id: "explore_freely",
     title: "Quiero explorar todo",
-    description: "Ver las 84 fragancias del catálogo.",
+    description: `Ver las ${aurelianCatalog.length} fragancias del catálogo.`,
   }),
 ]);

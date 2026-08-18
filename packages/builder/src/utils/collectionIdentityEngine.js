@@ -1,4 +1,5 @@
 const EMPTY_PROFILE = {
+  id: "in-progress",
   title: "Collection In Progress",
   subtitle: "A curated fragrance story begins with the first selection.",
   mood: ["First impression", "Open canvas", "Curator's table"],
@@ -231,6 +232,7 @@ export function getCollectionIdentityProfile(boxSummary = {}) {
   const identity = chooseIdentity(analysis);
 
   return {
+    id: identity.id,
     title: identity.title,
     subtitle: identity.subtitle,
     mood: identity.mood,

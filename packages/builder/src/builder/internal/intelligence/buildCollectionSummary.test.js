@@ -228,6 +228,7 @@ describe("buildCollectionSummary", () => {
       ],
     });
     expect(identityFrom(summary)).toEqual({
+      id: "in-progress",
       title: "Collection In Progress",
       subtitle: "A curated fragrance story begins with the first selection.",
       mood: ["First impression", "Open canvas", "Curator's table"],
@@ -900,6 +901,7 @@ describe("buildCollectionSummary", () => {
       ],
     });
     expect(identityFrom(summary)).toEqual({
+      id: "balanced",
       title: "Balanced Rotation",
       subtitle: "Composed for range, easy transitions, and confident year-round wear.",
       mood: ["Clean wardrobe", "Open calendar", "Soft polish"],
