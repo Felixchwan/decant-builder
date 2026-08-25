@@ -2443,8 +2443,8 @@
   top: 50%;
   display: grid;
   place-items: center;
-  width: 18px;
-  height: 18px;
+  width: 24px;
+  height: 24px;
   padding: 0;
   border: 1px solid rgba(248, 113, 113, 0.24);
   border-radius: 999px;
@@ -5816,7 +5816,7 @@
 
 :where(.builder-scope) .final-summary-stats {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 10px;
   margin-bottom: 20px;
 }
@@ -5994,6 +5994,7 @@
   margin-top: 5px;
   color: #f8fafc;
   font-size: var(--builder-unit-110);
+  overflow-wrap: break-word;
 }
 
 :where(.builder-scope) .final-summary-section {

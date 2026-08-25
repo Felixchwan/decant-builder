@@ -1288,3 +1288,40 @@ describe("Restored empty next-available vial slot recommendation action", () => 
     expect(reservedBranchSource).not.toMatch(/onKeyDown=/);
   });
 });
+
+// Regression coverage for a mobile QA pass on Aurelian's Review modal: with
+// real (longer) Spanish content -- "Desbloqueado" vs "Unlocked" -- the order
+// summary's stat grid overflowed the modal horizontally at 375/390/430px.
+// Root cause was two-fold: a bare `1fr` grid track has an implicit
+// `minmax(auto, 1fr)` floor, so a track grows to fit unbreakable content
+// instead of sharing space; and the stat value had no `overflow-wrap`, so a
+// single long word spilled past its card instead of wrapping. Both apply to
+// any merchant/locale with long stat values, not just Aurelian's Spanish.
+describe("BuilderPanel review order-summary stats -- long-value overflow guard", () => {
+  it("constrains grid tracks to their share of the row instead of growing to fit unbreakable content", () => {
+    expect(appCss).toMatch(
+      /:where\(\.builder-scope\) \.final-summary-stats \{[^}]*grid-template-columns:\s*repeat\(4,\s*minmax\(0,\s*1fr\)\);/s
+    );
+  });
+
+  it("lets a single long stat value wrap instead of overflowing its card", () => {
+    expect(appCss).toMatch(
+      /:where\(\.builder-scope\) \.final-stat-card strong \{[^}]*overflow-wrap:\s*break-word;/s
+    );
+  });
+});
+
+// Regression coverage for the same mobile QA pass: the per-slot remove (x)
+// button was 18x18px, under WCAG 2.5.8 AA's 24x24 CSS-px touch-target
+// minimum. It is a core control in the add/remove-fragrance step of the box
+// flow, tapped repeatedly while building a box on a phone.
+describe("BuilderPanel box slot remove button -- touch-target size guard", () => {
+  it("meets the WCAG 2.5.8 AA 24x24px minimum touch target", () => {
+    const ruleMatch = appCss.match(/:where\(\.builder-scope\) \.slot-remove-button \{([^}]*)\}/s);
+    expect(ruleMatch).not.toBeNull();
+    expect(ruleMatch[1]).toMatch(/width:\s*24px;/);
+    expect(ruleMatch[1]).toMatch(/height:\s*24px;/);
+    expect(ruleMatch[1]).not.toMatch(/width:\s*(1[0-9]|2[0-3])px;/);
+    expect(ruleMatch[1]).not.toMatch(/height:\s*(1[0-9]|2[0-3])px;/);
+  });
+});
