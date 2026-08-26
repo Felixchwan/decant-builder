@@ -28,6 +28,7 @@ describe("catalog identity baseline", () => {
         occasions: expect.any(Array),
         vibes: expect.any(Array),
         seasonWeights: expect.any(Object),
+        noteProminence: expect.any(Object),
       }));
       expect(perfume.name.trim()).not.toBe("");
       expect(perfume.shortName.trim()).not.toBe("");
@@ -36,6 +37,15 @@ describe("catalog identity baseline", () => {
       expect(Object.keys(perfume.seasonWeights).sort()).toEqual([...SUPPORTED_SEASONS].sort());
       expect(Object.values(perfume.seasonWeights).every(
         (value) => Number.isFinite(value) && value >= 0 && value <= 10
+      )).toBe(true);
+      // noteProminence is intentionally sparse -- an empty object is valid
+      // (no editorial data yet) and passes vacuously here; this only checks
+      // the range/integer contract for whatever keys DO exist. Note-id
+      // existence and fragrance-note-membership are checked in
+      // catalogReferenceIntegrity.test.js, alongside the other cross-
+      // reference checks, not here.
+      expect(Object.values(perfume.noteProminence).every(
+        (value) => Number.isInteger(value) && value >= 1 && value <= 10
       )).toBe(true);
       expect(perfume.seasons.every((season) => SUPPORTED_SEASONS.includes(season))).toBe(true);
       expect(

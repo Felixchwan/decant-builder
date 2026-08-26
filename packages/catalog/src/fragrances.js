@@ -3149,10 +3149,39 @@ const DEFAULT_SEASON_WEIGHTS = {
   winter: 0,
 };
 
+// Composer Phase 2B foundation: editorial note-prominence metadata. Unlike
+// SEASON_WEIGHTS_BY_ID above, this map is sparse ON PURPOSE and stays that
+// way indefinitely -- there is no synthesizing fallback (contrast
+// buildSeasonWeights below), because a missing entry, or a missing note
+// key within a present entry, means "no editorial judgment has been made
+// yet", not "score this as low/zero". Values are a 1-10 integer scale
+// (0 is invalid -- "negligible" is expressed by omitting the key, never by
+// scoring it 0), never inferred from top/middle/base/general pyramid
+// position, and never required to sum to anything.
+//
+// Seeded here with exactly one representative fragrance (id 1) and a
+// partial pair of scores, drawn from its real topNotes, purely to exercise
+// the validation rules in catalogReferenceIntegrity.test.js end to end.
+// These are placeholder illustrations, not curated editorial judgments --
+// broad catalog population is a separate, later effort.
+// Exported (from this source file only -- NOT re-exported through
+// index.js/the public package surface, see catalogPackageBoundary.test.js)
+// so catalogReferenceIntegrity.test.js can validate it directly. Reading it
+// back off the merged `fragrances` array alone would silently swallow a
+// typo'd/orphaned fragrance-id key (an unmatched numeric key just never
+// gets picked up by the `.map()` below), so the raw map itself must be the
+// thing under test for the "every prominence fragrance ID exists" rule.
+export const NOTE_PROMINENCE_BY_ID = {
+  1: { bergamot: 8, jasmine: 5 },
+};
+
+const EMPTY_NOTE_PROMINENCE = Object.freeze({});
+
 export const fragrances = perfumeCatalog.map((perfume) => ({
   ...perfume,
   seasonWeights:
     SEASON_WEIGHTS_BY_ID[perfume.id] || buildSeasonWeights(perfume.seasons),
+  noteProminence: NOTE_PROMINENCE_BY_ID[perfume.id] || EMPTY_NOTE_PROMINENCE,
 }));
 
 function buildSeasonWeights(seasons = []) {
