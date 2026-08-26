@@ -2,6 +2,13 @@ import { DEFAULT_BUILDER_THEME_COLORS } from "../theme/builderTheme.js";
 
 export const defaultBuilderConfig = {
   locale: "en-US",
+  // Generic override map for taxonomy display labels (see
+  // createTranslator's `taxonomyLabels` param) -- e.g. a host's own
+  // editorial translations for catalog note/accord vocabulary this shared
+  // package doesn't carry. Empty by default: no host is required to supply
+  // it, and absent an entry, display falls back to the value/name already
+  // used today.
+  taxonomyLabels: {},
   software: {
     name: "Decant Builder",
   },

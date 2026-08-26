@@ -1325,3 +1325,23 @@ describe("BuilderPanel box slot remove button -- touch-target size guard", () =>
     expect(ruleMatch[1]).not.toMatch(/height:\s*(1[0-9]|2[0-3])px;/);
   });
 });
+
+// Regression guard for a real defect: the catalog card's title (h3) rendered
+// left-aligned -- `.perfume-card-details-trigger` (the whole card is a
+// <button>) explicitly resets `text-align: left`, and nothing downstream
+// re-centered it -- visually mismatched against the centered bottle image
+// above. Fixed on both the title and the brand name directly below it
+// (leaving only the title centered would have looked like a new
+// inconsistency against a left-aligned brand name); the brand-row's own
+// flex layout (name-left, logo pinned right via margin-left:auto) is
+// untouched, since text-align only affects the name's own text, never a
+// flex item's position.
+describe("PerfumeCard title/brand alignment", () => {
+  it("centers the title to match the centered bottle image above it", () => {
+    expect(appCss).toMatch(/:where\(\.builder-scope\) \.perfume-info h3 \{[^}]*text-align:\s*center;/s);
+  });
+
+  it("centers the brand name alongside it, so the two lines read as one coherent centered block", () => {
+    expect(appCss).toMatch(/:where\(\.builder-scope\) \.perfume-brand-name \{[^}]*text-align:\s*center;/s);
+  });
+});

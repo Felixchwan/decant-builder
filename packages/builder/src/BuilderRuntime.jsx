@@ -121,8 +121,8 @@ function App({
     isCustomTheme: isCustomBuilderTheme,
   });
   const translator = useMemo(
-    () => createTranslator(builderConfig.locale),
-    [builderConfig.locale]
+    () => createTranslator(builderConfig.locale, builderConfig.taxonomyLabels),
+    [builderConfig.locale, builderConfig.taxonomyLabels]
   );
   const { t } = translator;
   const perfumes = catalog;
@@ -1698,7 +1698,7 @@ function PerfumeDetailsModal({
 
         <section className="perfume-details-section">
           <h4>{t("details.accords")}</h4>
-          <DetailTagGroup assetResolver={assetResolver} translator={translator} label={t("details.accords")} values={perfume.accords || []} assetType="accords" />
+          <DetailTagGroup assetResolver={assetResolver} translator={translator} values={perfume.accords || []} assetType="accords" />
         </section>
 
         <section className="perfume-details-section">
@@ -1709,6 +1709,7 @@ function PerfumeDetailsModal({
               title={t("details.generalNotes")}
               noteIds={perfume.generalNotes || []}
               notes={notes}
+              translator={translator}
               portalRoot={portalRoot}
             />
           ) : hasPyramidNotes ? (
@@ -1717,18 +1718,21 @@ function PerfumeDetailsModal({
                 title={t("details.topNotes")}
                 noteIds={perfume.topNotes || []}
                 notes={notes}
+                translator={translator}
                 portalRoot={portalRoot}
               />
               <DetailNoteGroup
                 title={t("details.middleNotes")}
                 noteIds={perfume.middleNotes || []}
                 notes={notes}
+                translator={translator}
                 portalRoot={portalRoot}
               />
               <DetailNoteGroup
                 title={t("details.baseNotes")}
                 noteIds={perfume.baseNotes || []}
                 notes={notes}
+                translator={translator}
                 portalRoot={portalRoot}
               />
             </>
@@ -1746,7 +1750,7 @@ function DetailTagGroup({ assetResolver, translator, label, values, assetType })
   const t = translator?.t || ((key) => key);
   return (
     <div className="detail-profile-group">
-      <span>{label}</span>
+      {label && <span>{label}</span>}
 
       <div className="details-tag-row">
         {values.length > 0 ? (
@@ -1786,7 +1790,7 @@ function DetailMetadataChip({ assetResolver, translator, value, assetType }) {
   );
 }
 
-function DetailNoteGroup({ title, noteIds, notes, portalRoot }) {
+function DetailNoteGroup({ title, noteIds, notes, translator, portalRoot }) {
   if (noteIds.length === 0) {
     return null;
   }
@@ -1801,6 +1805,7 @@ function DetailNoteGroup({ title, noteIds, notes, portalRoot }) {
             key={noteId}
             note={notes[noteId]}
             noteId={noteId}
+            translator={translator}
             portalRoot={portalRoot}
           />
         ))}
@@ -1809,8 +1814,17 @@ function DetailNoteGroup({ title, noteIds, notes, portalRoot }) {
   );
 }
 
-function DetailNotePill({ note, noteId, portalRoot }) {
-  const noteName = note?.name || formatLabel(noteId);
+function DetailNotePill({ note, noteId, translator, portalRoot }) {
+  // Note display names resolve through the same shared taxonomy label lookup
+  // already used for accords/seasons/occasions/vibes (see
+  // DetailMetadataChip), keyed by the note's canonical id -- this package
+  // carries no note/accord vocabulary of its own, just the lookup mechanism
+  // and its fallback. A host can supply its own display labels via
+  // createBuilderConfig's `taxonomyLabels`; absent that, `label()`'s third
+  // argument gives it the note's own catalog name (already good English)
+  // as the fallback, instead of the raw camelCase id.
+  const noteFallback = note?.name || formatLabel(noteId);
+  const noteName = translator?.label?.("notes", noteId, noteFallback) || noteFallback;
   const noteImage = note?.noteImage;
 
   if (!noteImage) {

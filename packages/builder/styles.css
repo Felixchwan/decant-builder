@@ -968,6 +968,7 @@
 :where(.builder-scope) .perfume-brand-name {
   flex: 1 1 auto;
   min-width: 0;
+  text-align: center;
 }
 
 :where(.builder-scope) .perfume-card-reason {
@@ -1123,6 +1124,7 @@
 :where(.builder-scope) .perfume-info h3 {
   margin: 0;
   font-size: var(--builder-unit-105);
+  text-align: center;
 }
 
 :where(.builder-scope) .perfume-info p {

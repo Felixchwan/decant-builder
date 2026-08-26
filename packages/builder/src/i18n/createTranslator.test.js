@@ -66,3 +66,38 @@ describe("createTranslator", () => {
     expect(evening).toBe("Atardecer");
   });
 });
+
+// Generic override/injection boundary: a host can supply its own display
+// labels for catalog vocabulary this shared package carries no editorial
+// translations for (e.g. Aurelian's own es-MX fragrance note/accord labels,
+// see apps/aurelian/src/merchant/taxonomyLabels.js) without this package
+// ever needing to know that vocabulary exists. These tests use synthetic
+// examples on purpose -- verifying the generic mechanism, not any host's
+// real vocabulary, which does not belong in this shared package.
+describe("createTranslator taxonomyLabels override", () => {
+  it("prefers a host-supplied taxonomy label over the built-in dictionaries", () => {
+    const translator = createTranslator("es-MX", { "taxonomy.marine": "Marino Personalizado" });
+
+    expect(translator.label("accords", "marine")).toBe("Marino Personalizado");
+  });
+
+  it("falls through to the built-in dictionary when the override doesn't cover a value", () => {
+    const translator = createTranslator("es-MX", { "taxonomy.marine": "Marino Personalizado" });
+
+    expect(translator.label("seasons", "winter")).toBe("Invierno");
+  });
+
+  it("defaults to an empty override map, changing nothing for a host that supplies none", () => {
+    const translator = createTranslator("es-MX");
+
+    expect(translator.label("seasons", "winter")).toBe("Invierno");
+    expect(translator.label("accords", "marine")).toBe("marine");
+  });
+
+  it("lets a caller supply a better fallback than the raw value when no translation exists anywhere", () => {
+    const translator = createTranslator("en-US");
+
+    expect(translator.label("notes", "seaNotes")).toBe("seaNotes");
+    expect(translator.label("notes", "seaNotes", "Sea Notes")).toBe("Sea Notes");
+  });
+});

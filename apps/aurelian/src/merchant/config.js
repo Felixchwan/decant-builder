@@ -2,12 +2,14 @@ import {
   buildLocalizedConfigOverrides,
   createBuilderConfig,
 } from "@discovery-box/builder/config";
+import { aurelianTaxonomyLabels } from "./taxonomyLabels.js";
 
 const locale = "es-MX";
 const localized = buildLocalizedConfigOverrides(locale);
 
 export const aurelianConfig = createBuilderConfig({
   ...localized,
+  taxonomyLabels: aurelianTaxonomyLabels,
   software: { name: "Decant Builder" },
   brand: {
     businessName: "Aurelian",

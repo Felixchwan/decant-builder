@@ -158,8 +158,8 @@ const BuilderPanel = forwardRef(function BuilderPanel({
   stickySummaryPortalTarget = null,
 }, ref) {
     const translator = useMemo(
-      () => createTranslator(builderConfig.locale),
-      [builderConfig.locale]
+      () => createTranslator(builderConfig.locale, builderConfig.taxonomyLabels),
+      [builderConfig.locale, builderConfig.taxonomyLabels]
     );
     const { t } = translator;
     const [hasSeenDiscoveryIntro, setHasSeenDiscoveryIntro] = useState(() => {
@@ -1220,7 +1220,7 @@ function ComposeMyBoxPanel({
   statusMessage,
   onOpenSetup,
 }) {
-  const translator = createTranslator(builderConfig.locale);
+  const translator = createTranslator(builderConfig.locale, builderConfig.taxonomyLabels);
   const { t } = translator;
 
   return (
@@ -1267,7 +1267,7 @@ function ComposerSetupModal({
   onCancel,
   onGenerate,
 }) {
-  const translator = createTranslator(builderConfig.locale);
+  const translator = createTranslator(builderConfig.locale, builderConfig.taxonomyLabels);
   const { t } = translator;
   const safeSettings = settings || {};
   const safeOptions = options || {};
@@ -1386,7 +1386,7 @@ function ComposerSetupModal({
             </div>
 
             <ComposePreferenceGroup
-              translator={createTranslator(builderConfig.locale)}
+              translator={createTranslator(builderConfig.locale, builderConfig.taxonomyLabels)}
               label={t("composer.season")}
               field="seasons"
               values={safeSettings.seasons}
@@ -1397,7 +1397,7 @@ function ComposerSetupModal({
             />
 
             <ComposePreferenceGroup
-              translator={createTranslator(builderConfig.locale)}
+              translator={createTranslator(builderConfig.locale, builderConfig.taxonomyLabels)}
               label={t("composer.occasion")}
               field="occasions"
               values={safeSettings.occasions}
@@ -1407,7 +1407,7 @@ function ComposerSetupModal({
             />
 
             <ComposePreferenceGroup
-              translator={createTranslator(builderConfig.locale)}
+              translator={createTranslator(builderConfig.locale, builderConfig.taxonomyLabels)}
               label={t("composer.vibe")}
               field="vibes"
               values={safeSettings.vibes}
@@ -1521,7 +1521,7 @@ function ComposerProposalModal({
   onCancel,
   onBack,
 }) {
-  const translator = createTranslator(builderConfig.locale);
+  const translator = createTranslator(builderConfig.locale, builderConfig.taxonomyLabels);
   const { t } = translator;
   useEffect(() => {
     function handleKeyDown(event) {
@@ -2969,7 +2969,7 @@ const CuratorBonusModule = forwardRef(function CuratorBonusModule(
   },
   ref
 ) {
-  const { t } = createTranslator(builderConfig.locale);
+  const { t } = createTranslator(builderConfig.locale, builderConfig.taxonomyLabels);
   const DISCOVERY_BONUS_TARGET_POINTS = builderConfig.curatorBonus.targetPoints;
   const CURATOR_BONUS_PREFERENCES = builderConfig.curatorBonus.preferences;
   const preferenceData = CURATOR_BONUS_PREFERENCES[preference];

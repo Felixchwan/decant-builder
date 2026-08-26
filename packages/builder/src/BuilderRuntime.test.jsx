@@ -86,3 +86,62 @@ describe("BuilderRuntime collapsible right-panel boundary", () => {
     expect(runtimeSource).not.toMatch(/isPanelCollapsed.*localStorage|localStorage.*[Pp]anelCollapse/);
   });
 });
+
+// Regression guard for a real Aurelian defect: the Accords section of the
+// fragrance details modal rendered `t("details.accords")` twice -- once as
+// the section's own <h4>, and again as DetailTagGroup's inner label span
+// (unlike the Profile section right above it, where each DetailTagGroup gets
+// its own distinct sub-label, e.g. "Seasons"/"Occasions"/"Vibes", none of
+// which repeat the section's own "Profile" heading). Fixed by making
+// DetailTagGroup's label optional and simply not passing one for Accords,
+// since the section heading alone already says everything the label would.
+describe("PerfumeDetailsModal accords section -- no duplicated heading", () => {
+  const accordsSectionIndex = runtimeSource.indexOf('<h4>{t("details.accords")}</h4>');
+  const accordsSectionSource = runtimeSource.slice(accordsSectionIndex, accordsSectionIndex + 220);
+
+  it("renders the Accords heading exactly once per section, not also as DetailTagGroup's label", () => {
+    expect(accordsSectionIndex).toBeGreaterThan(-1);
+    expect(accordsSectionSource).not.toMatch(/label=\{t\("details\.accords"\)\}/);
+    expect(accordsSectionSource).toMatch(/<DetailTagGroup assetResolver=\{assetResolver\} translator=\{translator\} values=\{perfume\.accords \|\| \[\]\} assetType="accords" \/>/);
+  });
+
+  it("keeps DetailTagGroup's label optional, rendering no label span at all when omitted", () => {
+    const componentIndex = runtimeSource.indexOf("function DetailTagGroup(");
+    const componentSource = runtimeSource.slice(componentIndex, componentIndex + 400);
+    expect(componentSource).toContain("{label && <span>{label}</span>}");
+  });
+
+  it("still gives the Profile section's three tag groups their own distinct sub-labels -- this fix narrows only the Accords duplication, not the established Profile pattern", () => {
+    const profileSectionIndex = runtimeSource.indexOf('<h4>{t("details.profile")}</h4>');
+    const profileSectionSource = runtimeSource.slice(profileSectionIndex, profileSectionIndex + 500);
+    expect(profileSectionSource).toContain('label={t("details.seasons")}');
+    expect(profileSectionSource).toContain('label={t("details.occasions")}');
+    expect(profileSectionSource).toContain('label={t("details.vibes")}');
+  });
+});
+
+// Regression guard for a real Aurelian defect: note pills in the fragrance
+// details modal (DetailNotePill) rendered the catalog's raw English
+// `note.name` directly, with no locale lookup at all -- unlike accord chips
+// (DetailMetadataChip), which already resolved through
+// `translator.label(assetType, value)`. Notes now go through the exact same
+// shared taxonomy label mechanism, keyed by the note's canonical id. This
+// package carries no note/accord vocabulary itself -- a host supplies its
+// own display labels via createBuilderConfig's `taxonomyLabels` (see
+// createTranslator's own tests for that generic override mechanism); absent
+// one, `label()`'s explicit fallback argument (the note's own catalog name,
+// not the generic raw-id fallback) preserves today's English display.
+describe("PerfumeDetailsModal note pills -- localized through the shared taxonomy label, not raw catalog English", () => {
+  it("resolves note display names via translator.label(\"notes\", noteId, fallback), passing the catalog name as the fallback", () => {
+    const pillIndex = runtimeSource.indexOf("function DetailNotePill(");
+    const pillSource = runtimeSource.slice(pillIndex, pillIndex + 900);
+    expect(pillSource).toContain("const noteFallback = note?.name || formatLabel(noteId);");
+    expect(pillSource).toContain('translator?.label?.("notes", noteId, noteFallback) || noteFallback');
+  });
+
+  it("threads translator into every DetailNoteGroup call site (general notes and all three pyramid tiers)", () => {
+    const notesSectionIndex = runtimeSource.indexOf('<h4>{t("details.notes")}</h4>');
+    const notesSectionSource = runtimeSource.slice(notesSectionIndex, notesSectionIndex + 1300);
+    expect((notesSectionSource.match(/translator=\{translator\}/g) || [])).toHaveLength(4);
+  });
+});

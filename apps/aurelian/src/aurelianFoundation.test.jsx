@@ -393,4 +393,17 @@ describe("Aurelian application foundation", () => {
     expect(mainSource).not.toMatch(/VITE_MERCHANT|selectMerchantApp|Aurelian/);
     expect(() => readFileSync(join(REPOSITORY_ROOT, "src", "app", "AurelianApp.jsx"), "utf8")).toThrow();
   });
+
+  // Regression guard for a real defect: the catalog card's title (and the
+  // brand name directly above it) rendered left-aligned by plain block-text
+  // default, visually mismatched against the centered bottle image above
+  // them -- neither line had ever had explicit centering (confirmed via full
+  // git-history review of this rule), so this restores the coherent,
+  // centered look for both lines together rather than centering only the
+  // title and leaving the brand name looking newly inconsistent beneath it.
+  it("centers the catalog card title and its brand name to match the centered bottle image above them", () => {
+    const stylesheet = readFileSync(join(APP_ROOT, "src", "app", "globals.css"), "utf8");
+    expect(stylesheet).toMatch(/\.product-card h2\s*\{[^}]*text-align:center/);
+    expect(stylesheet).toMatch(/\.product-card \.eyebrow\s*\{[^}]*text-align:center/);
+  });
 });

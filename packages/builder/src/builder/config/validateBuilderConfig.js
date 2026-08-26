@@ -25,6 +25,7 @@ function isPlainObject(value) {
 
 export function validateBuilderConfig(config) {
   assertPath(SUPPORTED_LOCALES.includes(config.locale), "locale", "must be a supported locale");
+  assertPath(isPlainObject(config.taxonomyLabels), "taxonomyLabels", "must be an object");
   assertPath(isNonEmptyString(config.software.name), "software.name", "must be a non-empty string");
   assertPath(isNonEmptyString(config.brand.businessName), "brand.businessName", "must be a non-empty string");
   assertPath(isPositiveNumber(config.commerce.pointValue), "commerce.pointValue", "must be a positive number");
