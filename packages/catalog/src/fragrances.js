@@ -3159,11 +3159,6 @@ const DEFAULT_SEASON_WEIGHTS = {
 // scoring it 0), never inferred from top/middle/base/general pyramid
 // position, and never required to sum to anything.
 //
-// Seeded here with exactly one representative fragrance (id 1) and a
-// partial pair of scores, drawn from its real topNotes, purely to exercise
-// the validation rules in catalogReferenceIntegrity.test.js end to end.
-// These are placeholder illustrations, not curated editorial judgments --
-// broad catalog population is a separate, later effort.
 // Exported (from this source file only -- NOT re-exported through
 // index.js/the public package surface, see catalogPackageBoundary.test.js)
 // so catalogReferenceIntegrity.test.js can validate it directly. Reading it
@@ -3171,8 +3166,40 @@ const DEFAULT_SEASON_WEIGHTS = {
 // typo'd/orphaned fragrance-id key (an unmatched numeric key just never
 // gets picked up by the `.map()` below), so the raw map itself must be the
 // thing under test for the "every prominence fragrance ID exists" rule.
+//
+// Composer Phase 2C: first real editorial seed batch (11 fragrances,
+// deliberately not optimized for catalog coverage -- chosen for clearly
+// recognizable, well-documented signature notes across varied scent
+// profiles, including one generalNotes-only fragrance to exercise that
+// containment path too). Each fragrance scores only its handful of
+// meaningfully perceptible/editorially defining notes, never every
+// canonical note in its pyramid.
+//
+// Editorial rule: a score represents our best estimate of how strongly a
+// note contributes to the fragrance's actual PERCEPTUAL identity --
+// never assigned from pyramid position, the fragrance's name, or textual
+// consensus alone. When confidence is insufficient, the note stays
+// unscored rather than guessed.
+//   9-10 = defining/signature
+//   7-8  = very evident
+//   4-6  = clearly perceptible
+//   1-3  = secondary but identifiable
+//   (absent key) = intentionally unscored
+//
+// See packages/catalog/tests/noteProminenceSeedBatch.test.js for the
+// narrow regression coverage of exactly this batch.
 export const NOTE_PROMINENCE_BY_ID = {
-  1: { bergamot: 8, jasmine: 5 },
+  1: { seaNotes: 10, calone: 9, bergamot: 7, jasmine: 5, whiteMusk: 4 }, // Acqua di Gio EDT
+  5: { lavender: 9, vanilla: 8, mint: 6, tonkaBean: 5 }, // Le Male
+  111: { orange: 8, vetiver: 8, grapefruit: 7, cedar: 6, pepper: 4 }, // Terre d'Hermès EDT
+  118: { cardamom: 9, coumarin: 6, lavender: 5, vetiver: 3 }, // La Nuit de L'Homme
+  202: { ambroxan: 9, bergamot: 7, sichuanPepper: 6, vanilla: 5 }, // Sauvage EDP
+  208: { iris: 9, neroli: 6, amber: 5, carrotSeeds: 3 }, // Prada L'Homme
+  303: { akigalawood: 10, ambroxan: 6, basil: 4 }, // Bois Imperial (generalNotes)
+  304: { madagascarVanilla: 10, cinnamon: 7, tonkaBean: 6, incense: 4 }, // Divine Vanille
+  401: { greenTea: 9, blackCurrant: 7, bergamot: 5, musk: 5 }, // Silver Mountain Water
+  404: { apple: 8, lavender: 8, vanilla: 7, cardamom: 4, coumarin: 4 }, // Layton
+  500: { ink: 9, incense: 7, seaSalt: 6, ambergris: 6 }, // Squid
 };
 
 const EMPTY_NOTE_PROMINENCE = Object.freeze({});
