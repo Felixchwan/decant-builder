@@ -277,7 +277,8 @@
 :where(.builder-scope).builder-theme-root--custom .compose-box-header button,
 :where(.builder-scope).builder-theme-root--custom .order-prep-actions button,
 :where(.builder-scope).builder-theme-root--custom .seller-order-summary button,
-:where(.builder-scope).builder-theme-root--custom .recommendation-actions button {
+:where(.builder-scope).builder-theme-root--custom .recommendation-actions button,
+:where(.builder-scope).builder-theme-root--custom .composer-proposal-add-button {
   border-color: color-mix(
     in srgb,
     var(--builder-color-accent, #4ade80) 42%,
@@ -5764,8 +5765,15 @@
   font-weight: 850;
 }
 
-:where(.builder-scope) .composer-proposal-item-state {
+:where(.builder-scope) .composer-proposal-item-actions {
   flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+}
+
+:where(.builder-scope) .composer-proposal-item-state {
   border-radius: 999px;
   padding: 4px 8px;
   background: color-mix(in srgb, var(--builder-color-accent, #86efac) 9%, transparent);
@@ -5774,6 +5782,22 @@
   font-weight: 900;
   letter-spacing: 0.06em;
   text-transform: uppercase;
+}
+
+:where(.builder-scope) .composer-proposal-add-button {
+  border: 0;
+  border-radius: 999px;
+  padding: 7px 11px;
+  background: var(--builder-color-accent, #4ade80);
+  color: #052e16;
+  font-size: var(--builder-unit-072);
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+:where(.builder-scope) .composer-proposal-add-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.48;
 }
 
 :where(.builder-scope) .composer-proposal-reasons {
@@ -8707,11 +8731,15 @@
     justify-self: center;
   }
 
-  :where(.builder-scope) .composer-proposal-item-state {
+  :where(.builder-scope) .composer-proposal-item-actions {
     grid-column: 2;
     width: fit-content;
     max-width: 100%;
     justify-self: start;
+    align-items: flex-start;
+  }
+
+  :where(.builder-scope) .composer-proposal-item-state {
     white-space: nowrap;
   }
 
@@ -8719,7 +8747,7 @@
     grid-template-columns: minmax(0, 1fr);
   }
 
-  :where(.builder-scope) .composer-proposal-item.no-alternatives .composer-proposal-item-state {
+  :where(.builder-scope) .composer-proposal-item.no-alternatives .composer-proposal-item-actions {
     grid-column: 1;
   }
 

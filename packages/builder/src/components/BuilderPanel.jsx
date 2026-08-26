@@ -1171,6 +1171,9 @@ const BuilderPanel = forwardRef(function BuilderPanel({
           onApply={onApplyComposerProposal}
           onMoveAlternative={onMoveComposerProposalAlternative}
           onCancel={onCancelComposerProposal}
+          onAddPerfume={onAddPerfume}
+          selectedPerfumeIds={selectedPerfumeIds}
+          isBoxFull={totalSlots >= maxSelectableSlots}
           onBack={() => {
             handleOpenComposerSetup();
             onCancelComposerProposal();
@@ -1519,6 +1522,9 @@ function ComposerProposalModal({
   onApply,
   onMoveAlternative,
   onCancel,
+  onAddPerfume,
+  selectedPerfumeIds,
+  isBoxFull,
   onBack,
 }) {
   const translator = createTranslator(builderConfig.locale, builderConfig.taxonomyLabels);
@@ -1650,6 +1656,12 @@ function ComposerProposalModal({
                     .slice(0, 3);
                   const hasTradeoff =
                     !isComposerPick && (gainedLabels.length > 0 || lostLabels.length > 0);
+                  const isAlreadyAdded = selectedPerfumeIds.has(perfume.id);
+                  const addButtonLabel = isAlreadyAdded
+                    ? t("general.added")
+                    : isBoxFull
+                      ? t("general.boxFull")
+                      : t("general.addToBox");
 
                   return (
                     <div
@@ -1723,9 +1735,19 @@ function ComposerProposalModal({
                         </button>
                       )}
 
-                      <span className="composer-proposal-item-state">
-                        {item.preserved ? t("composer.preserved") : isComposerPick ? t("composer.newComposerPick") : t("composer.newAlternative")}
-                      </span>
+                      <div className="composer-proposal-item-actions">
+                        <span className="composer-proposal-item-state">
+                          {item.preserved ? t("composer.preserved") : isComposerPick ? t("composer.newComposerPick") : t("composer.newAlternative")}
+                        </span>
+                        <button
+                          type="button"
+                          className="composer-proposal-add-button"
+                          onClick={() => onAddPerfume(perfume)}
+                          disabled={isAlreadyAdded || isBoxFull}
+                        >
+                          {addButtonLabel}
+                        </button>
+                      </div>
                     </div>
                   );
                 })}

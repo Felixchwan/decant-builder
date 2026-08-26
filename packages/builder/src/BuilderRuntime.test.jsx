@@ -131,6 +131,48 @@ describe("PerfumeDetailsModal accords section -- no duplicated heading", () => {
 // createTranslator's own tests for that generic override mechanism); absent
 // one, `label()`'s explicit fallback argument (the note's own catalog name,
 // not the generic raw-id fallback) preserves today's English display.
+// Composer Phase 1 follow-up: individually consuming one of a proposal's own
+// suggestions must not disable the whole-proposal Apply action. The fix
+// scopes the staleness comparison key to exclude the current proposal's own
+// addedPerfumes ids from the live box before comparing, rather than
+// suppressing staleness detection outright -- a genuinely invalidating
+// change (an unrelated selection edit, or a changed Composer input) must
+// still be caught. See composerIndividualSelection.test.js for behavioral
+// coverage of the underlying primitives; this is a source-contract check
+// since BuilderRuntime's App component is never rendered directly in this
+// package's own tests (see the file-level comment above).
+describe("Composer proposal staleness: individual consumption vs. genuine invalidation", () => {
+  const composerInputKeyIndex = runtimeSource.indexOf("const composerProposalAddedIds = useMemo(");
+  const composerInputKeySource = runtimeSource.slice(composerInputKeyIndex, composerInputKeyIndex + 1300);
+
+  it("derives the excluded-id set from the current proposal's own addedPerfumes, not from preservedPerfumes or the full collection", () => {
+    expect(composerInputKeySource).toContain(
+      "new Set((composerProposal?.addedPerfumes || []).map((perfume) => perfume.id)),"
+    );
+  });
+
+  it("filters the live selectedPerfumes by that excluded-id set before building the comparison key", () => {
+    expect(composerInputKeySource).toContain(
+      "selectedPerfumes.filter((perfume) => !composerProposalAddedIds.has(perfume.id)),"
+    );
+    expect(composerInputKeySource).toContain("selectedPerfumes: selectedPerfumesForComposerStaleCheck,");
+  });
+
+  it("keeps handleComposeMyBox generating new proposals from the raw, unfiltered selectedPerfumes -- proposal generation/scoring itself is untouched", () => {
+    const composeStart = runtimeSource.indexOf("function handleComposeMyBox()");
+    const composeSource = runtimeSource.slice(composeStart, composeStart + 1000);
+    expect(composeSource).toContain("buildComposerBoxProposal({\n          selectedPerfumes,");
+    expect(composeSource).not.toContain("selectedPerfumesForComposerStaleCheck");
+  });
+
+  it("leaves handleApplyComposerProposal's own full-collection-replace body untouched -- it still maps proposal.apply.collectionIds through the live catalog rather than merging/appending", () => {
+    const applyStart = runtimeSource.indexOf("function handleApplyComposerProposal()");
+    const applySource = runtimeSource.slice(applyStart, applyStart + 700);
+    expect(applySource).toContain("composerProposal.apply.collectionIds\n      .map((perfumeId) => catalogById.get(perfumeId))");
+    expect(applySource).toContain("setSelectedPerfumes(nextSelectedPerfumes);");
+  });
+});
+
 describe("PerfumeDetailsModal note pills -- localized through the shared taxonomy label, not raw catalog English", () => {
   it("resolves note display names via translator.label(\"notes\", noteId, fallback), passing the catalog name as the fallback", () => {
     const pillIndex = runtimeSource.indexOf("function DetailNotePill(");

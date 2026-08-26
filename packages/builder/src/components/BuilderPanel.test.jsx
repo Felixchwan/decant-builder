@@ -1218,6 +1218,65 @@ describe("Docked summary collapse toggle: chevron points toward its own action",
   });
 });
 
+// Composer Phase 1: individual suggestion selection. ComposerProposalModal
+// itself can't be rendered under renderToStaticMarkup (it's only mounted
+// once both composerProposal and a real portalRoot are present, and
+// createPortal has no server-side representation -- same reason the
+// season-pill tests above use source-contract checks instead of real
+// rendering). These tests confirm the per-suggestion "Add" action reuses
+// BuilderPanel's existing onAddPerfume/selectedPerfumeIds -- the same prop
+// and the same live-membership Set that RecommendationCard's own isAdded
+// state already uses elsewhere in this file -- rather than introducing a
+// parallel mutation path or a separate "added" flag. Behavioral coverage
+// (independent add, no sibling add, no duplicate, restore-on-remove, safe
+// whole-proposal acceptance after partial individual adds) lives in
+// composerIndividualSelection.test.js, which exercises the real
+// buildComposerBoxProposal + selectionState functions this wiring calls.
+describe("Composer proposal: individual suggestion Add action", () => {
+  const modalStart = normalizedPanelSource.indexOf("function ComposerProposalModal(");
+  const modalEnd = normalizedPanelSource.indexOf("function buildVisibleProposalItems(");
+  const modalSource = normalizedPanelSource.slice(modalStart, modalEnd);
+
+  it("accepts onAddPerfume, selectedPerfumeIds, and isBoxFull as plain props, not new BuilderRuntime-level state", () => {
+    const signatureSource = normalizedPanelSource.slice(modalStart, modalStart + 300);
+    expect(signatureSource).toContain("onAddPerfume,");
+    expect(signatureSource).toContain("selectedPerfumeIds,");
+    expect(signatureSource).toContain("isBoxFull,");
+  });
+
+  it("is called with BuilderPanel's own existing onAddPerfume prop and its existing selectedPerfumeIds memo -- the same values RecommendationCard's isAdded already reads -- not a newly invented prop", () => {
+    const callStart = normalizedPanelSource.indexOf("<ComposerProposalModal");
+    const callSource = normalizedPanelSource.slice(callStart, callStart + 500);
+    expect(callSource).toContain("onAddPerfume={onAddPerfume}");
+    expect(callSource).toContain("selectedPerfumeIds={selectedPerfumeIds}");
+    expect(callSource).toContain("isBoxFull={totalSlots >= maxSelectableSlots}");
+  });
+
+  it("derives each suggestion's already-added state from live selection membership (selectedPerfumeIds.has), not from the proposal's own frozen preserved/newlyAdded classification", () => {
+    expect(modalSource).toContain("const isAlreadyAdded = selectedPerfumeIds.has(perfume.id);");
+  });
+
+  it("calls onAddPerfume with the suggested perfume -- the exact same sanctioned mutation path used by every other in-panel Add action (DNA modal picks, RecommendationCard, hidden curator picks)", () => {
+    expect(modalSource).toContain("onClick={() => onAddPerfume(perfume)}");
+  });
+
+  it("disables the Add button once already added or once the box is full, and never on any other condition", () => {
+    expect(modalSource).toContain("disabled={isAlreadyAdded || isBoxFull}");
+  });
+
+  it("labels the action via the existing general.added/general.boxFull/general.addToBox keys -- the same three-state label RecommendationCard already uses -- introducing no new i18n keys", () => {
+    const labelStart = modalSource.indexOf("const addButtonLabel");
+    const labelSource = modalSource.slice(labelStart, labelStart + 240);
+    expect(labelSource).toContain('t("general.added")');
+    expect(labelSource).toContain('t("general.boxFull")');
+    expect(labelSource).toContain('t("general.addToBox")');
+  });
+
+  it("leaves the whole-proposal Apply action's own wiring untouched", () => {
+    expect(modalSource).toContain("onClick={onApply} disabled={!canApply}");
+  });
+});
+
 // Regression for the empty "+" vial slot's recommendation shortcut going
 // dead. The mechanism itself (onNextSlotRecommendation, wired all the way
 // through to handleNextSlotRecommendation's scroll+focus of the existing

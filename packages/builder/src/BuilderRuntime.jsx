@@ -326,10 +326,32 @@ const intentRecommendations = useMemo(() => {
 }, [initialRecommendationHint, perfumes, selectedPerfumes, notes, builderConfig]);
 const hasIntentRecommendations = intentRecommendations.length > 0;
 const composerBudget = parseComposerBudget(composerSettings.budget);
+// Individually adding (or removing) one of THIS proposal's own suggestions
+// is expected consumption, not a context change -- it must not be treated
+// the same as a genuinely invalidating edit (changing composer settings, the
+// catalog, or the box's pre-existing preserved contents). Composer's own
+// addedPerfumes already tracks exactly "this proposal's current suggestion
+// ids" (recomputed live as the user cycles alternatives -- see
+// buildComposerBoxProposal.js's rebuildProposalWithSelectedAlternatives), so
+// stripping those ids out of the live box before building the comparison key
+// makes the key invariant to individual add/remove of the proposal's own
+// suggestions, while any other selection change (an unrelated manual add, or
+// removing a preserved item) still changes the key and is still caught as
+// stale. This key is used only for the staleness comparison below --
+// handleComposeMyBox generates new proposals from the raw, unfiltered
+// selectedPerfumes, exactly as before.
+const composerProposalAddedIds = useMemo(
+  () => new Set((composerProposal?.addedPerfumes || []).map((perfume) => perfume.id)),
+  [composerProposal]
+);
+const selectedPerfumesForComposerStaleCheck = useMemo(
+  () => selectedPerfumes.filter((perfume) => !composerProposalAddedIds.has(perfume.id)),
+  [selectedPerfumes, composerProposalAddedIds]
+);
 const composerInputKey = useMemo(
   () =>
     buildComposerProposalInputKey({
-      selectedPerfumes,
+      selectedPerfumes: selectedPerfumesForComposerStaleCheck,
       excludedPerfumeIds: [],
       strategy: composerSettings.strategy,
       collectionStyle: composerSettings.collectionStyle,
@@ -345,7 +367,7 @@ const composerInputKey = useMemo(
       minimumPoints: composerMinimumPoints,
     }),
   [
-    selectedPerfumes,
+    selectedPerfumesForComposerStaleCheck,
     composerSettings,
     composerBudget,
     MAX_SELECTABLE_SLOTS,
