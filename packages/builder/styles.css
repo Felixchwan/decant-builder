@@ -5919,11 +5919,44 @@
   padding-right: 4px;
 }
 
+:where(.builder-scope) .note-explorer-results-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
 :where(.builder-scope) .note-explorer-results-heading {
   margin: 0;
   color: #ecfdf5;
   font-size: var(--builder-unit-090);
   font-weight: 900;
+}
+
+:where(.builder-scope) .note-explorer-sort {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 0 0 auto;
+}
+
+:where(.builder-scope) .note-explorer-sort span {
+  color: var(--builder-color-text-muted, #94a3b8);
+  font-size: var(--builder-unit-072);
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+:where(.builder-scope) .note-explorer-sort select {
+  min-width: 0;
+  border: 1px solid rgba(148, 163, 184, 0.24);
+  background: var(--builder-color-surface-elevated, rgba(15, 23, 42, 0.72));
+  color: var(--builder-color-text, #ecfdf5);
+  border-radius: 999px;
+  padding: 6px 10px;
+  font-size: var(--builder-unit-078);
 }
 
 :where(.builder-scope) .note-explorer-results-list {

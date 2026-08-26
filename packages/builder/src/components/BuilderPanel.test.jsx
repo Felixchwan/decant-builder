@@ -1370,6 +1370,58 @@ describe("Composer Phase 2A: Note Explorer", () => {
   });
 });
 
+// Composer Phase 2D: Note Explorer prominence sorting. sortNoteExplorerMatchesByProminence
+// itself (containment preservation, descending scored-first ordering, tie-break/
+// unscored-order stability, no-fabrication) is exercised directly against real
+// data shapes in buildNoteExplorerViewModel.test.js; these are wiring-only
+// source-contract checks, same constraint as the Phase 2A block above.
+describe("Composer Phase 2D: Note Explorer prominence sorting", () => {
+  const modalStart = normalizedPanelSource.indexOf("function NoteExplorerModal(");
+  const modalEnd = normalizedPanelSource.indexOf("function DiscoveryBoxCoachmark(");
+  const modalSource = normalizedPanelSource.slice(modalStart, modalEnd);
+
+  it("defaults sortOrder to catalog order, not prominence", () => {
+    expect(modalSource).toContain('const [sortOrder, setSortOrder] = useState("catalog");');
+  });
+
+  it("only reorders the already-computed containment matches -- never re-derives or re-filters them, and never touches catalogPerfumes directly", () => {
+    const displayedStart = modalSource.indexOf("const displayedMatches = useMemo(");
+    const displayedSource = modalSource.slice(displayedStart, displayedStart + 260);
+
+    expect(displayedSource).toContain('sortOrder === "prominence"');
+    expect(displayedSource).toContain("sortNoteExplorerMatchesByProminence(matches, selectedNoteId)");
+    expect(displayedSource).toContain(": matches");
+    expect(displayedSource).not.toContain("catalogPerfumes");
+  });
+
+  it("renders the result list from displayedMatches, not the raw containment matches, so the sort choice actually takes effect", () => {
+    expect(modalSource).toContain("{displayedMatches.map((perfume) => (");
+    expect(modalSource).not.toMatch(/\{matches\.map\(/);
+  });
+
+  it("offers exactly two sort options -- catalog order (the default) and most prominent -- through the existing translator, no new i18n mechanism", () => {
+    const selectStart = modalSource.indexOf('value={sortOrder}');
+    const selectSource = modalSource.slice(selectStart, selectStart + 400);
+
+    expect(selectSource).toContain('onChange={(event) => setSortOrder(event.target.value)}');
+    expect(selectSource).toContain('<option value="catalog">{t("noteExplorer.sortCatalogOrder")}</option>');
+    expect(selectSource).toContain('<option value="prominence">{t("noteExplorer.sortMostProminent")}</option>');
+  });
+
+  it("never renders a raw numeric prominence value or a qualitative Dominant/Prominent/Present/Secondary label", () => {
+    expect(modalSource).not.toMatch(/noteProminence\[[^\]]+\]\s*[},<]/);
+    // Word-boundary matches only -- deliberately does not flag
+    // "sortMostProminent", the new sort-option key name, as a qualitative
+    // label being displayed to the user.
+    expect(modalSource).not.toMatch(/\bDominant\b|\bProminent\b|\bPresent\b|\bSecondary\b/);
+  });
+
+  it("keeps the sort control visually consistent with the existing modal -- reuses the established translator/label-row pattern, not a new control family", () => {
+    expect(modalSource).toContain('className="note-explorer-sort"');
+    expect(modalSource).toContain('className="note-explorer-results-header"');
+  });
+});
+
 // Regression for the empty "+" vial slot's recommendation shortcut going
 // dead. The mechanism itself (onNextSlotRecommendation, wired all the way
 // through to handleNextSlotRecommendation's scroll+focus of the existing

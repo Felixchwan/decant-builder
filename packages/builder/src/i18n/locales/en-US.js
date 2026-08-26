@@ -572,6 +572,9 @@ export const enUS = {
   "noteExplorer.foundInOne": "Found in 1 fragrance",
   "noteExplorer.foundInMany": "Found in {count} fragrances",
   "noteExplorer.noteAria": "{note}, found in {count} {fragranceWord}",
+  "noteExplorer.sortLabel": "Sort",
+  "noteExplorer.sortCatalogOrder": "Catalog order",
+  "noteExplorer.sortMostProminent": "Most prominent",
 
   "details.close": "Close fragrance details",
   "details.view": "View notes & details",

@@ -574,6 +574,9 @@ export const esMX = {
   "noteExplorer.foundInOne": "Presente en 1 fragancia",
   "noteExplorer.foundInMany": "Presente en {count} fragancias",
   "noteExplorer.noteAria": "{note}, presente en {count} {fragranceWord}",
+  "noteExplorer.sortLabel": "Ordenar",
+  "noteExplorer.sortCatalogOrder": "Orden del catálogo",
+  "noteExplorer.sortMostProminent": "Más prominente",
 
   "details.close": "Cerrar detalles de fragancia",
   "details.view": "Ver notas y detalles",

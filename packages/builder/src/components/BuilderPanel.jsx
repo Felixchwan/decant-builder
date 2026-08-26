@@ -21,6 +21,7 @@ import { buildScentLibraryViewModel } from "../builder/internal/intelligence/bui
 import {
   buildNoteExplorerNoteOptions,
   getNoteExplorerMatches,
+  sortNoteExplorerMatchesByProminence,
 } from "../builder/internal/intelligence/buildNoteExplorerViewModel.js";
 import { isCuratorBonusUnlocked as deriveCuratorBonusUnlocked } from "../builder/internal/curatorBonus/isCuratorBonusUnlocked.js";
 import { buildBuilderThemeStyle, hasCustomBuilderTheme } from "../builder/theme/builderTheme.js";
@@ -1871,6 +1872,7 @@ function NoteExplorerModal({
   const { t } = translator;
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedNoteId, setSelectedNoteId] = useState(null);
+  const [sortOrder, setSortOrder] = useState("catalog");
 
   useEffect(() => {
     function handleKeyDown(event) {
@@ -1897,6 +1899,13 @@ function NoteExplorerModal({
   const matches = useMemo(
     () => getNoteExplorerMatches({ catalogPerfumes, noteId: selectedNoteId }),
     [catalogPerfumes, selectedNoteId]
+  );
+  const displayedMatches = useMemo(
+    () =>
+      sortOrder === "prominence"
+        ? sortNoteExplorerMatchesByProminence(matches, selectedNoteId)
+        : matches,
+    [matches, sortOrder, selectedNoteId]
   );
 
   const handleSelectNote = (noteId) => {
@@ -1957,13 +1966,25 @@ function NoteExplorerModal({
               <p className="note-explorer-empty-message">{t("noteExplorer.noResults")}</p>
             ) : (
               <>
-                <h4 className="note-explorer-results-heading">
-                  {t("noteExplorer.resultsHeading", {
-                    note: translator.label("notes", selectedNoteOption.noteId, selectedNoteOption.name),
-                  })}
-                </h4>
+                <div className="note-explorer-results-header">
+                  <h4 className="note-explorer-results-heading">
+                    {t("noteExplorer.resultsHeading", {
+                      note: translator.label("notes", selectedNoteOption.noteId, selectedNoteOption.name),
+                    })}
+                  </h4>
+                  <label className="note-explorer-sort">
+                    <span>{t("noteExplorer.sortLabel")}</span>
+                    <select
+                      value={sortOrder}
+                      onChange={(event) => setSortOrder(event.target.value)}
+                    >
+                      <option value="catalog">{t("noteExplorer.sortCatalogOrder")}</option>
+                      <option value="prominence">{t("noteExplorer.sortMostProminent")}</option>
+                    </select>
+                  </label>
+                </div>
                 <div className="note-explorer-results-list">
-                  {matches.map((perfume) => (
+                  {displayedMatches.map((perfume) => (
                     <NoteExplorerResultRow
                       key={perfume.id}
                       perfume={perfume}

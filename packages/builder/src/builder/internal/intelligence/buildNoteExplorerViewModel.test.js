@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   buildNoteExplorerNoteOptions,
   getNoteExplorerMatches,
+  sortNoteExplorerMatchesByProminence,
 } from "./buildNoteExplorerViewModel.js";
 
 // Composer Phase 2A: Note Explorer regression coverage. Containment-based
@@ -124,5 +125,83 @@ describe("getNoteExplorerMatches", () => {
 
   it("returns an empty array for a note nothing in the catalog carries", () => {
     expect(getNoteExplorerMatches({ catalogPerfumes: catalog, noteId: "saffron" })).toEqual([]);
+  });
+});
+
+// Composer Phase 2D: prominence sorting is a strictly separate, opt-in
+// reordering of an already-computed match list -- it never changes which
+// perfumes appear (containment stays exactly getNoteExplorerMatches' job),
+// only the order they're presented in.
+describe("sortNoteExplorerMatchesByProminence", () => {
+  // Catalog order is A, B, C, D, E. A and B are deliberately tied at the
+  // same score to exercise the tie-break rule; C and E are both unscored
+  // for amber (D has a real but lower score) to exercise unscored-order
+  // preservation with a gap between them.
+  const perfumeA = perfume(1, { name: "A", noteProminence: { amber: 9 } });
+  const perfumeB = perfume(2, { name: "B", noteProminence: { amber: 9 } });
+  const perfumeC = perfume(3, { name: "C", noteProminence: {} });
+  const perfumeD = perfume(4, { name: "D", noteProminence: { amber: 5 } });
+  const perfumeE = perfume(5, { name: "E", noteProminence: {} });
+  const amberMatches = [perfumeA, perfumeB, perfumeC, perfumeD, perfumeE];
+
+  it("places every scored match before every unscored match", () => {
+    const sorted = sortNoteExplorerMatchesByProminence(amberMatches, "amber");
+    const scoredNames = ["A", "B", "D"];
+    const sortedNames = sorted.map((p) => p.name);
+
+    expect(sortedNames.slice(0, 3).sort()).toEqual(scoredNames.sort());
+    expect(sortedNames.slice(3)).toEqual(["C", "E"]);
+  });
+
+  it("sorts scored matches descending by perfume.noteProminence[noteId]", () => {
+    const sorted = sortNoteExplorerMatchesByProminence(amberMatches, "amber");
+    expect(sorted.map((p) => p.name)).toEqual(["A", "B", "D", "C", "E"]);
+  });
+
+  it("preserves catalog order for tied scores (A and B both score 9, A came first)", () => {
+    const sorted = sortNoteExplorerMatchesByProminence(amberMatches, "amber");
+    const indexOfA = sorted.findIndex((p) => p.name === "A");
+    const indexOfB = sorted.findIndex((p) => p.name === "B");
+    expect(indexOfA).toBeLessThan(indexOfB);
+  });
+
+  it("preserves catalog order among unscored matches (C came before E)", () => {
+    const sorted = sortNoteExplorerMatchesByProminence(amberMatches, "amber");
+    const indexOfC = sorted.findIndex((p) => p.name === "C");
+    const indexOfE = sorted.findIndex((p) => p.name === "E");
+    expect(indexOfC).toBeLessThan(indexOfE);
+  });
+
+  it("treats a missing score as unscored, never as zero -- an unscored perfume never outranks or is conflated with a genuinely low explicit score", () => {
+    const zeroIsUnscoredCase = [
+      perfume(10, { name: "Unscored", noteProminence: {} }),
+      perfume(11, { name: "ScoredOne", noteProminence: { iris: 1 } }),
+    ];
+    const sorted = sortNoteExplorerMatchesByProminence(zeroIsUnscoredCase, "iris");
+    expect(sorted.map((p) => p.name)).toEqual(["ScoredOne", "Unscored"]);
+  });
+
+  it("never hides a matching fragrance, however sparse the prominence data -- same ids in, same ids out", () => {
+    const sorted = sortNoteExplorerMatchesByProminence(amberMatches, "amber");
+    expect(new Set(sorted.map((p) => p.id))).toEqual(new Set(amberMatches.map((p) => p.id)));
+    expect(sorted).toHaveLength(amberMatches.length);
+  });
+
+  it("does not mutate the input array", () => {
+    const original = [...amberMatches];
+    sortNoteExplorerMatchesByProminence(amberMatches, "amber");
+    expect(amberMatches).toEqual(original);
+  });
+
+  it("returns matches unchanged (still a new array) when no note is selected", () => {
+    const sorted = sortNoteExplorerMatchesByProminence(amberMatches, null);
+    expect(sorted).toEqual(amberMatches);
+    expect(sorted).not.toBe(amberMatches);
+  });
+
+  it("never infers a score from top/middle/base/general pyramid position -- a perfume with the note only in its pyramid and no noteProminence entry is always unscored", () => {
+    const pyramidOnly = perfume(20, { name: "PyramidOnly", topNotes: ["oud"], noteProminence: {} });
+    const sorted = sortNoteExplorerMatchesByProminence([pyramidOnly], "oud");
+    expect(sorted).toEqual([pyramidOnly]);
   });
 });
