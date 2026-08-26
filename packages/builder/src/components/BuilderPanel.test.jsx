@@ -1277,6 +1277,99 @@ describe("Composer proposal: individual suggestion Add action", () => {
   });
 });
 
+// Composer Phase 2A: Note Explorer. Same source-contract constraint as
+// ComposerProposalModal above (createPortal has no server-render
+// representation, and the modal only mounts once isNoteExplorerOpen and a
+// real portalRoot are both present) -- behavioral coverage of note
+// membership/ordering lives in buildNoteExplorerViewModel.test.js, which
+// exercises the real view-model functions this component calls. These tests
+// confirm the wiring: catalog-wide (not box-scoped) data source, the exact
+// same sanctioned onAddPerfume/selectedPerfumeIds path Composer Phase 1
+// already established, and localization through the existing
+// translator.label taxonomy mechanism.
+describe("Composer Phase 2A: Note Explorer", () => {
+  const modalStart = normalizedPanelSource.indexOf("function NoteExplorerModal(");
+  const modalEnd = normalizedPanelSource.indexOf("function DiscoveryBoxCoachmark(");
+  const modalSource = normalizedPanelSource.slice(modalStart, modalEnd);
+
+  it("exists as its own local, opt-in mode (isNoteExplorerOpen), alongside -- not replacing -- the existing Compose My Box setup/proposal state", () => {
+    expect(normalizedPanelSource).toContain(
+      "const [isNoteExplorerOpen, setIsNoteExplorerOpen] = useState(false);"
+    );
+    expect(normalizedPanelSource).toContain("const [isComposerSetupOpen, setIsComposerSetupOpen] = useState(false);");
+  });
+
+  it("adds a distinct Explore entry point next to Compose My Box, not a replacement for it", () => {
+    const panelStart = normalizedPanelSource.indexOf("function ComposeMyBoxPanel(");
+    const panelEnd = normalizedPanelSource.indexOf("function ComposerSetupModal(");
+    const panelSource = normalizedPanelSource.slice(panelStart, panelEnd);
+
+    expect(panelSource).toContain('t("noteExplorer.openButton")');
+    expect(panelSource).toContain('t("composer.composeMyBox")');
+    expect(panelSource).toContain("onOpenNoteExplorer");
+  });
+
+  it("derives note options from the live, catalog-wide catalogPerfumes prop (not selectedPerfumes/the box), via buildNoteExplorerNoteOptions", () => {
+    expect(modalSource).toContain(
+      "buildNoteExplorerNoteOptions({ catalogPerfumes, notes })"
+    );
+    expect(modalSource).not.toContain("selectedPerfumes");
+  });
+
+  it("derives note matches for the selected note via getNoteExplorerMatches, the same containment-based view-model function -- no inline duplicate note-matching logic", () => {
+    expect(modalSource).toContain(
+      "getNoteExplorerMatches({ catalogPerfumes, noteId: selectedNoteId })"
+    );
+  });
+
+  it("reuses BuilderPanel's existing onAddPerfume/selectedPerfumeIds/isBoxFull -- the exact same sanctioned mutation path Composer Phase 1 established -- rather than a new one", () => {
+    const callStart = normalizedPanelSource.indexOf("<NoteExplorerModal");
+    const callSource = normalizedPanelSource.slice(callStart, callStart + 400);
+    expect(callSource).toContain("onAddPerfume={onAddPerfume}");
+    expect(callSource).toContain("selectedPerfumeIds={selectedPerfumeIds}");
+    expect(callSource).toContain("isBoxFull={totalSlots >= maxSelectableSlots}");
+  });
+
+  it("derives each result's already-added state from live selection membership, so removing it via the normal collection UI makes it addable again", () => {
+    expect(modalSource).toContain("isAlreadyAdded={selectedPerfumeIds.has(perfume.id)}");
+  });
+
+  it("calls onAddPerfume with the matched perfume and disables only for already-added/box-full, matching the Composer Phase 1 Add-button contract exactly", () => {
+    const rowStart = normalizedPanelSource.indexOf("function NoteExplorerResultRow(");
+    const rowSource = normalizedPanelSource.slice(rowStart, rowStart + 800);
+    expect(rowSource).toContain("onClick={() => onAddPerfume(perfume)}");
+    expect(rowSource).toContain("disabled={isAlreadyAdded || isBoxFull}");
+    expect(rowSource).toContain('t("general.added")');
+    expect(rowSource).toContain('t("general.boxFull")');
+    expect(rowSource).toContain('t("general.addToBox")');
+  });
+
+  it("resolves note display labels through the existing translator.label taxonomy mechanism, with the raw catalog name as fallback -- never a raw canonical id shown to the user", () => {
+    const buttonStart = normalizedPanelSource.indexOf("function NoteExplorerNoteButton(");
+    const buttonSource = normalizedPanelSource.slice(buttonStart, buttonStart + 500);
+    expect(buttonSource).toContain('translator?.label?.("notes", option.noteId, option.name)');
+  });
+
+  it("shows a localized empty state when no notes match the search text, without ever falling through to a blank or raw-id view", () => {
+    expect(modalSource).toContain('t("noteExplorer.noNotesFound")');
+  });
+
+  it("shows a localized prompt before any note is selected, and a distinct localized empty state when a selected note somehow has no matches", () => {
+    expect(modalSource).toContain('t("noteExplorer.selectNotePrompt")');
+    expect(modalSource).toContain('t("noteExplorer.noResults")');
+  });
+
+  it("normalizes note search text (case/diacritic-insensitive) the same way the main catalog search already does, rather than a new ad hoc comparison", () => {
+    expect(normalizedPanelSource).toContain("function normalizeNoteSearchText(value) {");
+    expect(normalizedPanelSource).toContain('.normalize("NFKD")');
+    expect(normalizedPanelSource).toContain(".replace(/\\p{Diacritic}/gu, \"\")");
+  });
+
+  it("introduces no Aurelian- or Discovery-Decants-specific vocabulary in the shared Builder component", () => {
+    expect(modalSource).not.toMatch(/Aurelian|Discovery Decants/i);
+  });
+});
+
 // Regression for the empty "+" vial slot's recommendation shortcut going
 // dead. The mechanism itself (onNextSlotRecommendation, wired all the way
 // through to handleNextSlotRecommendation's scroll+focus of the existing

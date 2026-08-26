@@ -5337,6 +5337,20 @@
   font-weight: 900;
 }
 
+:where(.builder-scope) .compose-box-header-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+:where(.builder-scope) .compose-box-header-actions button.secondary {
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  background: rgba(15, 23, 42, 0.48);
+  color: #d1d5db;
+}
+
 :where(.builder-scope) .composer-busy-status {
   margin: 10px 0 0;
   color: var(--builder-color-accent, #d9f99d);
@@ -5817,6 +5831,111 @@
   color: #cbd5e1;
   font-size: var(--builder-unit-090);
   line-height: 1.5;
+}
+
+:where(.builder-scope) .note-explorer-modal {
+  display: grid;
+  grid-template-rows: auto auto auto minmax(0, 1fr);
+  width: min(760px, 94vw);
+  max-height: min(760px, calc(100dvh - 48px));
+  overflow: hidden;
+}
+
+:where(.builder-scope) .note-explorer-search {
+  margin-top: 12px;
+}
+
+:where(.builder-scope) .note-explorer-search input {
+  width: 100%;
+  min-width: 0;
+  border: 1px solid rgba(148, 163, 184, 0.24);
+  background: var(--builder-color-surface-elevated, rgba(15, 23, 42, 0.72));
+  color: var(--builder-color-text, #ecfdf5);
+  border-radius: 999px;
+  padding: 9px 12px;
+}
+
+:where(.builder-scope) .note-explorer-search input::placeholder {
+  color: var(--builder-color-text-muted, #94a3b8);
+}
+
+:where(.builder-scope) .note-explorer-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+  gap: 16px;
+  margin-top: 14px;
+  min-height: 0;
+  overflow: hidden;
+}
+
+:where(.builder-scope) .note-explorer-notes-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 10px;
+  align-content: start;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+:where(.builder-scope) .note-explorer-note-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8px;
+  width: 100%;
+  min-width: 0;
+  border: 1px solid color-mix(in srgb, var(--builder-color-accent, #4ade80) 22%, transparent);
+  padding: 5px 9px 5px 5px;
+  background:
+    radial-gradient(circle at 10% 0, color-mix(in srgb, var(--builder-color-accent, #86efac) 10%, transparent), transparent 45%),
+    color-mix(in srgb, var(--builder-color-accent, #4ade80) 8%, transparent);
+  color: var(--builder-color-accent, #bbf7d0);
+  text-align: left;
+  transition:
+    border-color 160ms ease,
+    background-color 160ms ease,
+    box-shadow 160ms ease,
+    transform 160ms ease;
+}
+
+:where(.builder-scope) .note-explorer-note-button:hover,
+:where(.builder-scope) .note-explorer-note-button:focus-visible,
+:where(.builder-scope) .scent-library-note-shell.is-selected .note-explorer-note-button {
+  border-color: color-mix(in srgb, var(--builder-color-accent, #86efac) 42%, transparent);
+  background: color-mix(in srgb, var(--builder-color-accent, #4ade80) 13%, transparent);
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--builder-color-accent, #86efac) 6%, transparent),
+    0 10px 24px rgba(0, 0, 0, 0.18);
+  outline: none;
+  transform: translateY(-1px);
+}
+
+:where(.builder-scope) .note-explorer-results {
+  display: grid;
+  align-content: start;
+  gap: 10px;
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+:where(.builder-scope) .note-explorer-results-heading {
+  margin: 0;
+  color: #ecfdf5;
+  font-size: var(--builder-unit-090);
+  font-weight: 900;
+}
+
+:where(.builder-scope) .note-explorer-results-list {
+  display: grid;
+  gap: 8px;
+}
+
+:where(.builder-scope) .note-explorer-empty-message {
+  margin: 0;
+  color: #cbd5e1;
+  font-size: var(--builder-unit-086);
+  line-height: 1.45;
 }
 
 :where(.builder-scope) .review-finalize-status {
@@ -8666,6 +8785,20 @@
 
   :where(.builder-scope) .composer-setup-controls {
     grid-template-columns: 1fr;
+  }
+
+  :where(.builder-scope) .note-explorer-modal {
+    grid-template-rows: auto auto auto minmax(0, 1fr);
+    max-height: 92vh;
+  }
+
+  :where(.builder-scope) .note-explorer-body {
+    grid-template-columns: minmax(0, 1fr);
+    overflow-y: auto;
+  }
+
+  :where(.builder-scope) .note-explorer-notes-grid {
+    overflow-y: visible;
   }
 
   :where(.builder-scope) .composer-setup-field-row {

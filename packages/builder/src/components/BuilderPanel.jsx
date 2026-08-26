@@ -18,6 +18,10 @@ import {
   selectDnaExplorerDetail,
 } from "../builder/internal/intelligence/buildCollectionIntelligenceViewModel.js";
 import { buildScentLibraryViewModel } from "../builder/internal/intelligence/buildScentLibraryViewModel.js";
+import {
+  buildNoteExplorerNoteOptions,
+  getNoteExplorerMatches,
+} from "../builder/internal/intelligence/buildNoteExplorerViewModel.js";
 import { isCuratorBonusUnlocked as deriveCuratorBonusUnlocked } from "../builder/internal/curatorBonus/isCuratorBonusUnlocked.js";
 import { buildBuilderThemeStyle, hasCustomBuilderTheme } from "../builder/theme/builderTheme.js";
 import {
@@ -176,6 +180,7 @@ const BuilderPanel = forwardRef(function BuilderPanel({
     const [isNotesModalOpen, setIsNotesModalOpen] = useState(false);
     const [isFinalSummaryOpen, setIsFinalSummaryOpen] = useState(false);
     const [isComposerSetupOpen, setIsComposerSetupOpen] = useState(false);
+    const [isNoteExplorerOpen, setIsNoteExplorerOpen] = useState(false);
     const [isCollectionSnapshotOpen, setIsCollectionSnapshotOpen] = useState(false);
     const [selectedDnaAccord, setSelectedDnaAccord] = useState(null);
     const previousCuratorBonusUnlockedRef = useRef(false);
@@ -506,6 +511,10 @@ const BuilderPanel = forwardRef(function BuilderPanel({
         source: "composer",
       });
       setIsComposerSetupOpen(true);
+    };
+
+    const handleOpenNoteExplorer = () => {
+      setIsNoteExplorerOpen(true);
     };
 
     const handleOpenReview = () => {
@@ -925,6 +934,7 @@ const BuilderPanel = forwardRef(function BuilderPanel({
         isGenerating={isComposerGenerating}
         statusMessage={composerStatusMessage}
         onOpenSetup={handleOpenComposerSetup}
+        onOpenNoteExplorer={handleOpenNoteExplorer}
       />
 
       <div className="slot-bar">
@@ -1199,6 +1209,18 @@ const BuilderPanel = forwardRef(function BuilderPanel({
           }}
         />
       )}
+      {isNoteExplorerOpen && portalRoot && (
+        <NoteExplorerModal
+          builderConfig={builderConfig}
+          catalogPerfumes={catalogPerfumes}
+          notes={notes}
+          selectedPerfumeIds={selectedPerfumeIds}
+          isBoxFull={totalSlots >= maxSelectableSlots}
+          onAddPerfume={onAddPerfume}
+          portalRoot={portalRoot}
+          onClose={() => setIsNoteExplorerOpen(false)}
+        />
+      )}
     </aside>
   );
 });
@@ -1222,6 +1244,7 @@ function ComposeMyBoxPanel({
   isGenerating,
   statusMessage,
   onOpenSetup,
+  onOpenNoteExplorer,
 }) {
   const translator = createTranslator(builderConfig.locale, builderConfig.taxonomyLabels);
   const { t } = translator;
@@ -1238,9 +1261,14 @@ function ComposeMyBoxPanel({
           <h3>{t("composer.panelTitle")}</h3>
         </div>
 
-        <button type="button" onClick={onOpenSetup} disabled={isGenerating}>
-          {isGenerating ? t("composer.composing") : isBoxFull ? t("composer.reviewProposal") : t("composer.composeMyBox")}
-        </button>
+        <div className="compose-box-header-actions">
+          <button type="button" className="secondary" onClick={onOpenNoteExplorer}>
+            {t("noteExplorer.openButton")}
+          </button>
+          <button type="button" onClick={onOpenSetup} disabled={isGenerating}>
+            {isGenerating ? t("composer.composing") : isBoxFull ? t("composer.reviewProposal") : t("composer.composeMyBox")}
+          </button>
+        </div>
       </div>
       {isGenerating && (
         <p className="composer-busy-status" role="status">
@@ -1818,6 +1846,208 @@ function buildVisibleProposalItems(proposal) {
       };
     })
     .filter(Boolean);
+}
+
+// Composer Phase 2A: Note Explorer. Containment-based browse-by-note mode,
+// kept alongside (not replacing) the existing Compose My Box proposal flow.
+// Reuses the exact same sanctioned add path (onAddPerfume/selectedPerfumeIds)
+// every other "browse and add" surface in this file already uses (see
+// ComposerProposalModal, RecommendationCard), and the same note-image-with-
+// fallback and note-pill visual language already established by the Scent
+// Library above -- no new design language, no new mutation path, no new
+// note/perfume relationship data (buildNoteExplorerNoteOptions/
+// getNoteExplorerMatches derive everything live from catalogPerfumes/notes).
+function NoteExplorerModal({
+  builderConfig,
+  catalogPerfumes,
+  notes,
+  selectedPerfumeIds,
+  isBoxFull,
+  onAddPerfume,
+  portalRoot,
+  onClose,
+}) {
+  const translator = createTranslator(builderConfig.locale, builderConfig.taxonomyLabels);
+  const { t } = translator;
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedNoteId, setSelectedNoteId] = useState(null);
+
+  useEffect(() => {
+    function handleKeyDown(event) {
+      if (event.key === "Escape") {
+        onClose();
+      }
+    }
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [onClose]);
+
+  const noteOptions = useMemo(
+    () => buildNoteExplorerNoteOptions({ catalogPerfumes, notes }),
+    [catalogPerfumes, notes]
+  );
+
+  const normalizedQuery = normalizeNoteSearchText(searchQuery);
+  const filteredNoteOptions = normalizedQuery
+    ? noteOptions.filter((option) => normalizeNoteSearchText(option.name).includes(normalizedQuery))
+    : noteOptions;
+
+  const selectedNoteOption = noteOptions.find((option) => option.noteId === selectedNoteId) || null;
+  const matches = useMemo(
+    () => getNoteExplorerMatches({ catalogPerfumes, noteId: selectedNoteId }),
+    [catalogPerfumes, selectedNoteId]
+  );
+
+  const handleSelectNote = (noteId) => {
+    setSelectedNoteId((currentNoteId) => (currentNoteId === noteId ? null : noteId));
+  };
+
+  return renderOwnedPortal(
+    <div className="modal-overlay final-summary-overlay" onClick={onClose}>
+      <div
+        className="final-summary-modal note-explorer-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="note-explorer-title"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <div className="modal-header">
+          <div>
+            <span>{t("noteExplorer.eyebrow")}</span>
+            <h3 id="note-explorer-title">{t("noteExplorer.title")}</h3>
+          </div>
+
+          <button type="button" onClick={onClose}>{t("general.close")}</button>
+        </div>
+
+        <p className="composer-setup-intro">{t("noteExplorer.subtitle")}</p>
+
+        <div className="note-explorer-search">
+          <input
+            type="search"
+            value={searchQuery}
+            onChange={(event) => setSearchQuery(event.target.value)}
+            placeholder={t("noteExplorer.searchPlaceholder")}
+            aria-label={t("noteExplorer.searchPlaceholder")}
+          />
+        </div>
+
+        <div className="note-explorer-body">
+          {filteredNoteOptions.length === 0 ? (
+            <p className="note-explorer-empty-message">{t("noteExplorer.noNotesFound")}</p>
+          ) : (
+            <div className="notes-grid note-explorer-notes-grid">
+              {filteredNoteOptions.map((option) => (
+                <NoteExplorerNoteButton
+                  key={option.noteId}
+                  option={option}
+                  translator={translator}
+                  isSelected={option.noteId === selectedNoteId}
+                  onSelect={() => handleSelectNote(option.noteId)}
+                />
+              ))}
+            </div>
+          )}
+
+          <div className="note-explorer-results">
+            {!selectedNoteOption ? (
+              <p className="note-explorer-empty-message">{t("noteExplorer.selectNotePrompt")}</p>
+            ) : matches.length === 0 ? (
+              <p className="note-explorer-empty-message">{t("noteExplorer.noResults")}</p>
+            ) : (
+              <>
+                <h4 className="note-explorer-results-heading">
+                  {t("noteExplorer.resultsHeading", {
+                    note: translator.label("notes", selectedNoteOption.noteId, selectedNoteOption.name),
+                  })}
+                </h4>
+                <div className="note-explorer-results-list">
+                  {matches.map((perfume) => (
+                    <NoteExplorerResultRow
+                      key={perfume.id}
+                      perfume={perfume}
+                      translator={translator}
+                      isAlreadyAdded={selectedPerfumeIds.has(perfume.id)}
+                      isBoxFull={isBoxFull}
+                      onAddPerfume={onAddPerfume}
+                    />
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>,
+    portalRoot
+  );
+}
+
+function NoteExplorerNoteButton({ option, translator, isSelected, onSelect }) {
+  const t = translator?.t || ((key) => key);
+  const displayName = translator?.label?.("notes", option.noteId, option.name) || option.name;
+  const countLabel = t(
+    option.perfumeCount === 1 ? "noteExplorer.foundInOne" : "noteExplorer.foundInMany",
+    { count: option.perfumeCount }
+  );
+
+  return (
+    <div className={`scent-library-note-shell ${isSelected ? "is-selected" : ""}`}>
+      <button
+        type="button"
+        className="note-pill note-explorer-note-button"
+        onClick={onSelect}
+        aria-pressed={isSelected}
+        aria-label={t("noteExplorer.noteAria", {
+          note: displayName,
+          count: option.perfumeCount,
+          fragranceWord: t(
+            option.perfumeCount === 1 ? "noteExplorer.fragranceSingular" : "noteExplorer.fragrancePlural"
+          ),
+        })}
+      >
+        <ScentLibraryNoteImage entry={{ name: displayName, image: option.image }} size="small" />
+        <span className="scent-library-note-name">{displayName}</span>
+        <span className="scent-library-note-count" aria-hidden="true">×{option.perfumeCount}</span>
+        <span className="scent-library-count-sr">{countLabel}</span>
+      </button>
+    </div>
+  );
+}
+
+function NoteExplorerResultRow({ perfume, translator, isAlreadyAdded, isBoxFull, onAddPerfume }) {
+  const { t } = translator;
+  const addButtonLabel = isAlreadyAdded
+    ? t("general.added")
+    : isBoxFull
+      ? t("general.boxFull")
+      : t("general.addToBox");
+
+  return (
+    <div className="composer-proposal-item no-alternatives note-explorer-result-item">
+      <div className="composer-proposal-item-body">
+        <strong>{perfume.name}</strong>
+        <span>{perfume.brand} - {perfume.points} pt</span>
+      </div>
+      <button
+        type="button"
+        className="composer-proposal-add-button"
+        onClick={() => onAddPerfume(perfume)}
+        disabled={isAlreadyAdded || isBoxFull}
+      >
+        {addButtonLabel}
+      </button>
+    </div>
+  );
+}
+
+function normalizeNoteSearchText(value) {
+  return String(value || "")
+    .trim()
+    .toLowerCase()
+    .normalize("NFKD")
+    .replace(/\p{Diacritic}/gu, "");
 }
 
 function DiscoveryBoxCoachmark({ model, onDismiss, onAction }) {

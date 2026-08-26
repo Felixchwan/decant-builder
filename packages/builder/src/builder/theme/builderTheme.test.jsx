@@ -462,9 +462,11 @@ describe("Builder portal architecture", () => {
     // isSummaryDocked ? ... : stickySummaryPortalTarget ? ... : ... chain
     // in BuilderPanel.jsx). The removed Collection Card preview modal
     // (dev-only "Vista previa" action, since deleted along with the rest
-    // of its support) used to be a ninth family; every remaining family is
+    // of its support) used to be a ninth family; Composer Phase 2A's Note
+    // Explorer modal is the current ninth family, added through this same
+    // owned mechanism (not a raw createPortal) -- every other family is
     // otherwise unchanged.
-    expect(portalSources.match(/renderOwnedPortal\(/g)).toHaveLength(8);
+    expect(portalSources.match(/renderOwnedPortal\(/g)).toHaveLength(9);
     expect(portalSources).not.toContain("createPortal(");
     expect(ownedPortalSource).toContain("createPortalLike(content, portalRoot)");
     expect(appSource).toContain("portalRoot={portalRoot}");
