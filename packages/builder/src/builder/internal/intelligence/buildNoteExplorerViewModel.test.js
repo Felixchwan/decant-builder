@@ -250,3 +250,74 @@ describe("Note Explorer 'Most prominent' sort reflects the Phase 3A calibrated o
     expect(rank.get(203)).toBeLessThan(rank.get(408));
   });
 });
+
+// Composer Phase 3B: horizontal note-family calibration regression for the
+// apple and mint canonical-key families, run against the real catalog.
+// The underlying data (taxonomy audit, exact scores, unrelated-value
+// preservation, pyramid immutability) is proven in
+// packages/catalog/tests/noteProminenceHorizontalCalibration3B.test.js;
+// this describe block only proves the existing, unmodified sort algorithm
+// produces the approved relative order per canonical key, and that
+// distinct apple/mint variants are never cross-matched by a note id that
+// isn't theirs.
+describe("Note Explorer 'Most prominent' sort reflects the Phase 3B calibrated order, per distinct canonical key", () => {
+  it("apple (generic): Layton > YSL Y EDP > Tous Man > (Jaguar Pace = Game of Spades Wildcard, catalog order) > Club de Nuit Intense Man (unscored, last)", () => {
+    const matches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "apple" });
+    expect(matches.map((match) => match.id).sort((a, b) => a - b)).toEqual([19, 28, 33, 114, 213, 404]);
+
+    const sorted = sortNoteExplorerMatchesByProminence(matches, "apple");
+    expect(sorted.map((match) => match.id)).toEqual([404, 213, 28, 33, 114, 19]);
+  });
+
+  it("greenApple: only Carlisle carries it, and it stays unscored (last/only position)", () => {
+    const matches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "greenApple" });
+    expect(matches.map((match) => match.id)).toEqual([403]);
+
+    const sorted = sortNoteExplorerMatchesByProminence(matches, "greenApple");
+    expect(sorted.map((match) => match.id)).toEqual([403]);
+  });
+
+  it("redApple: Born In Roma Coral Fantasy > Legend EDT", () => {
+    const matches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "redApple" });
+    expect(matches.map((match) => match.id).sort((a, b) => a - b)).toEqual([4, 211]);
+
+    const sorted = sortNoteExplorerMatchesByProminence(matches, "redApple");
+    expect(sorted.map((match) => match.id)).toEqual([211, 4]);
+  });
+
+  it("candyApple: only Eros EDP carries it, now scored", () => {
+    const matches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "candyApple" });
+    expect(matches.map((match) => match.id)).toEqual([6]);
+
+    const sorted = sortNoteExplorerMatchesByProminence(matches, "candyApple");
+    expect(sorted.map((match) => match.id)).toEqual([6]);
+  });
+
+  it("mint: Torino21 > Le Male > Concentré d'Orange Verte > Eros EDP", () => {
+    const matches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "mint" });
+    expect(matches.map((match) => match.id).sort((a, b) => a - b)).toEqual([5, 6, 110, 408]);
+
+    const sorted = sortNoteExplorerMatchesByProminence(matches, "mint");
+    expect(sorted.map((match) => match.id)).toEqual([408, 5, 110, 6]);
+  });
+
+  it("spearmint: Legend Blue > Mandarino di Sicilia", () => {
+    const matches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "spearmint" });
+    expect(matches.map((match) => match.id).sort((a, b) => a - b)).toEqual([22, 103]);
+
+    const sorted = sortNoteExplorerMatchesByProminence(matches, "spearmint");
+    expect(sorted.map((match) => match.id)).toEqual([22, 103]);
+  });
+
+  it("never cross-matches distinct apple/mint variants -- searching one canonical key never returns a fragrance whose only relevant note is a different variant", () => {
+    const appleMatches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "apple" });
+    expect(appleMatches.map((match) => match.id)).not.toContain(403); // Carlisle: greenApple only
+    expect(appleMatches.map((match) => match.id)).not.toContain(4); // Legend EDT: redApple only
+    expect(appleMatches.map((match) => match.id)).not.toContain(211); // Born In Roma Coral Fantasy: redApple only
+    expect(appleMatches.map((match) => match.id)).not.toContain(6); // Eros EDP: candyApple only
+
+    const mintMatches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "mint" });
+    expect(mintMatches.map((match) => match.id)).not.toContain(22); // Legend Blue: spearmint only
+    expect(mintMatches.map((match) => match.id)).not.toContain(103); // Mandarino di Sicilia: spearmint only
+  });
+});

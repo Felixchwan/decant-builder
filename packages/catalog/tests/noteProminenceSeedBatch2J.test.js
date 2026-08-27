@@ -40,7 +40,7 @@ const PHASE_2J_BATCH = {
 // never touch them.
 const PHASE_2C_BATCH = {
   1: { seaNotes: 10, calone: 9, bergamot: 7, jasmine: 5, whiteMusk: 4 },
-  5: { lavender: 9, vanilla: 8, mint: 6, tonkaBean: 5 },
+  5: { lavender: 9, vanilla: 8, mint: 7, tonkaBean: 5 }, // Phase 3B: mint 6 -> 7 (horizontal calibration)
   111: { orange: 8, vetiver: 8, grapefruit: 7, cedar: 6, pepper: 4 },
   118: { cardamom: 9, coumarin: 6, lavender: 5, vetiver: 3 },
   202: { ambroxan: 9, bergamot: 7, sichuanPepper: 6, vanilla: 5 },
@@ -48,7 +48,7 @@ const PHASE_2C_BATCH = {
   303: { akigalawood: 10, ambroxan: 6, basil: 4 },
   304: { madagascarVanilla: 10, cinnamon: 7, tonkaBean: 6, incense: 4 },
   401: { greenTea: 9, blackCurrant: 8, bergamot: 5, musk: 5 }, // Phase 3A: blackCurrant 7 -> 8 (horizontal calibration)
-  404: { apple: 8, lavender: 8, vanilla: 7, cardamom: 4, coumarin: 4 },
+  404: { apple: 9, lavender: 8, vanilla: 7, cardamom: 4, coumarin: 4 }, // Phase 3B: apple 8 -> 9 (horizontal calibration)
   500: { ink: 9, incense: 7, seaSalt: 6, ambergris: 6 },
 };
 
@@ -78,14 +78,14 @@ const PHASE_2F_BATCH = {
   203: { incense: 6, sage: 6, cloves: 4, blackCurrant: 8 }, // Phase 3A: added blackCurrant, final value 8 (swapped with Club de Nuit Intense Man on finalization)
   204: { guaiacWood: 9, chestnut: 7, cloves: 6, vanilla: 5 },
   205: { iris: 8, patchouli: 6, benzoin: 6, cloves: 5 },
-  213: { ginger: 6, apple: 5, sage: 5 },
+  213: { ginger: 6, apple: 8, sage: 5 }, // Phase 3B: apple 5 -> 8 (horizontal calibration)
   306: { seaNotes: 6, patchouli: 7, leather: 5, vetiver: 4 },
 };
 
 const PHASE_2G_BATCH = {
   14: { leather: 6, cinnamon: 5, vanilla: 5 },
   15: { mango: 6, sandalwood: 5, tonkaBean: 4 },
-  22: { spearmint: 6, ambroxan: 5, sandalwood: 4 },
+  22: { spearmint: 7, ambroxan: 5, sandalwood: 4 }, // Phase 3B: spearmint 6 -> 7 (horizontal calibration)
   23: { oakmoss: 6, leather: 5, jasmine: 4 },
   24: { bloodOrange: 6, cardamom: 5, tonkaBean: 4 },
   25: { leather: 7, haitianVetiver: 6, akigalawood: 5, patchouli: 4 },
@@ -104,7 +104,7 @@ const PHASE_2H_BATCH = {
   2: { lemon: 7, rosemary: 5 },
   3: { bergamot: 6, musk: 6, cedar: 5 },
   4: { lavender: 7, redApple: 6, tonkaBean: 6 },
-  6: { ambroxan: 7, vanilla: 7, mint: 5 },
+  6: { ambroxan: 7, vanilla: 7, mint: 5, candyApple: 5 }, // Phase 3B: added candyApple (horizontal calibration)
   8: { cardamom: 8, toffee: 7 },
   20: { lavender: 7, amber: 6, tonkaBean: 5 },
   21: { vanilla: 6, cinnamon: 5, patchouli: 5 },
@@ -132,7 +132,7 @@ const PHASE_2I_BATCH = {
   206: { vetiver: 6, patchouli: 6, pinkPepper: 5 },
   209: { coumarin: 7, patchouli: 6, amber: 5 },
   210: { seaSalt: 7, vetiver: 6 },
-  211: { tobacco: 6, redApple: 5 },
+  211: { tobacco: 6, redApple: 7 }, // Phase 3B: redApple 5 -> 7 (horizontal calibration)
   214: { iris: 6, powderyNotes: 6, neroli: 5 },
 };
 

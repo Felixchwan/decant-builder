@@ -3320,13 +3320,30 @@ const DEFAULT_SEASON_WEIGHTS = {
 // Silver Mountain Water) and Club de Nuit Intense Man carries 6. Both
 // remain above Cedrat Boise and Torino21 (3 each), so the originally
 // flagged implausible ordering stays resolved either way.
+//
+// Composer Phase 3B: second horizontal calibration pass -- the apple and
+// mint canonical-key families. This phase's core rule is the opposite of
+// collapsing: apple, greenApple, redApple, and candyApple are four
+// distinct canonical keys (confirmed against notes.js and the live
+// catalog) and are calibrated as four separate peer groups, never merged
+// into one "apple family" score; likewise mint and spearmint stay two
+// separate groups. See noteProminenceHorizontalCalibration3B.test.js for
+// the complete taxonomy audit, membership tables, and rationale.
+// A canonical-data finding, reported rather than silently acted on: YSL Y
+// EDP (id 213) uses the generic apple key, and is real-world widely
+// perceived as green-apple-forward. This was judged NOT clearly enough
+// defensible to reclassify as greenApple (most official/perfumer note
+// breakdowns for this exact release still say "apple," not "green apple,"
+// unlike Carlisle's genuinely distinct greenApple listing) -- so its
+// canonical key is left as apple, and its strong real-world apple
+// association is instead reflected as a high score under that key.
 export const NOTE_PROMINENCE_BY_ID = {
   1: { seaNotes: 10, calone: 9, bergamot: 7, jasmine: 5, whiteMusk: 4 }, // Acqua di Gio EDT
   2: { lemon: 7, rosemary: 5 }, // Light Blue Pour Homme EDT
   3: { bergamot: 6, musk: 6, cedar: 5 }, // Versace Pour Homme
   4: { lavender: 7, redApple: 6, tonkaBean: 6 }, // Legend EDT
-  5: { lavender: 9, vanilla: 8, mint: 6, tonkaBean: 5 }, // Le Male
-  6: { ambroxan: 7, vanilla: 7, mint: 5 }, // Eros EDP
+  5: { lavender: 9, vanilla: 8, mint: 7, tonkaBean: 5 }, // Le Male
+  6: { ambroxan: 7, vanilla: 7, mint: 5, candyApple: 5 }, // Eros EDP
   7: { leather: 8, ginger: 7, maninka: 5 }, // The Scent EDT
   8: { cardamom: 8, toffee: 7 }, // The Most Wanted
   9: { musk: 8, sage: 5, vetiver: 5 }, // Fierce
@@ -3342,7 +3359,7 @@ export const NOTE_PROMINENCE_BY_ID = {
   19: { pineapple: 8, birch: 7, blackCurrant: 6, ambergris: 5 }, // Club de Nuit Intense Man
   20: { lavender: 7, amber: 6, tonkaBean: 5 }, // F by Ferragamo Black
   21: { vanilla: 6, cinnamon: 5, patchouli: 5 }, // Halloween Man Mystery
-  22: { spearmint: 6, ambroxan: 5, sandalwood: 4 }, // Legend Blue
+  22: { spearmint: 7, ambroxan: 5, sandalwood: 4 }, // Legend Blue
   23: { oakmoss: 6, leather: 5, jasmine: 4 }, // Legend EDT
   24: { bloodOrange: 6, cardamom: 5, tonkaBean: 4 }, // Legend Red
   25: { leather: 7, haitianVetiver: 6, akigalawood: 5, patchouli: 4 }, // Montblanc Explorer
@@ -3386,9 +3403,9 @@ export const NOTE_PROMINENCE_BY_ID = {
   208: { iris: 9, neroli: 6, amber: 5, carrotSeeds: 3 }, // Prada L'Homme
   209: { coumarin: 7, patchouli: 6, amber: 5 }, // Luna Rossa Black
   210: { seaSalt: 7, vetiver: 6 }, // Born In Roma EDT
-  211: { tobacco: 6, redApple: 5 }, // Born In Roma Coral Fantasy
+  211: { tobacco: 6, redApple: 7 }, // Born In Roma Coral Fantasy
   212: { tobacco: 9, vanilla: 7, bourbonVanilla: 7, cinnamon: 6, blackPepper: 5 }, // Spicebomb Extreme
-  213: { ginger: 6, apple: 5, sage: 5 }, // YSL Y EDP
+  213: { ginger: 6, apple: 8, sage: 5 }, // YSL Y EDP
   214: { iris: 6, powderyNotes: 6, neroli: 5 }, // Prada L'Homme L'Eau
   301: { sandalwood: 7, madagascarVanilla: 6, lemon: 5 }, // Allure Homme Édition Blanche
   302: { grapefruit: 7, whiteMusk: 6, amber: 5 }, // Allure Homme Sport Superleggera
@@ -3399,7 +3416,7 @@ export const NOTE_PROMINENCE_BY_ID = {
   401: { greenTea: 9, blackCurrant: 8, bergamot: 5, musk: 5 }, // Silver Mountain Water
   402: { licorice: 8, cinnamon: 7, nutmeg: 6 }, // Sauvage Elixir
   403: { tonkaBean: 5, vanilla: 5 }, // Carlisle
-  404: { apple: 8, lavender: 8, vanilla: 7, cardamom: 4, coumarin: 4 }, // Layton
+  404: { apple: 9, lavender: 8, vanilla: 7, cardamom: 4, coumarin: 4 }, // Layton
   405: { iris: 6, grapefruit: 5, rose: 4 }, // Mefisto
   406: { pineapple: 8, oakmoss: 8, cedar: 5, patchouli: 4 }, // Hacivat
   407: { coconut: 7, pineapple: 6, seaNotes: 5, musk: 4 }, // Summer Hammer

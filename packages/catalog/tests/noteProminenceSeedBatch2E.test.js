@@ -45,7 +45,7 @@ const PHASE_2E_BATCH = {
 // Pinned exactly as approved in Phase 2C -- this batch must never touch them.
 const PHASE_2C_BATCH = {
   1: { seaNotes: 10, calone: 9, bergamot: 7, jasmine: 5, whiteMusk: 4 },
-  5: { lavender: 9, vanilla: 8, mint: 6, tonkaBean: 5 },
+  5: { lavender: 9, vanilla: 8, mint: 7, tonkaBean: 5 }, // Phase 3B: mint 6 -> 7 (horizontal calibration)
   111: { orange: 8, vetiver: 8, grapefruit: 7, cedar: 6, pepper: 4 },
   118: { cardamom: 9, coumarin: 6, lavender: 5, vetiver: 3 },
   202: { ambroxan: 9, bergamot: 7, sichuanPepper: 6, vanilla: 5 },
@@ -53,7 +53,7 @@ const PHASE_2C_BATCH = {
   303: { akigalawood: 10, ambroxan: 6, basil: 4 },
   304: { madagascarVanilla: 10, cinnamon: 7, tonkaBean: 6, incense: 4 },
   401: { greenTea: 9, blackCurrant: 8, bergamot: 5, musk: 5 }, // Phase 3A: blackCurrant 7 -> 8 (horizontal calibration)
-  404: { apple: 8, lavender: 8, vanilla: 7, cardamom: 4, coumarin: 4 },
+  404: { apple: 9, lavender: 8, vanilla: 7, cardamom: 4, coumarin: 4 }, // Phase 3B: apple 8 -> 9 (horizontal calibration)
   500: { ink: 9, incense: 7, seaSalt: 6, ambergris: 6 },
 };
 
