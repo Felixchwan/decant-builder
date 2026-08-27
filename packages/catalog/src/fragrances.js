@@ -3233,6 +3233,17 @@ const DEFAULT_SEASON_WEIGHTS = {
 // entries). Tobacco was explicitly investigated but left unadvanced this
 // round -- no new candidate met the confidence bar. Phase 2C and Phase 2E
 // entries above are left exactly as approved.
+//
+// Composer Phase 2G: fourth editorial batch (15 fragrances), the first
+// under the "vertical pass" strategy -- prioritizing broad review coverage
+// of the catalog (each fragrance individually, scoring only what's
+// perceptually defensible) over perfecting cross-fragrance ranking, which
+// is deferred to a later horizontal calibration pass once every fragrance
+// has had a first review. Confidence bar per entry is unchanged (still no
+// fabrication, still leave-unscored when unsure); only the SELECTION
+// strategy shifted from "chase specific note-family gaps" to "make broad
+// progress across a representative mix of profiles." Phase 2C, 2E, and 2F
+// entries above are left exactly as approved.
 export const NOTE_PROMINENCE_BY_ID = {
   1: { seaNotes: 10, calone: 9, bergamot: 7, jasmine: 5, whiteMusk: 4 }, // Acqua di Gio EDT
   5: { lavender: 9, vanilla: 8, mint: 6, tonkaBean: 5 }, // Le Male
@@ -3242,21 +3253,34 @@ export const NOTE_PROMINENCE_BY_ID = {
   11: { caramel: 8, tonkaBean: 6, mandarinOrange: 4 }, // Scandal Pour Homme
   12: { leather: 7, suede: 6, sugar: 6, grass: 5 }, // CH Men
   13: { tobacco: 8, amber: 6, grapefruit: 6, cardamom: 5 }, // The One for Men EDP
+  14: { leather: 6, cinnamon: 5, vanilla: 5 }, // Halloween Man
+  15: { mango: 6, sandalwood: 5, tonkaBean: 4 }, // Polo Black (generalNotes)
   16: { roastedCoffeeBeans: 8, leather: 6, tonkaBean: 6, cinnamon: 5 }, // Uomo Signature
   17: { birchLeaf: 7, incense: 5, pinkPepper: 4 }, // Gentlemen Only
   18: { pine: 7, fingerLime: 6, eucalyptus: 5, cedarwood: 4 }, // L.12.12 Blanc EDP
   19: { pineapple: 8, birch: 7, blackCurrant: 6, ambergris: 5 }, // Club de Nuit Intense Man
+  22: { spearmint: 6, ambroxan: 5, sandalwood: 4 }, // Legend Blue
+  23: { oakmoss: 6, leather: 5, jasmine: 4 }, // Legend EDT
+  24: { bloodOrange: 6, cardamom: 5, tonkaBean: 4 }, // Legend Red
+  25: { leather: 7, haitianVetiver: 6, akigalawood: 5, patchouli: 4 }, // Montblanc Explorer
   104: { tonkaBean: 9, lavender: 6, greenMandarin: 5, cedar: 4 }, // Armani Code EDT
+  105: { greenTea: 7, whiteLotus: 5, mineralNotes: 4 }, // Bvlgari Man Rain Essence
+  109: { leather: 6, patchouli: 5, fig: 4 }, // K EDP Intense
   110: { orange: 8, mint: 6, patchouli: 5, bitterOrange: 5 }, // Concentré d'Orange Verte
   111: { orange: 8, vetiver: 8, grapefruit: 7, cedar: 6, pepper: 4 }, // Terre d'Hermès EDT
+  112: { coconut: 9, pineapple: 6, tonkaBean: 5 }, // Le Beau Le Parfum
   113: { cardamom: 7, vanilla: 8, lavender: 6, iris: 4 }, // Le Male Le Parfum
   115: { citron: 8, cedar: 5, blackCurrant: 4 }, // Cedrat Boise
+  116: { vanilla: 5, tonkaBean: 5, pinkPepper: 4 }, // Invictus Victory
+  117: { ginger: 6, basil: 5, tonkaBean: 5, cedar: 4 }, // YSL L'Homme
   118: { cardamom: 9, coumarin: 6, lavender: 5, vetiver: 3 }, // La Nuit de L'Homme
   119: { seaNotes: 6, basil: 5, lemon: 5 }, // Mirto di Panarea
+  201: { aldehydes: 6, elemi: 5 }, // Dior Homme Sport
   202: { ambroxan: 9, bergamot: 7, sichuanPepper: 6, vanilla: 5 }, // Sauvage EDP
   203: { incense: 6, sage: 6, cloves: 4 }, // Loewe 7 Cobalt (generalNotes)
   204: { guaiacWood: 9, chestnut: 7, cloves: 6, vanilla: 5 }, // Replica By The Fireplace
   205: { iris: 8, patchouli: 6, benzoin: 6, cloves: 5 }, // Gentleman EDP
+  207: { seaNotes: 6, greenMango: 5, ambroxan: 4 }, // Polo Deep Blue Parfum
   208: { iris: 9, neroli: 6, amber: 5, carrotSeeds: 3 }, // Prada L'Homme
   212: { tobacco: 9, vanilla: 7, bourbonVanilla: 7, cinnamon: 6, blackPepper: 5 }, // Spicebomb Extreme
   213: { ginger: 6, apple: 5, sage: 5 }, // YSL Y EDP
@@ -3266,6 +3290,8 @@ export const NOTE_PROMINENCE_BY_ID = {
   306: { seaNotes: 6, patchouli: 7, leather: 5, vetiver: 4 }, // Acqua di Gio Elixir
   401: { greenTea: 9, blackCurrant: 7, bergamot: 5, musk: 5 }, // Silver Mountain Water
   404: { apple: 8, lavender: 8, vanilla: 7, cardamom: 4, coumarin: 4 }, // Layton
+  405: { iris: 6, grapefruit: 5, rose: 4 }, // Mefisto
+  407: { coconut: 7, pineapple: 6, seaNotes: 5, musk: 4 }, // Summer Hammer
   408: { mint: 9, basil: 6, rosemary: 5, blackCurrant: 4 }, // Torino21
   409: { powderyNotes: 7, juniper: 6, cedar: 6, jasmine: 5, tonkaBean: 4 }, // Orphéon EDP
   500: { ink: 9, incense: 7, seaSalt: 6, ambergris: 6 }, // Squid

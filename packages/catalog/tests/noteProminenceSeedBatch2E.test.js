@@ -194,7 +194,7 @@ describe("Composer Phase 2E note-prominence seed batch", () => {
   });
 
   it("leaves every fragrance outside both batches with the default empty prominence object", () => {
-    const outsideBatchIds = [2, 3, 4, 15, 100, 305, 403, 410, 501];
+    const outsideBatchIds = [2, 3, 4, 6, 100, 305, 403, 410, 501];
     for (const id of outsideBatchIds) {
       expect(NOTE_PROMINENCE_BY_ID).not.toHaveProperty(String(id));
       expect(perfumesById.get(id).noteProminence).toEqual({});

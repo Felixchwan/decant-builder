@@ -73,17 +73,15 @@ function getPerfumeNoteIds(perfume) {
 describe("Composer Phase 2F note-prominence seed batch", () => {
   const perfumesById = new Map(perfumes.map((perfume) => [perfume.id, perfume]));
 
-  it("adds exactly this batch's 12 fragrance IDs on top of the existing Phase 2C and Phase 2E batches", () => {
-    const allExpectedIds = [
-      ...Object.keys(PHASE_2F_BATCH),
-      ...Object.keys(PHASE_2C_BATCH),
-      ...Object.keys(PHASE_2E_BATCH),
-    ]
-      .map(Number)
-      .sort((a, b) => a - b);
-    const actualIds = Object.keys(NOTE_PROMINENCE_BY_ID).map(Number).sort((a, b) => a - b);
-
-    expect(actualIds).toEqual(allExpectedIds);
+  it("adds this batch's 12 fragrance IDs to NOTE_PROMINENCE_BY_ID", () => {
+    // A subset check, not an exact-set check: NOTE_PROMINENCE_BY_ID also
+    // holds the later Phase 2G batch (see noteProminenceSeedBatch2G.test.js,
+    // which asserts the combined exact key set across all four batches) --
+    // this file only proves its own batch's entries are present and
+    // correct, so it stays valid as further batches are added.
+    for (const id of Object.keys(PHASE_2F_BATCH).map(Number)) {
+      expect(NOTE_PROMINENCE_BY_ID).toHaveProperty(String(id));
+    }
   });
 
   it("matches the exact intended score for every fragrance/note pair in this batch", () => {
@@ -152,10 +150,14 @@ describe("Composer Phase 2F note-prominence seed batch", () => {
     expect(priorHadPatchouli).toBe(false);
     expect(priorHadGuaiacWood).toBe(false);
 
-    const patchouliValues = Object.values(NOTE_PROMINENCE_BY_ID)
+    // Scoped to this batch's own fixture, not the live (ever-growing) map --
+    // a later batch (e.g. Phase 2G) may legitimately add more patchouli/
+    // guaiacWood scores of its own without that changing what THIS batch
+    // introduced.
+    const patchouliValues = Object.values(PHASE_2F_BATCH)
       .filter((entry) => "patchouli" in entry)
       .map((entry) => entry.patchouli);
-    const guaiacWoodValues = Object.values(NOTE_PROMINENCE_BY_ID)
+    const guaiacWoodValues = Object.values(PHASE_2F_BATCH)
       .filter((entry) => "guaiacWood" in entry)
       .map((entry) => entry.guaiacWood);
 
@@ -206,7 +208,7 @@ describe("Composer Phase 2F note-prominence seed batch", () => {
   });
 
   it("leaves every fragrance outside all three batches with the default empty prominence object", () => {
-    const outsideBatchIds = [2, 3, 4, 6, 8, 100, 201, 305, 403, 410, 501];
+    const outsideBatchIds = [2, 3, 4, 6, 8, 100, 214, 305, 403, 410, 501];
     for (const id of outsideBatchIds) {
       expect(NOTE_PROMINENCE_BY_ID).not.toHaveProperty(String(id));
       expect(perfumesById.get(id).noteProminence).toEqual({});
