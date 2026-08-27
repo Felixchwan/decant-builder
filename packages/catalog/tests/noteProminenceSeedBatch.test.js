@@ -51,10 +51,16 @@ function getPerfumeNoteIds(perfume) {
 describe("Composer Phase 2C note-prominence seed batch", () => {
   const perfumesById = new Map(perfumes.map((perfume) => [perfume.id, perfume]));
 
-  it("adds exactly this batch's 11 fragrance IDs -- no more, no fewer", () => {
-    expect(Object.keys(NOTE_PROMINENCE_BY_ID).map(Number).sort((a, b) => a - b)).toEqual(
-      Object.keys(EXPECTED_BATCH).map(Number).sort((a, b) => a - b)
-    );
+  it("adds this batch's 11 fragrance IDs to NOTE_PROMINENCE_BY_ID", () => {
+    // A subset check, not an exact-set check: NOTE_PROMINENCE_BY_ID also
+    // holds the later Phase 2E batch (see noteProminenceSeedBatch2E.test.js,
+    // which asserts the combined exact key set) -- this file only proves
+    // its own batch's entries are present and correct, so it stays valid
+    // as further batches are added rather than needing to be widened every
+    // time.
+    for (const id of Object.keys(EXPECTED_BATCH).map(Number)) {
+      expect(NOTE_PROMINENCE_BY_ID).toHaveProperty(String(id));
+    }
   });
 
   it("matches the exact intended score for every fragrance/note pair in this batch", () => {

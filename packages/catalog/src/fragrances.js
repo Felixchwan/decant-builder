@@ -3186,19 +3186,57 @@ const DEFAULT_SEASON_WEIGHTS = {
 //   1-3  = secondary but identifiable
 //   (absent key) = intentionally unscored
 //
+// Two clarifications on applying this rule:
+// 1. Pyramid position alone neither justifies nor disqualifies a score. A
+//    sole top/middle/base note is not automatically prominent just for
+//    being alone -- but it should still be scored when perceptual identity
+//    genuinely supports it. The caution is against inferring FROM position;
+//    it is not a blanket rule against scoring lone notes.
+// 2. A prominence score is an independent editorial judgment, not a
+//    compositional share -- there is no fixed budget being divided among a
+//    fragrance's notes. Overlapping canonical note concepts (e.g. vanilla
+//    and bourbonVanilla, or a specific herb alongside a general accord
+//    term) may each receive their own score when each independently
+//    produces a meaningful Note Explorer result for that exact canonical
+//    id. This is not "double-counting": prominence values are never summed
+//    or normalized against each other, so two related concepts each being
+//    "very evident" simply means both are true, not that credit is split.
+//
 // See packages/catalog/tests/noteProminenceSeedBatch.test.js for the
-// narrow regression coverage of exactly this batch.
+// narrow regression coverage of the Phase 2C batch below, and
+// noteProminenceSeedBatch2E.test.js for the Phase 2E batch that follows it.
+//
+// Composer Phase 2E: second editorial seed batch (12 fragrances),
+// deliberately targeting note families the Phase 2C batch left
+// underrepresented -- tobacco and leather (previously zero coverage),
+// green/aromatic, a second incense entry, a second iris/powdery entry, and
+// citrus notes distinct from the bergamot/grapefruit already scored --
+// rather than adding more aquatic/marine coverage, which Phase 2C already
+// served well. Same editorial rule and scale as Phase 2C; the Phase 2C
+// entries above are left exactly as approved.
 export const NOTE_PROMINENCE_BY_ID = {
   1: { seaNotes: 10, calone: 9, bergamot: 7, jasmine: 5, whiteMusk: 4 }, // Acqua di Gio EDT
   5: { lavender: 9, vanilla: 8, mint: 6, tonkaBean: 5 }, // Le Male
+  13: { tobacco: 8, amber: 6, grapefruit: 6, cardamom: 5 }, // The One for Men EDP
+  16: { roastedCoffeeBeans: 8, leather: 6, tonkaBean: 6, cinnamon: 5 }, // Uomo Signature
+  17: { birchLeaf: 7, incense: 5, pinkPepper: 4 }, // Gentlemen Only
+  18: { pine: 7, fingerLime: 6, eucalyptus: 5, cedarwood: 4 }, // L.12.12 Blanc EDP
+  19: { pineapple: 8, birch: 7, blackCurrant: 6, ambergris: 5 }, // Club de Nuit Intense Man
+  104: { tonkaBean: 9, lavender: 6, greenMandarin: 5, cedar: 4 }, // Armani Code EDT
   111: { orange: 8, vetiver: 8, grapefruit: 7, cedar: 6, pepper: 4 }, // Terre d'Hermès EDT
+  113: { cardamom: 7, vanilla: 8, lavender: 6, iris: 4 }, // Le Male Le Parfum
+  115: { citron: 8, cedar: 5, blackCurrant: 4 }, // Cedrat Boise
   118: { cardamom: 9, coumarin: 6, lavender: 5, vetiver: 3 }, // La Nuit de L'Homme
   202: { ambroxan: 9, bergamot: 7, sichuanPepper: 6, vanilla: 5 }, // Sauvage EDP
   208: { iris: 9, neroli: 6, amber: 5, carrotSeeds: 3 }, // Prada L'Homme
+  212: { tobacco: 9, vanilla: 7, bourbonVanilla: 7, cinnamon: 6, blackPepper: 5 }, // Spicebomb Extreme
+  301: { sandalwood: 7, madagascarVanilla: 6, lemon: 5 }, // Allure Homme Édition Blanche
   303: { akigalawood: 10, ambroxan: 6, basil: 4 }, // Bois Imperial (generalNotes)
   304: { madagascarVanilla: 10, cinnamon: 7, tonkaBean: 6, incense: 4 }, // Divine Vanille
   401: { greenTea: 9, blackCurrant: 7, bergamot: 5, musk: 5 }, // Silver Mountain Water
   404: { apple: 8, lavender: 8, vanilla: 7, cardamom: 4, coumarin: 4 }, // Layton
+  408: { mint: 9, basil: 6, rosemary: 5, blackCurrant: 4 }, // Torino21
+  409: { powderyNotes: 7, juniper: 6, cedar: 6, jasmine: 5, tonkaBean: 4 }, // Orphéon EDP
   500: { ink: 9, incense: 7, seaSalt: 6, ambergris: 6 }, // Squid
 };
 
