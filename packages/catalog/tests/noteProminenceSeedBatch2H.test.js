@@ -3,37 +3,38 @@ import { describe, expect, it } from "vitest";
 import { fragrances as perfumes, notes } from "@discovery-box/catalog";
 import { NOTE_PROMINENCE_BY_ID } from "../src/fragrances.js";
 
-// Composer Phase 2G: narrow regression coverage for the fourth real
-// editorial note-prominence batch -- the first under the "vertical pass"
-// strategy (broad review coverage of the catalog first; cross-fragrance
-// comparative recalibration deferred to a later horizontal pass). Kept as
-// its own file, separate from the Phase 2C/2E/2F regression files, per the
+// Composer Phase 2H: narrow regression coverage for the fifth real
+// editorial note-prominence batch -- continuing the "vertical pass"
+// strategy (broad review coverage first; cross-fragrance comparative
+// recalibration deferred to a later horizontal pass). Kept as its own
+// file, separate from the Phase 2C/2E/2F/2G regression files, per the
 // established convention of one narrow regression file per batch.
 //
-// Selection prioritized broad progress across a representative mix of
-// profiles (fresh/aquatic, aromatic/green, woody, spicy, sweet/gourmand,
-// leather/tobacco, floral/iris/powdery, niche/unconventional) rather than
-// deepening any one note family, and confidence per note is still the
-// governing constraint -- several fragrances here carry only 2-4 scores.
-const PHASE_2G_BATCH = {
-  14: { leather: 6, cinnamon: 5, vanilla: 5 },
-  15: { mango: 6, sandalwood: 5, tonkaBean: 4 },
-  22: { spearmint: 6, ambroxan: 5, sandalwood: 4 },
-  23: { oakmoss: 6, leather: 5, jasmine: 4 },
-  24: { bloodOrange: 6, cardamom: 5, tonkaBean: 4 },
-  25: { leather: 7, haitianVetiver: 6, akigalawood: 5, patchouli: 4 },
-  105: { greenTea: 7, whiteLotus: 5, mineralNotes: 4 },
-  109: { leather: 6, patchouli: 5, fig: 4 },
-  112: { coconut: 9, pineapple: 6, tonkaBean: 5 },
-  116: { vanilla: 5, tonkaBean: 5, pinkPepper: 4 },
-  117: { ginger: 6, basil: 5, tonkaBean: 5, cedar: 4 },
-  201: { aldehydes: 6, elemi: 5 },
-  207: { seaNotes: 6, greenMango: 5, ambroxan: 4 },
-  405: { iris: 6, grapefruit: 5, rose: 4 },
-  407: { coconut: 7, pineapple: 6, seaNotes: 5, musk: 4 },
+// Selection progressed systematically through the catalog's lowest
+// unreviewed ids rather than targeting note families or coverage themes.
+// Several of these are smaller mass-market releases with fewer independent
+// real-world references than earlier batches' flagship fragrances, so this
+// round stayed conservative: no score reaches the 9-10 defining/signature
+// band, and several entries carry only two scored notes.
+const PHASE_2H_BATCH = {
+  2: { lemon: 7, rosemary: 5 },
+  3: { bergamot: 6, musk: 6, cedar: 5 },
+  4: { lavender: 7, redApple: 6, tonkaBean: 6 },
+  6: { ambroxan: 7, vanilla: 7, mint: 5 },
+  8: { cardamom: 8, toffee: 7 },
+  20: { lavender: 7, amber: 6, tonkaBean: 5 },
+  21: { vanilla: 6, cinnamon: 5, patchouli: 5 },
+  26: { grapefruit: 7, roastedCoffeeBeans: 7, amber: 5 },
+  27: { whiteMusk: 6, vetiver: 5 },
+  28: { orange: 6, apple: 5, amber: 5 },
+  29: { vanilla: 7, chinotto: 6, tonkaBean: 5 },
+  30: { leather: 7, bergamot: 5 },
+  31: { amber: 5, cardamom: 5 },
+  32: { suede: 5, amber: 5 },
+  33: { cashmeran: 6, patchouli: 5, apple: 4 },
 };
 
-// Pinned exactly as approved in the three prior batches -- this batch must
+// Pinned exactly as approved in the four prior batches -- this batch must
 // never touch them.
 const PHASE_2C_BATCH = {
   1: { seaNotes: 10, calone: 9, bergamot: 7, jasmine: 5, whiteMusk: 4 },
@@ -79,6 +80,24 @@ const PHASE_2F_BATCH = {
   306: { seaNotes: 6, patchouli: 7, leather: 5, vetiver: 4 },
 };
 
+const PHASE_2G_BATCH = {
+  14: { leather: 6, cinnamon: 5, vanilla: 5 },
+  15: { mango: 6, sandalwood: 5, tonkaBean: 4 },
+  22: { spearmint: 6, ambroxan: 5, sandalwood: 4 },
+  23: { oakmoss: 6, leather: 5, jasmine: 4 },
+  24: { bloodOrange: 6, cardamom: 5, tonkaBean: 4 },
+  25: { leather: 7, haitianVetiver: 6, akigalawood: 5, patchouli: 4 },
+  105: { greenTea: 7, whiteLotus: 5, mineralNotes: 4 },
+  109: { leather: 6, patchouli: 5, fig: 4 },
+  112: { coconut: 9, pineapple: 6, tonkaBean: 5 },
+  116: { vanilla: 5, tonkaBean: 5, pinkPepper: 4 },
+  117: { ginger: 6, basil: 5, tonkaBean: 5, cedar: 4 },
+  201: { aldehydes: 6, elemi: 5 },
+  207: { seaNotes: 6, greenMango: 5, ambroxan: 4 },
+  405: { iris: 6, grapefruit: 5, rose: 4 },
+  407: { coconut: 7, pineapple: 6, seaNotes: 5, musk: 4 },
+};
+
 function getPerfumeNoteIds(perfume) {
   return [
     ...(perfume.topNotes || []),
@@ -88,28 +107,32 @@ function getPerfumeNoteIds(perfume) {
   ];
 }
 
-describe("Composer Phase 2G note-prominence seed batch", () => {
+describe("Composer Phase 2H note-prominence seed batch", () => {
   const perfumesById = new Map(perfumes.map((perfume) => [perfume.id, perfume]));
 
-  it("adds this batch's 15 fragrance IDs to NOTE_PROMINENCE_BY_ID", () => {
-    // A subset check, not an exact-set check: NOTE_PROMINENCE_BY_ID also
-    // holds the later Phase 2H batch (see noteProminenceSeedBatch2H.test.js,
-    // which asserts the combined exact key set across all five batches) --
-    // this file only proves its own batch's entries are present and
-    // correct, so it stays valid as further batches are added.
-    for (const id of Object.keys(PHASE_2G_BATCH).map(Number)) {
-      expect(NOTE_PROMINENCE_BY_ID).toHaveProperty(String(id));
-    }
+  it("adds exactly this batch's 15 fragrance IDs on top of the existing Phase 2C, 2E, 2F, and 2G batches", () => {
+    const allExpectedIds = [
+      ...Object.keys(PHASE_2H_BATCH),
+      ...Object.keys(PHASE_2C_BATCH),
+      ...Object.keys(PHASE_2E_BATCH),
+      ...Object.keys(PHASE_2F_BATCH),
+      ...Object.keys(PHASE_2G_BATCH),
+    ]
+      .map(Number)
+      .sort((a, b) => a - b);
+    const actualIds = Object.keys(NOTE_PROMINENCE_BY_ID).map(Number).sort((a, b) => a - b);
+
+    expect(actualIds).toEqual(allExpectedIds);
   });
 
   it("matches the exact intended score for every fragrance/note pair in this batch", () => {
-    for (const [id, expectedScores] of Object.entries(PHASE_2G_BATCH)) {
+    for (const [id, expectedScores] of Object.entries(PHASE_2H_BATCH)) {
       expect(NOTE_PROMINENCE_BY_ID[id]).toEqual(expectedScores);
     }
   });
 
   it("scores only notes that actually belong to each fragrance's own canonical note set", () => {
-    for (const [id, entry] of Object.entries(PHASE_2G_BATCH)) {
+    for (const [id, entry] of Object.entries(PHASE_2H_BATCH)) {
       const fragrance = perfumesById.get(Number(id));
       const ownNoteIds = new Set(getPerfumeNoteIds(fragrance));
 
@@ -121,7 +144,7 @@ describe("Composer Phase 2G note-prominence seed batch", () => {
   });
 
   it("keeps every value an integer from 1 to 10 -- no zeros, no fractions", () => {
-    for (const entry of Object.values(PHASE_2G_BATCH)) {
+    for (const entry of Object.values(PHASE_2H_BATCH)) {
       for (const value of Object.values(entry)) {
         expect(Number.isInteger(value)).toBe(true);
         expect(value).toBeGreaterThanOrEqual(1);
@@ -130,8 +153,8 @@ describe("Composer Phase 2G note-prominence seed batch", () => {
     }
   });
 
-  it("leaves several of each scored fragrance's own canonical notes deliberately unscored -- sparse per-fragrance coverage remains valid even under the vertical-pass strategy", () => {
-    for (const [id, entry] of Object.entries(PHASE_2G_BATCH)) {
+  it("leaves at least one of each scored fragrance's own canonical notes deliberately unscored -- sparse coverage remains valid", () => {
+    for (const [id, entry] of Object.entries(PHASE_2H_BATCH)) {
       const fragrance = perfumesById.get(Number(id));
       const ownNoteIds = getPerfumeNoteIds(fragrance);
       const unscoredCount = ownNoteIds.filter((noteId) => !(noteId in entry)).length;
@@ -140,24 +163,14 @@ describe("Composer Phase 2G note-prominence seed batch", () => {
     }
   });
 
-  it("scores Polo Black through its generalNotes shape, not an invented pyramid", () => {
-    const poloBlack = perfumesById.get(15);
-    expect(poloBlack.topNotes || []).toEqual([]);
-    expect(poloBlack.middleNotes || []).toEqual([]);
-    expect(poloBlack.baseNotes || []).toEqual([]);
-    expect(poloBlack.generalNotes).toEqual(
-      expect.arrayContaining(["mango", "sandalwood", "tonkaBean"])
-    );
-  });
-
-  it("has exactly one 9-10 score in this batch (Le Beau Le Parfum's coconut) -- the vertical pass stayed conservative on defining/signature claims", () => {
-    const nineOrTenScores = Object.entries(PHASE_2G_BATCH).flatMap(([id, entry]) =>
+  it("stays conservative -- no 9-10 defining/signature score appears anywhere in this batch", () => {
+    const highScores = Object.entries(PHASE_2H_BATCH).flatMap(([id, entry]) =>
       Object.entries(entry)
         .filter(([, value]) => value >= 9)
         .map(([noteId, value]) => `${id}:${noteId}:${value}`)
     );
 
-    expect(nineOrTenScores).toEqual(["112:coconut:9"]);
+    expect(highScores).toEqual([]);
   });
 
   it("leaves every Phase 2C entry exactly as previously approved -- this batch never revises them", () => {
@@ -178,26 +191,34 @@ describe("Composer Phase 2G note-prominence seed batch", () => {
     }
   });
 
+  it("leaves every Phase 2G entry exactly as previously approved -- this batch never revises them", () => {
+    for (const [id, expectedScores] of Object.entries(PHASE_2G_BATCH)) {
+      expect(NOTE_PROMINENCE_BY_ID[id]).toEqual(expectedScores);
+    }
+  });
+
   it("leaves every batch fragrance's canonical note pyramid exactly as it was -- this batch adds only editorial metadata", () => {
-    expect(perfumesById.get(14)).toMatchObject({
-      name: "Halloween Man",
-      baseNotes: ["vanilla", "leather", "amber", "musk"],
+    expect(perfumesById.get(2)).toMatchObject({
+      name: "Light Blue Pour Homme EDT",
+      topNotes: ["lemon"],
+      middleNotes: ["rosemary"],
+      baseNotes: ["patchouli"],
     });
-    expect(perfumesById.get(112)).toMatchObject({
-      name: "Le Beau Le Parfum",
-      middleNotes: ["coconut", "woodyNotes"],
+    expect(perfumesById.get(8)).toMatchObject({
+      name: "The Most Wanted",
+      topNotes: ["cardamom"],
+      middleNotes: ["toffee"],
+      baseNotes: ["amberwood"],
     });
-    expect(perfumesById.get(407)).toMatchObject({
-      name: "Summer Hammer",
-      topNotes: ["greenMango", "pineapple", "fruityNotes", "coconut", "bergamot"],
-      middleNotes: ["coconut", "seaNotes", "jasmine"],
+    expect(perfumesById.get(30)).toMatchObject({
+      name: "Vibrant Leather Bogoss",
+      topNotes: ["bergamot"],
+      baseNotes: ["leather", "woodyNotes"],
     });
   });
 
-  it("leaves every fragrance outside all four batches with the default empty prominence object", () => {
-    // Ids 2, 3, 4, 6, and 8 were swapped out for 34/35/101/102/103 after
-    // Phase 2H occupied them -- see noteProminenceSeedBatch2H.test.js.
-    const outsideBatchIds = [34, 35, 100, 101, 102, 103, 214, 305, 403, 410, 501];
+  it("leaves every fragrance outside all five batches with the default empty prominence object", () => {
+    const outsideBatchIds = [34, 35, 100, 101, 102, 103, 106, 107, 108, 114, 206, 209, 210, 211, 214, 302, 305, 402, 403, 406, 410, 501];
     for (const id of outsideBatchIds) {
       expect(NOTE_PROMINENCE_BY_ID).not.toHaveProperty(String(id));
       expect(perfumesById.get(id).noteProminence).toEqual({});

@@ -140,7 +140,9 @@ describe("Composer Phase 2C note-prominence seed batch", () => {
   });
 
   it("leaves every fragrance outside this batch with the default empty prominence object, including Carlisle (403) and Il Padrino (410) which were dropped from the earlier draft", () => {
-    const outsideBatchIds = [2, 3, 4, 100, 403, 410, 501];
+    // Ids 2, 3, and 4 were swapped out for 34/35/101 after Phase 2H
+    // occupied them -- see noteProminenceSeedBatch2H.test.js.
+    const outsideBatchIds = [34, 35, 100, 101, 403, 410, 501];
     for (const id of outsideBatchIds) {
       expect(NOTE_PROMINENCE_BY_ID).not.toHaveProperty(String(id));
       expect(perfumesById.get(id).noteProminence).toEqual({});

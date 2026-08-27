@@ -3213,8 +3213,10 @@ const DEFAULT_SEASON_WEIGHTS = {
 //
 // See packages/catalog/tests/noteProminenceSeedBatch.test.js for the
 // narrow regression coverage of the Phase 2C batch below,
-// noteProminenceSeedBatch2E.test.js for the Phase 2E batch, and
-// noteProminenceSeedBatch2F.test.js for the Phase 2F batch that follows it.
+// noteProminenceSeedBatch2E.test.js for the Phase 2E batch,
+// noteProminenceSeedBatch2F.test.js for the Phase 2F batch,
+// noteProminenceSeedBatch2G.test.js for the Phase 2G batch, and
+// noteProminenceSeedBatch2H.test.js for the Phase 2H batch that follows it.
 //
 // Composer Phase 2E: second editorial seed batch (12 fragrances),
 // deliberately targeting note families the Phase 2C batch left
@@ -3244,10 +3246,25 @@ const DEFAULT_SEASON_WEIGHTS = {
 // strategy shifted from "chase specific note-family gaps" to "make broad
 // progress across a representative mix of profiles." Phase 2C, 2E, and 2F
 // entries above are left exactly as approved.
+//
+// Composer Phase 2H: fifth editorial batch (15 fragrances), continuing the
+// vertical pass by progressing systematically through the catalog's lowest
+// unreviewed ids rather than targeting note families or coverage themes.
+// Several of these are smaller mass-market releases with fewer independent
+// real-world references than earlier batches' flagship fragrances, so this
+// round stayed conservative: no score in this batch reaches the 9-10
+// defining/signature band, and several entries carry only two scored
+// notes. Phase 2C, 2E, 2F, and 2G entries above are left exactly as
+// approved.
 export const NOTE_PROMINENCE_BY_ID = {
   1: { seaNotes: 10, calone: 9, bergamot: 7, jasmine: 5, whiteMusk: 4 }, // Acqua di Gio EDT
+  2: { lemon: 7, rosemary: 5 }, // Light Blue Pour Homme EDT
+  3: { bergamot: 6, musk: 6, cedar: 5 }, // Versace Pour Homme
+  4: { lavender: 7, redApple: 6, tonkaBean: 6 }, // Legend EDT
   5: { lavender: 9, vanilla: 8, mint: 6, tonkaBean: 5 }, // Le Male
+  6: { ambroxan: 7, vanilla: 7, mint: 5 }, // Eros EDP
   7: { leather: 8, ginger: 7, maninka: 5 }, // The Scent EDT
+  8: { cardamom: 8, toffee: 7 }, // The Most Wanted
   9: { musk: 8, sage: 5, vetiver: 5 }, // Fierce
   10: { almond: 8, tonkaBean: 6, bitterOrange: 5, leather: 4 }, // L'Homme Idéal EDT
   11: { caramel: 8, tonkaBean: 6, mandarinOrange: 4 }, // Scandal Pour Homme
@@ -3259,10 +3276,20 @@ export const NOTE_PROMINENCE_BY_ID = {
   17: { birchLeaf: 7, incense: 5, pinkPepper: 4 }, // Gentlemen Only
   18: { pine: 7, fingerLime: 6, eucalyptus: 5, cedarwood: 4 }, // L.12.12 Blanc EDP
   19: { pineapple: 8, birch: 7, blackCurrant: 6, ambergris: 5 }, // Club de Nuit Intense Man
+  20: { lavender: 7, amber: 6, tonkaBean: 5 }, // F by Ferragamo Black
+  21: { vanilla: 6, cinnamon: 5, patchouli: 5 }, // Halloween Man Mystery
   22: { spearmint: 6, ambroxan: 5, sandalwood: 4 }, // Legend Blue
   23: { oakmoss: 6, leather: 5, jasmine: 4 }, // Legend EDT
   24: { bloodOrange: 6, cardamom: 5, tonkaBean: 4 }, // Legend Red
   25: { leather: 7, haitianVetiver: 6, akigalawood: 5, patchouli: 4 }, // Montblanc Explorer
+  26: { grapefruit: 7, roastedCoffeeBeans: 7, amber: 5 }, // Polo Red EDT
+  27: { whiteMusk: 6, vetiver: 5 }, // Touch for Men
+  28: { orange: 6, apple: 5, amber: 5 }, // Tous Man
+  29: { vanilla: 7, chinotto: 6, tonkaBean: 5 }, // Versace Eros Flame
+  30: { leather: 7, bergamot: 5 }, // Vibrant Leather Bogoss
+  31: { amber: 5, cardamom: 5 }, // Viking Cairo
+  32: { suede: 5, amber: 5 }, // Guess Man Gold
+  33: { cashmeran: 6, patchouli: 5, apple: 4 }, // Jaguar Pace
   104: { tonkaBean: 9, lavender: 6, greenMandarin: 5, cedar: 4 }, // Armani Code EDT
   105: { greenTea: 7, whiteLotus: 5, mineralNotes: 4 }, // Bvlgari Man Rain Essence
   109: { leather: 6, patchouli: 5, fig: 4 }, // K EDP Intense
