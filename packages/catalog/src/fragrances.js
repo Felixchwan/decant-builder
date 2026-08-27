@@ -3215,8 +3215,9 @@ const DEFAULT_SEASON_WEIGHTS = {
 // narrow regression coverage of the Phase 2C batch below,
 // noteProminenceSeedBatch2E.test.js for the Phase 2E batch,
 // noteProminenceSeedBatch2F.test.js for the Phase 2F batch,
-// noteProminenceSeedBatch2G.test.js for the Phase 2G batch, and
-// noteProminenceSeedBatch2H.test.js for the Phase 2H batch that follows it.
+// noteProminenceSeedBatch2G.test.js for the Phase 2G batch,
+// noteProminenceSeedBatch2H.test.js for the Phase 2H batch, and
+// noteProminenceSeedBatch2I.test.js for the Phase 2I batch that follows it.
 //
 // Composer Phase 2E: second editorial seed batch (12 fragrances),
 // deliberately targeting note families the Phase 2C batch left
@@ -3256,6 +3257,16 @@ const DEFAULT_SEASON_WEIGHTS = {
 // defining/signature band, and several entries carry only two scored
 // notes. Phase 2C, 2E, 2F, and 2G entries above are left exactly as
 // approved.
+//
+// Composer Phase 2I: sixth editorial batch (15 fragrances), continuing the
+// vertical pass by progressing systematically through the remaining
+// unreviewed ids. Includes three generalNotes-only fragrances of varying
+// density (Graphite at 4 notes, Essenza at 17) and two flanker pairs
+// (Prada L'Homme/L'Homme L'Eau, Born In Roma EDT/Coral Fantasy) exercising
+// the fragrance-specific-not-note-specific rule again. Only one score in
+// this batch reaches the defining/signature band (Fico di Amalfi's
+// figNectar at 9 -- see the rationale at that entry). Phase 2C, 2E, 2F,
+// 2G, and 2H entries above are left exactly as approved.
 export const NOTE_PROMINENCE_BY_ID = {
   1: { seaNotes: 10, calone: 9, bergamot: 7, jasmine: 5, whiteMusk: 4 }, // Acqua di Gio EDT
   2: { lemon: 7, rosemary: 5 }, // Light Blue Pour Homme EDT
@@ -3290,13 +3301,23 @@ export const NOTE_PROMINENCE_BY_ID = {
   31: { amber: 5, cardamom: 5 }, // Viking Cairo
   32: { suede: 5, amber: 5 }, // Guess Man Gold
   33: { cashmeran: 6, patchouli: 5, apple: 4 }, // Jaguar Pace
+  34: { grapefruit: 7, vetiver: 6, olibanum: 5 }, // Givenchy Pour Homme Blue Label
+  35: { leatherwood: 7, sage: 5 }, // Graphite (generalNotes)
+  100: { sicilianMandarin: 7, caramel: 5, petitgrain: 5 }, // Arancia di Capri
+  101: { bergamot: 7, jasmine: 5, patchouli: 4 }, // Essenza (generalNotes)
+  102: { figNectar: 9, figTree: 6, citron: 5 }, // Fico di Amalfi
+  103: { greenMandarin: 7, petitgrain: 5, spearmint: 5 }, // Mandarino di Sicilia
   104: { tonkaBean: 9, lavender: 6, greenMandarin: 5, cedar: 4 }, // Armani Code EDT
   105: { greenTea: 7, whiteLotus: 5, mineralNotes: 4 }, // Bvlgari Man Rain Essence
+  106: { blackVanilla: 7, anise: 6 }, // 212 VIP Black
+  107: { passionFruit: 6, frangipani: 5 }, // Birds of Paradise for Him
+  108: { truffle: 7, plum: 5 }, // Bad Boy Cobalt Parfum Electrique
   109: { leather: 6, patchouli: 5, fig: 4 }, // K EDP Intense
   110: { orange: 8, mint: 6, patchouli: 5, bitterOrange: 5 }, // Concentré d'Orange Verte
   111: { orange: 8, vetiver: 8, grapefruit: 7, cedar: 6, pepper: 4 }, // Terre d'Hermès EDT
   112: { coconut: 9, pineapple: 6, tonkaBean: 5 }, // Le Beau Le Parfum
   113: { cardamom: 7, vanilla: 8, lavender: 6, iris: 4 }, // Le Male Le Parfum
+  114: { ambroxan: 6, apple: 4 }, // Game of Spades Wildcard
   115: { citron: 8, cedar: 5, blackCurrant: 4 }, // Cedrat Boise
   116: { vanilla: 5, tonkaBean: 5, pinkPepper: 4 }, // Invictus Victory
   117: { ginger: 6, basil: 5, tonkaBean: 5, cedar: 4 }, // YSL L'Homme
@@ -3307,10 +3328,15 @@ export const NOTE_PROMINENCE_BY_ID = {
   203: { incense: 6, sage: 6, cloves: 4 }, // Loewe 7 Cobalt (generalNotes)
   204: { guaiacWood: 9, chestnut: 7, cloves: 6, vanilla: 5 }, // Replica By The Fireplace
   205: { iris: 8, patchouli: 6, benzoin: 6, cloves: 5 }, // Gentleman EDP
+  206: { vetiver: 6, patchouli: 6, pinkPepper: 5 }, // Polo Blue Parfum
   207: { seaNotes: 6, greenMango: 5, ambroxan: 4 }, // Polo Deep Blue Parfum
   208: { iris: 9, neroli: 6, amber: 5, carrotSeeds: 3 }, // Prada L'Homme
+  209: { coumarin: 7, patchouli: 6, amber: 5 }, // Luna Rossa Black
+  210: { seaSalt: 7, vetiver: 6 }, // Born In Roma EDT
+  211: { tobacco: 6, redApple: 5 }, // Born In Roma Coral Fantasy
   212: { tobacco: 9, vanilla: 7, bourbonVanilla: 7, cinnamon: 6, blackPepper: 5 }, // Spicebomb Extreme
   213: { ginger: 6, apple: 5, sage: 5 }, // YSL Y EDP
+  214: { iris: 6, powderyNotes: 6, neroli: 5 }, // Prada L'Homme L'Eau
   301: { sandalwood: 7, madagascarVanilla: 6, lemon: 5 }, // Allure Homme Édition Blanche
   303: { akigalawood: 10, ambroxan: 6, basil: 4 }, // Bois Imperial (generalNotes)
   304: { madagascarVanilla: 10, cinnamon: 7, tonkaBean: 6, incense: 4 }, // Divine Vanille
