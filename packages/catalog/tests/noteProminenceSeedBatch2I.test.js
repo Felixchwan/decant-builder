@@ -132,20 +132,16 @@ function getPerfumeNoteIds(perfume) {
 describe("Composer Phase 2I note-prominence seed batch", () => {
   const perfumesById = new Map(perfumes.map((perfume) => [perfume.id, perfume]));
 
-  it("adds exactly this batch's 15 fragrance IDs on top of the existing Phase 2C, 2E, 2F, 2G, and 2H batches", () => {
-    const allExpectedIds = [
-      ...Object.keys(PHASE_2I_BATCH),
-      ...Object.keys(PHASE_2C_BATCH),
-      ...Object.keys(PHASE_2E_BATCH),
-      ...Object.keys(PHASE_2F_BATCH),
-      ...Object.keys(PHASE_2G_BATCH),
-      ...Object.keys(PHASE_2H_BATCH),
-    ]
-      .map(Number)
-      .sort((a, b) => a - b);
-    const actualIds = Object.keys(NOTE_PROMINENCE_BY_ID).map(Number).sort((a, b) => a - b);
-
-    expect(actualIds).toEqual(allExpectedIds);
+  it("adds this batch's 15 fragrance IDs to NOTE_PROMINENCE_BY_ID", () => {
+    // A subset check, not an exact-set check: NOTE_PROMINENCE_BY_ID also
+    // holds the later, final Phase 2J batch (see
+    // noteProminenceSeedBatch2J.test.js, which asserts the full 87/87
+    // catalog coverage) -- this file only proves its own batch's entries
+    // are present and correct, so it stays valid now that the vertical
+    // pass is complete.
+    for (const id of Object.keys(PHASE_2I_BATCH).map(Number)) {
+      expect(NOTE_PROMINENCE_BY_ID).toHaveProperty(String(id));
+    }
   });
 
   it("matches the exact intended score for every fragrance/note pair in this batch", () => {
@@ -286,11 +282,17 @@ describe("Composer Phase 2I note-prominence seed batch", () => {
     });
   });
 
-  it("leaves every fragrance outside all six batches with the default empty prominence object", () => {
-    const outsideBatchIds = [302, 305, 402, 403, 406, 410, 501];
-    for (const id of outsideBatchIds) {
-      expect(NOTE_PROMINENCE_BY_ID).not.toHaveProperty(String(id));
-      expect(perfumesById.get(id).noteProminence).toEqual({});
+  it("never claims any ID belonging to a later batch", () => {
+    // As of Phase 2J, every one of the 87 catalog fragrances has a
+    // NOTE_PROMINENCE_BY_ID entry, so there is no longer any id that is
+    // globally unscored -- see noteProminenceSeedBatch2J.test.js for the
+    // "full 87/87 coverage" assertion. This test is now scoped to this
+    // batch's own fixture instead: it proves PHASE_2I_BATCH never grew to
+    // claim an id that actually belongs to the later Phase 2J batch.
+    const laterPhaseIds = [302, 305, 402, 403, 406, 410, 501];
+    const batchIds = Object.keys(PHASE_2I_BATCH).map(Number);
+    for (const id of laterPhaseIds) {
+      expect(batchIds).not.toContain(id);
     }
   });
 });

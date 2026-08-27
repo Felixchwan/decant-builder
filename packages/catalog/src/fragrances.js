@@ -3216,8 +3216,9 @@ const DEFAULT_SEASON_WEIGHTS = {
 // noteProminenceSeedBatch2E.test.js for the Phase 2E batch,
 // noteProminenceSeedBatch2F.test.js for the Phase 2F batch,
 // noteProminenceSeedBatch2G.test.js for the Phase 2G batch,
-// noteProminenceSeedBatch2H.test.js for the Phase 2H batch, and
-// noteProminenceSeedBatch2I.test.js for the Phase 2I batch that follows it.
+// noteProminenceSeedBatch2H.test.js for the Phase 2H batch,
+// noteProminenceSeedBatch2I.test.js for the Phase 2I batch, and
+// noteProminenceSeedBatch2J.test.js for the Phase 2J batch that follows it.
 //
 // Composer Phase 2E: second editorial seed batch (12 fragrances),
 // deliberately targeting note families the Phase 2C batch left
@@ -3267,6 +3268,27 @@ const DEFAULT_SEASON_WEIGHTS = {
 // this batch reaches the defining/signature band (Fico di Amalfi's
 // figNectar at 9 -- see the rationale at that entry). Phase 2C, 2E, 2F,
 // 2G, and 2H entries above are left exactly as approved.
+//
+// Composer Phase 2J: seventh and final editorial batch of the vertical
+// pass (7 fragrances), completing first-pass review coverage of the full
+// 87-fragrance catalog. Four of these (Carlisle, Hacivat, Il Padrino,
+// Tuxedo) were reviewed under a stricter bar because they were previously
+// deferred or flagged for uncertainty (Carlisle and Il Padrino were
+// dropped from an earlier Phase 2C draft for leaning on textual/marketing
+// consensus rather than confident perceptual judgment; Hacivat was
+// skipped in Phase 2G pending a closer look at its own catalog note data).
+// All four are scored only from what the catalog's own note pyramid and
+// accord list actually show, never from an outside marketing description.
+// Hacivat's recognizable profile is centered on its pineapple/citrus,
+// woody, and oakmoss character -- borne out directly by its own note
+// pyramid and by "oakmoss" appearing as one of its own listed accords --
+// so it carries 4 scored notes here, more than the other three stricter-
+// bar entries (2 notes each). Tuxedo's patchouli:9 is the one defining/
+// signature score in this batch; see the rationale at that entry. Phase
+// 2C, 2E, 2F, 2G, 2H, and 2I entries above are left exactly as approved.
+// With this batch, every one of the 87 catalog fragrances has been
+// reviewed for noteProminence at least once; a later phase will run the
+// deferred horizontal, cross-fragrance note-family calibration pass.
 export const NOTE_PROMINENCE_BY_ID = {
   1: { seaNotes: 10, calone: 9, bergamot: 7, jasmine: 5, whiteMusk: 4 }, // Acqua di Gio EDT
   2: { lemon: 7, rosemary: 5 }, // Light Blue Pour Homme EDT
@@ -3338,16 +3360,23 @@ export const NOTE_PROMINENCE_BY_ID = {
   213: { ginger: 6, apple: 5, sage: 5 }, // YSL Y EDP
   214: { iris: 6, powderyNotes: 6, neroli: 5 }, // Prada L'Homme L'Eau
   301: { sandalwood: 7, madagascarVanilla: 6, lemon: 5 }, // Allure Homme Édition Blanche
+  302: { grapefruit: 7, whiteMusk: 6, amber: 5 }, // Allure Homme Sport Superleggera
   303: { akigalawood: 10, ambroxan: 6, basil: 4 }, // Bois Imperial (generalNotes)
   304: { madagascarVanilla: 10, cinnamon: 7, tonkaBean: 6, incense: 4 }, // Divine Vanille
+  305: { bitterOrange: 7, australianSandalwood: 7 }, // Orange X Santal (generalNotes)
   306: { seaNotes: 6, patchouli: 7, leather: 5, vetiver: 4 }, // Acqua di Gio Elixir
   401: { greenTea: 9, blackCurrant: 7, bergamot: 5, musk: 5 }, // Silver Mountain Water
+  402: { licorice: 8, cinnamon: 7, nutmeg: 6 }, // Sauvage Elixir
+  403: { tonkaBean: 5, vanilla: 5 }, // Carlisle
   404: { apple: 8, lavender: 8, vanilla: 7, cardamom: 4, coumarin: 4 }, // Layton
   405: { iris: 6, grapefruit: 5, rose: 4 }, // Mefisto
+  406: { pineapple: 8, oakmoss: 8, cedar: 5, patchouli: 4 }, // Hacivat
   407: { coconut: 7, pineapple: 6, seaNotes: 5, musk: 4 }, // Summer Hammer
   408: { mint: 9, basil: 6, rosemary: 5, blackCurrant: 4 }, // Torino21
   409: { powderyNotes: 7, juniper: 6, cedar: 6, jasmine: 5, tonkaBean: 4 }, // Orphéon EDP
+  410: { patchouli: 6, vanilla: 5 }, // Il Padrino
   500: { ink: 9, incense: 7, seaSalt: 6, ambergris: 6 }, // Squid
+  501: { patchouli: 9, bourbonVanilla: 5 }, // Tuxedo
 };
 
 const EMPTY_NOTE_PROMINENCE = Object.freeze({});

@@ -139,15 +139,18 @@ describe("Composer Phase 2C note-prominence seed batch", () => {
     });
   });
 
-  it("leaves every fragrance outside this batch with the default empty prominence object, including Carlisle (403) and Il Padrino (410) which were dropped from the earlier draft", () => {
-    // Ids 2, 3, 4, 34, 35, 100, and 101 were swapped out after Phase 2H and
-    // Phase 2I occupied them in turn -- see noteProminenceSeedBatch2H.test.js
-    // and noteProminenceSeedBatch2I.test.js. This is now the full set of ids
-    // remaining outside all six batches.
-    const outsideBatchIds = [302, 305, 402, 403, 406, 410, 501];
-    for (const id of outsideBatchIds) {
-      expect(NOTE_PROMINENCE_BY_ID).not.toHaveProperty(String(id));
-      expect(perfumesById.get(id).noteProminence).toEqual({});
+  it("never claims any ID belonging to a later batch, including Carlisle (403) and Il Padrino (410) which were dropped from an earlier draft of this batch", () => {
+    // As of Phase 2J, every one of the 87 catalog fragrances has a
+    // NOTE_PROMINENCE_BY_ID entry, so there is no longer any id that is
+    // globally unscored -- see noteProminenceSeedBatch2J.test.js for the
+    // "full 87/87 coverage" assertion. This test is now scoped to this
+    // batch's own fixture instead: it proves EXPECTED_BATCH never grew to
+    // claim an id that actually belongs to a later phase (including
+    // Carlisle and Il Padrino, eventually reviewed in Phase 2J).
+    const laterPhaseIds = [34, 35, 100, 101, 102, 103, 106, 107, 108, 114, 206, 209, 210, 211, 214, 302, 305, 402, 403, 406, 410, 501];
+    const batchIds = Object.keys(EXPECTED_BATCH).map(Number);
+    for (const id of laterPhaseIds) {
+      expect(batchIds).not.toContain(id);
     }
   });
 });

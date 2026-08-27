@@ -135,10 +135,20 @@ describe("catalog reference integrity", () => {
     });
 
     it("treats a missing fragrance entry as valid (no editorial data yet), never as an error", () => {
-      const unscoredFragrance = perfumes.find((perfume) => !(perfume.id in NOTE_PROMINENCE_BY_ID));
+      // As of Composer Phase 2J, every real catalog fragrance has been
+      // reviewed at least once, so there is no longer a live example of an
+      // unscored fragrance to find (see noteProminenceSeedBatch2J.test.js
+      // for the full 87/87 coverage assertion). This test now verifies the
+      // underlying mechanism directly instead of relying on a fixture that
+      // happened to still be unscored: looking up an id that is not (and
+      // could never be) a real fragrance id is valid and never throws, and
+      // the merge in fragrances.js falls back to the shared empty object
+      // rather than fabricating a score.
+      const neverAFragranceId = -1;
 
-      expect(unscoredFragrance).toBeTruthy();
-      expect(unscoredFragrance.noteProminence).toEqual({});
+      expect(neverAFragranceId in NOTE_PROMINENCE_BY_ID).toBe(false);
+      expect(() => NOTE_PROMINENCE_BY_ID[neverAFragranceId]).not.toThrow();
+      expect(NOTE_PROMINENCE_BY_ID[neverAFragranceId]).toBeUndefined();
     });
 
     it("treats a missing note key within a scored fragrance as valid partial coverage, never a fabricated score", () => {
