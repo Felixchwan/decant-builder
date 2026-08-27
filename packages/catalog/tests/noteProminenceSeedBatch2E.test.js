@@ -69,13 +69,15 @@ function getPerfumeNoteIds(perfume) {
 describe("Composer Phase 2E note-prominence seed batch", () => {
   const perfumesById = new Map(perfumes.map((perfume) => [perfume.id, perfume]));
 
-  it("adds exactly this batch's 12 fragrance IDs on top of the existing Phase 2C batch", () => {
-    const allExpectedIds = [...Object.keys(PHASE_2E_BATCH), ...Object.keys(PHASE_2C_BATCH)]
-      .map(Number)
-      .sort((a, b) => a - b);
-    const actualIds = Object.keys(NOTE_PROMINENCE_BY_ID).map(Number).sort((a, b) => a - b);
-
-    expect(actualIds).toEqual(allExpectedIds);
+  it("adds this batch's 12 fragrance IDs to NOTE_PROMINENCE_BY_ID", () => {
+    // A subset check, not an exact-set check: NOTE_PROMINENCE_BY_ID also
+    // holds the later Phase 2F batch (see noteProminenceSeedBatch2F.test.js,
+    // which asserts the combined exact key set across all three batches) --
+    // this file only proves its own batch's entries are present and
+    // correct, so it stays valid as further batches are added.
+    for (const id of Object.keys(PHASE_2E_BATCH).map(Number)) {
+      expect(NOTE_PROMINENCE_BY_ID).toHaveProperty(String(id));
+    }
   });
 
   it("matches the exact intended score for every fragrance/note pair in this batch", () => {
@@ -192,7 +194,7 @@ describe("Composer Phase 2E note-prominence seed batch", () => {
   });
 
   it("leaves every fragrance outside both batches with the default empty prominence object", () => {
-    const outsideBatchIds = [2, 3, 4, 15, 100, 306, 403, 410, 501];
+    const outsideBatchIds = [2, 3, 4, 15, 100, 305, 403, 410, 501];
     for (const id of outsideBatchIds) {
       expect(NOTE_PROMINENCE_BY_ID).not.toHaveProperty(String(id));
       expect(perfumesById.get(id).noteProminence).toEqual({});

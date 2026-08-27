@@ -3186,7 +3186,7 @@ const DEFAULT_SEASON_WEIGHTS = {
 //   1-3  = secondary but identifiable
 //   (absent key) = intentionally unscored
 //
-// Two clarifications on applying this rule:
+// Three clarifications on applying this rule:
 // 1. Pyramid position alone neither justifies nor disqualifies a score. A
 //    sole top/middle/base note is not automatically prominent just for
 //    being alone -- but it should still be scored when perceptual identity
@@ -3201,10 +3201,20 @@ const DEFAULT_SEASON_WEIGHTS = {
 //    id. This is not "double-counting": prominence values are never summed
 //    or normalized against each other, so two related concepts each being
 //    "very evident" simply means both are true, not that credit is split.
+// 3. Prominence is fragrance-specific, not note-specific -- the same
+//    canonical note may legitimately receive very different scores across
+//    related fragrances or flankers, since each judgment is about that
+//    note's role in THAT composition's perceptual identity, never about
+//    the note as an abstract ingredient. See seaNotes below: Acqua di Gio
+//    EDT (id 1) scores it 10 (the fragrance the "aquatic" genre is built
+//    on), while Acqua di Gio Elixir (id 306), a documented woodier
+//    reinterpretation sharing the same note, scores it only 6 -- neither
+//    value was inferred from the other just because the note id matches.
 //
 // See packages/catalog/tests/noteProminenceSeedBatch.test.js for the
-// narrow regression coverage of the Phase 2C batch below, and
-// noteProminenceSeedBatch2E.test.js for the Phase 2E batch that follows it.
+// narrow regression coverage of the Phase 2C batch below,
+// noteProminenceSeedBatch2E.test.js for the Phase 2E batch, and
+// noteProminenceSeedBatch2F.test.js for the Phase 2F batch that follows it.
 //
 // Composer Phase 2E: second editorial seed batch (12 fragrances),
 // deliberately targeting note families the Phase 2C batch left
@@ -3214,25 +3224,46 @@ const DEFAULT_SEASON_WEIGHTS = {
 // rather than adding more aquatic/marine coverage, which Phase 2C already
 // served well. Same editorial rule and scale as Phase 2C; the Phase 2C
 // entries above are left exactly as approved.
+//
+// Composer Phase 2F: third editorial seed batch (12 fragrances), targeting
+// directional usefulness in leather, incense/resins (including a first
+// benzoin entry), aquatic/marine, woods (first patchouli and guaiacWood
+// entries -- both previously entirely absent despite being common
+// canonical notes), iris/powdery, citrus, and green/aromatic (first sage
+// entries). Tobacco was explicitly investigated but left unadvanced this
+// round -- no new candidate met the confidence bar. Phase 2C and Phase 2E
+// entries above are left exactly as approved.
 export const NOTE_PROMINENCE_BY_ID = {
   1: { seaNotes: 10, calone: 9, bergamot: 7, jasmine: 5, whiteMusk: 4 }, // Acqua di Gio EDT
   5: { lavender: 9, vanilla: 8, mint: 6, tonkaBean: 5 }, // Le Male
+  7: { leather: 8, ginger: 7, maninka: 5 }, // The Scent EDT
+  9: { musk: 8, sage: 5, vetiver: 5 }, // Fierce
+  10: { almond: 8, tonkaBean: 6, bitterOrange: 5, leather: 4 }, // L'Homme Idéal EDT
+  11: { caramel: 8, tonkaBean: 6, mandarinOrange: 4 }, // Scandal Pour Homme
+  12: { leather: 7, suede: 6, sugar: 6, grass: 5 }, // CH Men
   13: { tobacco: 8, amber: 6, grapefruit: 6, cardamom: 5 }, // The One for Men EDP
   16: { roastedCoffeeBeans: 8, leather: 6, tonkaBean: 6, cinnamon: 5 }, // Uomo Signature
   17: { birchLeaf: 7, incense: 5, pinkPepper: 4 }, // Gentlemen Only
   18: { pine: 7, fingerLime: 6, eucalyptus: 5, cedarwood: 4 }, // L.12.12 Blanc EDP
   19: { pineapple: 8, birch: 7, blackCurrant: 6, ambergris: 5 }, // Club de Nuit Intense Man
   104: { tonkaBean: 9, lavender: 6, greenMandarin: 5, cedar: 4 }, // Armani Code EDT
+  110: { orange: 8, mint: 6, patchouli: 5, bitterOrange: 5 }, // Concentré d'Orange Verte
   111: { orange: 8, vetiver: 8, grapefruit: 7, cedar: 6, pepper: 4 }, // Terre d'Hermès EDT
   113: { cardamom: 7, vanilla: 8, lavender: 6, iris: 4 }, // Le Male Le Parfum
   115: { citron: 8, cedar: 5, blackCurrant: 4 }, // Cedrat Boise
   118: { cardamom: 9, coumarin: 6, lavender: 5, vetiver: 3 }, // La Nuit de L'Homme
+  119: { seaNotes: 6, basil: 5, lemon: 5 }, // Mirto di Panarea
   202: { ambroxan: 9, bergamot: 7, sichuanPepper: 6, vanilla: 5 }, // Sauvage EDP
+  203: { incense: 6, sage: 6, cloves: 4 }, // Loewe 7 Cobalt (generalNotes)
+  204: { guaiacWood: 9, chestnut: 7, cloves: 6, vanilla: 5 }, // Replica By The Fireplace
+  205: { iris: 8, patchouli: 6, benzoin: 6, cloves: 5 }, // Gentleman EDP
   208: { iris: 9, neroli: 6, amber: 5, carrotSeeds: 3 }, // Prada L'Homme
   212: { tobacco: 9, vanilla: 7, bourbonVanilla: 7, cinnamon: 6, blackPepper: 5 }, // Spicebomb Extreme
+  213: { ginger: 6, apple: 5, sage: 5 }, // YSL Y EDP
   301: { sandalwood: 7, madagascarVanilla: 6, lemon: 5 }, // Allure Homme Édition Blanche
   303: { akigalawood: 10, ambroxan: 6, basil: 4 }, // Bois Imperial (generalNotes)
   304: { madagascarVanilla: 10, cinnamon: 7, tonkaBean: 6, incense: 4 }, // Divine Vanille
+  306: { seaNotes: 6, patchouli: 7, leather: 5, vetiver: 4 }, // Acqua di Gio Elixir
   401: { greenTea: 9, blackCurrant: 7, bergamot: 5, musk: 5 }, // Silver Mountain Water
   404: { apple: 8, lavender: 8, vanilla: 7, cardamom: 4, coumarin: 4 }, // Layton
   408: { mint: 9, basil: 6, rosemary: 5, blackCurrant: 4 }, // Torino21
