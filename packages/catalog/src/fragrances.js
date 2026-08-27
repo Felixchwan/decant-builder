@@ -1170,7 +1170,7 @@ baseNotes: ["caramel", "musk"],
   topNotes: [],
   middleNotes: [],
   baseNotes: [],
-  generalNotes: ["orange", "bitterOrange", "lemon", "mandarin", "mint", "oakmoss", "patchouli"],
+  generalNotes: ["orange", "bitterOrange", "lemon", "mandarin", "mint", "basil", "oakmoss", "patchouli"],
   seasons: ["spring", "summer"],
   occasions: ["daily", "office", "casual"],
   vibes: ["fresh", "green", "classic", "clean"],
@@ -3289,6 +3289,37 @@ const DEFAULT_SEASON_WEIGHTS = {
 // With this batch, every one of the 87 catalog fragrances has been
 // reviewed for noteProminence at least once; a later phase will run the
 // deferred horizontal, cross-fragrance note-family calibration pass.
+//
+// Composer Phase 3A: first horizontal calibration pass -- basil and
+// blackCurrant. Unlike the vertical pass above (which asked "how
+// important is this note inside this fragrance?"), this phase compares
+// every fragrance containing the same canonical note against every other
+// one, and recalibrates relative to that comparison. This intentionally
+// revises some vertical-pass values that a purely per-fragrance review
+// could not have calibrated correctly; see
+// noteProminenceHorizontalCalibration3A.test.js for the complete family
+// listing, rationale, and the narrow vertical-seed-test updates this pass
+// required.
+// A concrete catalog-data correction, made explicit rather than silently
+// folded in: Concentré d'Orange Verte (id 110) -- the fragrance named as
+// ranking too weakly for basil -- was initially found to have no basil in
+// its canonical generalNotes list at all (only mint), which this phase
+// first reported as an out-of-scope catalog-data gap rather than a
+// prominence issue. That was revisited on explicit editorial instruction:
+// Concentré d'Orange Verte is treated as canonically containing basil
+// (real-world, this Hermès cologne's green, herbal-orange character is
+// widely documented as basil-forward, matching its own "green" accord),
+// so basil was added to its existing generalNotes collection -- the
+// smallest structural change preserving every other canonical note -- and
+// it now carries a horizontally-calibrated basil score of its own, tied
+// with Torino21 at the top of the family.
+// A final editorial adjustment within the blackCurrant family, made on
+// explicit instruction while wrapping up this pass: Loewe 7 Cobalt (203) and Club
+// de Nuit Intense Man (19) are swapped from an earlier draft of this pass
+// -- Loewe 7 Cobalt now carries the top blackCurrant score (8, tied with
+// Silver Mountain Water) and Club de Nuit Intense Man carries 6. Both
+// remain above Cedrat Boise and Torino21 (3 each), so the originally
+// flagged implausible ordering stays resolved either way.
 export const NOTE_PROMINENCE_BY_ID = {
   1: { seaNotes: 10, calone: 9, bergamot: 7, jasmine: 5, whiteMusk: 4 }, // Acqua di Gio EDT
   2: { lemon: 7, rosemary: 5 }, // Light Blue Pour Homme EDT
@@ -3302,7 +3333,7 @@ export const NOTE_PROMINENCE_BY_ID = {
   10: { almond: 8, tonkaBean: 6, bitterOrange: 5, leather: 4 }, // L'Homme Idéal EDT
   11: { caramel: 8, tonkaBean: 6, mandarinOrange: 4 }, // Scandal Pour Homme
   12: { leather: 7, suede: 6, sugar: 6, grass: 5 }, // CH Men
-  13: { tobacco: 8, amber: 6, grapefruit: 6, cardamom: 5 }, // The One for Men EDP
+  13: { tobacco: 8, amber: 6, grapefruit: 6, cardamom: 5, basil: 3 }, // The One for Men EDP
   14: { leather: 6, cinnamon: 5, vanilla: 5 }, // Halloween Man
   15: { mango: 6, sandalwood: 5, tonkaBean: 4 }, // Polo Black (generalNotes)
   16: { roastedCoffeeBeans: 8, leather: 6, tonkaBean: 6, cinnamon: 5 }, // Uomo Signature
@@ -3335,19 +3366,19 @@ export const NOTE_PROMINENCE_BY_ID = {
   107: { passionFruit: 6, frangipani: 5 }, // Birds of Paradise for Him
   108: { truffle: 7, plum: 5 }, // Bad Boy Cobalt Parfum Electrique
   109: { leather: 6, patchouli: 5, fig: 4 }, // K EDP Intense
-  110: { orange: 8, mint: 6, patchouli: 5, bitterOrange: 5 }, // Concentré d'Orange Verte
+  110: { orange: 8, mint: 6, patchouli: 5, bitterOrange: 5, basil: 8 }, // Concentré d'Orange Verte
   111: { orange: 8, vetiver: 8, grapefruit: 7, cedar: 6, pepper: 4 }, // Terre d'Hermès EDT
   112: { coconut: 9, pineapple: 6, tonkaBean: 5 }, // Le Beau Le Parfum
   113: { cardamom: 7, vanilla: 8, lavender: 6, iris: 4 }, // Le Male Le Parfum
   114: { ambroxan: 6, apple: 4 }, // Game of Spades Wildcard
-  115: { citron: 8, cedar: 5, blackCurrant: 4 }, // Cedrat Boise
+  115: { citron: 8, cedar: 5, blackCurrant: 3 }, // Cedrat Boise
   116: { vanilla: 5, tonkaBean: 5, pinkPepper: 4 }, // Invictus Victory
   117: { ginger: 6, basil: 5, tonkaBean: 5, cedar: 4 }, // YSL L'Homme
   118: { cardamom: 9, coumarin: 6, lavender: 5, vetiver: 3 }, // La Nuit de L'Homme
-  119: { seaNotes: 6, basil: 5, lemon: 5 }, // Mirto di Panarea
+  119: { seaNotes: 6, basil: 7, lemon: 5 }, // Mirto di Panarea
   201: { aldehydes: 6, elemi: 5 }, // Dior Homme Sport
   202: { ambroxan: 9, bergamot: 7, sichuanPepper: 6, vanilla: 5 }, // Sauvage EDP
-  203: { incense: 6, sage: 6, cloves: 4 }, // Loewe 7 Cobalt (generalNotes)
+  203: { incense: 6, sage: 6, cloves: 4, blackCurrant: 8 }, // Loewe 7 Cobalt (generalNotes)
   204: { guaiacWood: 9, chestnut: 7, cloves: 6, vanilla: 5 }, // Replica By The Fireplace
   205: { iris: 8, patchouli: 6, benzoin: 6, cloves: 5 }, // Gentleman EDP
   206: { vetiver: 6, patchouli: 6, pinkPepper: 5 }, // Polo Blue Parfum
@@ -3363,16 +3394,16 @@ export const NOTE_PROMINENCE_BY_ID = {
   302: { grapefruit: 7, whiteMusk: 6, amber: 5 }, // Allure Homme Sport Superleggera
   303: { akigalawood: 10, ambroxan: 6, basil: 4 }, // Bois Imperial (generalNotes)
   304: { madagascarVanilla: 10, cinnamon: 7, tonkaBean: 6, incense: 4 }, // Divine Vanille
-  305: { bitterOrange: 7, australianSandalwood: 7 }, // Orange X Santal (generalNotes)
+  305: { bitterOrange: 7, australianSandalwood: 7, basil: 5 }, // Orange X Santal (generalNotes)
   306: { seaNotes: 6, patchouli: 7, leather: 5, vetiver: 4 }, // Acqua di Gio Elixir
-  401: { greenTea: 9, blackCurrant: 7, bergamot: 5, musk: 5 }, // Silver Mountain Water
+  401: { greenTea: 9, blackCurrant: 8, bergamot: 5, musk: 5 }, // Silver Mountain Water
   402: { licorice: 8, cinnamon: 7, nutmeg: 6 }, // Sauvage Elixir
   403: { tonkaBean: 5, vanilla: 5 }, // Carlisle
   404: { apple: 8, lavender: 8, vanilla: 7, cardamom: 4, coumarin: 4 }, // Layton
   405: { iris: 6, grapefruit: 5, rose: 4 }, // Mefisto
   406: { pineapple: 8, oakmoss: 8, cedar: 5, patchouli: 4 }, // Hacivat
   407: { coconut: 7, pineapple: 6, seaNotes: 5, musk: 4 }, // Summer Hammer
-  408: { mint: 9, basil: 6, rosemary: 5, blackCurrant: 4 }, // Torino21
+  408: { mint: 9, basil: 8, rosemary: 5, blackCurrant: 3 }, // Torino21
   409: { powderyNotes: 7, juniper: 6, cedar: 6, jasmine: 5, tonkaBean: 4 }, // Orphéon EDP
   410: { patchouli: 6, vanilla: 5 }, // Il Padrino
   500: { ink: 9, incense: 7, seaSalt: 6, ambergris: 6 }, // Squid

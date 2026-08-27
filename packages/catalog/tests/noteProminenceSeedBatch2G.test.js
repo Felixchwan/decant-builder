@@ -44,23 +44,23 @@ const PHASE_2C_BATCH = {
   208: { iris: 9, neroli: 6, amber: 5, carrotSeeds: 3 },
   303: { akigalawood: 10, ambroxan: 6, basil: 4 },
   304: { madagascarVanilla: 10, cinnamon: 7, tonkaBean: 6, incense: 4 },
-  401: { greenTea: 9, blackCurrant: 7, bergamot: 5, musk: 5 },
+  401: { greenTea: 9, blackCurrant: 8, bergamot: 5, musk: 5 }, // Phase 3A: blackCurrant 7 -> 8 (horizontal calibration)
   404: { apple: 8, lavender: 8, vanilla: 7, cardamom: 4, coumarin: 4 },
   500: { ink: 9, incense: 7, seaSalt: 6, ambergris: 6 },
 };
 
 const PHASE_2E_BATCH = {
-  13: { tobacco: 8, amber: 6, grapefruit: 6, cardamom: 5 },
+  13: { tobacco: 8, amber: 6, grapefruit: 6, cardamom: 5, basil: 3 }, // Phase 3A: added basil (horizontal calibration)
   16: { roastedCoffeeBeans: 8, leather: 6, tonkaBean: 6, cinnamon: 5 },
   17: { birchLeaf: 7, incense: 5, pinkPepper: 4 },
   18: { pine: 7, fingerLime: 6, eucalyptus: 5, cedarwood: 4 },
-  19: { pineapple: 8, birch: 7, blackCurrant: 6, ambergris: 5 },
+  19: { pineapple: 8, birch: 7, blackCurrant: 6, ambergris: 5 }, // Phase 3A: blackCurrant 6 -> 8 -> 6 (final value, swapped with Loewe 7 Cobalt on finalization)
   104: { tonkaBean: 9, lavender: 6, greenMandarin: 5, cedar: 4 },
   113: { cardamom: 7, vanilla: 8, lavender: 6, iris: 4 },
-  115: { citron: 8, cedar: 5, blackCurrant: 4 },
+  115: { citron: 8, cedar: 5, blackCurrant: 3 }, // Phase 3A: blackCurrant 4 -> 3 (horizontal calibration)
   212: { tobacco: 9, vanilla: 7, bourbonVanilla: 7, cinnamon: 6, blackPepper: 5 },
   301: { sandalwood: 7, madagascarVanilla: 6, lemon: 5 },
-  408: { mint: 9, basil: 6, rosemary: 5, blackCurrant: 4 },
+  408: { mint: 9, basil: 8, rosemary: 5, blackCurrant: 3 }, // Phase 3A: basil 6 -> 8, blackCurrant 4 -> 3 (horizontal calibration)
   409: { powderyNotes: 7, juniper: 6, cedar: 6, jasmine: 5, tonkaBean: 4 },
 };
 
@@ -70,9 +70,9 @@ const PHASE_2F_BATCH = {
   10: { almond: 8, tonkaBean: 6, bitterOrange: 5, leather: 4 },
   11: { caramel: 8, tonkaBean: 6, mandarinOrange: 4 },
   12: { leather: 7, suede: 6, sugar: 6, grass: 5 },
-  110: { orange: 8, mint: 6, patchouli: 5, bitterOrange: 5 },
-  119: { seaNotes: 6, basil: 5, lemon: 5 },
-  203: { incense: 6, sage: 6, cloves: 4 },
+  110: { orange: 8, mint: 6, patchouli: 5, bitterOrange: 5, basil: 8 }, // Phase 3A correction: added basil (canonical-data correction + horizontal calibration)
+  119: { seaNotes: 6, basil: 7, lemon: 5 }, // Phase 3A: basil 5 -> 7 (horizontal calibration)
+  203: { incense: 6, sage: 6, cloves: 4, blackCurrant: 8 }, // Phase 3A: added blackCurrant, final value 8 (swapped with Club de Nuit Intense Man on finalization)
   204: { guaiacWood: 9, chestnut: 7, cloves: 6, vanilla: 5 },
   205: { iris: 8, patchouli: 6, benzoin: 6, cloves: 5 },
   213: { ginger: 6, apple: 5, sage: 5 },

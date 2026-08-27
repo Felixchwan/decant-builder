@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { fragrances as catalogFragrances } from "@discovery-box/catalog";
 import {
   buildNoteExplorerNoteOptions,
   getNoteExplorerMatches,
@@ -203,5 +204,49 @@ describe("sortNoteExplorerMatchesByProminence", () => {
     const pyramidOnly = perfume(20, { name: "PyramidOnly", topNotes: ["oud"], noteProminence: {} });
     const sorted = sortNoteExplorerMatchesByProminence([pyramidOnly], "oud");
     expect(sorted).toEqual([pyramidOnly]);
+  });
+});
+
+// Composer Phase 3A: horizontal note-family calibration regression, run
+// against the real catalog rather than synthetic fixtures. The underlying
+// data (family membership, exact scores, unrelated-value preservation,
+// pyramid immutability) is proven in
+// packages/catalog/tests/noteProminenceHorizontalCalibration3A.test.js;
+// this describe block only proves the existing, unmodified sort algorithm
+// produces the approved relative order once given those calibrated scores
+// -- packages/catalog must never import from packages/builder (ADR-0006),
+// so the sort-specific assertions live here instead.
+describe("Note Explorer 'Most prominent' sort reflects the Phase 3A calibrated order", () => {
+  it("basil: (Concentré d'Orange Verte = Torino21, catalog order) > Mirto di Panarea > (YSL L'Homme = Orange X Santal, catalog order) > Bois Imperial > The One for Men EDP > Halloween Man (unscored, last)", () => {
+    const matches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "basil" });
+    expect(matches.map((match) => match.id).sort((a, b) => a - b)).toEqual([13, 14, 110, 117, 119, 303, 305, 408]);
+
+    const sorted = sortNoteExplorerMatchesByProminence(matches, "basil");
+    expect(sorted.map((match) => match.id)).toEqual([110, 408, 119, 117, 305, 303, 13, 14]);
+
+    // Concentré d'Orange Verte -- the fragrance flagged as ranking too
+    // weakly for basil -- now ties for first place, per the Phase 3A
+    // canonical-data correction and horizontal calibration, rather than
+    // ranking as a secondary/incidental note.
+    const rank = new Map(sorted.map((match, index) => [match.id, index]));
+    expect(rank.get(110)).toBe(0);
+  });
+
+  it("blackCurrant: (Loewe 7 Cobalt = Silver Mountain Water, catalog order) > Club de Nuit Intense Man > (Cedrat Boise = Torino21, catalog order) > Il Padrino (unscored, last)", () => {
+    const matches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "blackCurrant" });
+    expect(matches.map((match) => match.id).sort((a, b) => a - b)).toEqual([19, 115, 203, 401, 408, 410]);
+
+    const sorted = sortNoteExplorerMatchesByProminence(matches, "blackCurrant");
+    expect(sorted.map((match) => match.id)).toEqual([203, 401, 19, 115, 408, 410]);
+
+    // The specific implausible ordering flagged before this phase --
+    // Cedrat Boise and Torino21 outranking Loewe 7 Cobalt -- is resolved.
+    // (Loewe 7 Cobalt and Club de Nuit Intense Man were swapped from an
+    // earlier draft of this pass on explicit editorial instruction during
+    // finalization; both remain well above Cedrat Boise/Torino21 either
+    // way.)
+    const rank = new Map(sorted.map((match, index) => [match.id, index]));
+    expect(rank.get(203)).toBeLessThan(rank.get(115));
+    expect(rank.get(203)).toBeLessThan(rank.get(408));
   });
 });
