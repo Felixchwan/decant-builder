@@ -3412,6 +3412,35 @@ const DEFAULT_SEASON_WEIGHTS = {
 // correction was made or recommended. See
 // noteProminenceHorizontalCalibration3E.test.js for the complete
 // taxonomy audit, membership tables, and rationale.
+//
+// Composer Phase 3F: sixth horizontal calibration pass -- the vetiver and
+// amber canonical-key families. Vetiver keys: vetiver, haitianVetiver (an
+// explicitly-qualified variant sharing notes/vetiver.jpg, kept distinct).
+// Amber keys: amber -- the only true canonical amber-identity key in this
+// dictionary. Ambroxan, ambergris, amberwood, ambermax, benzoin, labdanum,
+// and opoponax are real, separately-named materials that commonly
+// contribute to an "amber" olfactive effect but were never treated as
+// canonical amber substitutes or renamed into it, per this dictionary's
+// own distinct entries for each (amberwood and vetiver are even tagged
+// family: "woody", not "amber"/"woody"-crossed, in notes.js itself).
+// orientalNotes carries family: "amber" but is a generic collective accord
+// label (like the existing woodyNotes/spicyNotes/fruityNotes umbrella
+// notes), not a specific amber material, and was excluded on the same
+// basis. Across 22 vetiver, 2 haitianVetiver, and 26 amber fragrance/note
+// pairs, this phase's own calibration changes zero individual pairs --
+// every already-scored entry held up as internally consistent under
+// comparison against real peers, and every unscored member's vetiver or
+// amber note is genuine generic-base/background material in a
+// composition whose own documented signature lies elsewhere (e.g.
+// Acqua di Gio EDT's marine accord, Le Male's lavender-vanilla-mint,
+// Bois Imperial's akigalawood). Per this phase's own strict editorial
+// caution, generic dryness/greenness/woodiness was never treated as
+// vetiver evidence, and generic warmth/sweetness/resinous character --
+// including ambroxan, ambergris, benzoin, or labdanum's own contribution
+// to a fragrance's amber-like effect -- was never treated as evidence for
+// the explicit canonical amber key. No canonical-data correction was made
+// or recommended. See noteProminenceHorizontalCalibration3F.test.js for
+// the complete taxonomy audit, membership tables, and rationale.
 export const NOTE_PROMINENCE_BY_ID = {
   1: { seaNotes: 10, calone: 9, bergamot: 7, jasmine: 5, whiteMusk: 4 }, // Acqua di Gio EDT
   2: { lemon: 7, rosemary: 5, patchouli: 4 }, // Light Blue Pour Homme EDT

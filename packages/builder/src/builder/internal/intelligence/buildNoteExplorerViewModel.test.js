@@ -615,7 +615,7 @@ describe("Note Explorer 'Most prominent' sort reflects the Phase 3E calibrated o
     expect(sorted.map((match) => match.id)).toEqual([305]);
   });
 
-  it("patchouli (33 members): Tuxedo's defining score leads, down through Legend Red's Phase 3E addition, then 18 unscored members trail in catalog order", () => {
+  it("patchouli (33 members): Tuxedo's defining score leads, down through Terre d'Hermès EDT's Phase 3E addition, then 18 unscored members trail in catalog order", () => {
     const matches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "patchouli" });
     expect(matches.map((match) => match.id).sort((a, b) => a - b)).toEqual([
       1, 2, 6, 15, 16, 17, 19, 21, 25, 29, 33, 101, 103, 109, 110, 111, 115, 205, 206, 207, 208, 209, 211, 302, 303,
@@ -645,5 +645,93 @@ describe("Note Explorer 'Most prominent' sort reflects the Phase 3E calibrated o
     // fragrance to assert an exclusion for -- confirmed in
     // noteProminenceHorizontalCalibration3E.test.js instead.
     expect(patchouliMatches.map((match) => match.id)).toContain(501); // Tuxedo genuinely carries generic patchouli
+  });
+});
+
+// Composer Phase 3F: horizontal note-family calibration regression for the
+// vetiver and amber canonical-key families, run against the real catalog.
+// The underlying data (taxonomy audit, canonical-data sanity audit, exact
+// scores, canonical-pyramid immutability) is proven in
+// packages/catalog/tests/noteProminenceHorizontalCalibration3F.test.js;
+// this describe block only proves the existing, unmodified sort algorithm
+// produces the approved relative order per canonical key -- scored
+// fragrances sort descending, ties preserve catalog order, unscored
+// members trail after every scored one, and vetiver/haitianVetiver never
+// cross-rank against each other. Phase 3F changed zero prominence values,
+// so every order below is identical to the pre-Phase-3F catalog.
+describe("Note Explorer 'Most prominent' sort reflects the Phase 3F calibrated order, per distinct canonical key", () => {
+  it("vetiver (22 members): Terre d'Hermès EDT leads, down through 3 tied members at score 6, then 14 unscored members trail in catalog order", () => {
+    const matches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "vetiver" });
+    expect(matches.map((match) => match.id).sort((a, b) => a - b)).toEqual([
+      9, 10, 11, 12, 17, 27, 34, 101, 108, 109, 111, 117, 118, 203, 206, 210, 211, 213, 301, 303, 306, 407,
+    ]);
+
+    const sorted = sortNoteExplorerMatchesByProminence(matches, "vetiver");
+    expect(sorted.map((match) => match.id)).toEqual([
+      111, 34, 206, 210, 9, 27, 306, 118, 10, 11, 12, 17, 101, 108, 109, 117, 203, 211, 213, 301, 303, 407,
+    ]);
+
+    // 34, 206, and 210 tie at score 6 -- the sort preserves their
+    // ascending catalog-array order (34 before 206 before 210) rather
+    // than forcing an artificial rank difference.
+    const rank = new Map(sorted.map((match, index) => [match.id, index]));
+    expect(rank.get(34)).toBeLessThan(rank.get(206));
+    expect(rank.get(206)).toBeLessThan(rank.get(210));
+    const lastScoredRank = rank.get(118);
+    expect(rank.get(10)).toBeGreaterThan(lastScoredRank); // an unscored member trails every scored one
+  });
+
+  it("haitianVetiver: only Montblanc Explorer (scored) and Sauvage Elixir (unscored) carry it", () => {
+    const matches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "haitianVetiver" });
+    expect(matches.map((match) => match.id).sort((a, b) => a - b)).toEqual([25, 402]);
+
+    const sorted = sortNoteExplorerMatchesByProminence(matches, "haitianVetiver");
+    expect(sorted.map((match) => match.id)).toEqual([25, 402]); // scored (25) leads, unscored (402) trails
+  });
+
+  it("amber (26 members): The One for Men EDP and F by Ferragamo Black tie for the lead, down through 7 tied members at score 5, then 17 unscored members trail in catalog order", () => {
+    const matches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "amber" });
+    expect(matches.map((match) => match.id).sort((a, b) => a - b)).toEqual([
+      1, 3, 5, 12, 13, 14, 20, 26, 28, 31, 32, 101, 107, 112, 114, 116, 119, 201, 208, 209, 214, 302, 402, 405, 407,
+      410,
+    ]);
+
+    const sorted = sortNoteExplorerMatchesByProminence(matches, "amber");
+    expect(sorted.map((match) => match.id)).toEqual([
+      13, 20, 32, 26, 28, 31, 208, 209, 302, 1, 3, 5, 12, 14, 101, 119, 107, 112, 114, 116, 201, 214, 402, 405, 407,
+      410,
+    ]);
+
+    // 13 and 20 tie at score 6, and 32/26/28/31/208/209/302 tie at score 5
+    // -- the sort preserves ascending catalog-array order within each tie
+    // group rather than forcing an artificial rank difference.
+    const rank = new Map(sorted.map((match, index) => [match.id, index]));
+    expect(rank.get(13)).toBeLessThan(rank.get(20));
+    expect(rank.get(32)).toBeLessThan(rank.get(26));
+    expect(rank.get(26)).toBeLessThan(rank.get(28));
+    expect(rank.get(28)).toBeLessThan(rank.get(31));
+    expect(rank.get(31)).toBeLessThan(rank.get(208));
+    expect(rank.get(208)).toBeLessThan(rank.get(209));
+    expect(rank.get(209)).toBeLessThan(rank.get(302));
+    const lastScoredRank = rank.get(302);
+    expect(rank.get(1)).toBeGreaterThan(lastScoredRank); // an unscored member trails every scored one
+  });
+
+  it("never cross-matches distinct vetiver variants, and never treats an amber-adjacent material as the canonical amber key -- searching one canonical key never returns a fragrance whose only relevant note is a different variant", () => {
+    const vetiverMatches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "vetiver" });
+    expect(vetiverMatches.map((match) => match.id)).not.toContain(25); // Montblanc Explorer: haitianVetiver only
+    expect(vetiverMatches.map((match) => match.id)).not.toContain(402); // Sauvage Elixir: haitianVetiver only
+
+    const haitianVetiverMatches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "haitianVetiver" });
+    expect(haitianVetiverMatches.map((match) => match.id)).not.toContain(111); // Terre d'Hermès EDT: generic vetiver only
+
+    const amberMatches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "amber" });
+    expect(amberMatches.map((match) => match.id)).not.toContain(202); // Sauvage EDP: ambroxan only
+    expect(amberMatches.map((match) => match.id)).not.toContain(19); // Club de Nuit Intense Man: ambergris only
+    expect(amberMatches.map((match) => match.id)).not.toContain(8); // The Most Wanted: amberwood only
+    expect(amberMatches.map((match) => match.id)).not.toContain(404); // Layton: ambermax only
+    expect(amberMatches.map((match) => match.id)).not.toContain(102); // Fico di Amalfi: benzoin only
+    expect(amberMatches.map((match) => match.id)).not.toContain(403); // Carlisle: opoponax only
+    expect(amberMatches.map((match) => match.id)).not.toContain(113); // Le Male Le Parfum: orientalNotes only
   });
 });
