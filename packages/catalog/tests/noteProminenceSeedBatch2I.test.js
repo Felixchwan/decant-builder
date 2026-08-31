@@ -114,7 +114,7 @@ const PHASE_2H_BATCH = {
   27: { whiteMusk: 6, vetiver: 5 },
   28: { orange: 6, apple: 5, amber: 5 },
   29: { vanilla: 7, chinotto: 6, tonkaBean: 5 },
-  30: { leather: 7, bergamot: 5 },
+  30: { leather: 9, bergamot: 5 }, // Phase 3G: leather 7 -> 9 (horizontal calibration)
   31: { amber: 5, cardamom: 5 },
   32: { suede: 5, amber: 5 },
   33: { cashmeran: 6, patchouli: 5, apple: 4 },

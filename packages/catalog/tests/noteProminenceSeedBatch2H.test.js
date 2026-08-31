@@ -14,8 +14,11 @@ import { NOTE_PROMINENCE_BY_ID } from "../src/fragrances.js";
 // unreviewed ids rather than targeting note families or coverage themes.
 // Several of these are smaller mass-market releases with fewer independent
 // real-world references than earlier batches' flagship fragrances, so this
-// round stayed conservative: no score reaches the 9-10 defining/signature
-// band, and several entries carry only two scored notes.
+// round originally stayed conservative: no score reached the 9-10
+// defining/signature band at the time, and several entries carry only two
+// scored notes. (Phase 3G's later horizontal calibration raised Vibrant
+// Leather Bogoss's leather score into that band -- see the batch fixture
+// and its own regression test below.)
 const PHASE_2H_BATCH = {
   2: { lemon: 7, rosemary: 5, patchouli: 4 }, // Phase 3E: added patchouli (horizontal calibration)
   3: { bergamot: 6, musk: 6, cedar: 4 }, // Phase 3C: cedar 5 -> 4 (horizontal calibration)
@@ -28,7 +31,7 @@ const PHASE_2H_BATCH = {
   27: { whiteMusk: 6, vetiver: 5 },
   28: { orange: 6, apple: 5, amber: 5 },
   29: { vanilla: 7, chinotto: 6, tonkaBean: 5 },
-  30: { leather: 7, bergamot: 5 },
+  30: { leather: 9, bergamot: 5 }, // Phase 3G: leather 7 -> 9 (horizontal calibration)
   31: { amber: 5, cardamom: 5 },
   32: { suede: 5, amber: 5 },
   33: { cashmeran: 6, patchouli: 5, apple: 4 },
@@ -180,8 +183,16 @@ describe("Composer Phase 2H note-prominence seed batch", () => {
     expect(Object.keys(NOTE_PROMINENCE_BY_ID[2]).sort()).toEqual(ownNoteIds.sort());
   });
 
-  it("stays conservative -- no 9-10 defining/signature score appears anywhere in this batch", () => {
-    const highScores = Object.entries(PHASE_2H_BATCH).flatMap(([id, entry]) =>
+  it("stayed conservative in its own original vertical pass -- no 9-10 defining/signature score was ever assigned during Phase 2H itself", () => {
+    // Excludes id 30 (Vibrant Leather Bogoss): Phase 3G's later horizontal
+    // calibration raised its leather score into the 9-10 band based on the
+    // fragrance's own documented identity (see
+    // noteProminenceHorizontalCalibration3G.test.js), so the embedded
+    // PHASE_2H_BATCH snapshot above now legitimately carries a 9. This
+    // test's claim is scoped to the original Phase 2H vertical pass, not
+    // to values a later horizontal phase subsequently raised.
+    const originalEntries = Object.fromEntries(Object.entries(PHASE_2H_BATCH).filter(([id]) => id !== "30"));
+    const highScores = Object.entries(originalEntries).flatMap(([id, entry]) =>
       Object.entries(entry)
         .filter(([, value]) => value >= 9)
         .map(([noteId, value]) => `${id}:${noteId}:${value}`)

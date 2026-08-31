@@ -735,3 +735,70 @@ describe("Note Explorer 'Most prominent' sort reflects the Phase 3F calibrated o
     expect(amberMatches.map((match) => match.id)).not.toContain(113); // Le Male Le Parfum: orientalNotes only
   });
 });
+
+// Composer Phase 3G: horizontal note-family calibration regression for the
+// iris and leather canonical-key families, run against the real catalog.
+// The underlying data (taxonomy audit, canonical-data sanity audit, exact
+// scores, unrelated-value preservation, pyramid immutability) is proven in
+// packages/catalog/tests/noteProminenceHorizontalCalibration3G.test.js;
+// this describe block only proves the existing, unmodified sort algorithm
+// produces the approved relative order per canonical key -- scored
+// fragrances sort descending, ties preserve catalog order, unscored
+// members trail after every scored one, and leather/suede never cross-
+// rank against each other.
+describe("Note Explorer 'Most prominent' sort reflects the Phase 3G calibrated order, per distinct canonical key", () => {
+  it("iris (7 members): Prada L'Homme leads, down through 2 tied members at score 6, then 2 unscored members trail in catalog order", () => {
+    const matches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "iris" });
+    expect(matches.map((match) => match.id).sort((a, b) => a - b)).toEqual([33, 112, 113, 205, 208, 214, 405]);
+
+    const sorted = sortNoteExplorerMatchesByProminence(matches, "iris");
+    expect(sorted.map((match) => match.id)).toEqual([208, 205, 214, 405, 113, 33, 112]);
+
+    // 214 and 405 tie at score 6 -- the sort preserves their ascending
+    // catalog-array order rather than forcing an artificial rank
+    // difference.
+    const rank = new Map(sorted.map((match, index) => [match.id, index]));
+    expect(rank.get(214)).toBeLessThan(rank.get(405));
+    const lastScoredRank = rank.get(113);
+    expect(rank.get(33)).toBeGreaterThan(lastScoredRank); // an unscored member trails every scored one
+  });
+
+  it("leather (12 members): Vibrant Leather Bogoss's Phase 3G addition leads, down through several tied groups, then 2 unscored members trail in catalog order", () => {
+    const matches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "leather" });
+    expect(matches.map((match) => match.id).sort((a, b) => a - b)).toEqual([
+      6, 7, 10, 12, 14, 16, 23, 25, 30, 109, 115, 306,
+    ]);
+
+    const sorted = sortNoteExplorerMatchesByProminence(matches, "leather");
+    expect(sorted.map((match) => match.id)).toEqual([30, 7, 12, 25, 14, 16, 109, 23, 306, 10, 6, 115]);
+
+    // Vibrant Leather Bogoss (30) now leads the whole family at its raised
+    // score of 9 -- the sole Phase 3G change. 12 and 25 tie at score 7,
+    // and 14/16/109 tie at score 6 -- the sort preserves ascending
+    // catalog-array order within each tie group.
+    const rank = new Map(sorted.map((match, index) => [match.id, index]));
+    expect(rank.get(30)).toBe(0);
+    expect(rank.get(12)).toBeLessThan(rank.get(25));
+    expect(rank.get(14)).toBeLessThan(rank.get(16));
+    expect(rank.get(16)).toBeLessThan(rank.get(109));
+    const lastScoredRank = rank.get(10);
+    expect(rank.get(6)).toBeGreaterThan(lastScoredRank); // an unscored member trails every scored one
+  });
+
+  it("suede: only CH Men and Guess Man Gold carry it, each scored independently of the fragrance's own generic leather value", () => {
+    const matches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "suede" });
+    expect(matches.map((match) => match.id).sort((a, b) => a - b)).toEqual([12, 32]);
+
+    const sorted = sortNoteExplorerMatchesByProminence(matches, "suede");
+    expect(sorted.map((match) => match.id)).toEqual([12, 32]);
+  });
+
+  it("never cross-matches distinct leather variants -- searching one canonical key never returns a fragrance whose only relevant note is a different variant (iris has no other in-catalog variant to guard against)", () => {
+    const leatherMatches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "leather" });
+    expect(leatherMatches.map((match) => match.id)).not.toContain(32); // Guess Man Gold: suede only
+
+    const suedeMatches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "suede" });
+    expect(suedeMatches.map((match) => match.id)).not.toContain(30); // Vibrant Leather Bogoss: generic leather only
+    expect(suedeMatches.map((match) => match.id)).toContain(12); // CH Men genuinely carries both, independently scored
+  });
+});

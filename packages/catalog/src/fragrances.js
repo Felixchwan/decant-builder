@@ -3441,6 +3441,30 @@ const DEFAULT_SEASON_WEIGHTS = {
 // the explicit canonical amber key. No canonical-data correction was made
 // or recommended. See noteProminenceHorizontalCalibration3F.test.js for
 // the complete taxonomy audit, membership tables, and rationale.
+//
+// Composer Phase 3G: seventh horizontal calibration pass -- the iris and
+// leather canonical-key families. Iris keys: iris -- the only true
+// canonical iris-identity key (no "orris"/"orrisRoot" key exists in the
+// taxonomy). Leather keys: leather, suede -- both real, separately-named
+// materials kept deliberately distinct (CH Men and Guess Man Gold each
+// legitimately carry their own suede score alongside, or instead of,
+// leather). violetLeaf, powderyNotes, birch, birchLeaf, and leatherwood
+// were investigated and excluded: none is an iris or leather variant --
+// leatherwood is even explicitly documented elsewhere in notes.js as its
+// own distinct entry, not an alias for leather, and birch/leatherwood are
+// tagged family: "woody", not "leather". Across 7 iris, 12 leather, and 2
+// suede fragrance/note pairs, every already-scored entry held up as
+// internally consistent except one: Vibrant Leather Bogoss (30) --
+// leather: 7 -> 9. Its own catalog data already names "leather" as the
+// second of five listed accords and its own shortName drops "Bogoss"
+// entirely, leaving "Vibrant Leather" as the product's own declared
+// identity -- not a perceptual read, matching this phase's own caution
+// that a truly defining leather note must not be under-scored merely for
+// sitting in the base. No canonical-data correction was made or
+// recommended -- every fragrance already uses the most specific available
+// iris/leather-family key its own documented identity supports. See
+// noteProminenceHorizontalCalibration3G.test.js for the complete taxonomy
+// audit, membership tables, and rationale.
 export const NOTE_PROMINENCE_BY_ID = {
   1: { seaNotes: 10, calone: 9, bergamot: 7, jasmine: 5, whiteMusk: 4 }, // Acqua di Gio EDT
   2: { lemon: 7, rosemary: 5, patchouli: 4 }, // Light Blue Pour Homme EDT
@@ -3471,7 +3495,7 @@ export const NOTE_PROMINENCE_BY_ID = {
   27: { whiteMusk: 6, vetiver: 5 }, // Touch for Men
   28: { orange: 6, apple: 5, amber: 5 }, // Tous Man
   29: { vanilla: 7, chinotto: 6, tonkaBean: 5 }, // Versace Eros Flame
-  30: { leather: 7, bergamot: 5 }, // Vibrant Leather Bogoss
+  30: { leather: 9, bergamot: 5 }, // Vibrant Leather Bogoss
   31: { amber: 5, cardamom: 5 }, // Viking Cairo
   32: { suede: 5, amber: 5 }, // Guess Man Gold
   33: { cashmeran: 6, patchouli: 5, apple: 4 }, // Jaguar Pace
