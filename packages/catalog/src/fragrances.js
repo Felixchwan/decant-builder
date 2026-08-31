@@ -3393,9 +3393,28 @@ const DEFAULT_SEASON_WEIGHTS = {
 // was found as clear and narrow as the Phase 3A basil or Phase 3C
 // blackVanilla corrections. See noteProminenceHorizontalCalibration3D.test.js
 // for the complete taxonomy audit, membership tables, and rationale.
+//
+// Composer Phase 3E: fifth horizontal calibration pass -- the sandalwood
+// and patchouli canonical-key families. Sandalwood keys: sandalwood,
+// australianSandalwood (already kept deliberately distinct elsewhere in
+// this dictionary, per the sandalwood/australianSandalwood precedent
+// noted alongside the "spices" note below). Patchouli keys: patchouli,
+// patchouliNoir -- the latter exists in notes.js but has zero catalog
+// membership, audited and confirmed empty, not calibrated. Generic
+// woody/earthy notes (woodyNotes, cashmeran, akigalawood, cedar,
+// cedarwood, etc.) were never treated as sandalwood or patchouli
+// substitutes. Across 22 sandalwood, 1 australianSandalwood, 33
+// patchouli, and 0 patchouliNoir fragrance/note pairs, the approved
+// calibration adds only 2 new scores -- every already-scored entry held
+// up as internally consistent, and generic creaminess/smooth woodiness
+// (for sandalwood) or generic earthiness/darkness (for patchouli) was
+// never treated as proof of prominence on its own. No canonical-data
+// correction was made or recommended. See
+// noteProminenceHorizontalCalibration3E.test.js for the complete
+// taxonomy audit, membership tables, and rationale.
 export const NOTE_PROMINENCE_BY_ID = {
   1: { seaNotes: 10, calone: 9, bergamot: 7, jasmine: 5, whiteMusk: 4 }, // Acqua di Gio EDT
-  2: { lemon: 7, rosemary: 5 }, // Light Blue Pour Homme EDT
+  2: { lemon: 7, rosemary: 5, patchouli: 4 }, // Light Blue Pour Homme EDT
   3: { bergamot: 6, musk: 6, cedar: 4 }, // Versace Pour Homme
   4: { lavender: 7, redApple: 6, tonkaBean: 6 }, // Legend EDT
   5: { lavender: 9, vanilla: 8, mint: 7, tonkaBean: 5 }, // Le Male
@@ -3440,7 +3459,7 @@ export const NOTE_PROMINENCE_BY_ID = {
   108: { truffle: 7, plum: 5 }, // Bad Boy Cobalt Parfum Electrique
   109: { leather: 6, patchouli: 5, fig: 4 }, // K EDP Intense
   110: { orange: 8, mint: 6, patchouli: 5, bitterOrange: 5, basil: 8 }, // Concentré d'Orange Verte
-  111: { orange: 8, vetiver: 8, grapefruit: 7, cedar: 6, pepper: 4 }, // Terre d'Hermès EDT
+  111: { orange: 8, vetiver: 8, grapefruit: 7, cedar: 6, pepper: 4, patchouli: 5 }, // Terre d'Hermès EDT
   112: { coconut: 9, pineapple: 6, tonkaBean: 5 }, // Le Beau Le Parfum
   113: { cardamom: 7, vanilla: 8, lavender: 6, iris: 4 }, // Le Male Le Parfum
   114: { ambroxan: 6, apple: 4 }, // Game of Spades Wildcard

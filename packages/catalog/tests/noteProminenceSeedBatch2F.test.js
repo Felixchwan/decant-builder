@@ -35,7 +35,7 @@ const PHASE_2F_BATCH = {
 const PHASE_2C_BATCH = {
   1: { seaNotes: 10, calone: 9, bergamot: 7, jasmine: 5, whiteMusk: 4 },
   5: { lavender: 9, vanilla: 8, mint: 7, tonkaBean: 5 }, // Phase 3B: mint 6 -> 7 (horizontal calibration)
-  111: { orange: 8, vetiver: 8, grapefruit: 7, cedar: 6, pepper: 4 },
+  111: { orange: 8, vetiver: 8, grapefruit: 7, cedar: 6, pepper: 4, patchouli: 5 }, // Phase 3E: added patchouli (horizontal calibration)
   118: { cardamom: 9, coumarin: 6, lavender: 5, vetiver: 3 },
   202: { ambroxan: 9, bergamot: 7, sichuanPepper: 6, vanilla: 5 },
   208: { iris: 9, neroli: 6, amber: 5, carrotSeeds: 3 },
@@ -142,8 +142,16 @@ describe("Composer Phase 2F note-prominence seed batch", () => {
     );
   });
 
-  it("introduces the first patchouli and guaiacWood scores in NOTE_PROMINENCE_BY_ID, closing a woods-family gap Phase 2C and 2E left entirely unscored", () => {
+  it("introduces the first patchouli and guaiacWood scores in NOTE_PROMINENCE_BY_ID, closing a woods-family gap Phase 2C and 2E left entirely unscored during the vertical pass", () => {
+    // Excludes id 111 (Terre d'Hermès EDT, a Phase 2C entry): Phase 3E's
+    // later horizontal calibration added its own patchouli score to that
+    // fragrance, so the embedded PHASE_2C_BATCH snapshot above now
+    // legitimately carries patchouli too. This test's claim is scoped to
+    // the original vertical pass -- Phase 2C and 2E's own vertical-pass
+    // reviews never scored patchouli or guaiacWood -- not to values a
+    // later horizontal phase subsequently added.
     const priorEntries = { ...PHASE_2C_BATCH, ...PHASE_2E_BATCH };
+    delete priorEntries[111];
     const priorHadPatchouli = Object.values(priorEntries).some((entry) => "patchouli" in entry);
     const priorHadGuaiacWood = Object.values(priorEntries).some((entry) => "guaiacWood" in entry);
 

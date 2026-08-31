@@ -17,7 +17,7 @@ import { NOTE_PROMINENCE_BY_ID } from "../src/fragrances.js";
 // round stayed conservative: no score reaches the 9-10 defining/signature
 // band, and several entries carry only two scored notes.
 const PHASE_2H_BATCH = {
-  2: { lemon: 7, rosemary: 5 },
+  2: { lemon: 7, rosemary: 5, patchouli: 4 }, // Phase 3E: added patchouli (horizontal calibration)
   3: { bergamot: 6, musk: 6, cedar: 4 }, // Phase 3C: cedar 5 -> 4 (horizontal calibration)
   4: { lavender: 7, redApple: 6, tonkaBean: 6 },
   6: { ambroxan: 7, vanilla: 7, mint: 5, candyApple: 5 }, // Phase 3B: added candyApple (horizontal calibration)
@@ -39,7 +39,7 @@ const PHASE_2H_BATCH = {
 const PHASE_2C_BATCH = {
   1: { seaNotes: 10, calone: 9, bergamot: 7, jasmine: 5, whiteMusk: 4 },
   5: { lavender: 9, vanilla: 8, mint: 7, tonkaBean: 5 }, // Phase 3B: mint 6 -> 7 (horizontal calibration)
-  111: { orange: 8, vetiver: 8, grapefruit: 7, cedar: 6, pepper: 4 },
+  111: { orange: 8, vetiver: 8, grapefruit: 7, cedar: 6, pepper: 4, patchouli: 5 }, // Phase 3E: added patchouli (horizontal calibration)
   118: { cardamom: 9, coumarin: 6, lavender: 5, vetiver: 3 },
   202: { ambroxan: 9, bergamot: 7, sichuanPepper: 6, vanilla: 5 },
   208: { iris: 9, neroli: 6, amber: 5, carrotSeeds: 3 },
@@ -149,14 +149,35 @@ describe("Composer Phase 2H note-prominence seed batch", () => {
     }
   });
 
-  it("leaves at least one of each scored fragrance's own canonical notes deliberately unscored -- sparse coverage remains valid", () => {
+  it("leaves at least one of each scored fragrance's own canonical notes deliberately unscored -- sparse coverage remains valid, except the one documented full-coverage exception", () => {
+    // Light Blue Pour Homme EDT (2) is a full-coverage exception, in the
+    // same spirit as Phase 2E's Armani Code EDT/Orphéon EDP precedent: it
+    // is a genuinely minimal composition (exactly 3 canonical notes --
+    // lemon top, rosemary middle, patchouli base), and Phase 3E's later
+    // horizontal calibration scored the last of the three (patchouli)
+    // with real, independent confidence -- not because every note is
+    // "easy" to score, but because all 3 happen to be the small,
+    // well-characterized set this fragrance is actually built from.
+    const fullCoverageExceptionIds = new Set([2]);
+
     for (const [id, entry] of Object.entries(PHASE_2H_BATCH)) {
+      if (fullCoverageExceptionIds.has(Number(id))) {
+        continue;
+      }
+
       const fragrance = perfumesById.get(Number(id));
       const ownNoteIds = getPerfumeNoteIds(fragrance);
       const unscoredCount = ownNoteIds.filter((noteId) => !(noteId in entry)).length;
 
       expect(unscoredCount, `${fragrance.name} should have at least one deliberately unscored note`).toBeGreaterThan(0);
     }
+  });
+
+  it("documents the full-coverage exception explicitly: Light Blue Pour Homme EDT has every canonical note scored, not left partially unscored", () => {
+    const lightBluePourHomme = perfumesById.get(2);
+    const ownNoteIds = getPerfumeNoteIds(lightBluePourHomme);
+    expect(ownNoteIds.sort()).toEqual(["lemon", "patchouli", "rosemary"].sort());
+    expect(Object.keys(NOTE_PROMINENCE_BY_ID[2]).sort()).toEqual(ownNoteIds.sort());
   });
 
   it("stays conservative -- no 9-10 defining/signature score appears anywhere in this batch", () => {

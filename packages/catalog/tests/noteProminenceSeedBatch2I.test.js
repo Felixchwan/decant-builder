@@ -43,7 +43,7 @@ const PHASE_2I_BATCH = {
 const PHASE_2C_BATCH = {
   1: { seaNotes: 10, calone: 9, bergamot: 7, jasmine: 5, whiteMusk: 4 },
   5: { lavender: 9, vanilla: 8, mint: 7, tonkaBean: 5 }, // Phase 3B: mint 6 -> 7 (horizontal calibration)
-  111: { orange: 8, vetiver: 8, grapefruit: 7, cedar: 6, pepper: 4 },
+  111: { orange: 8, vetiver: 8, grapefruit: 7, cedar: 6, pepper: 4, patchouli: 5 }, // Phase 3E: added patchouli (horizontal calibration)
   118: { cardamom: 9, coumarin: 6, lavender: 5, vetiver: 3 },
   202: { ambroxan: 9, bergamot: 7, sichuanPepper: 6, vanilla: 5 },
   208: { iris: 9, neroli: 6, amber: 5, carrotSeeds: 3 },
@@ -103,7 +103,7 @@ const PHASE_2G_BATCH = {
 };
 
 const PHASE_2H_BATCH = {
-  2: { lemon: 7, rosemary: 5 },
+  2: { lemon: 7, rosemary: 5, patchouli: 4 }, // Phase 3E: added patchouli (horizontal calibration)
   3: { bergamot: 6, musk: 6, cedar: 4 }, // Phase 3C: cedar 5 -> 4 (horizontal calibration)
   4: { lavender: 7, redApple: 6, tonkaBean: 6 },
   6: { ambroxan: 7, vanilla: 7, mint: 5, candyApple: 5 }, // Phase 3B: added candyApple (horizontal calibration)

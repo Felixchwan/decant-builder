@@ -579,3 +579,71 @@ describe("Note Explorer 'Most prominent' sort reflects the Phase 3D calibrated o
     expect(muskMatches.map((match) => match.id)).not.toContain(302); // Allure Homme Sport Superleggera: whiteMusk only
   });
 });
+
+// Composer Phase 3E: horizontal note-family calibration regression for the
+// sandalwood and patchouli canonical-key families, run against the real
+// catalog. The underlying data (taxonomy audit, canonical-data sanity
+// audit, exact scores, unrelated-value preservation, pyramid immutability)
+// is proven in packages/catalog/tests/noteProminenceHorizontalCalibration3E.test.js;
+// this describe block only proves the existing, unmodified sort algorithm
+// produces the approved relative order per canonical key -- scored
+// fragrances sort descending, ties preserve catalog order, unscored
+// members trail after every scored one, and sandalwood/australianSandalwood
+// (and patchouli/patchouliNoir) never cross-rank against each other.
+describe("Note Explorer 'Most prominent' sort reflects the Phase 3E calibrated order, per distinct canonical key", () => {
+  it("sandalwood (22 members): Allure Homme Edition Blanche EDP > Polo Black > Legend Blue, then all 19 unscored members trail in catalog order", () => {
+    const matches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "sandalwood" });
+    expect(matches.map((match) => match.id).sort((a, b) => a - b)).toEqual([
+      4, 5, 6, 9, 12, 15, 22, 29, 32, 107, 112, 115, 208, 214, 301, 302, 401, 402, 404, 405, 407, 410,
+    ]);
+
+    const sorted = sortNoteExplorerMatchesByProminence(matches, "sandalwood");
+    expect(sorted.map((match) => match.id)).toEqual([
+      301, 15, 22, 4, 5, 6, 9, 12, 32, 29, 107, 112, 115, 208, 214, 302, 401, 402, 404, 405, 407, 410,
+    ]);
+
+    const rank = new Map(sorted.map((match, index) => [match.id, index]));
+    const lastScoredRank = rank.get(22);
+    expect(rank.get(4)).toBeGreaterThan(lastScoredRank); // an unscored member trails every scored one
+  });
+
+  it("australianSandalwood: only Orange X Santal carries it", () => {
+    const matches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "australianSandalwood" });
+    expect(matches.map((match) => match.id)).toEqual([305]);
+
+    const sorted = sortNoteExplorerMatchesByProminence(matches, "australianSandalwood");
+    expect(sorted.map((match) => match.id)).toEqual([305]);
+  });
+
+  it("patchouli (33 members): Tuxedo's defining score leads, down through Legend Red's Phase 3E addition, then 18 unscored members trail in catalog order", () => {
+    const matches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "patchouli" });
+    expect(matches.map((match) => match.id).sort((a, b) => a - b)).toEqual([
+      1, 2, 6, 15, 16, 17, 19, 21, 25, 29, 33, 101, 103, 109, 110, 111, 115, 205, 206, 207, 208, 209, 211, 302, 303,
+      304, 306, 402, 403, 404, 406, 410, 501,
+    ]);
+
+    const sorted = sortNoteExplorerMatchesByProminence(matches, "patchouli");
+    expect(sorted.map((match) => match.id)).toEqual([
+      501, 306, 205, 206, 209, 410, 21, 33, 109, 110, 111, 2, 25, 101, 406, 1, 6, 15, 16, 17, 19, 29, 103, 115, 207,
+      208, 211, 302, 303, 304, 402, 403, 404,
+    ]);
+
+    // Light Blue Pour Homme EDT (2) and Terre d'Hermès EDT (111) are the
+    // two Phase 3E additions, each scored independently and correctly
+    // outranked by every already-established higher score.
+    const rank = new Map(sorted.map((match, index) => [match.id, index]));
+    expect(rank.get(2)).toBeLessThan(rank.get(1));
+    expect(rank.get(111)).toBeLessThan(rank.get(115));
+  });
+
+  it("never cross-matches distinct sandalwood/patchouli variants -- searching one canonical key never returns a fragrance whose only relevant note is a different variant", () => {
+    const sandalwoodMatches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "sandalwood" });
+    expect(sandalwoodMatches.map((match) => match.id)).not.toContain(305); // Orange X Santal: australianSandalwood only
+
+    const patchouliMatches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "patchouli" });
+    // patchouliNoir has zero catalog membership, so there is no
+    // fragrance to assert an exclusion for -- confirmed in
+    // noteProminenceHorizontalCalibration3E.test.js instead.
+    expect(patchouliMatches.map((match) => match.id)).toContain(501); // Tuxedo genuinely carries generic patchouli
+  });
+});
