@@ -1279,3 +1279,42 @@ describe("Note Explorer 'Most prominent' sort reflects the Phase 3O calibrated o
     expect(cedarMatches.map((match) => match.id)).not.toContain(7); // The Scent EDT: woodyNotes only
   });
 });
+
+// Composer Phase 3P: horizontal note-family calibration regression for the
+// violet family (violet, violetLeaf), run against the real catalog. The
+// underlying data (taxonomy audit, canonical-data sanity audit, exact
+// scores, canonical-pyramid immutability) is proven in
+// packages/catalog/tests/noteProminenceHorizontalCalibration3P.test.js;
+// this describe block only proves the existing, unmodified sort algorithm
+// produces the approved relative order -- with every member unscored,
+// that order is simply the stable catalog-array order, and violet/
+// violetLeaf must never cross-rank against each other. Phase 3P changed
+// zero prominence values.
+describe("Note Explorer 'Most prominent' sort reflects the Phase 3P calibrated order, per distinct canonical key", () => {
+  it("violet (4 members, all unscored): preserves catalog order with no forced ranking", () => {
+    const matches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "violet" });
+    expect(matches.map((match) => match.id).sort((a, b) => a - b)).toEqual([1, 12, 208, 404]);
+
+    const sorted = sortNoteExplorerMatchesByProminence(matches, "violet");
+    expect(sorted.map((match) => match.id)).toEqual([1, 12, 208, 404]);
+  });
+
+  it("violetLeaf (8 members, all unscored): preserves catalog order with no forced ranking", () => {
+    const matches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "violetLeaf" });
+    expect(matches.map((match) => match.id).sort((a, b) => a - b)).toEqual([14, 17, 23, 27, 117, 210, 306, 501]);
+
+    const sorted = sortNoteExplorerMatchesByProminence(matches, "violetLeaf");
+    expect(sorted.map((match) => match.id)).toEqual([14, 17, 23, 27, 117, 210, 306, 501]);
+  });
+
+  it("never cross-matches violet and violetLeaf, or admits an adjacent floral/green material -- searching one canonical key never returns a fragrance whose only relevant note is the other exact key or a different material", () => {
+    const violetMatches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "violet" });
+    expect(violetMatches.map((match) => match.id)).not.toContain(306); // Acqua di Gio Elixir: violetLeaf only
+    expect(violetMatches.map((match) => match.id)).not.toContain(33); // Jaguar Pace: iris only
+
+    const violetLeafMatches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "violetLeaf" });
+    expect(violetLeafMatches.map((match) => match.id)).not.toContain(208); // Prada L'Homme: generic violet only
+    expect(violetLeafMatches.map((match) => match.id)).not.toContain(3); // Versace Pour Homme: geranium only
+    expect(violetLeafMatches.map((match) => match.id)).not.toContain(4); // Legend EDT: rose only
+  });
+});

@@ -3721,6 +3721,34 @@ const DEFAULT_SEASON_WEIGHTS = {
 // two concepts rather than conflating them. See
 // noteProminenceHorizontalCalibration3O.test.js for the complete
 // taxonomy audit, membership tables, and rationale.
+//
+// Composer Phase 3P: sixteenth horizontal calibration pass -- the violet
+// family. Exact keys, kept materially distinct despite a shared
+// botanical source: violet ("Violet", family: "floral" -- the flower/
+// powdery-floral material) and violetLeaf ("Violet Leaf", no family tag
+// -- the green/leaf material). No other qualified violet variant exists
+// in the taxonomy. iris, powderyNotes, rose, roseDeMai, geranium,
+// lilyOfTheValley, cyclamen, hyacinth, freesia, and osmanthus were all
+// re-confirmed as their own distinct, already-established floral/green
+// canonical keys, never conflated with either violet key. No fragrance
+// carries both violet and violetLeaf simultaneously. Across 4 violet and
+// 8 violetLeaf fragrance/note pairs -- both entirely unscored coming
+// into this phase -- this phase's own calibration changes zero
+// individual pairs. Every member was reviewed individually: Prada
+// L'Homme's violet sits beside its own established, extensively-
+// documented iris: 9 signature, and per this phase's own caution against
+// equating iris-like softness with violet prominence, was left unscored
+// rather than assumed to share iris's defining status. Acqua di Gio
+// Elixir's own accords list includes a "violet" tag despite its
+// canonical note being the distinct violetLeaf -- this generic accord-
+// level classification was considered and rejected as evidence, per the
+// same discipline established for woodyNotes in Phase 3O: an accord tag
+// is a genre-level signal, not the specific ingredient identity the
+// correction bar requires. No canonical-data correction was made or
+// recommended -- every fragrance already uses the most specific
+// available violet-family key its own documented identity supports. See
+// noteProminenceHorizontalCalibration3P.test.js for the complete
+// taxonomy audit, membership tables, and rationale.
 export const NOTE_PROMINENCE_BY_ID = {
   1: { seaNotes: 10, calone: 9, bergamot: 7, jasmine: 5, whiteMusk: 4 }, // Acqua di Gio EDT
   2: { lemon: 7, rosemary: 5, patchouli: 4 }, // Light Blue Pour Homme EDT
