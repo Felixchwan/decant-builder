@@ -1245,3 +1245,37 @@ describe("Note Explorer 'Most prominent' sort reflects the Phase 3N calibrated o
     expect(geraniumMatches.map((match) => match.id)).not.toContain(14); // Halloween Man: violetLeaf only
   });
 });
+
+// Composer Phase 3O: horizontal note-family calibration regression for the
+// collective canonical note woodyNotes, run against the real catalog. The
+// underlying data (taxonomy audit, canonical-data sanity audit, exact
+// scores, canonical-pyramid immutability) is proven in
+// packages/catalog/tests/noteProminenceHorizontalCalibration3O.test.js;
+// this describe block only proves the existing, unmodified sort algorithm
+// produces the approved relative order -- with every member unscored,
+// that order is simply the stable catalog-array order, and perfumes
+// carrying only a concrete wood note (never exact woodyNotes) must never
+// enter the result set. Phase 3O changed zero prominence values.
+describe("Note Explorer 'Most prominent' sort reflects the Phase 3O calibrated order for woodyNotes", () => {
+  it("woodyNotes (13 members, all unscored): preserves catalog order with no forced ranking", () => {
+    const matches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "woodyNotes" });
+    expect(matches.map((match) => match.id).sort((a, b) => a - b)).toEqual([
+      7, 12, 23, 26, 30, 112, 113, 201, 210, 301, 302, 303, 406,
+    ]);
+
+    const sorted = sortNoteExplorerMatchesByProminence(matches, "woodyNotes");
+    expect(sorted.map((match) => match.id)).toEqual([7, 12, 23, 26, 30, 112, 113, 201, 210, 301, 302, 303, 406]);
+  });
+
+  it("never admits a fragrance carrying only a concrete wood note into the exact woodyNotes result set", () => {
+    const woodyNotesMatches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "woodyNotes" });
+    expect(woodyNotesMatches.map((match) => match.id)).not.toContain(111); // Terre d'Hermès EDT: vetiver only
+    expect(woodyNotesMatches.map((match) => match.id)).not.toContain(208); // Prada L'Homme: cedar only
+    expect(woodyNotesMatches.map((match) => match.id)).not.toContain(4); // Legend EDT: sandalwood only
+
+    // Conversely, searching a concrete wood key must never return a
+    // fragrance whose only relevant note is the generalized woodyNotes.
+    const cedarMatches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "cedar" });
+    expect(cedarMatches.map((match) => match.id)).not.toContain(7); // The Scent EDT: woodyNotes only
+  });
+});

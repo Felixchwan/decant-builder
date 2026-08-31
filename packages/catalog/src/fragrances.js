@@ -3682,6 +3682,45 @@ const DEFAULT_SEASON_WEIGHTS = {
 // conflated with an adjacent aromatic/floral material. See
 // noteProminenceHorizontalCalibration3N.test.js for the complete taxonomy
 // audit, membership tables, and rationale.
+//
+// Composer Phase 3O: fifteenth horizontal calibration pass -- the
+// collective canonical note woodyNotes ("Woody Notes", family: "woody").
+// Unlike every prior phase, this one calibrates a generalized/collective
+// note, not a specific material: woodyNotes prominence applies only to
+// fragrances whose canonical note data explicitly contains woodyNotes,
+// and is never derived from the presence or prominence of individual
+// wood notes (cedar, cedarwood, texasCedar, sandalwood,
+// australianSandalwood, guaiacWood, oak, birch, cashmeran, cashmirwood,
+// akigalawood, mahogany, leatherwood, pine, fir, firBalsam -- all
+// re-confirmed as their own independent canonical keys, several already
+// calibrated in earlier phases). Across 13 woodyNotes fragrance/note
+// pairs -- all 13 entirely unscored coming into this phase -- this
+// phase's own calibration changes zero individual pairs. Every member
+// was reviewed individually against two disqualifying patterns: (1)
+// where another woody-family note already coexists and is itself scored
+// or otherwise the more plausible driver of the fragrance's overall
+// "woody" character (Allure Homme Edition Blanche EDP's sandalwood: 7,
+// Bois Imperial's akigalawood: 10, Hacivat's cedar: 4, Born In Roma EDT's
+// vetiver: 6 -- itself family: "woody" -- among others), crediting
+// woodyNotes for that effect would be exactly the "aggregate individual
+// woods" mistake this phase's own caution forbids; (2) where woodyNotes
+// is the sole wood-family note present but the only supporting signal is
+// the fragrance's own broad accords/genre classification (e.g. "woody"
+// appearing in an accords list) rather than a specific, non-generic
+// perceptual claim, crediting it would be exactly the "do not score from
+// genre" mistake this phase's own caution forbids -- this includes
+// Vibrant Leather Bogoss, where "woody" appears third in its own accords
+// list but the product's own name and shortName name only leather, never
+// wood, as its declared identity. No fragrance's woodyNotes met the
+// stricter bar of being an explicitly-documented major perceptual axis
+// independent of both patterns. No canonical-data correction was made or
+// recommended -- several fragrances already correctly carry both
+// woodyNotes and a separately-scored specific wood side by side
+// (Allure Homme Edition Blanche EDP, Allure Homme Sport Superleggera,
+// Bois Imperial, Hacivat), proving the catalog already distinguishes the
+// two concepts rather than conflating them. See
+// noteProminenceHorizontalCalibration3O.test.js for the complete
+// taxonomy audit, membership tables, and rationale.
 export const NOTE_PROMINENCE_BY_ID = {
   1: { seaNotes: 10, calone: 9, bergamot: 7, jasmine: 5, whiteMusk: 4 }, // Acqua di Gio EDT
   2: { lemon: 7, rosemary: 5, patchouli: 4 }, // Light Blue Pour Homme EDT
