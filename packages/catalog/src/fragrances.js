@@ -3493,6 +3493,36 @@ const DEFAULT_SEASON_WEIGHTS = {
 // target exists in either direction. See
 // noteProminenceHorizontalCalibration3H.test.js for the complete taxonomy
 // audit, membership tables, and rationale.
+//
+// Composer Phase 3I: ninth horizontal calibration pass -- the rose and
+// jasmine canonical-key families. Rose keys: rose, roseDeMai (an
+// explicitly-qualified rose variant -- a real, specifically-named
+// perfumery cultivar, kept distinct; Versace Pour Homme's roseDeMai stays
+// separate from generic rose). Jasmine keys: jasmine -- the only true
+// canonical jasmine-identity key (no "jasmineSambac"/"grandiflorumJasmine"
+// or other qualified variant exists in the taxonomy). pomarose and
+// brazilianRosewood were investigated and excluded despite the name
+// overlap: pomarose is a real, separately-named captive material (not a
+// literal rose), and brazilianRosewood is a wood, not a flower, in the
+// same spirit as amberwood's exclusion from amber in Phase 3F. rosemary
+// was excluded as an unrelated aromatic herb sharing only a name
+// substring. orangeBlossom, neroli, lilyOfTheValley, violet, violetLeaf,
+// iris, frangipani, magnolia, freesia, hyacinth, cyclamen, mignonette,
+// osmanthus, and geranium were all investigated and confirmed as their
+// own distinct, already-established floral canonical keys, never
+// conflated with rose or jasmine. Across 10 rose, 1 roseDeMai, and 14
+// jasmine fragrance/note pairs, this phase's own calibration changes zero
+// individual pairs -- every already-scored entry (rose: 4; jasmine: 1, 4,
+// 5, 5) held up as internally consistent under comparison against real
+// peers, and every unscored member's rose or jasmine note sits in a
+// composition whose own documented signature clearly lies elsewhere --
+// e.g. Layton's apple:9, Fico di Amalfi's figNectar:9, Torino21's mint:9,
+// Tuxedo's patchouli:9 all dwarf their fragrance's unscored rose/jasmine.
+// No canonical-data correction was made or recommended -- every fragrance
+// already uses the most specific available rose/jasmine-family key its
+// own documented identity supports. See
+// noteProminenceHorizontalCalibration3I.test.js for the complete taxonomy
+// audit, membership tables, and rationale.
 export const NOTE_PROMINENCE_BY_ID = {
   1: { seaNotes: 10, calone: 9, bergamot: 7, jasmine: 5, whiteMusk: 4 }, // Acqua di Gio EDT
   2: { lemon: 7, rosemary: 5, patchouli: 4 }, // Light Blue Pour Homme EDT

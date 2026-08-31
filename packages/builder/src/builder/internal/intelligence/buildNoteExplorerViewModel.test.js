@@ -843,3 +843,63 @@ describe("Note Explorer 'Most prominent' sort reflects the Phase 3H calibrated o
     expect(coffeeMatches.map((match) => match.id)).not.toContain(212); // Spicebomb Extreme: tobacco only
   });
 });
+
+// Composer Phase 3I: horizontal note-family calibration regression for the
+// rose and jasmine canonical-key families, run against the real catalog.
+// The underlying data (taxonomy audit, canonical-data sanity audit, exact
+// scores, canonical-pyramid immutability) is proven in
+// packages/catalog/tests/noteProminenceHorizontalCalibration3I.test.js;
+// this describe block only proves the existing, unmodified sort algorithm
+// produces the approved relative order per canonical key -- scored
+// fragrances sort descending, ties preserve catalog order, unscored
+// members trail after every scored one, and rose/roseDeMai never
+// cross-rank against each other. Phase 3I changed zero prominence values,
+// so every order below is identical to the pre-Phase-3I catalog.
+describe("Note Explorer 'Most prominent' sort reflects the Phase 3I calibrated order, per distinct canonical key", () => {
+  it("rose (10 members): Mefisto is the sole scored member, then 9 unscored members trail in catalog order", () => {
+    const matches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "rose" });
+    expect(matches.map((match) => match.id).sort((a, b) => a - b)).toEqual([1, 4, 9, 19, 29, 101, 119, 403, 405, 501]);
+
+    const sorted = sortNoteExplorerMatchesByProminence(matches, "rose");
+    expect(sorted.map((match) => match.id)).toEqual([405, 1, 4, 9, 19, 29, 101, 119, 403, 501]);
+
+    const rank = new Map(sorted.map((match, index) => [match.id, index]));
+    expect(rank.get(405)).toBe(0);
+    expect(rank.get(1)).toBeGreaterThan(rank.get(405)); // an unscored member trails the sole scored one
+  });
+
+  it("roseDeMai: only Versace Pour Homme carries it, and it remains unscored", () => {
+    const matches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "roseDeMai" });
+    expect(matches.map((match) => match.id)).toEqual([3]);
+
+    const sorted = sortNoteExplorerMatchesByProminence(matches, "roseDeMai");
+    expect(sorted.map((match) => match.id)).toEqual([3]);
+  });
+
+  it("jasmine (14 members): 3 tied members at score 5 lead, down through 2 more scored members, then 10 unscored members trail in catalog order", () => {
+    const matches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "jasmine" });
+    expect(matches.map((match) => match.id).sort((a, b) => a - b)).toEqual([
+      1, 9, 12, 19, 23, 101, 102, 115, 119, 404, 406, 407, 408, 409,
+    ]);
+
+    const sorted = sortNoteExplorerMatchesByProminence(matches, "jasmine");
+    expect(sorted.map((match) => match.id)).toEqual([1, 101, 409, 23, 9, 12, 19, 102, 119, 115, 404, 406, 407, 408]);
+
+    // 1, 101, and 409 tie at score 5 -- the sort preserves their
+    // ascending catalog-array order rather than forcing an artificial
+    // rank difference.
+    const rank = new Map(sorted.map((match, index) => [match.id, index]));
+    expect(rank.get(1)).toBeLessThan(rank.get(101));
+    expect(rank.get(101)).toBeLessThan(rank.get(409));
+    const lastScoredRank = rank.get(23);
+    expect(rank.get(9)).toBeGreaterThan(lastScoredRank); // an unscored member trails every scored one
+  });
+
+  it("never cross-matches rose and roseDeMai -- searching one canonical key never returns a fragrance whose only relevant note is a different variant", () => {
+    const roseMatches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "rose" });
+    expect(roseMatches.map((match) => match.id)).not.toContain(3); // Versace Pour Homme: roseDeMai only
+
+    const roseDeMaiMatches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "roseDeMai" });
+    expect(roseDeMaiMatches.map((match) => match.id)).not.toContain(405); // Mefisto: generic rose only
+  });
+});
