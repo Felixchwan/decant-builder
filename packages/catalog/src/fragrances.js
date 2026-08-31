@@ -3813,6 +3813,35 @@ const DEFAULT_SEASON_WEIGHTS = {
 // canonical-data correction was made or recommended. See
 // noteProminenceHorizontalCalibration3R.test.js for the complete
 // taxonomy audit, membership tables, and rationale.
+//
+// Composer Phase 3S: nineteenth horizontal calibration pass -- three
+// independent standalone canonical keys grouped only for workflow/
+// editorial efficiency as citrus-tree-derived aromatic/floral materials,
+// never as one ranking family: neroli ("Neroli", family: "floral"),
+// orangeBlossom ("Orange Blossom", family: "floral"), and petitgrain
+// ("Petitgrain", family: "green"). No qualified variant of any exists in
+// the taxonomy. Per the Phase 3D conclusion, all three remain
+// independent from orange, bitterOrange, mandarin, mandarinOrange,
+// greenMandarin, bergamot, lemon, and every other calibrated citrus-
+// fruit key -- confirmed again here: none of the 3D citrus-fruit keys
+// ever substitutes for, or is conflated with, these three. jasmine
+// (3I), geranium (3N), and lilyOfTheValley (still unreviewed) were all
+// re-confirmed as their own distinct floral identities, never neroli or
+// orangeBlossom substitutes. Essenza is the only fragrance carrying more
+// than one of the three exact keys (neroli and petitgrain), each
+// independently unscored, never cross-credited. Across 5 neroli, 5
+// orangeBlossom, and 5 petitgrain fragrance/note pairs, this phase's own
+// calibration changes zero individual pairs. Every already-scored entry
+// held up as internally consistent, including Prada L'Homme's neroli: 6
+// and Prada L'Homme L'Eau's neroli: 5 (both correctly secondary to their
+// own established iris signature) and Arancia di Capri's and Mandarino
+// di Sicilia's petitgrain: 5 each (both correctly secondary to their own
+// established, name-matching citrus-fruit signature). No canonical-data
+// correction was made or recommended -- no identity confusion was found
+// between neroli, orangeBlossom, and petitgrain, and none was derived
+// from generic orange/citrus character. See
+// noteProminenceHorizontalCalibration3S.test.js for the complete
+// taxonomy audit, membership tables, and rationale.
 export const NOTE_PROMINENCE_BY_ID = {
   1: { seaNotes: 10, calone: 9, bergamot: 7, jasmine: 5, whiteMusk: 4 }, // Acqua di Gio EDT
   2: { lemon: 7, rosemary: 5, patchouli: 4 }, // Light Blue Pour Homme EDT

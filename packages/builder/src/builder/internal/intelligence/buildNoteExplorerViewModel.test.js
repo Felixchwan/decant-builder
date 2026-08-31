@@ -1467,3 +1467,78 @@ describe("Note Explorer 'Most prominent' sort reflects the Phase 3R calibrated o
     expect(seaNotesMatches.map((match) => match.id)).toContain(407);
   });
 });
+
+// Composer Phase 3S: horizontal note-family calibration regression for the
+// three independent standalone canonical keys neroli, orangeBlossom, and
+// petitgrain, run against the real catalog. The underlying data (taxonomy
+// audit, canonical-data sanity audit, exact scores, canonical-pyramid
+// immutability) is proven in
+// packages/catalog/tests/noteProminenceHorizontalCalibration3S.test.js;
+// this describe block only proves the existing, unmodified sort algorithm
+// produces the approved relative order per exact key -- scored fragrances
+// sort descending, ties preserve catalog order, unscored members trail
+// after every scored one, and containment stays strict per key. Phase 3S
+// changed zero prominence values, so every order below is identical to
+// the pre-Phase-3S catalog.
+describe("Note Explorer 'Most prominent' sort reflects the Phase 3S calibrated order, per distinct canonical key", () => {
+  it("neroli (5 members): Prada L'Homme leads, down through Prada L'Homme L'Eau, then 3 unscored members trail in catalog order", () => {
+    const matches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "neroli" });
+    expect(matches.map((match) => match.id).sort((a, b) => a - b)).toEqual([1, 3, 101, 208, 214]);
+
+    const sorted = sortNoteExplorerMatchesByProminence(matches, "neroli");
+    expect(sorted.map((match) => match.id)).toEqual([208, 214, 1, 3, 101]);
+
+    const rank = new Map(sorted.map((match, index) => [match.id, index]));
+    expect(rank.get(208)).toBeLessThan(rank.get(214));
+    const lastScoredRank = rank.get(214);
+    expect(rank.get(1)).toBeGreaterThan(lastScoredRank); // an unscored member trails every scored one
+  });
+
+  it("orangeBlossom (5 members, all unscored): preserves catalog order with no forced ranking", () => {
+    const matches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "orangeBlossom" });
+    expect(matches.map((match) => match.id).sort((a, b) => a - b)).toEqual([5, 10, 13, 14, 204]);
+
+    const sorted = sortNoteExplorerMatchesByProminence(matches, "orangeBlossom");
+    expect(sorted.map((match) => match.id)).toEqual([5, 10, 13, 14, 204]);
+  });
+
+  it("petitgrain (5 members): Arancia di Capri and Mandarino di Sicilia tie for the lead, then 3 unscored members trail in catalog order", () => {
+    const matches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "petitgrain" });
+    expect(matches.map((match) => match.id).sort((a, b) => a - b)).toEqual([9, 100, 101, 103, 401]);
+
+    const sorted = sortNoteExplorerMatchesByProminence(matches, "petitgrain");
+    expect(sorted.map((match) => match.id)).toEqual([100, 103, 9, 101, 401]);
+
+    // 100 and 103 tie at score 5 -- the sort preserves ascending
+    // catalog-array order rather than forcing an artificial rank
+    // difference.
+    const rank = new Map(sorted.map((match, index) => [match.id, index]));
+    expect(rank.get(100)).toBeLessThan(rank.get(103));
+    const lastScoredRank = rank.get(103);
+    expect(rank.get(9)).toBeGreaterThan(lastScoredRank); // an unscored member trails every scored one
+  });
+
+  it("never treats a calibrated citrus-fruit key or an adjacent floral material as neroli, orangeBlossom, or petitgrain -- searching one canonical key never returns a fragrance whose only relevant note is a different material", () => {
+    const nonMemberExamples = [
+      { noteId: "neroli", excludeId: 28, label: "Tous Man: orange only" },
+      { noteId: "neroli", excludeId: 6, label: "Eros EDP: bitterOrange only" },
+      { noteId: "orangeBlossom", excludeId: 4, label: "Legend EDT: bergamot/geranium only" },
+      { noteId: "petitgrain", excludeId: 2, label: "Light Blue Pour Homme EDT: lemon only" },
+      { noteId: "petitgrain", excludeId: 110, label: "Concentré d'Orange Verte: mandarin only" },
+      { noteId: "neroli", excludeId: 12, label: "CH Men: jasmine only" },
+      { noteId: "orangeBlossom", excludeId: 501, label: "Tuxedo: lilyOfTheValley only" },
+    ];
+    for (const { noteId, excludeId } of nonMemberExamples) {
+      const matches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId });
+      expect(matches.map((match) => match.id)).not.toContain(excludeId);
+    }
+
+    // Essenza legitimately carries both neroli and petitgrain,
+    // independently unscored -- confirming coexistence never causes
+    // cross-contamination between exact keys.
+    const neroliMatches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "neroli" });
+    const petitgrainMatches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "petitgrain" });
+    expect(neroliMatches.map((match) => match.id)).toContain(101);
+    expect(petitgrainMatches.map((match) => match.id)).toContain(101);
+  });
+});
