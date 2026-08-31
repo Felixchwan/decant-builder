@@ -3867,6 +3867,32 @@ const DEFAULT_SEASON_WEIGHTS = {
 // as inheriting any of oakmoss's prominence merely for sharing the
 // generic term. See noteProminenceHorizontalCalibration3T.test.js for
 // the complete taxonomy audit, membership tables, and rationale.
+//
+// Composer Phase 3U: twenty-first horizontal calibration pass -- seven
+// amber/resinous-adjacent standalone canonical keys, grouped only for
+// workflow efficiency and never as one canonical family, each calibrated
+// independently: amberwood, ambergris, olibanum, labdanum, opoponax,
+// peruBalsam, and ambermax. Per Phases 3F and 3Q, amber, ambroxan,
+// ambergris, amberwood, ambermax, benzoin, labdanum, and opoponax remain
+// separate canonical identities, and similar amber/resinous perceptual
+// effects were never treated as justifying canonical merging or cross-
+// ranking. benzoin, siamBenzoin, incense, and elemi were all re-confirmed
+// as their own distinct, already-established resinous/balsamic canonical
+// keys, out of scope for this phase. YSL Y EDP carries both amberwood and
+// olibanum, and Squid carries both ambergris and opoponax -- each pair
+// independently scored, never cross-credited. Across 5 amberwood, 3
+// ambergris, 5 olibanum, 2 labdanum, 2 opoponax, 2 peruBalsam, and 1
+// ambermax fragrance/note pairs, this phase's own calibration changes
+// zero individual pairs. Every already-scored entry held up as
+// internally consistent, including Squid's ambergris: 6 (correctly tied
+// with its own established seaSalt: 6, both correctly secondary to the
+// fragrance's own defining ink: 9 concept, never conflated with marine/
+// salty/mineral genre character). No canonical-data correction was made
+// or recommended -- no identity confusion was found among amberwood,
+// ambergris, ambermax, ambroxan, and amber, or among olibanum, labdanum,
+// opoponax, peruBalsam, benzoin, siamBenzoin, and incense. See
+// noteProminenceHorizontalCalibration3U.test.js for the complete
+// taxonomy audit, membership tables, and rationale.
 export const NOTE_PROMINENCE_BY_ID = {
   1: { seaNotes: 10, calone: 9, bergamot: 7, jasmine: 5, whiteMusk: 4 }, // Acqua di Gio EDT
   2: { lemon: 7, rosemary: 5, patchouli: 4 }, // Light Blue Pour Homme EDT

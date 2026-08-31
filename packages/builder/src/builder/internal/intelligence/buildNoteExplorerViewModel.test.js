@@ -1594,3 +1594,107 @@ describe("Note Explorer 'Most prominent' sort reflects the Phase 3T calibrated o
     }
   });
 });
+
+// Composer Phase 3U: horizontal note-family calibration regression for
+// seven amber/resinous-adjacent standalone canonical keys (amberwood,
+// ambergris, olibanum, labdanum, opoponax, peruBalsam, ambermax), run
+// against the real catalog. The underlying data (taxonomy audit,
+// canonical-data sanity audit, exact scores, canonical-pyramid
+// immutability) is proven in
+// packages/catalog/tests/noteProminenceHorizontalCalibration3U.test.js;
+// this describe block only proves the existing, unmodified sort algorithm
+// produces the approved relative order per exact key -- scored fragrances
+// sort descending, unscored members trail after every scored one, and
+// containment stays strict per key. Phase 3U changed zero prominence
+// values, so every order below is identical to the pre-Phase-3U catalog.
+describe("Note Explorer 'Most prominent' sort reflects the Phase 3U calibrated order, per distinct canonical key", () => {
+  it("amberwood (5 members, all unscored): preserves catalog order with no forced ranking", () => {
+    const matches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "amberwood" });
+    expect(matches.map((match) => match.id).sort((a, b) => a - b)).toEqual([8, 33, 105, 213, 306]);
+
+    const sorted = sortNoteExplorerMatchesByProminence(matches, "amberwood");
+    expect(sorted.map((match) => match.id)).toEqual([8, 33, 105, 213, 306]);
+  });
+
+  it("ambergris (3 members): Squid leads, down through Club de Nuit Intense Man, then Tuxedo (unscored) trails", () => {
+    const matches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "ambergris" });
+    expect(matches.map((match) => match.id).sort((a, b) => a - b)).toEqual([19, 500, 501]);
+
+    const sorted = sortNoteExplorerMatchesByProminence(matches, "ambergris");
+    expect(sorted.map((match) => match.id)).toEqual([500, 19, 501]);
+
+    const rank = new Map(sorted.map((match, index) => [match.id, index]));
+    const lastScoredRank = rank.get(19);
+    expect(rank.get(501)).toBeGreaterThan(lastScoredRank); // the unscored member trails every scored one
+  });
+
+  it("olibanum (5 members): Givenchy Pour Homme Blue Label is the sole scored member, then 4 unscored members trail in catalog order", () => {
+    const matches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "olibanum" });
+    expect(matches.map((match) => match.id).sort((a, b) => a - b)).toEqual([34, 116, 201, 206, 213]);
+
+    const sorted = sortNoteExplorerMatchesByProminence(matches, "olibanum");
+    expect(sorted.map((match) => match.id)).toEqual([34, 116, 201, 206, 213]);
+
+    const rank = new Map(sorted.map((match, index) => [match.id, index]));
+    expect(rank.get(34)).toBe(0);
+    expect(rank.get(116)).toBeGreaterThan(rank.get(34)); // an unscored member trails the sole scored one
+  });
+
+  it("labdanum, opoponax, and peruBalsam (2 members each, all unscored): preserve catalog order with no forced ranking", () => {
+    const labdanumMatches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "labdanum" });
+    expect(labdanumMatches.map((match) => match.id)).toEqual([20, 410]);
+
+    const opoponaxMatches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "opoponax" });
+    expect(opoponaxMatches.map((match) => match.id)).toEqual([403, 500]);
+
+    const peruBalsamMatches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "peruBalsam" });
+    expect(peruBalsamMatches.map((match) => match.id)).toEqual([32, 204]);
+
+    for (const [matches, noteId] of [
+      [labdanumMatches, "labdanum"],
+      [opoponaxMatches, "opoponax"],
+      [peruBalsamMatches, "peruBalsam"],
+    ]) {
+      const sorted = sortNoteExplorerMatchesByProminence(matches, noteId);
+      expect(sorted.map((match) => match.id)).toEqual(matches.map((match) => match.id));
+    }
+  });
+
+  it("ambermax: Layton is the sole member and remains unscored", () => {
+    const matches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "ambermax" });
+    expect(matches.map((match) => match.id)).toEqual([404]);
+
+    const sorted = sortNoteExplorerMatchesByProminence(matches, "ambermax");
+    expect(sorted.map((match) => match.id)).toEqual([404]);
+  });
+
+  it("never treats amber, ambroxan, benzoin, siamBenzoin, incense, or elemi as one of the seven in-scope keys -- searching one canonical key never returns a fragrance whose only relevant note is a different material", () => {
+    const nonMemberExamples = [
+      { noteId: "amberwood", excludeId: 1, label: "Acqua di Gio EDT: amber only" },
+      { noteId: "ambergris", excludeId: 6, label: "Eros EDP: ambroxan only" },
+      { noteId: "olibanum", excludeId: 102, label: "Fico di Amalfi: benzoin only" },
+      { noteId: "labdanum", excludeId: 304, label: "Divine Vanille: siamBenzoin only" },
+      { noteId: "opoponax", excludeId: 17, label: "Gentlemen Only: incense/elemi only" },
+      { noteId: "peruBalsam", excludeId: 17, label: "Gentlemen Only: incense/elemi only" },
+      { noteId: "ambermax", excludeId: 1, label: "Acqua di Gio EDT: amber only" },
+    ];
+    for (const { noteId, excludeId } of nonMemberExamples) {
+      const matches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId });
+      expect(matches.map((match) => match.id)).not.toContain(excludeId);
+    }
+
+    // YSL Y EDP legitimately carries both amberwood and olibanum, and
+    // Squid legitimately carries both ambergris and opoponax --
+    // confirming coexistence never causes cross-contamination between
+    // exact keys.
+    const amberwoodMatches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "amberwood" });
+    const olibanumMatches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "olibanum" });
+    expect(amberwoodMatches.map((match) => match.id)).toContain(213);
+    expect(olibanumMatches.map((match) => match.id)).toContain(213);
+
+    const ambergrisMatches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "ambergris" });
+    const opoponaxMatches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "opoponax" });
+    expect(ambergrisMatches.map((match) => match.id)).toContain(500);
+    expect(opoponaxMatches.map((match) => match.id)).toContain(500);
+  });
+});
