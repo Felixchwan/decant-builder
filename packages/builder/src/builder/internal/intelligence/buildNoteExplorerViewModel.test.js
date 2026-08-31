@@ -903,3 +903,72 @@ describe("Note Explorer 'Most prominent' sort reflects the Phase 3I calibrated o
     expect(roseDeMaiMatches.map((match) => match.id)).not.toContain(405); // Mefisto: generic rose only
   });
 });
+
+// Composer Phase 3J: horizontal note-family calibration regression for the
+// tonka bean and lavender canonical-key families, run against the real
+// catalog. The underlying data (taxonomy audit, canonical-data sanity
+// audit, exact scores, unrelated-value preservation, pyramid immutability)
+// is proven in packages/catalog/tests/noteProminenceHorizontalCalibration3J.test.js;
+// this describe block only proves the existing, unmodified sort algorithm
+// produces the approved relative order per canonical key -- scored
+// fragrances sort descending, ties preserve catalog order, and unscored
+// members trail after every scored one.
+describe("Note Explorer 'Most prominent' sort reflects the Phase 3J calibrated order, per distinct canonical key", () => {
+  it("tonkaBean (22 members): Armani Code EDT leads, down through several tied groups, then 6 unscored members trail in catalog order", () => {
+    const matches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "tonkaBean" });
+    expect(matches.map((match) => match.id).sort((a, b) => a - b)).toEqual([
+      3, 4, 5, 10, 11, 15, 16, 20, 21, 24, 27, 29, 104, 112, 116, 117, 203, 205, 213, 304, 403, 409,
+    ]);
+
+    const sorted = sortNoteExplorerMatchesByProminence(matches, "tonkaBean");
+    expect(sorted.map((match) => match.id)).toEqual([
+      104, 4, 10, 11, 16, 304, 5, 20, 29, 112, 116, 117, 403, 15, 24, 409, 3, 21, 27, 203, 205, 213,
+    ]);
+
+    // 4/10/11/16/304 tie at score 6, 5/20/29/112/116/117 tie at score 5,
+    // and 15/24/409 tie at score 4 -- the sort preserves ascending
+    // catalog-array order within each tie group rather than forcing an
+    // artificial rank difference.
+    const rank = new Map(sorted.map((match, index) => [match.id, index]));
+    expect(rank.get(4)).toBeLessThan(rank.get(10));
+    expect(rank.get(10)).toBeLessThan(rank.get(11));
+    expect(rank.get(11)).toBeLessThan(rank.get(16));
+    expect(rank.get(16)).toBeLessThan(rank.get(304));
+    expect(rank.get(5)).toBeLessThan(rank.get(20));
+    expect(rank.get(20)).toBeLessThan(rank.get(29));
+    expect(rank.get(15)).toBeLessThan(rank.get(24));
+    expect(rank.get(24)).toBeLessThan(rank.get(409));
+    const lastScoredRank = rank.get(409);
+    expect(rank.get(3)).toBeGreaterThan(lastScoredRank); // an unscored member trails every scored one
+  });
+
+  it("lavender (29 members): Le Male and Layton tie for the lead at 9 (Layton's Phase 3J addition), down through several tied groups, then 22 unscored members trail in catalog order", () => {
+    const matches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "lavender" });
+    expect(matches.map((match) => match.id).sort((a, b) => a - b)).toEqual([
+      4, 5, 7, 14, 20, 21, 22, 31, 32, 33, 34, 104, 106, 107, 108, 113, 114, 116, 118, 202, 205, 206, 211, 212, 306,
+      402, 404, 405, 408,
+    ]);
+
+    const sorted = sortNoteExplorerMatchesByProminence(matches, "lavender");
+    expect(sorted.map((match) => match.id)).toEqual([
+      5, 404, 4, 20, 104, 113, 118, 7, 14, 32, 21, 22, 31, 33, 34, 106, 107, 108, 114, 116, 202, 205, 206, 211, 212,
+      306, 402, 405, 408,
+    ]);
+
+    // Le Male (5) and Layton (404) tie at score 9 -- Layton's Phase 3J
+    // addition -- preserving ascending catalog-array order (5 before
+    // 404) rather than forcing an artificial rank difference. 4 and 20
+    // tie at score 7.
+    const rank = new Map(sorted.map((match, index) => [match.id, index]));
+    expect(rank.get(5)).toBeLessThan(rank.get(404));
+    expect(rank.get(4)).toBeLessThan(rank.get(20));
+    const lastScoredRank = rank.get(118);
+    expect(rank.get(7)).toBeGreaterThan(lastScoredRank); // an unscored member trails every scored one
+  });
+
+  it("never treats an adjacent aromatic herb as lavender, despite sharing lavender's own family: \"aromatic\" tag -- searching lavender never returns a fragrance whose only relevant note is a different herb", () => {
+    const lavenderMatches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "lavender" });
+    expect(lavenderMatches.map((match) => match.id)).not.toContain(15); // Polo Black: sage only, no lavender
+    expect(lavenderMatches.map((match) => match.id)).not.toContain(9); // Fierce: rosemary only, no lavender
+  });
+});

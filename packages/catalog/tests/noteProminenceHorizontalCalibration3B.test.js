@@ -168,7 +168,10 @@ const UNRELATED_VALUES_BY_ID = {
   211: { tobacco: 6 },
   213: { ginger: 6, sage: 5 },
   403: { tonkaBean: 5, vanilla: 5 },
-  404: { lavender: 8, vanilla: 7, cardamom: 4, coumarin: 4 },
+  // lavender was subsequently raised from 8 to 9 by Phase 3J's own
+  // horizontal pass -- included here at its current approved value, for
+  // the same reason bloodOrange above reflects Phase 3D's later change.
+  404: { lavender: 9, vanilla: 7, cardamom: 4, coumarin: 4 },
   408: { basil: 8, rosemary: 5, blackCurrant: 3 },
 };
 

@@ -3523,6 +3523,43 @@ const DEFAULT_SEASON_WEIGHTS = {
 // own documented identity supports. See
 // noteProminenceHorizontalCalibration3I.test.js for the complete taxonomy
 // audit, membership tables, and rationale.
+//
+// Composer Phase 3J: tenth horizontal calibration pass -- the tonka bean
+// and lavender canonical-key families. Tonka keys: tonkaBean -- the only
+// true canonical tonka-identity key (no qualified variant exists in the
+// taxonomy). Lavender keys: lavender -- the only true canonical
+// lavender-identity key (no qualified variant exists either). coumarin,
+// vanilla, bourbonVanilla, blackVanilla, madagascarVanilla, almond,
+// anise, sage, rosemary, basil, mint, spearmint, clarySage, amaretto, and
+// starAnise were all investigated and excluded: each is a real,
+// separately-named material never treated as a tonka or lavender
+// substitute merely for sharing a sweet/aromatic character -- sage,
+// rosemary, clarySage, basil, mint, and spearmint even share lavender's
+// own family: "aromatic" tag in notes.js, yet each remains its own
+// distinct, independently-named herb, not a lavender variant. Across 22
+// tonkaBean and 29 lavender fragrance/note pairs, the approved
+// calibration changes exactly 1 score: Layton (404) -- lavender: 8 -> 9,
+// tied with the fragrance's own apple: 9. Layton is widely and
+// specifically documented (by its own maker, Parfums de Marly, and
+// throughout perfume criticism) as an apple-AND-lavender dual signature,
+// not an apple fragrance with lavender as a secondary support -- exactly
+// the case this phase's own editorial caution anticipated: a truly
+// structural, signature-level lavender must not be under-scored merely
+// because another note (here, apple) is also prominent. Every other
+// already-scored entry across both families -- including the explicit
+// comparison anchors Armani Code EDT (tonkaBean: 9, correctly dominant),
+// Le Male (lavender: 9, tonkaBean: 5), Le Male Le Parfum (lavender: 6),
+// La Nuit de L'Homme (lavender: 5, correctly secondary to cardamom: 9),
+// Eros Flame (tonkaBean: 5), F by Ferragamo Black (lavender: 7,
+// tonkaBean: 5), Legend EDT (lavender: 7, tonkaBean: 6), and Gentleman
+// EDP (both unscored, correctly deferring to its own established
+// iris: 8) -- held up as internally consistent on individual review, with
+// no under-scoring found. The Most Wanted was checked and confirmed not
+// a member of either family. No canonical-data correction was made or
+// recommended -- with no qualified tonka or lavender variant existing in
+// the taxonomy, no reclassification target exists in either direction.
+// See noteProminenceHorizontalCalibration3J.test.js for the complete
+// taxonomy audit, membership tables, and rationale.
 export const NOTE_PROMINENCE_BY_ID = {
   1: { seaNotes: 10, calone: 9, bergamot: 7, jasmine: 5, whiteMusk: 4 }, // Acqua di Gio EDT
   2: { lemon: 7, rosemary: 5, patchouli: 4 }, // Light Blue Pour Homme EDT
@@ -3602,7 +3639,7 @@ export const NOTE_PROMINENCE_BY_ID = {
   401: { greenTea: 9, blackCurrant: 8, bergamot: 5, musk: 5, mandarin: 4 }, // Silver Mountain Water
   402: { licorice: 8, cinnamon: 7, nutmeg: 6 }, // Sauvage Elixir
   403: { tonkaBean: 5, vanilla: 5 }, // Carlisle
-  404: { apple: 9, lavender: 8, vanilla: 7, cardamom: 4, coumarin: 4 }, // Layton
+  404: { apple: 9, lavender: 9, vanilla: 7, cardamom: 4, coumarin: 4 }, // Layton
   405: { iris: 6, grapefruit: 5, rose: 4 }, // Mefisto
   406: { pineapple: 8, oakmoss: 8, cedar: 4, patchouli: 4 }, // Hacivat
   407: { coconut: 7, pineapple: 6, seaNotes: 5, musk: 4 }, // Summer Hammer
