@@ -3465,6 +3465,34 @@ const DEFAULT_SEASON_WEIGHTS = {
 // iris/leather-family key its own documented identity supports. See
 // noteProminenceHorizontalCalibration3G.test.js for the complete taxonomy
 // audit, membership tables, and rationale.
+//
+// Composer Phase 3H: eighth horizontal calibration pass -- the tobacco and
+// coffee canonical-key families. Tobacco keys: tobacco -- the only true
+// canonical tobacco-identity key (no "tobaccoLeaf" or other qualified
+// variant exists in the taxonomy). Coffee keys: roastedCoffeeBeans -- the
+// only true canonical coffee-identity key (no generic "coffee" key exists
+// in the taxonomy at all, so there is nothing to keep it separate from).
+// cacao, chocolate, and smokyNotes do not exist as canonical keys either,
+// and were not invented. caramel, toffee, tonkaBean, vanilla,
+// madagascarVanilla, bourbonVanilla, blackVanilla, and rum were
+// investigated and excluded: each is a real, separately-named material
+// (four of them explicitly tagged family: "sweet" in notes.js, distinct
+// from tobacco's own family: "tobacco" tag), never treated as a tobacco
+// or coffee substitute merely for sharing a dark/gourmand character.
+// Across 3 tobacco and 2 roastedCoffeeBeans fragrance/note pairs -- every
+// member of both families already scored during earlier vertical review,
+// none left unscored -- this phase's own calibration changes zero
+// individual pairs. Every already-scored entry held up as internally
+// consistent under comparison against real peers: Spicebomb Extreme's
+// tobacco:9 correctly leads its own vanilla:8/bourbonVanilla:8 rather than
+// being under-scored for their co-prominence, and The One for Men EDP's
+// tobacco:8 and Uomo Signature's roastedCoffeeBeans:8 both remain
+// genuinely well-documented signature notes at their existing values. No
+// canonical-data correction was made or recommended -- with no qualified
+// tobacco or coffee variant existing in the taxonomy, no reclassification
+// target exists in either direction. See
+// noteProminenceHorizontalCalibration3H.test.js for the complete taxonomy
+// audit, membership tables, and rationale.
 export const NOTE_PROMINENCE_BY_ID = {
   1: { seaNotes: 10, calone: 9, bergamot: 7, jasmine: 5, whiteMusk: 4 }, // Acqua di Gio EDT
   2: { lemon: 7, rosemary: 5, patchouli: 4 }, // Light Blue Pour Homme EDT

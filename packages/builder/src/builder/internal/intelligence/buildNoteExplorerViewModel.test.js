@@ -802,3 +802,44 @@ describe("Note Explorer 'Most prominent' sort reflects the Phase 3G calibrated o
     expect(suedeMatches.map((match) => match.id)).toContain(12); // CH Men genuinely carries both, independently scored
   });
 });
+
+// Composer Phase 3H: horizontal note-family calibration regression for the
+// tobacco and coffee canonical-key families, run against the real
+// catalog. The underlying data (taxonomy audit, canonical-data sanity
+// audit, exact scores, canonical-pyramid immutability) is proven in
+// packages/catalog/tests/noteProminenceHorizontalCalibration3H.test.js;
+// this describe block only proves the existing, unmodified sort algorithm
+// produces the approved relative order per canonical key -- scored
+// fragrances sort descending, and tobacco/roastedCoffeeBeans never
+// cross-rank against each other. Phase 3H changed zero prominence values
+// (both families were already fully scored, with no unscored member and
+// no tie to guard order for), so every order below is identical to the
+// pre-Phase-3H catalog.
+describe("Note Explorer 'Most prominent' sort reflects the Phase 3H calibrated order, per distinct canonical key", () => {
+  it("tobacco (3 members, all scored): Spicebomb Extreme leads, down through The One for Men EDP, then Born In Roma Coral Fantasy", () => {
+    const matches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "tobacco" });
+    expect(matches.map((match) => match.id).sort((a, b) => a - b)).toEqual([13, 211, 212]);
+
+    const sorted = sortNoteExplorerMatchesByProminence(matches, "tobacco");
+    expect(sorted.map((match) => match.id)).toEqual([212, 13, 211]);
+  });
+
+  it("roastedCoffeeBeans (2 members, both scored): Uomo Signature leads, then Polo Red EDT", () => {
+    const matches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "roastedCoffeeBeans" });
+    expect(matches.map((match) => match.id).sort((a, b) => a - b)).toEqual([16, 26]);
+
+    const sorted = sortNoteExplorerMatchesByProminence(matches, "roastedCoffeeBeans");
+    expect(sorted.map((match) => match.id)).toEqual([16, 26]);
+  });
+
+  it("never cross-matches tobacco and roastedCoffeeBeans -- no fragrance carries both, and searching one canonical key never returns the other's member", () => {
+    const tobaccoMatches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "tobacco" });
+    expect(tobaccoMatches.map((match) => match.id)).not.toContain(16); // Uomo Signature: roastedCoffeeBeans only
+    expect(tobaccoMatches.map((match) => match.id)).not.toContain(26); // Polo Red EDT: roastedCoffeeBeans only
+
+    const coffeeMatches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "roastedCoffeeBeans" });
+    expect(coffeeMatches.map((match) => match.id)).not.toContain(13); // The One for Men EDP: tobacco only
+    expect(coffeeMatches.map((match) => match.id)).not.toContain(211); // Born In Roma Coral Fantasy: tobacco only
+    expect(coffeeMatches.map((match) => match.id)).not.toContain(212); // Spicebomb Extreme: tobacco only
+  });
+});
