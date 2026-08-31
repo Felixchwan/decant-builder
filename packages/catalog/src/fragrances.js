@@ -3893,6 +3893,34 @@ const DEFAULT_SEASON_WEIGHTS = {
 // opoponax, peruBalsam, benzoin, siamBenzoin, and incense. See
 // noteProminenceHorizontalCalibration3U.test.js for the complete
 // taxonomy audit, membership tables, and rationale.
+//
+// Composer Phase 3V: twenty-second horizontal calibration pass -- four
+// resinous canonical keys grouped only for workflow efficiency, never as
+// one umbrella "resin" ranking: benzoin, siamBenzoin, incense, and
+// elemi. benzoin and siamBenzoin were audited as a genuine generic/
+// origin-qualified pair -- but unlike moss/oakmoss, siamBenzoin carries
+// its own bespoke image, never reusing benzoin.jpg, and no fragrance
+// carries both keys, confirming they are treated as two independently
+// distinct materials rather than a generic-reuses-specific-image
+// pattern. incense and elemi are independent standalone materials, never
+// treated as benzoin variants. olibanum, labdanum, opoponax, peruBalsam,
+// and every amber-family key (amber, ambergris, ambroxan, amberwood,
+// ambermax) were re-confirmed as their own distinct, already-established
+// canonical identities -- Squid legitimately carries benzoin and incense
+// alongside its own already-established opoponax and ambergris, all four
+// independently scored, never conflated. Gentlemen Only carries both
+// incense and elemi, and Divine Vanille carries both siamBenzoin and
+// incense, each pair independently scored. Across 4 benzoin, 2
+// siamBenzoin, 4 incense, and 2 elemi fragrance/note pairs, this phase's
+// own calibration changes zero individual pairs. Every already-scored
+// entry held up as internally consistent, including Squid's incense: 7
+// (matching "incense" as one of its own listed accords -- a genuine,
+// real contributing axis correctly trailing the fragrance's own defining
+// ink: 9 concept, never conflated with generic smokiness). No
+// canonical-data correction was made or recommended -- no fragrance
+// carries both benzoin and siamBenzoin, and no identity confusion was
+// found in either direction. See noteProminenceHorizontalCalibration3V.test.js
+// for the complete taxonomy audit, membership tables, and rationale.
 export const NOTE_PROMINENCE_BY_ID = {
   1: { seaNotes: 10, calone: 9, bergamot: 7, jasmine: 5, whiteMusk: 4 }, // Acqua di Gio EDT
   2: { lemon: 7, rosemary: 5, patchouli: 4 }, // Light Blue Pour Homme EDT

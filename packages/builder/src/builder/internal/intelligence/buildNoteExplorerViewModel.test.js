@@ -1698,3 +1698,88 @@ describe("Note Explorer 'Most prominent' sort reflects the Phase 3U calibrated o
     expect(opoponaxMatches.map((match) => match.id)).toContain(500);
   });
 });
+
+// Composer Phase 3V: horizontal note-family calibration regression for
+// four resinous canonical keys (benzoin, siamBenzoin, incense, elemi),
+// run against the real catalog. The underlying data (taxonomy audit,
+// canonical-data sanity audit, exact scores, canonical-pyramid
+// immutability) is proven in
+// packages/catalog/tests/noteProminenceHorizontalCalibration3V.test.js;
+// this describe block only proves the existing, unmodified sort algorithm
+// produces the approved relative order per exact key -- scored fragrances
+// sort descending, unscored members trail after every scored one, and
+// containment stays strict per key. Phase 3V changed zero prominence
+// values, so every order below is identical to the pre-Phase-3V catalog.
+describe("Note Explorer 'Most prominent' sort reflects the Phase 3V calibrated order, per distinct canonical key", () => {
+  it("benzoin (4 members): Gentleman EDP is the sole scored member, then 3 unscored members trail in catalog order", () => {
+    const matches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "benzoin" });
+    expect(matches.map((match) => match.id).sort((a, b) => a - b)).toEqual([102, 111, 205, 500]);
+
+    const sorted = sortNoteExplorerMatchesByProminence(matches, "benzoin");
+    expect(sorted.map((match) => match.id)).toEqual([205, 102, 111, 500]);
+
+    const rank = new Map(sorted.map((match, index) => [match.id, index]));
+    expect(rank.get(205)).toBe(0);
+    expect(rank.get(102)).toBeGreaterThan(rank.get(205)); // an unscored member trails the sole scored one
+  });
+
+  it("siamBenzoin (2 members, both unscored): preserves catalog order with no forced ranking", () => {
+    const matches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "siamBenzoin" });
+    expect(matches.map((match) => match.id)).toEqual([304, 410]);
+
+    const sorted = sortNoteExplorerMatchesByProminence(matches, "siamBenzoin");
+    expect(sorted.map((match) => match.id)).toEqual([304, 410]);
+  });
+
+  it("incense (4 members, all scored): Squid leads, down through Loewe 7 Cobalt, Gentlemen Only, and Divine Vanille in strictly descending order", () => {
+    const matches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "incense" });
+    expect(matches.map((match) => match.id).sort((a, b) => a - b)).toEqual([17, 203, 304, 500]);
+
+    const sorted = sortNoteExplorerMatchesByProminence(matches, "incense");
+    // Every member is scored, with no ties (7, 6, 5, 4) -- confirming a
+    // strictly descending order with no tie-preservation cases to guard.
+    expect(sorted.map((match) => match.id)).toEqual([500, 203, 17, 304]);
+  });
+
+  it("elemi (2 members): Dior Homme Sport leads, then Gentlemen Only (unscored) trails", () => {
+    const matches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "elemi" });
+    expect(matches.map((match) => match.id).sort((a, b) => a - b)).toEqual([17, 201]);
+
+    const sorted = sortNoteExplorerMatchesByProminence(matches, "elemi");
+    expect(sorted.map((match) => match.id)).toEqual([201, 17]);
+  });
+
+  it("never treats an adjacent resinous/amber material as one of the four in-scope keys -- searching one canonical key never returns a fragrance whose only relevant note is a different material", () => {
+    const nonMemberExamples = [
+      { noteId: "benzoin", excludeId: 34, label: "Givenchy Pour Homme Blue Label: olibanum only" },
+      { noteId: "siamBenzoin", excludeId: 20, label: "F by Ferragamo Black: labdanum only" },
+      { noteId: "incense", excludeId: 403, label: "Carlisle: opoponax only" },
+      { noteId: "elemi", excludeId: 32, label: "Guess Man Gold: peruBalsam only" },
+      { noteId: "benzoin", excludeId: 1, label: "Acqua di Gio EDT: amber only" },
+      { noteId: "siamBenzoin", excludeId: 19, label: "Club de Nuit Intense Man: ambergris only" },
+      { noteId: "incense", excludeId: 6, label: "Eros EDP: ambroxan only" },
+      { noteId: "elemi", excludeId: 8, label: "The Most Wanted: amberwood only" },
+      { noteId: "benzoin", excludeId: 404, label: "Layton: ambermax only" },
+    ];
+    for (const { noteId, excludeId } of nonMemberExamples) {
+      const matches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId });
+      expect(matches.map((match) => match.id)).not.toContain(excludeId);
+    }
+
+    // Squid legitimately carries both benzoin and incense, Gentlemen
+    // Only legitimately carries both incense and elemi, and Divine
+    // Vanille legitimately carries both siamBenzoin and incense --
+    // confirming coexistence never causes cross-contamination between
+    // exact keys.
+    const benzoinMatches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "benzoin" });
+    const incenseMatches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "incense" });
+    const elemiMatches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "elemi" });
+    const siamBenzoinMatches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "siamBenzoin" });
+    expect(benzoinMatches.map((match) => match.id)).toContain(500);
+    expect(incenseMatches.map((match) => match.id)).toContain(500);
+    expect(incenseMatches.map((match) => match.id)).toContain(17);
+    expect(elemiMatches.map((match) => match.id)).toContain(17);
+    expect(siamBenzoinMatches.map((match) => match.id)).toContain(304);
+    expect(incenseMatches.map((match) => match.id)).toContain(304);
+  });
+});
