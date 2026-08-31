@@ -1032,3 +1032,88 @@ describe("Note Explorer 'Most prominent' sort reflects the Phase 3K calibrated o
     expect(cinnamonMatches.map((match) => match.id)).not.toContain(20); // F by Ferragamo Black: blackPepper only
   });
 });
+
+// Composer Phase 3L: horizontal note-family calibration regression for the
+// pepper canonical-key families, run against the real catalog. The
+// underlying data (taxonomy audit, canonical-data sanity audit, exact
+// scores, canonical-pyramid immutability) is proven in
+// packages/catalog/tests/noteProminenceHorizontalCalibration3L.test.js;
+// this describe block only proves the existing, unmodified sort algorithm
+// produces the approved relative order per canonical key -- scored
+// fragrances sort descending, ties preserve catalog order, and unscored
+// members trail after every scored one. Phase 3L changed zero prominence
+// values, so every order below is identical to the pre-Phase-3L catalog.
+describe("Note Explorer 'Most prominent' sort reflects the Phase 3L calibrated order, per distinct canonical pepper key", () => {
+  it("pepper (4 members): Terre d'Hermès EDT is the sole scored member, then 3 unscored members trail in catalog order", () => {
+    const matches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "pepper" });
+    expect(matches.map((match) => match.id).sort((a, b) => a - b)).toEqual([29, 34, 111, 404]);
+
+    const sorted = sortNoteExplorerMatchesByProminence(matches, "pepper");
+    expect(sorted.map((match) => match.id)).toEqual([111, 29, 34, 404]);
+
+    const rank = new Map(sorted.map((match, index) => [match.id, index]));
+    expect(rank.get(111)).toBe(0);
+    expect(rank.get(29)).toBeGreaterThan(rank.get(111)); // an unscored member trails the sole scored one
+  });
+
+  it("blackPepper (10 members): Spicebomb Extreme is the sole scored member, then 9 unscored members trail in catalog order", () => {
+    const matches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "blackPepper" });
+    expect(matches.map((match) => match.id).sort((a, b) => a - b)).toEqual([20, 21, 29, 33, 114, 205, 208, 212, 304, 501]);
+
+    const sorted = sortNoteExplorerMatchesByProminence(matches, "blackPepper");
+    expect(sorted.map((match) => match.id)).toEqual([212, 20, 21, 29, 33, 114, 205, 208, 304, 501]);
+
+    const rank = new Map(sorted.map((match, index) => [match.id, index]));
+    expect(rank.get(212)).toBe(0);
+    expect(rank.get(20)).toBeGreaterThan(rank.get(212)); // an unscored member trails the sole scored one
+  });
+
+  it("pinkPepper (12 members): Polo Blue Parfum leads, down through a tie, then 9 unscored members trail in catalog order", () => {
+    const matches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "pinkPepper" });
+    expect(matches.map((match) => match.id).sort((a, b) => a - b)).toEqual([
+      16, 17, 25, 102, 107, 108, 116, 201, 203, 204, 206, 500,
+    ]);
+
+    const sorted = sortNoteExplorerMatchesByProminence(matches, "pinkPepper");
+    expect(sorted.map((match) => match.id)).toEqual([206, 17, 116, 16, 25, 102, 107, 108, 201, 203, 204, 500]);
+
+    // 17 and 116 tie at score 4 -- the sort preserves ascending
+    // catalog-array order rather than forcing an artificial rank
+    // difference.
+    const rank = new Map(sorted.map((match, index) => [match.id, index]));
+    expect(rank.get(17)).toBeLessThan(rank.get(116));
+    const lastScoredRank = rank.get(116);
+    expect(rank.get(16)).toBeGreaterThan(lastScoredRank); // an unscored member trails every scored one
+  });
+
+  it("sichuanPepper: Sauvage EDP (scored) leads, Tous Man (unscored) trails", () => {
+    const matches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "sichuanPepper" });
+    expect(matches.map((match) => match.id).sort((a, b) => a - b)).toEqual([28, 202]);
+
+    const sorted = sortNoteExplorerMatchesByProminence(matches, "sichuanPepper");
+    expect(sorted.map((match) => match.id)).toEqual([202, 28]);
+  });
+
+  it("whitePepper (3 members, all unscored): preserves catalog order with no forced ranking", () => {
+    const matches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "whitePepper" });
+    expect(matches.map((match) => match.id).sort((a, b) => a - b)).toEqual([27, 32, 117]);
+
+    const sorted = sortNoteExplorerMatchesByProminence(matches, "whitePepper");
+    expect(sorted.map((match) => match.id)).toEqual([32, 27, 117]);
+  });
+
+  it("never cross-matches distinct pepper variants, or treats an adjacent spice as a pepper variant -- searching one canonical pepper key never returns a fragrance whose only relevant note is a different variant or spice", () => {
+    const pinkPepperMatches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "pinkPepper" });
+    expect(pinkPepperMatches.map((match) => match.id)).not.toContain(33); // Jaguar Pace: blackPepper only
+    expect(pinkPepperMatches.map((match) => match.id)).not.toContain(28); // Tous Man: sichuanPepper only
+
+    const blackPepperMatches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "blackPepper" });
+    expect(blackPepperMatches.map((match) => match.id)).not.toContain(500); // Squid: pinkPepper only
+    expect(blackPepperMatches.map((match) => match.id)).not.toContain(32); // Guess Man Gold: whitePepper only
+    expect(blackPepperMatches.map((match) => match.id)).not.toContain(118); // La Nuit de L'Homme: cardamom only, no pepper key
+    expect(blackPepperMatches.map((match) => match.id)).not.toContain(1); // Acqua di Gio EDT: nutmeg only, no pepper key
+
+    const whitePepperMatches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "whitePepper" });
+    expect(whitePepperMatches.map((match) => match.id)).not.toContain(33); // Jaguar Pace: blackPepper only
+  });
+});

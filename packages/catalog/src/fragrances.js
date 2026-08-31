@@ -3593,6 +3593,34 @@ const DEFAULT_SEASON_WEIGHTS = {
 // in the taxonomy, no reclassification target exists in either
 // direction. See noteProminenceHorizontalCalibration3K.test.js for the
 // complete taxonomy audit, membership tables, and rationale.
+//
+// Composer Phase 3L: twelfth horizontal calibration pass -- the pepper
+// canonical-key families. Five true pepper keys exist in the taxonomy,
+// kept deliberately distinct: pepper (generic), blackPepper, pinkPepper,
+// sichuanPepper, whitePepper. cardamom, cinnamon, nutmeg, cloves, ginger,
+// gingerFlower, saffron, anise, and starAnise were all investigated and
+// re-confirmed as their own distinct, already-established spice keys,
+// never pepper substitutes. Across 4 pepper, 10 blackPepper, 12
+// pinkPepper, 2 sichuanPepper, and 3 whitePepper fragrance/note pairs,
+// this phase's own calibration changes zero individual pairs -- every
+// already-scored entry held up as internally consistent, including the
+// explicit comparison anchors: Terre d'Hermès EDT's pepper: 4 (correctly
+// its lowest-scored note, a real but secondary facet beside its own
+// established orange/vetiver dual signature), Sauvage EDP's
+// sichuanPepper: 6 (a genuine, well-documented differentiator for this
+// specific release, proportionately trailing its own established
+// ambroxan: 9 signature without being under-scored), Spicebomb Extreme's
+// blackPepper: 5 (a real contributing spice, correctly trailing its own
+// established tobacco/vanilla signature), and Polo Blue Parfum's
+// pinkPepper: 5 (proportionate to its own established vetiver/patchouli
+// base duo). Gentleman EDP's and Tuxedo's blackPepper both remain
+// correctly unscored, deferring to each fragrance's own established
+// iris/patchouli signature. Sauvage Elixir and The One for Men EDP were
+// checked and confirmed not members of any pepper-family key. No
+// canonical-data correction was made or recommended -- every fragrance
+// already uses the most specific pepper-family key its own documented
+// identity supports. See noteProminenceHorizontalCalibration3L.test.js
+// for the complete taxonomy audit, membership tables, and rationale.
 export const NOTE_PROMINENCE_BY_ID = {
   1: { seaNotes: 10, calone: 9, bergamot: 7, jasmine: 5, whiteMusk: 4 }, // Acqua di Gio EDT
   2: { lemon: 7, rosemary: 5, patchouli: 4 }, // Light Blue Pour Homme EDT
