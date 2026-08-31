@@ -3621,6 +3621,37 @@ const DEFAULT_SEASON_WEIGHTS = {
 // already uses the most specific pepper-family key its own documented
 // identity supports. See noteProminenceHorizontalCalibration3L.test.js
 // for the complete taxonomy audit, membership tables, and rationale.
+//
+// Composer Phase 3M: thirteenth horizontal calibration pass -- the
+// ginger, nutmeg, and clove canonical-key families. Exact keys, each the
+// only true canonical identity in its family: ginger, nutmeg, cloves. No
+// qualified variant of any exists in the taxonomy. gingerFlower was
+// investigated and excluded: it carries its own bespoke image (never
+// reusing ginger.jpg) and its own distinct display name, matching this
+// dictionary's own established pattern of keeping a plant's flower
+// materially distinct from its root/spice (e.g. orangeBlossom vs. orange,
+// violetLeaf vs. violet) -- it is a distinct floral material, not a
+// ginger variant. cardamom, cinnamon, blackPepper, pinkPepper, pepper,
+// whitePepper, sichuanPepper, anise, starAnise, saffron, and caraway were
+// all re-confirmed as their own distinct, already-established spice keys.
+// Across 9 ginger, 9 nutmeg, and 4 cloves fragrance/note pairs, this
+// phase's own calibration changes zero individual pairs -- every
+// already-scored entry held up as internally consistent, including the
+// explicit comparison anchors: YSL L'Homme's and YSL Y EDP's ginger: 6
+// each (correctly leading L'Homme's own top accord, and correctly
+// secondary to Y EDP's own established, more dominant apple: 8), The
+// Scent EDT's ginger: 7 (a genuine co-axis alongside its own established
+// leather: 8, never under-scored), Sauvage Elixir's nutmeg: 6 (a real,
+// close-behind contributor within its own established cinnamon/licorice
+// spice trio), Replica By The Fireplace's cloves: 6 and Gentleman EDP's
+// cloves: 5 (both genuine, proportionate contributors beside each
+// fragrance's own established, more dominant signature). Carlisle's
+// nutmeg remains correctly unscored for lack of comparably strong
+// documented signature status. F by Ferragamo Black was checked and
+// confirmed not a member of any of the three families. No canonical-data
+// correction was made or recommended. See
+// noteProminenceHorizontalCalibration3M.test.js for the complete taxonomy
+// audit, membership tables, and rationale.
 export const NOTE_PROMINENCE_BY_ID = {
   1: { seaNotes: 10, calone: 9, bergamot: 7, jasmine: 5, whiteMusk: 4 }, // Acqua di Gio EDT
   2: { lemon: 7, rosemary: 5, patchouli: 4 }, // Light Blue Pour Homme EDT

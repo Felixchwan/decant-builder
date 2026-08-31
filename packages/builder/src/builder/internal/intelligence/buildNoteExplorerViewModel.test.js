@@ -1117,3 +1117,70 @@ describe("Note Explorer 'Most prominent' sort reflects the Phase 3L calibrated o
     expect(whitePepperMatches.map((match) => match.id)).not.toContain(33); // Jaguar Pace: blackPepper only
   });
 });
+
+// Composer Phase 3M: horizontal note-family calibration regression for the
+// ginger, nutmeg, and clove canonical-key families, run against the real
+// catalog. The underlying data (taxonomy audit, canonical-data sanity
+// audit, exact scores, canonical-pyramid immutability) is proven in
+// packages/catalog/tests/noteProminenceHorizontalCalibration3M.test.js;
+// this describe block only proves the existing, unmodified sort algorithm
+// produces the approved relative order per canonical key -- scored
+// fragrances sort descending, ties preserve catalog order, and unscored
+// members trail after every scored one. Phase 3M changed zero prominence
+// values, so every order below is identical to the pre-Phase-3M catalog.
+describe("Note Explorer 'Most prominent' sort reflects the Phase 3M calibrated order, per distinct canonical key", () => {
+  it("ginger (9 members): The Scent EDT leads, down through a tie, then 6 unscored members trail in catalog order", () => {
+    const matches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "ginger" });
+    expect(matches.map((match) => match.id).sort((a, b) => a - b)).toEqual([7, 13, 28, 32, 112, 117, 210, 213, 214]);
+
+    const sorted = sortNoteExplorerMatchesByProminence(matches, "ginger");
+    expect(sorted.map((match) => match.id)).toEqual([7, 117, 213, 13, 32, 28, 112, 214, 210]);
+
+    // 117 and 213 tie at score 6 -- the sort preserves ascending
+    // catalog-array order rather than forcing an artificial rank
+    // difference.
+    const rank = new Map(sorted.map((match, index) => [match.id, index]));
+    expect(rank.get(117)).toBeLessThan(rank.get(213));
+    const lastScoredRank = rank.get(213);
+    expect(rank.get(13)).toBeGreaterThan(lastScoredRank); // an unscored member trails every scored one
+  });
+
+  it("nutmeg (9 members): Sauvage Elixir is the sole scored member, then 8 unscored members trail in catalog order", () => {
+    const matches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "nutmeg" });
+    expect(matches.map((match) => match.id).sort((a, b) => a - b)).toEqual([1, 12, 17, 27, 32, 202, 306, 402, 403]);
+
+    const sorted = sortNoteExplorerMatchesByProminence(matches, "nutmeg");
+    expect(sorted.map((match) => match.id)).toEqual([402, 1, 12, 17, 32, 27, 202, 306, 403]);
+
+    const rank = new Map(sorted.map((match, index) => [match.id, index]));
+    expect(rank.get(402)).toBe(0);
+    expect(rank.get(1)).toBeGreaterThan(rank.get(402)); // an unscored member trails the sole scored one
+  });
+
+  it("cloves (4 members): Replica By The Fireplace leads, down to Loewe 7 Cobalt, then Essenza (unscored) trails", () => {
+    const matches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "cloves" });
+    expect(matches.map((match) => match.id).sort((a, b) => a - b)).toEqual([101, 203, 204, 205]);
+
+    const sorted = sortNoteExplorerMatchesByProminence(matches, "cloves");
+    expect(sorted.map((match) => match.id)).toEqual([204, 205, 203, 101]);
+
+    const rank = new Map(sorted.map((match, index) => [match.id, index]));
+    const lastScoredRank = rank.get(203);
+    expect(rank.get(101)).toBeGreaterThan(lastScoredRank); // the unscored member trails every scored one
+  });
+
+  it("never treats gingerFlower as a ginger variant, or an adjacent spice as ginger/nutmeg/cloves -- searching one canonical key never returns a fragrance whose only relevant note is a different variant or spice", () => {
+    const gingerMatches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "ginger" });
+    expect(gingerMatches.map((match) => match.id)).not.toContain(14); // Halloween Man: gingerFlower only
+
+    const gingerFlowerMatches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "gingerFlower" });
+    expect(gingerFlowerMatches.map((match) => match.id)).toEqual([14]);
+    expect(gingerFlowerMatches.map((match) => match.id)).not.toContain(7); // The Scent EDT: generic ginger only
+
+    const nutmegMatches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "nutmeg" });
+    expect(nutmegMatches.map((match) => match.id)).not.toContain(118); // La Nuit de L'Homme: cardamom only, no nutmeg
+
+    const clovesMatches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "cloves" });
+    expect(clovesMatches.map((match) => match.id)).not.toContain(304); // Divine Vanille: cinnamon only, no cloves
+  });
+});
