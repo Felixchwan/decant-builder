@@ -1184,3 +1184,64 @@ describe("Note Explorer 'Most prominent' sort reflects the Phase 3M calibrated o
     expect(clovesMatches.map((match) => match.id)).not.toContain(304); // Divine Vanille: cinnamon only, no cloves
   });
 });
+
+// Composer Phase 3N: horizontal note-family calibration regression for the
+// sage family and geranium, run against the real catalog. The underlying
+// data (taxonomy audit, canonical-data sanity audit, exact scores,
+// canonical-pyramid immutability) is proven in
+// packages/catalog/tests/noteProminenceHorizontalCalibration3N.test.js;
+// this describe block only proves the existing, unmodified sort algorithm
+// produces the approved relative order per canonical key -- scored
+// fragrances sort descending, ties preserve catalog order, and unscored
+// members trail after every scored one. Phase 3N changed zero prominence
+// values (clarySage and geranium were, and remain, entirely unscored), so
+// every order below is identical to the pre-Phase-3N catalog.
+describe("Note Explorer 'Most prominent' sort reflects the Phase 3N calibrated order, per distinct canonical key", () => {
+  it("sage (8 members): Loewe 7 Cobalt leads, down through a 3-way tie, then 4 unscored members trail in catalog order", () => {
+    const matches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "sage" });
+    expect(matches.map((match) => match.id).sort((a, b) => a - b)).toEqual([9, 15, 26, 35, 101, 203, 210, 213]);
+
+    const sorted = sortNoteExplorerMatchesByProminence(matches, "sage");
+    expect(sorted.map((match) => match.id)).toEqual([203, 9, 35, 213, 15, 26, 101, 210]);
+
+    // 9, 35, and 213 tie at score 5 -- the sort preserves ascending
+    // catalog-array order rather than forcing an artificial rank
+    // difference.
+    const rank = new Map(sorted.map((match, index) => [match.id, index]));
+    expect(rank.get(9)).toBeLessThan(rank.get(35));
+    expect(rank.get(35)).toBeLessThan(rank.get(213));
+    const lastScoredRank = rank.get(213);
+    expect(rank.get(15)).toBeGreaterThan(lastScoredRank); // an unscored member trails every scored one
+  });
+
+  it("clarySage (10 members, all unscored): preserves catalog order with no forced ranking", () => {
+    const matches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "clarySage" });
+    expect(matches.map((match) => match.id).sort((a, b) => a - b)).toEqual([3, 6, 11, 24, 25, 109, 206, 207, 211, 304]);
+
+    const sorted = sortNoteExplorerMatchesByProminence(matches, "clarySage");
+    expect(sorted.map((match) => match.id)).toEqual([3, 6, 11, 24, 25, 109, 206, 207, 211, 304]);
+  });
+
+  it("geranium (15 members, all unscored): preserves catalog order with no forced ranking", () => {
+    const matches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "geranium" });
+    expect(matches.map((match) => match.id).sort((a, b) => a - b)).toEqual([
+      3, 4, 6, 29, 31, 107, 108, 109, 111, 114, 207, 208, 211, 213, 404,
+    ]);
+
+    const sorted = sortNoteExplorerMatchesByProminence(matches, "geranium");
+    expect(sorted.map((match) => match.id)).toEqual([3, 4, 6, 29, 31, 107, 108, 109, 111, 114, 207, 208, 211, 213, 404]);
+  });
+
+  it("never treats an adjacent aromatic/floral material as sage, clarySage, or geranium -- searching one canonical key never returns a fragrance whose only relevant note is a different material", () => {
+    const sageMatches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "sage" });
+    expect(sageMatches.map((match) => match.id)).not.toContain(5); // Le Male: lavender/mint/artemisia only
+    expect(sageMatches.map((match) => match.id)).not.toContain(1); // Acqua di Gio EDT: rosemary only
+
+    const clarySageMatches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "clarySage" });
+    expect(clarySageMatches.map((match) => match.id)).not.toContain(32); // Guess Man Gold: wormwood only
+
+    const geraniumMatches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "geranium" });
+    expect(geraniumMatches.map((match) => match.id)).not.toContain(13); // The One for Men EDP: basil only
+    expect(geraniumMatches.map((match) => match.id)).not.toContain(14); // Halloween Man: violetLeaf only
+  });
+});

@@ -3652,6 +3652,36 @@ const DEFAULT_SEASON_WEIGHTS = {
 // correction was made or recommended. See
 // noteProminenceHorizontalCalibration3M.test.js for the complete taxonomy
 // audit, membership tables, and rationale.
+//
+// Composer Phase 3N: fourteenth horizontal calibration pass -- the sage
+// family (sage, clarySage -- two real, separately-named aromatic herbs,
+// kept deliberately distinct; no other qualified sage variant exists) and
+// geranium (an independent floral/aromatic key, family: "floral",
+// distinct from sage's own family: "aromatic" tag, never collapsed into
+// the sage family despite frequently co-occurring in the same fougère
+// middle accords). lavender, rosemary, basil, mint, spearmint, artemisia,
+// wormwood, and violetLeaf were all re-confirmed as their own distinct,
+// already-established canonical keys. Across 8 sage, 10 clarySage, and 15
+// geranium fragrance/note pairs -- clarySage and geranium both entirely
+// unscored coming into this phase -- this phase's own calibration changes
+// zero individual pairs. Every already-scored sage entry held up as
+// internally consistent. Every clarySage and geranium member was
+// reviewed individually: geranium in particular functions almost
+// entirely as a generic, near-universal fougère-structural ingredient
+// across this catalog's masculine compositions (it is genuinely present,
+// per each fragrance's own documented pyramid, in the overwhelming
+// majority of its 15 members) rather than a differentiated, fragrance-
+// specific highlight in any single one -- including Terre d'Hermès EDT,
+// where geranium sits as one of only two official middle notes alongside
+// the already-scored pepper: 4, a structural parity considered but not
+// treated as sufficient evidence on its own, per this phase's own
+// caution against equating fougère structure with genuine geranium
+// prominence. No canonical-data correction was made or recommended --
+// every fragrance already uses the most specific available sage-family
+// key its own documented identity supports, and geranium was never found
+// conflated with an adjacent aromatic/floral material. See
+// noteProminenceHorizontalCalibration3N.test.js for the complete taxonomy
+// audit, membership tables, and rationale.
 export const NOTE_PROMINENCE_BY_ID = {
   1: { seaNotes: 10, calone: 9, bergamot: 7, jasmine: 5, whiteMusk: 4 }, // Acqua di Gio EDT
   2: { lemon: 7, rosemary: 5, patchouli: 4 }, // Light Blue Pour Homme EDT
