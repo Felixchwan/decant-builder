@@ -3364,6 +3364,35 @@ const DEFAULT_SEASON_WEIGHTS = {
 // identity. Corrected to blackVanilla, at the same prominence value (6).
 // See noteProminenceHorizontalCalibration3C.test.js for the complete
 // taxonomy audit, membership tables, and rationale.
+//
+// Composer Phase 3D: fourth horizontal calibration pass -- the citrus/
+// orange and musk canonical-key families, the broadest audit yet by key
+// count (18 citrus/orange keys -- lime, lemon, bergamot, orange,
+// mandarinOrange, bitterOrange, sicilianMandarin, grapefruit, citron,
+// greenMandarin, bloodOrange, tangerine, fingerLime, mandarin, citrus,
+// chinotto, citruses, italianMandarin -- plus 2 musk keys: musk,
+// whiteMusk). petitgrain, lemonVerbena, neroli, and orangeBlossom were
+// investigated and excluded: the catalog's own notes.js tags each with a
+// different family ("green" or "floral"), not "citrus" -- semantic
+// family here is a discovery grouping the taxonomy itself defines, not a
+// judgment call this phase makes. ambergris and ambroxan were confirmed
+// as distinct from musk (different canonical keys, never conflated).
+// Despite the enormous combined membership (roughly 120 fragrance/citrus-
+// note pairs and 27 fragrance/musk-note pairs), the approved calibration
+// changes only 3 individual fragrance/note pairs -- every already-scored
+// entry across all 20 keys held up as internally consistent under
+// comparison, and the overwhelming majority of unscored members stay
+// unscored: bergamot (40 members, only 6 ever scored) and musk (23
+// members, only 4 ever scored) are the two most common notes in the
+// whole catalog specifically because they function as generic top/base
+// filler in most compositions, and per this phase's own editorial
+// caution, common presence was never treated as evidence of genuine,
+// differentiated prominence. No canonical-data correction was made or
+// recommended -- every fragrance already uses the most specific citrus/
+// musk variant its own documented note identity supports, and no case
+// was found as clear and narrow as the Phase 3A basil or Phase 3C
+// blackVanilla corrections. See noteProminenceHorizontalCalibration3D.test.js
+// for the complete taxonomy audit, membership tables, and rationale.
 export const NOTE_PROMINENCE_BY_ID = {
   1: { seaNotes: 10, calone: 9, bergamot: 7, jasmine: 5, whiteMusk: 4 }, // Acqua di Gio EDT
   2: { lemon: 7, rosemary: 5 }, // Light Blue Pour Homme EDT
@@ -3388,7 +3417,7 @@ export const NOTE_PROMINENCE_BY_ID = {
   21: { vanilla: 6, cinnamon: 5, patchouli: 5 }, // Halloween Man Mystery
   22: { spearmint: 7, ambroxan: 5, sandalwood: 4, cedar: 4 }, // Legend Blue
   23: { oakmoss: 6, leather: 5, jasmine: 4 }, // Legend EDT
-  24: { bloodOrange: 6, cardamom: 5, tonkaBean: 4 }, // Legend Red
+  24: { bloodOrange: 6, cardamom: 5, tonkaBean: 4, grapefruit: 5 }, // Legend Red
   25: { leather: 7, haitianVetiver: 6, akigalawood: 5, patchouli: 4 }, // Montblanc Explorer
   26: { grapefruit: 7, roastedCoffeeBeans: 7, amber: 5 }, // Polo Red EDT
   27: { whiteMusk: 6, vetiver: 5 }, // Touch for Men
@@ -3403,7 +3432,7 @@ export const NOTE_PROMINENCE_BY_ID = {
   100: { sicilianMandarin: 7, caramel: 5, petitgrain: 5 }, // Arancia di Capri
   101: { bergamot: 7, jasmine: 5, patchouli: 4 }, // Essenza (generalNotes)
   102: { figNectar: 9, figTree: 6, citron: 5 }, // Fico di Amalfi
-  103: { greenMandarin: 7, petitgrain: 5, spearmint: 5 }, // Mandarino di Sicilia
+  103: { greenMandarin: 7, petitgrain: 5, spearmint: 5, bloodOrange: 4 }, // Mandarino di Sicilia
   104: { tonkaBean: 9, lavender: 6, greenMandarin: 5, cedar: 4 }, // Armani Code EDT
   105: { greenTea: 7, whiteLotus: 5, mineralNotes: 4 }, // Bvlgari Man Rain Essence
   106: { blackVanilla: 7, anise: 6 }, // 212 VIP Black
@@ -3440,7 +3469,7 @@ export const NOTE_PROMINENCE_BY_ID = {
   304: { madagascarVanilla: 10, cinnamon: 7, tonkaBean: 6, incense: 4 }, // Divine Vanille
   305: { bitterOrange: 7, australianSandalwood: 7, basil: 5 }, // Orange X Santal (generalNotes)
   306: { seaNotes: 6, patchouli: 7, leather: 5, vetiver: 4 }, // Acqua di Gio Elixir
-  401: { greenTea: 9, blackCurrant: 8, bergamot: 5, musk: 5 }, // Silver Mountain Water
+  401: { greenTea: 9, blackCurrant: 8, bergamot: 5, musk: 5, mandarin: 4 }, // Silver Mountain Water
   402: { licorice: 8, cinnamon: 7, nutmeg: 6 }, // Sauvage Elixir
   403: { tonkaBean: 5, vanilla: 5 }, // Carlisle
   404: { apple: 9, lavender: 8, vanilla: 7, cardamom: 4, coumarin: 4 }, // Layton

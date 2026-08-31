@@ -437,3 +437,145 @@ describe("Note Explorer 'Most prominent' sort reflects the Phase 3C calibrated o
     expect(cedarMatches.map((match) => match.id)).not.toContain(302); // Allure Homme Sport Superleggera: cedarwood only
   });
 });
+
+// Composer Phase 3D: horizontal note-family calibration regression for the
+// citrus/orange and musk canonical-key families, run against the real
+// catalog. The underlying data (taxonomy audit, canonical-data sanity
+// audit, exact scores, unrelated-value preservation, pyramid immutability)
+// is proven in packages/catalog/tests/noteProminenceHorizontalCalibration3D.test.js;
+// this describe block only proves the existing, unmodified sort algorithm
+// produces the approved relative order per canonical key -- scored
+// fragrances sort descending, ties preserve catalog order, unscored
+// members trail after every scored one, and exact canonical variants
+// (e.g. bergamot vs. bloodOrange, musk vs. whiteMusk) never cross-rank.
+describe("Note Explorer 'Most prominent' sort reflects the Phase 3D calibrated order, per distinct canonical key", () => {
+  it("bergamot (40 members): scores descend ((Acqua di Gio EDT = Essenza = Sauvage EDP) at 7, down to Silver Mountain Water at 5), then all 34 unscored members trail in catalog order", () => {
+    const matches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "bergamot" });
+    expect(matches.map((match) => match.id).sort((a, b) => a - b)).toEqual([
+      1, 3, 4, 5, 7, 12, 17, 19, 23, 25, 30, 31, 34, 35, 100, 101, 102, 103, 107, 114, 115, 117, 118, 119, 201, 202,
+      205, 207, 209, 211, 213, 301, 306, 401, 404, 405, 406, 407, 410, 501,
+    ]);
+
+    const sorted = sortNoteExplorerMatchesByProminence(matches, "bergamot");
+    expect(sorted.map((match) => match.id)).toEqual([
+      1, 101, 202, 3, 30, 401, 4, 5, 7, 12, 17, 19, 23, 25, 31, 34, 35, 100, 102, 103, 119, 107, 114, 115, 117, 118,
+      201, 205, 207, 209, 211, 213, 301, 306, 404, 405, 406, 407, 410, 501,
+    ]);
+
+    const rank = new Map(sorted.map((match, index) => [match.id, index]));
+    const lastScoredRank = rank.get(401);
+    expect(rank.get(4)).toBeGreaterThan(lastScoredRank); // an unscored member trails every scored one
+  });
+
+  it("orange: Concentré d'Orange Verte = Terre d'Hermès EDT > Tous Man, then unscored members trail in catalog order", () => {
+    const matches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "orange" });
+    expect(matches.map((match) => match.id).sort((a, b) => a - b)).toEqual([1, 9, 28, 31, 100, 101, 105, 110, 111]);
+
+    const sorted = sortNoteExplorerMatchesByProminence(matches, "orange");
+    expect(sorted.map((match) => match.id)).toEqual([110, 111, 28, 1, 9, 31, 100, 101, 105]);
+  });
+
+  it("mandarinOrange: only Scandal Pour Homme is scored, then unscored members trail in catalog order", () => {
+    const matches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "mandarinOrange" });
+    expect(matches.map((match) => match.id).sort((a, b) => a - b)).toEqual([1, 6, 7, 11, 14, 21, 27, 29, 101]);
+
+    const sorted = sortNoteExplorerMatchesByProminence(matches, "mandarinOrange");
+    expect(sorted.map((match) => match.id)).toEqual([11, 1, 6, 7, 14, 21, 27, 29, 101]);
+  });
+
+  it("bitterOrange: Orange X Santal > (L'Homme Idéal EDT = Concentré d'Orange Verte, catalog order), then Eros EDP (unscored, last)", () => {
+    const matches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "bitterOrange" });
+    expect(matches.map((match) => match.id).sort((a, b) => a - b)).toEqual([6, 10, 110, 305]);
+
+    const sorted = sortNoteExplorerMatchesByProminence(matches, "bitterOrange");
+    expect(sorted.map((match) => match.id)).toEqual([305, 10, 110, 6]);
+  });
+
+  it("grapefruit: (Polo Red EDT = Givenchy Pour Homme Blue Label = Terre d'Hermès EDT = Allure Homme Sport Superleggera, catalog order) at 7, down through Legend Red's newly-approved score, then unscored members trail in catalog order", () => {
+    const matches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "grapefruit" });
+    expect(matches.map((match) => match.id).sort((a, b) => a - b)).toEqual([
+      12, 13, 16, 24, 26, 34, 101, 102, 111, 207, 302, 402, 405, 406,
+    ]);
+
+    const sorted = sortNoteExplorerMatchesByProminence(matches, "grapefruit");
+    expect(sorted.map((match) => match.id)).toEqual([26, 34, 111, 302, 13, 24, 405, 12, 16, 101, 102, 207, 402, 406]);
+
+    // Legend Red (24) is the one newly-approved grapefruit score this
+    // phase added, scored independently alongside its existing
+    // bloodOrange:6, never collapsed into that other citrus variant.
+    const rank = new Map(sorted.map((match, index) => [match.id, index]));
+    expect(rank.get(24)).toBeLessThan(rank.get(12));
+  });
+
+  it("citron: Cedrat Boise > Fico di Amalfi", () => {
+    const matches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "citron" });
+    expect(matches.map((match) => match.id).sort((a, b) => a - b)).toEqual([102, 115]);
+
+    const sorted = sortNoteExplorerMatchesByProminence(matches, "citron");
+    expect(sorted.map((match) => match.id)).toEqual([115, 102]);
+  });
+
+  it("greenMandarin: Mandarino di Sicilia > Armani Code EDT, then unscored members trail in catalog order", () => {
+    const matches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "greenMandarin" });
+    expect(matches.map((match) => match.id).sort((a, b) => a - b)).toEqual([17, 103, 104, 306]);
+
+    const sorted = sortNoteExplorerMatchesByProminence(matches, "greenMandarin");
+    expect(sorted.map((match) => match.id)).toEqual([103, 104, 17, 306]);
+  });
+
+  it("bloodOrange: Legend Red > Mandarino di Sicilia's newly-approved score, then K EDP Intense (unscored, last)", () => {
+    const matches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "bloodOrange" });
+    expect(matches.map((match) => match.id).sort((a, b) => a - b)).toEqual([24, 103, 109]);
+
+    const sorted = sortNoteExplorerMatchesByProminence(matches, "bloodOrange");
+    expect(sorted.map((match) => match.id)).toEqual([24, 103, 109]);
+  });
+
+  it("mandarin: Silver Mountain Water's newly-approved score outranks every unscored member, in catalog order", () => {
+    const matches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "mandarin" });
+    expect(matches.map((match) => match.id).sort((a, b) => a - b)).toEqual([110, 206, 302, 401, 404]);
+
+    const sorted = sortNoteExplorerMatchesByProminence(matches, "mandarin");
+    expect(sorted.map((match) => match.id)).toEqual([401, 110, 206, 302, 404]);
+  });
+
+  it("musk (23 members): Fierce > Versace Pour Homme > Silver Mountain Water > Summer Hammer, then all 19 unscored members trail in catalog order", () => {
+    const matches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "musk" });
+    expect(matches.map((match) => match.id).sort((a, b) => a - b)).toEqual([
+      3, 9, 14, 17, 19, 28, 31, 32, 100, 101, 103, 105, 106, 107, 114, 207, 209, 304, 401, 405, 407, 408, 500,
+    ]);
+
+    const sorted = sortNoteExplorerMatchesByProminence(matches, "musk");
+    expect(sorted.map((match) => match.id)).toEqual([
+      9, 3, 401, 407, 14, 17, 19, 32, 28, 31, 100, 101, 103, 105, 106, 107, 114, 207, 209, 304, 405, 408, 500,
+    ]);
+
+    const rank = new Map(sorted.map((match, index) => [match.id, index]));
+    const lastScoredRank = rank.get(407);
+    expect(rank.get(14)).toBeGreaterThan(lastScoredRank); // an unscored member trails every scored one
+  });
+
+  it("whiteMusk: Touch for Men = Allure Homme Sport Superleggera > Acqua di Gio EDT, then Cedrat Boise (unscored, last)", () => {
+    const matches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "whiteMusk" });
+    expect(matches.map((match) => match.id).sort((a, b) => a - b)).toEqual([1, 27, 115, 302]);
+
+    const sorted = sortNoteExplorerMatchesByProminence(matches, "whiteMusk");
+    expect(sorted.map((match) => match.id)).toEqual([27, 302, 1, 115]);
+  });
+
+  it("never cross-matches distinct citrus/musk variants -- searching one canonical key never returns a fragrance whose only relevant note is a different variant", () => {
+    const orangeMatches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "orange" });
+    expect(orangeMatches.map((match) => match.id)).not.toContain(24); // Legend Red: bloodOrange only
+    expect(orangeMatches.map((match) => match.id)).not.toContain(103); // Mandarino di Sicilia: greenMandarin/bloodOrange only
+    expect(orangeMatches.map((match) => match.id)).not.toContain(305); // Orange X Santal: bitterOrange only
+
+    const mandarinOrangeMatches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "mandarinOrange" });
+    expect(mandarinOrangeMatches.map((match) => match.id)).not.toContain(100); // Arancia di Capri: sicilianMandarin only
+    expect(mandarinOrangeMatches.map((match) => match.id)).not.toContain(401); // Silver Mountain Water: mandarin (generic) only
+
+    const muskMatches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "musk" });
+    expect(muskMatches.map((match) => match.id)).not.toContain(1); // Acqua di Gio EDT: whiteMusk only
+    expect(muskMatches.map((match) => match.id)).not.toContain(27); // Touch for Men: whiteMusk only
+    expect(muskMatches.map((match) => match.id)).not.toContain(302); // Allure Homme Sport Superleggera: whiteMusk only
+  });
+});

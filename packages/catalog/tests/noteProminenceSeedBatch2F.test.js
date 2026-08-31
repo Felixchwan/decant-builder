@@ -41,7 +41,7 @@ const PHASE_2C_BATCH = {
   208: { iris: 9, neroli: 6, amber: 5, carrotSeeds: 3 },
   303: { akigalawood: 10, ambroxan: 6, basil: 4 },
   304: { madagascarVanilla: 10, cinnamon: 7, tonkaBean: 6, incense: 4 },
-  401: { greenTea: 9, blackCurrant: 8, bergamot: 5, musk: 5 }, // Phase 3A: blackCurrant 7 -> 8 (horizontal calibration)
+  401: { greenTea: 9, blackCurrant: 8, bergamot: 5, musk: 5, mandarin: 4 }, // Phase 3D: added mandarin (horizontal calibration) // Phase 3A: blackCurrant 7 -> 8 (horizontal calibration)
   404: { apple: 9, lavender: 8, vanilla: 7, cardamom: 4, coumarin: 4 }, // Phase 3B: apple 8 -> 9 (horizontal calibration)
   500: { ink: 9, incense: 7, seaSalt: 6, ambergris: 6 },
 };

@@ -47,7 +47,7 @@ const PHASE_2C_BATCH = {
   208: { iris: 9, neroli: 6, amber: 5, carrotSeeds: 3 },
   303: { akigalawood: 10, ambroxan: 6, basil: 4 },
   304: { madagascarVanilla: 10, cinnamon: 7, tonkaBean: 6, incense: 4 },
-  401: { greenTea: 9, blackCurrant: 8, bergamot: 5, musk: 5 }, // Phase 3A: blackCurrant 7 -> 8 (horizontal calibration)
+  401: { greenTea: 9, blackCurrant: 8, bergamot: 5, musk: 5, mandarin: 4 }, // Phase 3D: added mandarin (horizontal calibration) // Phase 3A: blackCurrant 7 -> 8 (horizontal calibration)
   404: { apple: 9, lavender: 8, vanilla: 7, cardamom: 4, coumarin: 4 }, // Phase 3B: apple 8 -> 9 (horizontal calibration)
   500: { ink: 9, incense: 7, seaSalt: 6, ambergris: 6 },
 };
@@ -87,7 +87,7 @@ const PHASE_2G_BATCH = {
   15: { mango: 6, sandalwood: 5, tonkaBean: 4 },
   22: { spearmint: 7, ambroxan: 5, sandalwood: 4, cedar: 4 }, // Phase 3C: added cedar (horizontal calibration) // Phase 3B: spearmint 6 -> 7 (horizontal calibration)
   23: { oakmoss: 6, leather: 5, jasmine: 4 },
-  24: { bloodOrange: 6, cardamom: 5, tonkaBean: 4 },
+  24: { bloodOrange: 6, cardamom: 5, tonkaBean: 4, grapefruit: 5 }, // Phase 3D: added grapefruit (horizontal calibration)
   25: { leather: 7, haitianVetiver: 6, akigalawood: 5, patchouli: 4 },
   105: { greenTea: 7, whiteLotus: 5, mineralNotes: 4 },
   109: { leather: 6, patchouli: 5, fig: 4 },
@@ -124,7 +124,7 @@ const PHASE_2I_BATCH = {
   100: { sicilianMandarin: 7, caramel: 5, petitgrain: 5 },
   101: { bergamot: 7, jasmine: 5, patchouli: 4 },
   102: { figNectar: 9, figTree: 6, citron: 5 },
-  103: { greenMandarin: 7, petitgrain: 5, spearmint: 5 },
+  103: { greenMandarin: 7, petitgrain: 5, spearmint: 5, bloodOrange: 4 }, // Phase 3D: added bloodOrange (horizontal calibration)
   106: { blackVanilla: 7, anise: 6 },
   107: { passionFruit: 6, frangipani: 5 },
   108: { truffle: 7, plum: 5 },

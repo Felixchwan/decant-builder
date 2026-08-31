@@ -158,7 +158,11 @@ const UNRELATED_VALUES_BY_ID = {
   22: { ambroxan: 5, sandalwood: 4, cedar: 4 },
   28: { orange: 6, amber: 5 },
   33: { cashmeran: 6, patchouli: 5 },
-  103: { greenMandarin: 7, petitgrain: 5 },
+  // bloodOrange was subsequently added to id 103 by Phase 3D's own
+  // horizontal pass -- included here at its current approved value,
+  // since this snapshot's job is to prove Phase 3B's own scope, not to
+  // freeze a key Phase 3B never touched.
+  103: { greenMandarin: 7, petitgrain: 5, bloodOrange: 4 },
   110: { orange: 8, patchouli: 5, bitterOrange: 5, basil: 8 },
   114: { ambroxan: 6 },
   211: { tobacco: 6 },

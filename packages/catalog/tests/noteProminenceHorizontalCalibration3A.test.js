@@ -135,7 +135,11 @@ const UNRELATED_VALUES_BY_ID = {
   203: { incense: 6, sage: 6, cloves: 4 },
   303: { akigalawood: 10, ambroxan: 6 },
   305: { bitterOrange: 7, australianSandalwood: 7 },
-  401: { greenTea: 9, bergamot: 5, musk: 5 },
+  // mandarin was subsequently added to id 401 by Phase 3D's own
+  // horizontal pass -- included here at its current approved value,
+  // since this snapshot's job is to prove Phase 3A's own scope, not to
+  // freeze a key Phase 3A never touched.
+  401: { greenTea: 9, bergamot: 5, musk: 5, mandarin: 4 },
   408: { mint: 9, rosemary: 5 },
   410: { patchouli: 6, vanilla: 5 },
 };
