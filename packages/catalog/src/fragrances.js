@@ -3781,6 +3781,38 @@ const DEFAULT_SEASON_WEIGHTS = {
 // target exists in either direction. See
 // noteProminenceHorizontalCalibration3Q.test.js for the complete
 // taxonomy audit, membership tables, and rationale.
+//
+// Composer Phase 3R: eighteenth horizontal calibration pass -- three
+// independent standalone canonical keys grouped only for workflow
+// efficiency, never as a shared fruit/aquatic/aromatic family:
+// pineapple ("Pineapple", family: "fruity"), seaNotes ("Sea Notes",
+// family: "aquatic"), and juniper ("Juniper", no family tag). No
+// qualified variant of any exists in the taxonomy. apple, greenApple,
+// redApple, candyApple, mango, greenMango, passionFruit, fig, figNectar,
+// and fruityNotes were re-confirmed distinct from pineapple; seaSalt,
+// mineralNotes, and calone were re-confirmed distinct from seaNotes --
+// Acqua di Gio EDT legitimately carries both seaNotes and calone as two
+// separately-documented, separately-scored aquatic materials, and Born
+// In Roma EDT correctly uses seaSalt and mineralNotes instead of
+// seaNotes, never conflated; pine, fir, firBalsam, rosemary, sage,
+// clarySage, basil, and cypress were re-confirmed distinct from juniper.
+// Mirto di Panarea carries both seaNotes and juniper, and Summer Hammer
+// carries both pineapple and seaNotes -- each pair independently scored,
+// never cross-credited. Across 6 pineapple, 6 seaNotes, and 6 juniper
+// fragrance/note pairs, this phase's own calibration changes zero
+// individual pairs. Every already-scored entry held up as internally
+// consistent, including the explicit comparison anchors: Acqua di Gio
+// EDT's seaNotes: 10 (correctly the maximum, absolute defining signature
+// of the fragrance that originated the aquatic genre), Club de Nuit
+// Intense Man's pineapple: 8 (correctly leading its own well-documented
+// pineapple/blackcurrant/birch top-note trio), and Hacivat's pineapple: 8
+// (correctly tied with its own established oakmoss: 8, reflecting a
+// genuine, real co-equal fruity-chypre dual signature rather than an
+// artificially manufactured difference). Born In Roma EDT was checked
+// and confirmed not a member of any of the three families. No
+// canonical-data correction was made or recommended. See
+// noteProminenceHorizontalCalibration3R.test.js for the complete
+// taxonomy audit, membership tables, and rationale.
 export const NOTE_PROMINENCE_BY_ID = {
   1: { seaNotes: 10, calone: 9, bergamot: 7, jasmine: 5, whiteMusk: 4 }, // Acqua di Gio EDT
   2: { lemon: 7, rosemary: 5, patchouli: 4 }, // Light Blue Pour Homme EDT

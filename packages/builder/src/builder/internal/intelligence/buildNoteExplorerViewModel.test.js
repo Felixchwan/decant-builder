@@ -1382,3 +1382,88 @@ describe("Note Explorer 'Most prominent' sort reflects the Phase 3Q calibrated o
     expect(ambroxanMatches.map((match) => match.id)).toContain(114);
   });
 });
+
+// Composer Phase 3R: horizontal note-family calibration regression for the
+// three independent standalone canonical keys pineapple, seaNotes, and
+// juniper, run against the real catalog. The underlying data (taxonomy
+// audit, canonical-data sanity audit, exact scores, canonical-pyramid
+// immutability) is proven in
+// packages/catalog/tests/noteProminenceHorizontalCalibration3R.test.js;
+// this describe block only proves the existing, unmodified sort algorithm
+// produces the approved relative order per exact key -- scored fragrances
+// sort descending, ties preserve catalog order, unscored members trail
+// after every scored one, and containment stays strict per key. Phase 3R
+// changed zero prominence values, so every order below is identical to
+// the pre-Phase-3R catalog.
+describe("Note Explorer 'Most prominent' sort reflects the Phase 3R calibrated order, per distinct canonical key", () => {
+  it("pineapple (6 members): Club de Nuit Intense Man and Hacivat tie for the lead, down through a second tie, then 2 unscored members trail in catalog order", () => {
+    const matches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "pineapple" });
+    expect(matches.map((match) => match.id).sort((a, b) => a - b)).toEqual([4, 19, 28, 112, 406, 407]);
+
+    const sorted = sortNoteExplorerMatchesByProminence(matches, "pineapple");
+    expect(sorted.map((match) => match.id)).toEqual([19, 406, 112, 407, 4, 28]);
+
+    // 19 and 406 tie at score 8, and 112 and 407 tie at score 6 -- the
+    // sort preserves ascending catalog-array order within each tie group
+    // rather than forcing an artificial rank difference.
+    const rank = new Map(sorted.map((match, index) => [match.id, index]));
+    expect(rank.get(19)).toBeLessThan(rank.get(406));
+    expect(rank.get(112)).toBeLessThan(rank.get(407));
+    const lastScoredRank = rank.get(407);
+    expect(rank.get(4)).toBeGreaterThan(lastScoredRank); // an unscored member trails every scored one
+  });
+
+  it("seaNotes (6 members): Acqua di Gio EDT leads at the maximum score, down through a 3-way tie, then Fierce (unscored) trails", () => {
+    const matches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "seaNotes" });
+    expect(matches.map((match) => match.id).sort((a, b) => a - b)).toEqual([1, 9, 119, 207, 306, 407]);
+
+    const sorted = sortNoteExplorerMatchesByProminence(matches, "seaNotes");
+    expect(sorted.map((match) => match.id)).toEqual([1, 119, 207, 306, 407, 9]);
+
+    // 119, 207, and 306 tie at score 6 -- the sort preserves ascending
+    // catalog-array order rather than forcing an artificial rank
+    // difference.
+    const rank = new Map(sorted.map((match, index) => [match.id, index]));
+    expect(rank.get(1)).toBe(0);
+    expect(rank.get(119)).toBeLessThan(rank.get(207));
+    expect(rank.get(207)).toBeLessThan(rank.get(306));
+    const lastScoredRank = rank.get(407);
+    expect(rank.get(9)).toBeGreaterThan(lastScoredRank); // the unscored member trails every scored one
+  });
+
+  it("juniper (6 members): Orphéon EDP is the sole scored member, then 5 unscored members trail in catalog order", () => {
+    const matches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "juniper" });
+    expect(matches.map((match) => match.id).sort((a, b) => a - b)).toEqual([24, 109, 119, 204, 213, 409]);
+
+    const sorted = sortNoteExplorerMatchesByProminence(matches, "juniper");
+    expect(sorted.map((match) => match.id)).toEqual([409, 24, 119, 109, 204, 213]);
+
+    const rank = new Map(sorted.map((match, index) => [match.id, index]));
+    expect(rank.get(409)).toBe(0);
+    expect(rank.get(24)).toBeGreaterThan(rank.get(409)); // an unscored member trails the sole scored one
+  });
+
+  it("never treats an adjacent fruit, marine/mineral, or coniferous/aromatic material as pineapple, seaNotes, or juniper -- searching one canonical key never returns a fragrance whose only relevant note is a different material", () => {
+    const pineappleMatches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "pineapple" });
+    expect(pineappleMatches.map((match) => match.id)).not.toContain(33); // Jaguar Pace: apple only
+    expect(pineappleMatches.map((match) => match.id)).not.toContain(15); // Polo Black: mango only
+    expect(pineappleMatches.map((match) => match.id)).not.toContain(109); // K EDP Intense: fig only
+
+    const seaNotesMatches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "seaNotes" });
+    expect(seaNotesMatches.map((match) => match.id)).not.toContain(210); // Born In Roma EDT: seaSalt/mineralNotes only
+    expect(seaNotesMatches.map((match) => match.id)).not.toContain(105); // Bvlgari Man Rain Essence: mineralNotes only
+
+    const juniperMatches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "juniper" });
+    expect(juniperMatches.map((match) => match.id)).not.toContain(18); // L.12.12 Blanc EDP: pine only
+    expect(juniperMatches.map((match) => match.id)).not.toContain(9); // Fierce: fir only
+    expect(juniperMatches.map((match) => match.id)).not.toContain(1); // Acqua di Gio EDT: rosemary only
+
+    // Mirto di Panarea and Summer Hammer legitimately carry two in-scope
+    // exact keys each, independently scored -- confirming coexistence
+    // never causes cross-contamination between exact keys.
+    expect(seaNotesMatches.map((match) => match.id)).toContain(119);
+    expect(juniperMatches.map((match) => match.id)).toContain(119);
+    expect(pineappleMatches.map((match) => match.id)).toContain(407);
+    expect(seaNotesMatches.map((match) => match.id)).toContain(407);
+  });
+});
