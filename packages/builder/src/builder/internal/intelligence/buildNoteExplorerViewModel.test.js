@@ -1542,3 +1542,55 @@ describe("Note Explorer 'Most prominent' sort reflects the Phase 3S calibrated o
     expect(petitgrainMatches.map((match) => match.id)).toContain(101);
   });
 });
+
+// Composer Phase 3T: horizontal note-family calibration regression for the
+// two related but exact-distinct canonical keys oakmoss and moss, run
+// against the real catalog. The underlying data (taxonomy audit,
+// canonical-data sanity audit, exact scores, canonical-pyramid
+// immutability) is proven in
+// packages/catalog/tests/noteProminenceHorizontalCalibration3T.test.js;
+// this describe block only proves the existing, unmodified sort algorithm
+// produces the approved relative order per exact key -- scored fragrances
+// sort descending, unscored members trail after every scored one, and
+// containment stays strict per key. Phase 3T changed zero prominence
+// values, so every order below is identical to the pre-Phase-3T catalog.
+describe("Note Explorer 'Most prominent' sort reflects the Phase 3T calibrated order, per distinct canonical key", () => {
+  it("oakmoss (11 members): Hacivat leads, down through Legend EDP, then 9 unscored members trail in catalog order", () => {
+    const matches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "oakmoss" });
+    expect(matches.map((match) => match.id).sort((a, b) => a - b)).toEqual([1, 4, 9, 12, 23, 29, 101, 110, 115, 305, 406]);
+
+    const sorted = sortNoteExplorerMatchesByProminence(matches, "oakmoss");
+    expect(sorted.map((match) => match.id)).toEqual([406, 23, 1, 4, 9, 12, 29, 101, 110, 115, 305]);
+
+    const rank = new Map(sorted.map((match, index) => [match.id, index]));
+    expect(rank.get(406)).toBe(0);
+    expect(rank.get(23)).toBe(1);
+    const lastScoredRank = rank.get(23);
+    expect(rank.get(1)).toBeGreaterThan(lastScoredRank); // an unscored member trails every scored one
+  });
+
+  it("moss (2 members, both unscored): preserves catalog order with no forced ranking", () => {
+    const matches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "moss" });
+    expect(matches.map((match) => match.id).sort((a, b) => a - b)).toEqual([22, 33]);
+
+    const sorted = sortNoteExplorerMatchesByProminence(matches, "moss");
+    expect(sorted.map((match) => match.id)).toEqual([22, 33]);
+  });
+
+  it("never treats an adjacent green/earthy/woody material as oakmoss or moss -- searching one canonical key never returns a fragrance whose only relevant note is a different material", () => {
+    const nonMemberExamples = [
+      { noteId: "oakmoss", excludeId: 10, label: "L'Homme Idéal EDT: vetiver only" },
+      { noteId: "oakmoss", excludeId: 2, label: "Light Blue Pour Homme EDT: patchouli only" },
+      { noteId: "oakmoss", excludeId: 3, label: "Versace Pour Homme: cedar only" },
+      { noteId: "oakmoss", excludeId: 7, label: "The Scent EDT: woodyNotes only" },
+      { noteId: "oakmoss", excludeId: 401, label: "Silver Mountain Water: galbanum only" },
+      { noteId: "oakmoss", excludeId: 108, label: "Bad Boy Cobalt Parfum Electrique: oak only" },
+      { noteId: "oakmoss", excludeId: 19, label: "Club de Nuit Intense Man: birch only" },
+      { noteId: "moss", excludeId: 10, label: "L'Homme Idéal EDT: vetiver only" },
+    ];
+    for (const { noteId, excludeId } of nonMemberExamples) {
+      const matches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId });
+      expect(matches.map((match) => match.id)).not.toContain(excludeId);
+    }
+  });
+});

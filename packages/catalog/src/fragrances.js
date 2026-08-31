@@ -3842,6 +3842,31 @@ const DEFAULT_SEASON_WEIGHTS = {
 // from generic orange/citrus character. See
 // noteProminenceHorizontalCalibration3S.test.js for the complete
 // taxonomy audit, membership tables, and rationale.
+//
+// Composer Phase 3T: twentieth horizontal calibration pass -- two
+// related but exact-distinct canonical keys, never collapsed into one
+// umbrella ranking: oakmoss ("Oakmoss", family: "green" -- a specific
+// moss material) and moss ("Moss", family: "green", reusing
+// notes/oakmoss.jpg as its own image -- a generic moss identity, the
+// same generic/specific image-reuse pattern already established for
+// pepper/blackPepper and texasCedar/cedarwood). No fragrance carries
+// both keys. vetiver, patchouli, cedar, and woodyNotes were all
+// re-confirmed as their own distinct, already-established canonical
+// keys, never oakmoss or moss substitutes. Across 11 oakmoss and 2 moss
+// fragrance/note pairs -- moss entirely unscored coming into this phase
+// -- this phase's own calibration changes zero individual pairs. Every
+// already-scored oakmoss entry held up as internally consistent,
+// including Hacivat's oakmoss: 8 (correctly tied with its own
+// established pineapple: 8, matching "oakmoss" as one of its own listed
+// accords -- a genuine, real co-equal fruity-chypre dual signature, per
+// its own already-established Phase 3R rationale). Club de Nuit Intense
+// Man and Terre d'Hermès EDT were checked and confirmed not members of
+// either key. No canonical-data correction was made or recommended --
+// no fragrance was found using generic moss where explicit oakmoss
+// identity is documented, or vice versa; generic moss was never treated
+// as inheriting any of oakmoss's prominence merely for sharing the
+// generic term. See noteProminenceHorizontalCalibration3T.test.js for
+// the complete taxonomy audit, membership tables, and rationale.
 export const NOTE_PROMINENCE_BY_ID = {
   1: { seaNotes: 10, calone: 9, bergamot: 7, jasmine: 5, whiteMusk: 4 }, // Acqua di Gio EDT
   2: { lemon: 7, rosemary: 5, patchouli: 4 }, // Light Blue Pour Homme EDT
