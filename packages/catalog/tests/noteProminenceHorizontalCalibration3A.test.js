@@ -120,11 +120,16 @@ const BLACK_CURRANT_FAMILY = {
 
 // The exact, unrelated prominence values on every touched fragrance,
 // pinned so this phase is provably scoped to only basil/blackCurrant.
+// Note: cedar on ids 115 and 117 was subsequently recalibrated by Phase
+// 3C's own horizontal pass (115: cedar 5 -> 6; 117 unchanged at 4) --
+// updated here to the current approved value, since this snapshot's job
+// is to prove Phase 3A's own scope, not to freeze values Phase 3A never
+// owned.
 const UNRELATED_VALUES_BY_ID = {
   13: { tobacco: 8, amber: 6, grapefruit: 6, cardamom: 5 },
   19: { pineapple: 8, birch: 7, ambergris: 5 },
   110: { orange: 8, mint: 6, patchouli: 5, bitterOrange: 5 },
-  115: { citron: 8, cedar: 5 },
+  115: { citron: 8, cedar: 6 },
   117: { ginger: 6, tonkaBean: 5, cedar: 4 },
   119: { seaNotes: 6, lemon: 5 },
   203: { incense: 6, sage: 6, cloves: 4 },

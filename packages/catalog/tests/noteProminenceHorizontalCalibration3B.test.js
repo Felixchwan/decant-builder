@@ -146,12 +146,16 @@ const ALL_FAMILIES = {
 
 // The exact, unrelated prominence values on every touched fragrance,
 // pinned so this phase is provably scoped to only the six keys above.
+// Note: id 22 subsequently gained a cedar score from Phase 3C's own
+// horizontal pass -- included here at its current approved value, since
+// this snapshot's job is to prove Phase 3B's own scope, not to freeze a
+// key Phase 3B never touched.
 const UNRELATED_VALUES_BY_ID = {
   4: { lavender: 7, tonkaBean: 6 },
   5: { lavender: 9, vanilla: 8, tonkaBean: 5 },
   6: { ambroxan: 7, vanilla: 7 },
   19: { pineapple: 8, birch: 7, blackCurrant: 6, ambergris: 5 },
-  22: { ambroxan: 5, sandalwood: 4 },
+  22: { ambroxan: 5, sandalwood: 4, cedar: 4 },
   28: { orange: 6, amber: 5 },
   33: { cashmeran: 6, patchouli: 5 },
   103: { greenMandarin: 7, petitgrain: 5 },

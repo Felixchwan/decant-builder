@@ -1554,7 +1554,7 @@ baseNotes: ["caramel", "musk"],
   ],
 
   baseNotes: [
-    "vanilla",
+    "blackVanilla",
     "tonkaBean",
     "benzoin",
     "patchouli",
@@ -3337,10 +3337,37 @@ const DEFAULT_SEASON_WEIGHTS = {
 // unlike Carlisle's genuinely distinct greenApple listing) -- so its
 // canonical key is left as apple, and its strong real-world apple
 // association is instead reflected as a high score under that key.
+//
+// Composer Phase 3C: third horizontal calibration pass -- the vanilla and
+// cedar canonical-key families, the largest yet (vanilla: 18 fragrances
+// after the Gentleman EDP correction below moved id 205 to blackVanilla;
+// cedar: 28). Same core rule as Phase 3B: vanilla, bourbonVanilla,
+// madagascarVanilla, and blackVanilla are four distinct canonical keys
+// (confirmed against notes.js and the live catalog); cedar, cedarwood,
+// and texasCedar are three distinct keys. Each is calibrated as its own
+// separate peer group. Every other existing vanilla/cedar-variant
+// assignment held up under review (e.g. Spicebomb Extreme's explicit dual
+// vanilla + bourbonVanilla listing, Divine Vanille's specifically-named
+// texasCedar, Hacivat's coexisting cedar and cedarwood) with no clear,
+// narrow mismatch of the kind that justified the Phase 3A basil
+// correction. Per this phase's own editorial caution, cedar in
+// particular was NOT scored merely because a fragrance is broadly
+// "woody" -- of 28 cedar-carrying fragrances, most stay unscored, and
+// every new/changed score is tied to genuine accord corroboration or
+// documented real-world character, never pyramid position alone.
+// One canonical-data correction WAS made, on the same narrow basis as
+// the Phase 3A basil correction: Gentleman EDP (id 205) was generalized
+// under the plain vanilla key, but Givenchy's own published note
+// identity for this release explicitly names the base note Black
+// Vanilla (Black Vanilla Husk in detailed fragrance references) -- not a
+// perceptual "smells dark" read, but the fragrance's own documented note
+// identity. Corrected to blackVanilla, at the same prominence value (6).
+// See noteProminenceHorizontalCalibration3C.test.js for the complete
+// taxonomy audit, membership tables, and rationale.
 export const NOTE_PROMINENCE_BY_ID = {
   1: { seaNotes: 10, calone: 9, bergamot: 7, jasmine: 5, whiteMusk: 4 }, // Acqua di Gio EDT
   2: { lemon: 7, rosemary: 5 }, // Light Blue Pour Homme EDT
-  3: { bergamot: 6, musk: 6, cedar: 5 }, // Versace Pour Homme
+  3: { bergamot: 6, musk: 6, cedar: 4 }, // Versace Pour Homme
   4: { lavender: 7, redApple: 6, tonkaBean: 6 }, // Legend EDT
   5: { lavender: 9, vanilla: 8, mint: 7, tonkaBean: 5 }, // Le Male
   6: { ambroxan: 7, vanilla: 7, mint: 5, candyApple: 5 }, // Eros EDP
@@ -3354,12 +3381,12 @@ export const NOTE_PROMINENCE_BY_ID = {
   14: { leather: 6, cinnamon: 5, vanilla: 5 }, // Halloween Man
   15: { mango: 6, sandalwood: 5, tonkaBean: 4 }, // Polo Black (generalNotes)
   16: { roastedCoffeeBeans: 8, leather: 6, tonkaBean: 6, cinnamon: 5 }, // Uomo Signature
-  17: { birchLeaf: 7, incense: 5, pinkPepper: 4 }, // Gentlemen Only
+  17: { birchLeaf: 7, incense: 5, pinkPepper: 4, cedar: 4 }, // Gentlemen Only
   18: { pine: 7, fingerLime: 6, eucalyptus: 5, cedarwood: 4 }, // L.12.12 Blanc EDP
   19: { pineapple: 8, birch: 7, blackCurrant: 6, ambergris: 5 }, // Club de Nuit Intense Man
   20: { lavender: 7, amber: 6, tonkaBean: 5 }, // F by Ferragamo Black
   21: { vanilla: 6, cinnamon: 5, patchouli: 5 }, // Halloween Man Mystery
-  22: { spearmint: 7, ambroxan: 5, sandalwood: 4 }, // Legend Blue
+  22: { spearmint: 7, ambroxan: 5, sandalwood: 4, cedar: 4 }, // Legend Blue
   23: { oakmoss: 6, leather: 5, jasmine: 4 }, // Legend EDT
   24: { bloodOrange: 6, cardamom: 5, tonkaBean: 4 }, // Legend Red
   25: { leather: 7, haitianVetiver: 6, akigalawood: 5, patchouli: 4 }, // Montblanc Explorer
@@ -3388,7 +3415,7 @@ export const NOTE_PROMINENCE_BY_ID = {
   112: { coconut: 9, pineapple: 6, tonkaBean: 5 }, // Le Beau Le Parfum
   113: { cardamom: 7, vanilla: 8, lavender: 6, iris: 4 }, // Le Male Le Parfum
   114: { ambroxan: 6, apple: 4 }, // Game of Spades Wildcard
-  115: { citron: 8, cedar: 5, blackCurrant: 3 }, // Cedrat Boise
+  115: { citron: 8, cedar: 6, blackCurrant: 3 }, // Cedrat Boise
   116: { vanilla: 5, tonkaBean: 5, pinkPepper: 4 }, // Invictus Victory
   117: { ginger: 6, basil: 5, tonkaBean: 5, cedar: 4 }, // YSL L'Homme
   118: { cardamom: 9, coumarin: 6, lavender: 5, vetiver: 3 }, // La Nuit de L'Homme
@@ -3396,19 +3423,19 @@ export const NOTE_PROMINENCE_BY_ID = {
   201: { aldehydes: 6, elemi: 5 }, // Dior Homme Sport
   202: { ambroxan: 9, bergamot: 7, sichuanPepper: 6, vanilla: 5 }, // Sauvage EDP
   203: { incense: 6, sage: 6, cloves: 4, blackCurrant: 8 }, // Loewe 7 Cobalt (generalNotes)
-  204: { guaiacWood: 9, chestnut: 7, cloves: 6, vanilla: 5 }, // Replica By The Fireplace
-  205: { iris: 8, patchouli: 6, benzoin: 6, cloves: 5 }, // Gentleman EDP
+  204: { guaiacWood: 9, chestnut: 7, cloves: 6, vanilla: 4 }, // Replica By The Fireplace
+  205: { iris: 8, patchouli: 6, benzoin: 6, cloves: 5, blackVanilla: 6 }, // Gentleman EDP
   206: { vetiver: 6, patchouli: 6, pinkPepper: 5 }, // Polo Blue Parfum
   207: { seaNotes: 6, greenMango: 5, ambroxan: 4 }, // Polo Deep Blue Parfum
   208: { iris: 9, neroli: 6, amber: 5, carrotSeeds: 3 }, // Prada L'Homme
   209: { coumarin: 7, patchouli: 6, amber: 5 }, // Luna Rossa Black
   210: { seaSalt: 7, vetiver: 6 }, // Born In Roma EDT
   211: { tobacco: 6, redApple: 7 }, // Born In Roma Coral Fantasy
-  212: { tobacco: 9, vanilla: 7, bourbonVanilla: 7, cinnamon: 6, blackPepper: 5 }, // Spicebomb Extreme
+  212: { tobacco: 9, vanilla: 8, bourbonVanilla: 8, cinnamon: 6, blackPepper: 5 }, // Spicebomb Extreme
   213: { ginger: 6, apple: 8, sage: 5 }, // YSL Y EDP
   214: { iris: 6, powderyNotes: 6, neroli: 5 }, // Prada L'Homme L'Eau
   301: { sandalwood: 7, madagascarVanilla: 6, lemon: 5 }, // Allure Homme Édition Blanche
-  302: { grapefruit: 7, whiteMusk: 6, amber: 5 }, // Allure Homme Sport Superleggera
+  302: { grapefruit: 7, whiteMusk: 6, amber: 5, cedarwood: 4 }, // Allure Homme Sport Superleggera
   303: { akigalawood: 10, ambroxan: 6, basil: 4 }, // Bois Imperial (generalNotes)
   304: { madagascarVanilla: 10, cinnamon: 7, tonkaBean: 6, incense: 4 }, // Divine Vanille
   305: { bitterOrange: 7, australianSandalwood: 7, basil: 5 }, // Orange X Santal (generalNotes)
@@ -3418,7 +3445,7 @@ export const NOTE_PROMINENCE_BY_ID = {
   403: { tonkaBean: 5, vanilla: 5 }, // Carlisle
   404: { apple: 9, lavender: 8, vanilla: 7, cardamom: 4, coumarin: 4 }, // Layton
   405: { iris: 6, grapefruit: 5, rose: 4 }, // Mefisto
-  406: { pineapple: 8, oakmoss: 8, cedar: 5, patchouli: 4 }, // Hacivat
+  406: { pineapple: 8, oakmoss: 8, cedar: 4, patchouli: 4 }, // Hacivat
   407: { coconut: 7, pineapple: 6, seaNotes: 5, musk: 4 }, // Summer Hammer
   408: { mint: 9, basil: 8, rosemary: 5, blackCurrant: 3 }, // Torino21
   409: { powderyNotes: 7, juniper: 6, cedar: 6, jasmine: 5, tonkaBean: 4 }, // Orphéon EDP

@@ -30,13 +30,13 @@ import { NOTE_PROMINENCE_BY_ID } from "../src/fragrances.js";
 const PHASE_2E_BATCH = {
   13: { tobacco: 8, amber: 6, grapefruit: 6, cardamom: 5, basil: 3 }, // Phase 3A: added basil (horizontal calibration)
   16: { roastedCoffeeBeans: 8, leather: 6, tonkaBean: 6, cinnamon: 5 },
-  17: { birchLeaf: 7, incense: 5, pinkPepper: 4 },
+  17: { birchLeaf: 7, incense: 5, pinkPepper: 4, cedar: 4 }, // Phase 3C: added cedar (horizontal calibration)
   18: { pine: 7, fingerLime: 6, eucalyptus: 5, cedarwood: 4 },
   19: { pineapple: 8, birch: 7, blackCurrant: 6, ambergris: 5 }, // Phase 3A: blackCurrant 6 -> 8 -> 6 (final value, swapped with Loewe 7 Cobalt on finalization)
   104: { tonkaBean: 9, lavender: 6, greenMandarin: 5, cedar: 4 },
   113: { cardamom: 7, vanilla: 8, lavender: 6, iris: 4 },
-  115: { citron: 8, cedar: 5, blackCurrant: 3 }, // Phase 3A: blackCurrant 4 -> 3 (horizontal calibration)
-  212: { tobacco: 9, vanilla: 7, bourbonVanilla: 7, cinnamon: 6, blackPepper: 5 },
+  115: { citron: 8, cedar: 6, blackCurrant: 3 }, // Phase 3C: cedar 5 -> 6 (horizontal calibration) // Phase 3A: blackCurrant 4 -> 3 (horizontal calibration)
+  212: { tobacco: 9, vanilla: 8, bourbonVanilla: 8, cinnamon: 6, blackPepper: 5 }, // Phase 3C: vanilla 7 -> 8, bourbonVanilla 7 -> 8 (horizontal calibration)
   301: { sandalwood: 7, madagascarVanilla: 6, lemon: 5 },
   408: { mint: 9, basil: 8, rosemary: 5, blackCurrant: 3 }, // Phase 3A: basil 6 -> 8, blackCurrant 4 -> 3 (horizontal calibration)
   409: { powderyNotes: 7, juniper: 6, cedar: 6, jasmine: 5, tonkaBean: 4 },
@@ -156,11 +156,12 @@ describe("Composer Phase 2E note-prominence seed batch", () => {
     const spicebombExtreme = perfumesById.get(212);
     expect(spicebombExtreme.baseNotes).toEqual(expect.arrayContaining(["vanilla", "bourbonVanilla"]));
 
-    expect(NOTE_PROMINENCE_BY_ID[212].vanilla).toBe(7);
-    expect(NOTE_PROMINENCE_BY_ID[212].bourbonVanilla).toBe(7);
-    // Neither score was reduced to "make room" for the other -- both sit at
-    // the same "very evident" value simultaneously, proving these are
-    // independent judgments rather than a normalized/summed split.
+    // Both raised from 7 to 8 together by Phase 3C's horizontal
+    // calibration -- still the same value simultaneously, still proving
+    // these are independent judgments rather than a normalized/summed
+    // split (see noteProminenceHorizontalCalibration3C.test.js).
+    expect(NOTE_PROMINENCE_BY_ID[212].vanilla).toBe(8);
+    expect(NOTE_PROMINENCE_BY_ID[212].bourbonVanilla).toBe(8);
   });
 
   it("leaves every Phase 2C entry exactly as previously approved -- this batch never revises them", () => {

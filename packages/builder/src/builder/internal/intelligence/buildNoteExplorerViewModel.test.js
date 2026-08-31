@@ -321,3 +321,119 @@ describe("Note Explorer 'Most prominent' sort reflects the Phase 3B calibrated o
     expect(mintMatches.map((match) => match.id)).not.toContain(103); // Mandarino di Sicilia: spearmint only
   });
 });
+
+// Composer Phase 3C: horizontal note-family calibration regression for the
+// vanilla and cedar canonical-key families, run against the real catalog.
+// The underlying data (taxonomy audit, canonical-data sanity audit, exact
+// scores, unrelated-value preservation, pyramid immutability) is proven in
+// packages/catalog/tests/noteProminenceHorizontalCalibration3C.test.js;
+// this describe block only proves the existing, unmodified sort algorithm
+// produces the approved relative order per canonical key -- scored
+// fragrances sort descending, ties preserve catalog order, unscored
+// members trail after every scored one, and no cross-variant ranking
+// occurs between e.g. cedar and cedarwood.
+describe("Note Explorer 'Most prominent' sort reflects the Phase 3C calibrated order, per distinct canonical key", () => {
+  it("vanilla (generic): scores descend (Le Male = Le Male Le Parfum = Spicebomb Extreme at 8, down to Replica By The Fireplace at 4), then every unscored member trails in catalog order", () => {
+    // Gentleman EDP (205) is no longer a member: its canonical base note
+    // was corrected to blackVanilla (see the "blackVanilla" case below
+    // and noteProminenceHorizontalCalibration3C.test.js), so the vanilla
+    // family is 18 members here, not 19.
+    const matches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "vanilla" });
+    expect(matches.map((match) => match.id).sort((a, b) => a - b)).toEqual([
+      5, 6, 12, 14, 19, 20, 21, 29, 31, 113, 115, 116, 202, 204, 212, 403, 404, 410,
+    ]);
+
+    const sorted = sortNoteExplorerMatchesByProminence(matches, "vanilla");
+    expect(sorted.map((match) => match.id)).toEqual([
+      5, 113, 212, 6, 29, 404, 21, 14, 116, 202, 403, 410, 204, 12, 19, 20, 31, 115,
+    ]);
+
+    // The five unscored members (12, 19, 20, 31, 115) all trail after
+    // every scored member, in their original catalog order.
+    const rank = new Map(sorted.map((match, index) => [match.id, index]));
+    const lastScoredRank = rank.get(204);
+    for (const unscoredId of [12, 19, 20, 31, 115]) {
+      expect(rank.get(unscoredId)).toBeGreaterThan(lastScoredRank);
+    }
+  });
+
+  it("bourbonVanilla: Spicebomb Extreme > Tuxedo", () => {
+    const matches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "bourbonVanilla" });
+    expect(matches.map((match) => match.id).sort((a, b) => a - b)).toEqual([212, 501]);
+
+    const sorted = sortNoteExplorerMatchesByProminence(matches, "bourbonVanilla");
+    expect(sorted.map((match) => match.id)).toEqual([212, 501]);
+  });
+
+  it("madagascarVanilla: Divine Vanille > Allure Homme Edition Blanche EDP", () => {
+    const matches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "madagascarVanilla" });
+    expect(matches.map((match) => match.id).sort((a, b) => a - b)).toEqual([301, 304]);
+
+    const sorted = sortNoteExplorerMatchesByProminence(matches, "madagascarVanilla");
+    expect(sorted.map((match) => match.id)).toEqual([304, 301]);
+  });
+
+  it("blackVanilla: 212 VIP Black > Gentleman EDP", () => {
+    // Gentleman EDP (205) joined this family via the approved canonical
+    // correction (its base note is Black Vanilla per Givenchy's own
+    // published note identity, not generic vanilla) -- this family now
+    // has 2 members instead of 1.
+    const matches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "blackVanilla" });
+    expect(matches.map((match) => match.id).sort((a, b) => a - b)).toEqual([106, 205]);
+
+    const sorted = sortNoteExplorerMatchesByProminence(matches, "blackVanilla");
+    expect(sorted.map((match) => match.id)).toEqual([106, 205]);
+  });
+
+  it("cedar (generic): scores descend (Terre d'Hermès EDT = Cedrat Boise = Orphéon EDP at 6, down to a tied group at 4), then all 21 unscored members trail in catalog order", () => {
+    const matches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "cedar" });
+    expect(matches.map((match) => match.id).sort((a, b) => a - b)).toEqual([
+      1, 3, 5, 6, 10, 13, 17, 22, 24, 27, 28, 29, 102, 103, 104, 108, 111, 114, 115, 117, 118, 119, 208, 213, 214, 405,
+      406, 409,
+    ]);
+
+    const sorted = sortNoteExplorerMatchesByProminence(matches, "cedar");
+    expect(sorted.map((match) => match.id)).toEqual([
+      111, 115, 409, 3, 17, 22, 104, 117, 406, 1, 5, 6, 10, 13, 24, 27, 28, 29, 102, 103, 119, 108, 114, 118, 208, 214,
+      213, 405,
+    ]);
+
+    // The scored prefix (9 fragrances) precedes every unscored member.
+    const rank = new Map(sorted.map((match, index) => [match.id, index]));
+    const lastScoredRank = rank.get(406);
+    for (const unscoredId of [1, 5, 6, 10, 13, 24, 27, 28, 29, 102, 103, 119, 108, 114, 118, 208, 214, 213, 405]) {
+      expect(rank.get(unscoredId)).toBeGreaterThan(lastScoredRank);
+    }
+  });
+
+  it("cedarwood: (L.12.12 Blanc EDP = Allure Homme Sport Superleggera, catalog order) at 4, then unscored members trail in catalog order", () => {
+    const matches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "cedarwood" });
+    expect(matches.map((match) => match.id).sort((a, b) => a - b)).toEqual([18, 34, 109, 302, 406]);
+
+    const sorted = sortNoteExplorerMatchesByProminence(matches, "cedarwood");
+    expect(sorted.map((match) => match.id)).toEqual([18, 302, 34, 109, 406]);
+  });
+
+  it("texasCedar: only Divine Vanille carries it, and it stays unscored", () => {
+    const matches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "texasCedar" });
+    expect(matches.map((match) => match.id)).toEqual([304]);
+
+    const sorted = sortNoteExplorerMatchesByProminence(matches, "texasCedar");
+    expect(sorted.map((match) => match.id)).toEqual([304]);
+  });
+
+  it("never cross-matches distinct vanilla/cedar variants -- searching one canonical key never returns a fragrance whose only relevant note is a different variant", () => {
+    const vanillaMatches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "vanilla" });
+    expect(vanillaMatches.map((match) => match.id)).not.toContain(501); // Tuxedo: bourbonVanilla only
+    expect(vanillaMatches.map((match) => match.id)).not.toContain(301); // Allure Homme Edition Blanche EDP: madagascarVanilla only
+    expect(vanillaMatches.map((match) => match.id)).not.toContain(304); // Divine Vanille: madagascarVanilla only
+    expect(vanillaMatches.map((match) => match.id)).not.toContain(106); // 212 VIP Black: blackVanilla only
+    expect(vanillaMatches.map((match) => match.id)).not.toContain(205); // Gentleman EDP: blackVanilla only, since the Phase 3C correction
+
+    const cedarMatches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "cedar" });
+    expect(cedarMatches.map((match) => match.id)).not.toContain(18); // L.12.12 Blanc EDP: cedarwood only
+    expect(cedarMatches.map((match) => match.id)).not.toContain(34); // Givenchy Pour Homme Blue Label: cedarwood only
+    expect(cedarMatches.map((match) => match.id)).not.toContain(109); // K EDP Intense: cedarwood only
+    expect(cedarMatches.map((match) => match.id)).not.toContain(302); // Allure Homme Sport Superleggera: cedarwood only
+  });
+});
