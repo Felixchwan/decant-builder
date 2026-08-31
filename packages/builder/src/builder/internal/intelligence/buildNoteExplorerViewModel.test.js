@@ -972,3 +972,63 @@ describe("Note Explorer 'Most prominent' sort reflects the Phase 3J calibrated o
     expect(lavenderMatches.map((match) => match.id)).not.toContain(9); // Fierce: rosemary only, no lavender
   });
 });
+
+// Composer Phase 3K: horizontal note-family calibration regression for the
+// cardamom and cinnamon canonical-key families, run against the real
+// catalog. The underlying data (taxonomy audit, canonical-data sanity
+// audit, exact scores, canonical-pyramid immutability) is proven in
+// packages/catalog/tests/noteProminenceHorizontalCalibration3K.test.js;
+// this describe block only proves the existing, unmodified sort algorithm
+// produces the approved relative order per canonical key -- scored
+// fragrances sort descending, ties preserve catalog order, and unscored
+// members trail after every scored one. Phase 3K changed zero prominence
+// values, so every order below is identical to the pre-Phase-3K catalog.
+describe("Note Explorer 'Most prominent' sort reflects the Phase 3K calibrated order, per distinct canonical key", () => {
+  it("cardamom (18 members): La Nuit de L'Homme leads, down through a 3-way tie, then 11 unscored members trail in catalog order", () => {
+    const matches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "cardamom" });
+    expect(matches.map((match) => match.id).sort((a, b) => a - b)).toEqual([
+      5, 8, 9, 13, 16, 18, 24, 31, 34, 100, 109, 113, 118, 206, 208, 211, 402, 404,
+    ]);
+
+    const sorted = sortNoteExplorerMatchesByProminence(matches, "cardamom");
+    expect(sorted.map((match) => match.id)).toEqual([
+      118, 8, 113, 13, 24, 31, 404, 5, 9, 16, 18, 34, 100, 109, 206, 208, 211, 402,
+    ]);
+
+    // 13, 24, and 31 tie at score 5 -- the sort preserves ascending
+    // catalog-array order rather than forcing an artificial rank
+    // difference.
+    const rank = new Map(sorted.map((match, index) => [match.id, index]));
+    expect(rank.get(13)).toBeLessThan(rank.get(24));
+    expect(rank.get(24)).toBeLessThan(rank.get(31));
+    const lastScoredRank = rank.get(404);
+    expect(rank.get(5)).toBeGreaterThan(lastScoredRank); // an unscored member trails every scored one
+  });
+
+  it("cinnamon (8 members): Divine Vanille and Sauvage Elixir tie for the lead, down through a 3-way tie, then 2 unscored members trail in catalog order", () => {
+    const matches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "cinnamon" });
+    expect(matches.map((match) => match.id).sort((a, b) => a - b)).toEqual([5, 14, 16, 21, 205, 212, 304, 402]);
+
+    const sorted = sortNoteExplorerMatchesByProminence(matches, "cinnamon");
+    expect(sorted.map((match) => match.id)).toEqual([304, 402, 212, 14, 16, 21, 5, 205]);
+
+    // 304 and 402 tie at score 7, and 14/16/21 tie at score 5 -- the sort
+    // preserves ascending catalog-array order within each tie group.
+    const rank = new Map(sorted.map((match, index) => [match.id, index]));
+    expect(rank.get(304)).toBeLessThan(rank.get(402));
+    expect(rank.get(14)).toBeLessThan(rank.get(16));
+    expect(rank.get(16)).toBeLessThan(rank.get(21));
+    const lastScoredRank = rank.get(21);
+    expect(rank.get(5)).toBeGreaterThan(lastScoredRank); // an unscored member trails every scored one
+  });
+
+  it("never treats an adjacent warm spice as cardamom or cinnamon, despite several sharing their own family: \"spicy\" tag -- searching one canonical key never returns a fragrance whose only relevant note is a different spice", () => {
+    const cardamomMatches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "cardamom" });
+    expect(cardamomMatches.map((match) => match.id)).not.toContain(1); // Acqua di Gio EDT: nutmeg only
+    expect(cardamomMatches.map((match) => match.id)).not.toContain(20); // F by Ferragamo Black: blackPepper only
+
+    const cinnamonMatches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "cinnamon" });
+    expect(cinnamonMatches.map((match) => match.id)).not.toContain(101); // Essenza: cloves only
+    expect(cinnamonMatches.map((match) => match.id)).not.toContain(20); // F by Ferragamo Black: blackPepper only
+  });
+});

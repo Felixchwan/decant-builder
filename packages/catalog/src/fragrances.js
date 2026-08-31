@@ -3560,6 +3560,39 @@ const DEFAULT_SEASON_WEIGHTS = {
 // the taxonomy, no reclassification target exists in either direction.
 // See noteProminenceHorizontalCalibration3J.test.js for the complete
 // taxonomy audit, membership tables, and rationale.
+//
+// Composer Phase 3K: eleventh horizontal calibration pass -- the cardamom
+// and cinnamon canonical-key families. Cardamom keys: cardamom -- the
+// only true canonical cardamom-identity key (no qualified variant exists
+// in the taxonomy). Cinnamon keys: cinnamon -- the only true canonical
+// cinnamon-identity key (no qualified variant exists either). blackPepper,
+// pinkPepper, sichuanPepper, pepper, whitePepper, nutmeg, cloves,
+// starAnise, anise, ginger, gingerFlower, saffron, and caraway were all
+// investigated and excluded: each is a real, separately-named material
+// never treated as a cardamom or cinnamon substitute merely for sharing a
+// warm-spicy character -- most even share cardamom/cinnamon's own
+// family: "spicy" tag in notes.js, yet each remains its own distinct,
+// independently-named spice, not a variant of either. Across 18 cardamom
+// and 8 cinnamon fragrance/note pairs, this phase's own calibration
+// changes zero individual pairs -- every already-scored entry held up as
+// internally consistent under comparison against real peers, including
+// the explicit comparison anchors: La Nuit de L'Homme's cardamom: 9
+// (correctly the family's highest score, its own well-documented, single
+// defining opening note, never under-scored despite lavender/coumarin/
+// vetiver also being scored), Le Male Le Parfum's cardamom: 7 (its sole
+// top note, proportionate to vanilla's own greater base-level dominance),
+// Layton's cardamom: 4 (correctly secondary to its own established
+// apple/lavender dual signature), Spicebomb Extreme's and Sauvage
+// Elixir's cinnamon: 6/7 (genuine, non-trivial contributing spice axes,
+// proportionately trailing each fragrance's own established tobacco/
+// licorice signature without being under-scored), and Gentleman EDP's
+// cinnamon (correctly unscored, deferring to its own established iris
+// signature). Armani Code EDT and Il Padrino were checked and confirmed
+// not members of either family. No canonical-data correction was made or
+// recommended -- with no qualified cardamom or cinnamon variant existing
+// in the taxonomy, no reclassification target exists in either
+// direction. See noteProminenceHorizontalCalibration3K.test.js for the
+// complete taxonomy audit, membership tables, and rationale.
 export const NOTE_PROMINENCE_BY_ID = {
   1: { seaNotes: 10, calone: 9, bergamot: 7, jasmine: 5, whiteMusk: 4 }, // Acqua di Gio EDT
   2: { lemon: 7, rosemary: 5, patchouli: 4 }, // Light Blue Pour Homme EDT
