@@ -3749,6 +3749,38 @@ const DEFAULT_SEASON_WEIGHTS = {
 // available violet-family key its own documented identity supports. See
 // noteProminenceHorizontalCalibration3P.test.js for the complete
 // taxonomy audit, membership tables, and rationale.
+//
+// Composer Phase 3Q: seventeenth horizontal calibration pass -- two
+// independent standalone canonical keys grouped only for workflow
+// efficiency, never as a shared semantic family: rosemary ("Rosemary",
+// family: "aromatic") and ambroxan ("Ambroxan", family: "amber"). sage,
+// clarySage, lavender, basil, mint, spearmint, artemisia, wormwood, and
+// eucalyptus were re-confirmed as their own distinct, already-
+// established aromatic/herbal keys, never rosemary substitutes. amber,
+// ambergris, amberwood, ambermax, benzoin, labdanum, opoponax, and
+// mineralNotes were re-confirmed as their own distinct, already-
+// established amber/mineral/synthetic keys, never ambroxan substitutes
+// -- Game of Spades Wildcard legitimately carries both ambroxan (scored)
+// and generic amber (unscored) as two separately-documented base
+// materials, never conflated. Across 8 rosemary and 7 ambroxan
+// fragrance/note pairs, this phase's own calibration changes zero
+// individual pairs. Every already-scored entry held up as internally
+// consistent, including Sauvage EDP's ambroxan: 9 (correctly the
+// family's highest score, its own universally-cited defining signature
+// material). Montblanc Legend Blue's ambroxan: 5, scored well below its
+// own spearmint: 7, was specifically weighed against this phase's
+// caution not to under-score a genuinely defining axis -- but the
+// available evidence for treating the two as a documented, co-equal dual
+// signature (rather than a spearmint-led composition with ambroxan as a
+// real but secondary base contributor) did not clear the correction
+// bar's explicit-identity/high-confidence threshold, and the score was
+// left unchanged. Versace Pour Homme, Sauvage Elixir, and Dior Homme
+// Sport were checked and confirmed not members of either family. No
+// canonical-data correction was made or recommended -- with no qualified
+// variant of either key existing in the taxonomy, no reclassification
+// target exists in either direction. See
+// noteProminenceHorizontalCalibration3Q.test.js for the complete
+// taxonomy audit, membership tables, and rationale.
 export const NOTE_PROMINENCE_BY_ID = {
   1: { seaNotes: 10, calone: 9, bergamot: 7, jasmine: 5, whiteMusk: 4 }, // Acqua di Gio EDT
   2: { lemon: 7, rosemary: 5, patchouli: 4 }, // Light Blue Pour Homme EDT

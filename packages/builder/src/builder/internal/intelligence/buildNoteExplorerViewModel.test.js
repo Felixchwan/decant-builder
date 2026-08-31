@@ -1318,3 +1318,67 @@ describe("Note Explorer 'Most prominent' sort reflects the Phase 3P calibrated o
     expect(violetLeafMatches.map((match) => match.id)).not.toContain(4); // Legend EDT: rose only
   });
 });
+
+// Composer Phase 3Q: horizontal note-family calibration regression for the
+// two independent standalone canonical keys rosemary and ambroxan, run
+// against the real catalog. The underlying data (taxonomy audit,
+// canonical-data sanity audit, exact scores, canonical-pyramid
+// immutability) is proven in
+// packages/catalog/tests/noteProminenceHorizontalCalibration3Q.test.js;
+// this describe block only proves the existing, unmodified sort algorithm
+// produces the approved relative order per exact key -- scored fragrances
+// sort descending, ties preserve catalog order, unscored members trail
+// after every scored one, and containment stays strict per key. Phase 3Q
+// changed zero prominence values, so every order below is identical to
+// the pre-Phase-3Q catalog.
+describe("Note Explorer 'Most prominent' sort reflects the Phase 3Q calibrated order, per distinct canonical key", () => {
+  it("rosemary (8 members): Light Blue Pour Homme EDT and Torino21 tie for the lead, then 6 unscored members trail in catalog order", () => {
+    const matches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "rosemary" });
+    expect(matches.map((match) => match.id).sort((a, b) => a - b)).toEqual([1, 2, 9, 10, 29, 33, 101, 408]);
+
+    const sorted = sortNoteExplorerMatchesByProminence(matches, "rosemary");
+    expect(sorted.map((match) => match.id)).toEqual([2, 408, 1, 9, 10, 29, 33, 101]);
+
+    // 2 and 408 tie at score 5 -- the sort preserves ascending
+    // catalog-array order rather than forcing an artificial rank
+    // difference.
+    const rank = new Map(sorted.map((match, index) => [match.id, index]));
+    expect(rank.get(2)).toBeLessThan(rank.get(408));
+    const lastScoredRank = rank.get(408);
+    expect(rank.get(1)).toBeGreaterThan(lastScoredRank); // an unscored member trails every scored one
+  });
+
+  it("ambroxan (7 members): Sauvage EDP leads, down through a tie, then Montblanc Explorer (unscored) trails", () => {
+    const matches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "ambroxan" });
+    expect(matches.map((match) => match.id).sort((a, b) => a - b)).toEqual([6, 22, 25, 114, 202, 207, 303]);
+
+    const sorted = sortNoteExplorerMatchesByProminence(matches, "ambroxan");
+    expect(sorted.map((match) => match.id)).toEqual([202, 6, 114, 303, 22, 207, 25]);
+
+    // 114 and 303 tie at score 6 -- the sort preserves ascending
+    // catalog-array order rather than forcing an artificial rank
+    // difference.
+    const rank = new Map(sorted.map((match, index) => [match.id, index]));
+    expect(rank.get(114)).toBeLessThan(rank.get(303));
+    const lastScoredRank = rank.get(207);
+    expect(rank.get(25)).toBeGreaterThan(lastScoredRank); // the unscored member trails every scored one
+  });
+
+  it("never treats an adjacent herb as rosemary, or an adjacent amber/mineral material as ambroxan -- searching one canonical key never returns a fragrance whose only relevant note is a different material", () => {
+    const rosemaryMatches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "rosemary" });
+    expect(rosemaryMatches.map((match) => match.id)).not.toContain(15); // Polo Black: sage only
+    expect(rosemaryMatches.map((match) => match.id)).not.toContain(4); // Legend EDT: lavender only
+    expect(rosemaryMatches.map((match) => match.id)).not.toContain(13); // The One for Men EDP: basil only
+
+    const ambroxanMatches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "ambroxan" });
+    expect(ambroxanMatches.map((match) => match.id)).not.toContain(1); // Acqua di Gio EDT: amber only
+    expect(ambroxanMatches.map((match) => match.id)).not.toContain(19); // Club de Nuit Intense Man: ambergris only
+    expect(ambroxanMatches.map((match) => match.id)).not.toContain(8); // The Most Wanted: amberwood only
+    expect(ambroxanMatches.map((match) => match.id)).not.toContain(404); // Layton: ambermax only
+
+    // Game of Spades Wildcard legitimately carries both ambroxan and
+    // generic amber, independently scored -- confirming coexistence
+    // never causes cross-contamination between the two exact keys.
+    expect(ambroxanMatches.map((match) => match.id)).toContain(114);
+  });
+});
