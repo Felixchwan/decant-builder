@@ -578,6 +578,11 @@ export const esMX = {
   "noteExplorer.sortCatalogOrder": "Orden del catálogo",
   "noteExplorer.sortMostProminent": "Más prominente",
 
+  "noteProminenceLevel.defining": "Nota protagonista",
+  "noteProminenceLevel.veryEvident": "Muy presente",
+  "noteProminenceLevel.clearlyPerceptible": "Perceptible",
+  "noteProminenceLevel.secondary": "Sutil",
+
   "details.close": "Cerrar detalles de fragancia",
   "details.view": "Ver notas y detalles",
   "details.previous": "Fragancia anterior",

@@ -576,6 +576,11 @@ export const enUS = {
   "noteExplorer.sortCatalogOrder": "Catalog order",
   "noteExplorer.sortMostProminent": "Most prominent",
 
+  "noteProminenceLevel.defining": "Signature note",
+  "noteProminenceLevel.veryEvident": "Very present",
+  "noteProminenceLevel.clearlyPerceptible": "Perceptible",
+  "noteProminenceLevel.secondary": "Subtle",
+
   "details.close": "Close fragrance details",
   "details.view": "View notes & details",
   "details.previous": "Previous fragrance",

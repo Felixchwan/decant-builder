@@ -5964,6 +5964,13 @@
   gap: 8px;
 }
 
+:where(.builder-scope) .note-explorer-prominence-level {
+  /* Neutral continuation of the existing metadata line -- deliberately no
+     border, background, radius, uppercase, or semantic hue, so the
+     qualitative prominence level reads as prose, never as a badge/tier. */
+  color: #94a3b8;
+}
+
 :where(.builder-scope) .note-explorer-empty-message {
   margin: 0;
   color: #cbd5e1;

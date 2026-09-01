@@ -5,6 +5,11 @@ import { afterEach, describe, expect, it } from "vitest";
 import { discoveryDecantsConfig } from "../../../../src/merchants/discoveryDecants/config.js";
 import { buildCollectionSummary } from "../builder/internal/intelligence/buildCollectionSummary.js";
 import { buildComposerRecommendations } from "../builder/internal/recommendations/buildComposerRecommendations.js";
+import {
+  annotateNoteExplorerMatchesWithProminenceLevel,
+  getNoteExplorerMatches,
+  sortNoteExplorerMatchesByProminence,
+} from "../builder/internal/intelligence/buildNoteExplorerViewModel.js";
 import { aurelianConfig } from "../../../../apps/aurelian/src/merchant/config.js";
 import { fragrances as perfumes, notes } from "@discovery-box/catalog";
 import { createTranslator } from "../i18n/createTranslator.js";
@@ -1336,7 +1341,7 @@ describe("Composer Phase 2A: Note Explorer", () => {
 
   it("calls onAddPerfume with the matched perfume and disables only for already-added/box-full, matching the Composer Phase 1 Add-button contract exactly", () => {
     const rowStart = normalizedPanelSource.indexOf("function NoteExplorerResultRow(");
-    const rowSource = normalizedPanelSource.slice(rowStart, rowStart + 800);
+    const rowSource = normalizedPanelSource.slice(rowStart, rowStart + 1200);
     expect(rowSource).toContain("onClick={() => onAddPerfume(perfume)}");
     expect(rowSource).toContain("disabled={isAlreadyAdded || isBoxFull}");
     expect(rowSource).toContain('t("general.added")');
@@ -1419,6 +1424,130 @@ describe("Composer Phase 2D: Note Explorer prominence sorting", () => {
   it("keeps the sort control visually consistent with the existing modal -- reuses the established translator/label-row pattern, not a new control family", () => {
     expect(modalSource).toContain('className="note-explorer-sort"');
     expect(modalSource).toContain('className="note-explorer-results-header"');
+  });
+});
+
+// Note Explorer qualitative prominence level display. Same source-contract
+// constraint as the Phase 2A/2D blocks above (createPortal has no
+// server-render representation) -- these tests combine wiring-only source
+// checks with real calls into the actual, unmodified view-model pipeline
+// (getNoteExplorerMatches -> sortNoteExplorerMatchesByProminence ->
+// annotateNoteExplorerMatchesWithProminenceLevel) and the real translator,
+// so "the row displays X" is proven via the real data + real translation
+// this component actually consumes, never a reproduced/duplicated copy of
+// either. Threshold-mapping coverage itself lives in
+// packages/catalog/src/noteProminenceLevel.test.js; this file only proves
+// the consumer/rendering contract.
+describe("Note Explorer qualitative prominence level display", () => {
+  const modalStart = normalizedPanelSource.indexOf("function NoteExplorerModal(");
+  const modalEnd = normalizedPanelSource.indexOf("function DiscoveryBoxCoachmark(");
+  const modalSource = normalizedPanelSource.slice(modalStart, modalEnd);
+  const rowStart = normalizedPanelSource.indexOf("function NoteExplorerResultRow(");
+  const rowEnd = normalizedPanelSource.indexOf("function normalizeNoteSearchText(");
+  const rowSource = normalizedPanelSource.slice(rowStart, rowEnd);
+
+  function realDisplayedMatches(noteId, sortOrder) {
+    const matches = getNoteExplorerMatches({ catalogPerfumes: perfumes, noteId });
+    const sortedMatches =
+      sortOrder === "prominence" ? sortNoteExplorerMatchesByProminence(matches, noteId) : matches;
+    return annotateNoteExplorerMatchesWithProminenceLevel(sortedMatches, noteId);
+  }
+
+  it("wires annotateNoteExplorerMatchesWithProminenceLevel as the final step of displayedMatches, strictly after the existing sort decision", () => {
+    const displayedStart = modalSource.indexOf("const displayedMatches = useMemo(");
+    const displayedEnd = modalSource.indexOf("const handleSelectNote");
+    const displayedSource = modalSource.slice(displayedStart, displayedEnd);
+
+    const sortIndex = displayedSource.indexOf("sortNoteExplorerMatchesByProminence(matches, selectedNoteId)");
+    const annotateIndex = displayedSource.indexOf(
+      "annotateNoteExplorerMatchesWithProminenceLevel(sortedMatches, selectedNoteId)"
+    );
+    expect(sortIndex).toBeGreaterThan(-1);
+    expect(annotateIndex).toBeGreaterThan(-1);
+    expect(annotateIndex).toBeGreaterThan(sortIndex);
+  });
+
+  it("renders the translated level via the real catalog machine key, appended to the existing brand/points line, never a hardcoded English word", () => {
+    expect(rowSource).toContain("perfume.noteProminenceLevel ? (");
+    expect(rowSource).toContain("t(`noteProminenceLevel.${perfume.noteProminenceLevel}`)");
+    expect(rowSource).toContain('className="note-explorer-prominence-level"');
+    expect(rowSource).toContain(") : null}");
+  });
+
+  it("a scored Note Explorer result resolves to the correct real translated qualitative level -- Squid's real incense: 7", () => {
+    const annotated = realDisplayedMatches("incense", "catalog");
+    const squid = annotated.find((match) => match.id === 500);
+
+    expect(squid.noteProminence.incense).toBe(7);
+    expect(squid.noteProminenceLevel).toBe("veryEvident");
+
+    const esTranslator = createTranslator("es-MX");
+    expect(esTranslator.t(`noteProminenceLevel.${squid.noteProminenceLevel}`)).toBe("Muy presente");
+  });
+
+  it("a null/unscored exact-note member renders no qualitative text and no trailing separator -- La Nuit de L'Homme's own caraway", () => {
+    const annotated = realDisplayedMatches("caraway", "catalog");
+    const laNuit = annotated.find((match) => match.id === 118);
+
+    expect(laNuit).toBeTruthy(); // still present -- containment is independent from prominence
+    expect(laNuit.noteProminence.caraway).toBeUndefined();
+    expect(laNuit.noteProminenceLevel).toBeNull();
+
+    // The row's own conditional renders nothing (not even the leading " - ")
+    // whenever noteProminenceLevel is falsy -- proven directly against the
+    // real component source, not a reproduced copy of it.
+    expect(rowSource).toMatch(/noteProminenceLevel \? \(\s*<>\s*\{" - "\}/);
+  });
+
+  it("resolves the correct real es-MX string for every one of the four machine keys", () => {
+    expect(esMX["noteProminenceLevel.defining"]).toBe("Nota protagonista");
+    expect(esMX["noteProminenceLevel.veryEvident"]).toBe("Muy presente");
+    expect(esMX["noteProminenceLevel.clearlyPerceptible"]).toBe("Perceptible");
+    expect(esMX["noteProminenceLevel.secondary"]).toBe("Sutil");
+  });
+
+  it("real-catalog sanity check across all four levels plus null, using already-established scores", () => {
+    const cardamom = realDisplayedMatches("cardamom", "catalog").find((match) => match.id === 118);
+    const incense = realDisplayedMatches("incense", "catalog").find((match) => match.id === 500);
+    const coumarin = realDisplayedMatches("coumarin", "catalog").find((match) => match.id === 404);
+    const vetiver = realDisplayedMatches("vetiver", "catalog").find((match) => match.id === 118);
+    const caraway = realDisplayedMatches("caraway", "catalog").find((match) => match.id === 118);
+
+    expect(cardamom.noteProminence.cardamom).toBe(9);
+    expect(cardamom.noteProminenceLevel).toBe("defining");
+    expect(incense.noteProminence.incense).toBe(7);
+    expect(incense.noteProminenceLevel).toBe("veryEvident");
+    expect(coumarin.noteProminence.coumarin).toBe(4);
+    expect(coumarin.noteProminenceLevel).toBe("clearlyPerceptible");
+    expect(vetiver.noteProminence.vetiver).toBe(3);
+    expect(vetiver.noteProminenceLevel).toBe("secondary");
+    expect(caraway.noteProminenceLevel).toBeNull();
+  });
+
+  it("qualitative text is scoped to Note Explorer result rows only -- the noteProminenceLevel.* locale namespace is never referenced anywhere else in BuilderPanel.jsx", () => {
+    const sourceOutsideResultRow = normalizedPanelSource.slice(0, rowStart) + normalizedPanelSource.slice(rowEnd);
+    expect(sourceOutsideResultRow).not.toContain("noteProminenceLevel.");
+  });
+
+  it("switching Note Explorer sort mode does not change the level attached to a given fragrance", () => {
+    const catalogOrderAnnotated = realDisplayedMatches("incense", "catalog");
+    const prominenceOrderAnnotated = realDisplayedMatches("incense", "prominence");
+
+    const catalogSquid = catalogOrderAnnotated.find((match) => match.id === 500);
+    const prominenceSquid = prominenceOrderAnnotated.find((match) => match.id === 500);
+    expect(catalogSquid.noteProminenceLevel).toBe(prominenceSquid.noteProminenceLevel);
+    expect(catalogSquid.noteProminenceLevel).toBe("veryEvident");
+  });
+
+  it("does not change existing ordering -- cedarwood's real tied pair and unscored trailing order survive the full displayedMatches pipeline unchanged", () => {
+    const withoutAnnotation = sortNoteExplorerMatchesByProminence(
+      getNoteExplorerMatches({ catalogPerfumes: perfumes, noteId: "cedarwood" }),
+      "cedarwood"
+    );
+    const withAnnotation = realDisplayedMatches("cedarwood", "prominence");
+
+    expect(withAnnotation.map((match) => match.id)).toEqual(withoutAnnotation.map((match) => match.id));
+    expect(withAnnotation.map((match) => match.id)).toEqual([18, 302, 34, 109, 406]);
   });
 });
 

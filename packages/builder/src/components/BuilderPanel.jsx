@@ -19,6 +19,7 @@ import {
 } from "../builder/internal/intelligence/buildCollectionIntelligenceViewModel.js";
 import { buildScentLibraryViewModel } from "../builder/internal/intelligence/buildScentLibraryViewModel.js";
 import {
+  annotateNoteExplorerMatchesWithProminenceLevel,
   buildNoteExplorerNoteOptions,
   getNoteExplorerMatches,
   sortNoteExplorerMatchesByProminence,
@@ -1900,13 +1901,14 @@ function NoteExplorerModal({
     () => getNoteExplorerMatches({ catalogPerfumes, noteId: selectedNoteId }),
     [catalogPerfumes, selectedNoteId]
   );
-  const displayedMatches = useMemo(
-    () =>
+  const displayedMatches = useMemo(() => {
+    const sortedMatches =
       sortOrder === "prominence"
         ? sortNoteExplorerMatchesByProminence(matches, selectedNoteId)
-        : matches,
-    [matches, sortOrder, selectedNoteId]
-  );
+        : matches;
+
+    return annotateNoteExplorerMatchesWithProminenceLevel(sortedMatches, selectedNoteId);
+  }, [matches, sortOrder, selectedNoteId]);
 
   const handleSelectNote = (noteId) => {
     setSelectedNoteId((currentNoteId) => (currentNoteId === noteId ? null : noteId));
@@ -2049,7 +2051,17 @@ function NoteExplorerResultRow({ perfume, translator, isAlreadyAdded, isBoxFull,
     <div className="composer-proposal-item no-alternatives note-explorer-result-item">
       <div className="composer-proposal-item-body">
         <strong>{perfume.name}</strong>
-        <span>{perfume.brand} - {perfume.points} pt</span>
+        <span>
+          {perfume.brand} - {perfume.points} pt
+          {perfume.noteProminenceLevel ? (
+            <>
+              {" - "}
+              <span className="note-explorer-prominence-level">
+                {t(`noteProminenceLevel.${perfume.noteProminenceLevel}`)}
+              </span>
+            </>
+          ) : null}
+        </span>
       </div>
       <button
         type="button"
