@@ -5,3 +5,4 @@ export { metadataAssets } from "./metadataAssets.js";
 export { createMerchantCatalog } from "./createMerchantCatalog.js";
 export { createCatalogAssetResolver } from "./createCatalogAssetResolver.js";
 export { perfumePlaceholderAssetKey } from "./perfumePlaceholderAssetKey.js";
+export { getNoteProminenceLevel } from "./noteProminenceLevel.js";

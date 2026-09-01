@@ -26,6 +26,7 @@ describe("@discovery-box/catalog package boundary", () => {
       "createCatalogAssetResolver",
       "createMerchantCatalog",
       "fragrances",
+      "getNoteProminenceLevel",
       "metadataAssets",
       "notes",
       "perfumePlaceholderAssetKey",
