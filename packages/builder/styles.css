@@ -5964,10 +5964,21 @@
   gap: 8px;
 }
 
-:where(.builder-scope) .note-explorer-prominence-level {
-  /* Neutral continuation of the existing metadata line -- deliberately no
-     border, background, radius, uppercase, or semantic hue, so the
-     qualitative prominence level reads as prose, never as a badge/tier. */
+:where(.builder-scope) .note-explorer-result-item .note-explorer-prominence-level {
+  /* Scoped to .note-explorer-result-item (not the bare shared span) so
+     this two-class selector (specificity 0,2,0) outranks both
+     .composer-proposal-item span's display:block (0,1,1) and
+     .composer-proposal-item div span's color:#cbd5e1 (0,1,2) on pure
+     specificity, with no need to force precedence and without touching
+     either shared Composer rule, which still applies unchanged to every
+     ordinary (non-Note-Explorer) proposal row. display:inline keeps the
+     level on the same continuous metadata line ("Brand - X pt - Label")
+     instead of breaking onto its own line; the color override restores
+     the intended, more-muted #94a3b8 over the brand/points line's own
+     #cbd5e1. Deliberately no border/background/radius/uppercase/
+     semantic hue, so the qualitative prominence level reads as prose,
+     never as a badge/tier. */
+  display: inline;
   color: #94a3b8;
 }
 

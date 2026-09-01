@@ -1467,6 +1467,41 @@ describe("Note Explorer qualitative prominence level display", () => {
     expect(annotateIndex).toBeGreaterThan(sortIndex);
   });
 
+  // Regression guard for a real CSS cascade bug found in live browser QA:
+  // the shared, broad `.composer-proposal-item span` (display: block) and
+  // `.composer-proposal-item div span` (color: #cbd5e1) rules both matched
+  // the nested .note-explorer-prominence-level span, silently overriding
+  // its intended inline/muted presentation. The fix is a selector scoped to
+  // .note-explorer-result-item specifically (specificity 0,2,0), which
+  // outranks both shared rules (0,1,1 and 0,1,2) on pure specificity, with
+  // no !important and no edit to either shared rule. This file's own
+  // renderToStaticMarkup harness cannot apply real CSS or compute cascade
+  // winners, so this test only proves the declarations exist as source --
+  // the actual computed-style/visual proof was done in a real browser
+  // (desktop and ~375px mobile) as part of this phase's validation.
+  it("declares an inline, muted-color override for the prominence level, scoped specifically to Note Explorer rows -- not a change to either shared Composer rule", () => {
+    const scopedRuleMatch = appCss.match(
+      /:where\(\.builder-scope\) \.note-explorer-result-item \.note-explorer-prominence-level \{([^}]*)\}/
+    );
+    expect(scopedRuleMatch, "expected a .note-explorer-result-item .note-explorer-prominence-level rule").toBeTruthy();
+
+    const scopedRuleBody = scopedRuleMatch[1];
+    const scopedRuleDeclarations = scopedRuleBody.replace(/\/\*[\s\S]*?\*\//g, "");
+    expect(scopedRuleDeclarations).toMatch(/display:\s*inline;/);
+    expect(scopedRuleDeclarations).toMatch(/color:\s*#94a3b8;/);
+    expect(scopedRuleDeclarations).not.toContain("!important");
+    expect(scopedRuleDeclarations).not.toMatch(/border|background|radius|uppercase|text-transform/);
+
+    // The two shared, broad rules responsible for the original bug are
+    // still present and unmodified -- every ordinary (non-Note-Explorer)
+    // Composer proposal row still gets exactly the same block/#cbd5e1
+    // treatment it always has.
+    expect(appCss).toMatch(/:where\(\.builder-scope\) \.composer-proposal-item span \{\s*display:\s*block;\s*\}/);
+    expect(appCss).toMatch(
+      /:where\(\.builder-scope\) \.composer-proposal-item div span \{\s*margin-top:\s*3px;\s*color:\s*#cbd5e1;/
+    );
+  });
+
   it("renders the translated level via the real catalog machine key, appended to the existing brand/points line, never a hardcoded English word", () => {
     expect(rowSource).toContain("perfume.noteProminenceLevel ? (");
     expect(rowSource).toContain("t(`noteProminenceLevel.${perfume.noteProminenceLevel}`)");
