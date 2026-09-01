@@ -3998,6 +3998,29 @@ const DEFAULT_SEASON_WEIGHTS = {
 // co-occurring in Legend EDT. See
 // noteProminenceHorizontalCalibration3Y.test.js for the complete
 // taxonomy audit, membership table, and rationale.
+//
+// Composer Phase 3Z: twenty-sixth horizontal calibration pass -- a
+// single standalone canonical key, calibrated on its own: cypress.
+// pine, fir, firBalsam, juniper, rosemary, sage, clarySage, cedar,
+// cedarwood, woodyNotes, galbanum, and grass were all re-confirmed as
+// their own distinct, already-established canonical keys -- cypress is
+// never treated as an inferred proxy for any of them, for generic
+// woody freshness, forest/conifer impression, pine-like character,
+// juniper-like aromatic sharpness, or cedar dryness. None of the four
+// cypress members carries any competing coniferous material, so no
+// cross-material confusion was even possible. Every member's own
+// accords list uses only generic "woody"/"aromatic"/"fresh" tags --
+// none names cypress or a coniferous material specifically -- and each
+// member's cypress sits inside an already well-defined dominant
+// concept unrelated to conifer character: Uomo Signature's own
+// coffee/leather/spicy-sweet concept, Le Beau Le Parfum's own
+// coconut-tropical concept, Polo Deep Blue Parfum's own
+// aquatic-citrus concept, and Orange X Santal's own citrus-woody
+// concept. Across 4 cypress fragrance/note pairs, this phase's own
+// calibration changes zero individual pairs. No canonical-data
+// correction was made or recommended. See
+// noteProminenceHorizontalCalibration3Z.test.js for the complete
+// taxonomy audit, membership table, and rationale.
 export const NOTE_PROMINENCE_BY_ID = {
   1: { seaNotes: 10, calone: 9, bergamot: 7, jasmine: 5, whiteMusk: 4 }, // Acqua di Gio EDT
   2: { lemon: 7, rosemary: 5, patchouli: 4 }, // Light Blue Pour Homme EDT

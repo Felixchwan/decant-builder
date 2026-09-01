@@ -2027,3 +2027,34 @@ describe("Note Explorer 'Most prominent' sort reflects the Phase 3Y calibrated o
     }
   });
 });
+
+// Composer Phase 3Z: horizontal note-family calibration regression for
+// a single standalone canonical key (cypress), run against the real
+// catalog. The underlying data (taxonomy audit, canonical-data sanity
+// audit, exact scores, canonical-pyramid immutability) is proven in
+// packages/catalog/tests/noteProminenceHorizontalCalibration3Z.test.js;
+// this describe block only proves the existing, unmodified sort algorithm
+// produces the approved relative order -- scored fragrances sort
+// descending, unscored members trail after every scored one, and
+// containment stays strict. Phase 3Z changed zero prominence values, so
+// the order below is identical to the pre-Phase-3Z catalog.
+describe("Note Explorer 'Most prominent' sort reflects the Phase 3Z calibrated order for cypress", () => {
+  it("cypress (4 members, all unscored): preserves catalog order with no forced ranking", () => {
+    const matches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "cypress" });
+    expect(matches.map((match) => match.id).sort((a, b) => a - b)).toEqual([16, 112, 207, 305]);
+
+    const sorted = sortNoteExplorerMatchesByProminence(matches, "cypress");
+    expect(sorted.map((match) => match.id)).toEqual(matches.map((match) => match.id));
+  });
+
+  it("never treats an adjacent coniferous/woody material as cypress -- searching cypress never returns a fragrance whose only relevant note is a different material", () => {
+    const nonMemberExamples = [
+      { noteId: "cypress", excludeId: 1, label: "Acqua di Gio EDT: cedar only" },
+      { noteId: "cypress", excludeId: 7, label: "The Scent EDT: woodyNotes only" },
+    ];
+    for (const { noteId, excludeId } of nonMemberExamples) {
+      const matches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId });
+      expect(matches.map((match) => match.id)).not.toContain(excludeId);
+    }
+  });
+});
