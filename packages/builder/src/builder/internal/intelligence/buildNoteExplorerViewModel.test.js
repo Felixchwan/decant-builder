@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { fragrances as catalogFragrances } from "@discovery-box/catalog";
 import {
+  annotateNoteExplorerMatchesWithProminenceLevel,
   buildNoteExplorerNoteOptions,
   getNoteExplorerMatches,
   sortNoteExplorerMatchesByProminence,
@@ -2056,5 +2057,150 @@ describe("Note Explorer 'Most prominent' sort reflects the Phase 3Z calibrated o
       const matches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId });
       expect(matches.map((match) => match.id)).not.toContain(excludeId);
     }
+  });
+});
+
+// Qualitative-prominence consumer layer: annotateNoteExplorerMatchesWithProminenceLevel
+// is a purely additive step that must run strictly after containment
+// (getNoteExplorerMatches) and after any sort
+// (sortNoteExplorerMatchesByProminence) have already run -- these tests
+// exercise the full three-step pipeline against real, already-established
+// catalog scores, asserting only that the view model correctly relays the
+// catalog's own getNoteProminenceLevel(score) result, never reproducing
+// the threshold mapping itself.
+describe("annotateNoteExplorerMatchesWithProminenceLevel", () => {
+  it("assigns the exact real-catalog machine key for a defining (9-10) score -- La Nuit de L'Homme's cardamom: 9", () => {
+    const matches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "cardamom" });
+    const sorted = sortNoteExplorerMatchesByProminence(matches, "cardamom");
+    const annotated = annotateNoteExplorerMatchesWithProminenceLevel(sorted, "cardamom");
+
+    const laNuit = annotated.find((match) => match.id === 118);
+    expect(laNuit.noteProminence.cardamom).toBe(9);
+    expect(laNuit.noteProminenceLevel).toBe("defining");
+  });
+
+  it("assigns the exact real-catalog machine key for a veryEvident (7-8) score -- Squid's incense: 7", () => {
+    const matches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "incense" });
+    const sorted = sortNoteExplorerMatchesByProminence(matches, "incense");
+    const annotated = annotateNoteExplorerMatchesWithProminenceLevel(sorted, "incense");
+
+    const squid = annotated.find((match) => match.id === 500);
+    expect(squid.noteProminence.incense).toBe(7);
+    expect(squid.noteProminenceLevel).toBe("veryEvident");
+  });
+
+  it("assigns the exact real-catalog machine key for a clearlyPerceptible (4-6) score -- Layton's coumarin: 4", () => {
+    const matches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "coumarin" });
+    const sorted = sortNoteExplorerMatchesByProminence(matches, "coumarin");
+    const annotated = annotateNoteExplorerMatchesWithProminenceLevel(sorted, "coumarin");
+
+    const layton = annotated.find((match) => match.id === 404);
+    expect(layton.noteProminence.coumarin).toBe(4);
+    expect(layton.noteProminenceLevel).toBe("clearlyPerceptible");
+  });
+
+  it("assigns the exact real-catalog machine key for a secondary (1-3) score -- La Nuit de L'Homme's vetiver: 3", () => {
+    const matches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "vetiver" });
+    const sorted = sortNoteExplorerMatchesByProminence(matches, "vetiver");
+    const annotated = annotateNoteExplorerMatchesWithProminenceLevel(sorted, "vetiver");
+
+    const laNuit = annotated.find((match) => match.id === 118);
+    expect(laNuit.noteProminence.vetiver).toBe(3);
+    expect(laNuit.noteProminenceLevel).toBe("secondary");
+  });
+
+  it("assigns null, never the string \"unscored\", for a canonically-carried but intentionally unscored note -- La Nuit de L'Homme's own caraway", () => {
+    const matches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "caraway" });
+    const sorted = sortNoteExplorerMatchesByProminence(matches, "caraway");
+    const annotated = annotateNoteExplorerMatchesWithProminenceLevel(sorted, "caraway");
+
+    const laNuit = annotated.find((match) => match.id === 118);
+    expect(laNuit).toBeTruthy(); // still present -- containment is independent from prominence
+    expect(laNuit.noteProminence.caraway).toBeUndefined();
+    expect(laNuit.noteProminenceLevel).toBeNull();
+    expect(annotated.map((match) => match.noteProminenceLevel)).not.toContain("unscored");
+  });
+
+  it("one fragrance carrying four different calibrated states for its own distinct notes classifies each independently -- La Nuit de L'Homme's cardamom/coumarin/vetiver/caraway", () => {
+    const cardamom = annotateNoteExplorerMatchesWithProminenceLevel(
+      getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "cardamom" }),
+      "cardamom",
+    ).find((match) => match.id === 118);
+    const coumarin = annotateNoteExplorerMatchesWithProminenceLevel(
+      getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "coumarin" }),
+      "coumarin",
+    ).find((match) => match.id === 118);
+    const vetiver = annotateNoteExplorerMatchesWithProminenceLevel(
+      getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "vetiver" }),
+      "vetiver",
+    ).find((match) => match.id === 118);
+    const caraway = annotateNoteExplorerMatchesWithProminenceLevel(
+      getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "caraway" }),
+      "caraway",
+    ).find((match) => match.id === 118);
+
+    expect(cardamom.noteProminenceLevel).toBe("defining");
+    expect(coumarin.noteProminenceLevel).toBe("clearlyPerceptible");
+    expect(vetiver.noteProminenceLevel).toBe("secondary");
+    expect(caraway.noteProminenceLevel).toBeNull();
+  });
+
+  it("does not change exact-note membership -- the same ids present before annotation are present after, in the same count", () => {
+    const matches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "cedarwood" });
+    const sorted = sortNoteExplorerMatchesByProminence(matches, "cedarwood");
+    const annotated = annotateNoteExplorerMatchesWithProminenceLevel(sorted, "cedarwood");
+
+    expect(annotated).toHaveLength(sorted.length);
+    expect(annotated.map((match) => match.id)).toEqual(sorted.map((match) => match.id));
+  });
+
+  it("does not change scored-before-unscored ordering or relative order among scored entries, and ties still preserve catalog order -- cedarwood's real tied pair", () => {
+    const matches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "cedarwood" });
+    const sorted = sortNoteExplorerMatchesByProminence(matches, "cedarwood");
+    const annotated = annotateNoteExplorerMatchesWithProminenceLevel(sorted, "cedarwood");
+
+    // Order is untouched by annotation: [18, 302] tied at cedarwood: 4 in
+    // catalog order, then [34, 109, 406] unscored trailing in catalog order.
+    expect(annotated.map((match) => match.id)).toEqual([18, 302, 34, 109, 406]);
+    expect(annotated.map((match) => match.noteProminenceLevel)).toEqual([
+      "clearlyPerceptible",
+      "clearlyPerceptible",
+      null,
+      null,
+      null,
+    ]);
+  });
+
+  it("is purely additive -- every original field on each match survives annotation unchanged", () => {
+    const matches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "incense" });
+    const sorted = sortNoteExplorerMatchesByProminence(matches, "incense");
+    const annotated = annotateNoteExplorerMatchesWithProminenceLevel(sorted, "incense");
+
+    annotated.forEach((annotatedMatch, index) => {
+      const originalMatch = sorted[index];
+      const rest = { ...annotatedMatch };
+      delete rest.noteProminenceLevel;
+      expect(rest).toEqual(originalMatch);
+    });
+  });
+
+  it("does not mutate the input array or its original objects", () => {
+    const matches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "incense" });
+    const sorted = sortNoteExplorerMatchesByProminence(matches, "incense");
+    const beforeSnapshot = sorted.map((match) => ({ ...match }));
+
+    annotateNoteExplorerMatchesWithProminenceLevel(sorted, "incense");
+
+    expect(sorted.map((match) => ({ ...match }))).toEqual(beforeSnapshot);
+    sorted.forEach((match) => {
+      expect(match).not.toHaveProperty("noteProminenceLevel");
+    });
+  });
+
+  it("handles a missing noteId defensively, returning null levels without throwing", () => {
+    const matches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "incense" });
+    expect(() => annotateNoteExplorerMatchesWithProminenceLevel(matches, undefined)).not.toThrow();
+    const annotated = annotateNoteExplorerMatchesWithProminenceLevel(matches, undefined);
+    expect(annotated.every((match) => match.noteProminenceLevel === null)).toBe(true);
   });
 });

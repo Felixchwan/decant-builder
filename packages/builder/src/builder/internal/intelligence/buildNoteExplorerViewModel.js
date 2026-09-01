@@ -1,3 +1,5 @@
+import { getNoteProminenceLevel } from "@discovery-box/catalog";
+
 import { getPerfumeNoteIds } from "../../../utils/noteUtils.js";
 
 // Composer Phase 2A: Note Explorer. Containment-based only -- a perfume
@@ -102,6 +104,34 @@ export function sortNoteExplorerMatchesByProminence(matches, noteId) {
   });
 
   return [...scored, ...unscored];
+}
+
+// Qualitative-prominence consumer layer: a purely additive annotation step
+// that must run strictly after containment (getNoteExplorerMatches) and
+// after any sort (sortNoteExplorerMatchesByProminence) have already
+// decided membership and order. This function never filters and never
+// reorders -- every match passed in comes back out, exactly once, in the
+// same order -- so containment and sorting stay the sole responsibility of
+// the functions above. Each returned entry is a new shallow copy of its
+// input carrying one extra field, noteProminenceLevel, derived exclusively
+// via the catalog package's own getNoteProminenceLevel(score) -- the
+// shared public single source of truth for the numeric-to-qualitative
+// mapping (9-10 defining, 7-8 veryEvident, 4-6 clearlyPerceptible, 1-3
+// secondary, otherwise null). The threshold logic itself is never
+// duplicated here. A perfume that canonically carries the note but has no
+// numeric score yields noteProminenceLevel: null -- "no calibrated
+// perceptual level", never the string "unscored", and never confused with
+// the note being absent (that question was already answered by
+// containment, before this function ever runs). The field is
+// display/explanation-only: nothing here is consulted by sorting,
+// filtering, containment, or recommendation logic.
+export function annotateNoteExplorerMatchesWithProminenceLevel(matches, noteId) {
+  const safeMatches = Array.isArray(matches) ? matches : [];
+
+  return safeMatches.map((perfume) => ({
+    ...perfume,
+    noteProminenceLevel: noteId ? getNoteProminenceLevel(perfume?.noteProminence?.[noteId]) : null,
+  }));
 }
 
 function compareNoteOptions(firstOption, secondOption) {
