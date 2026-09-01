@@ -3921,6 +3921,33 @@ const DEFAULT_SEASON_WEIGHTS = {
 // carries both benzoin and siamBenzoin, and no identity confusion was
 // found in either direction. See noteProminenceHorizontalCalibration3V.test.js
 // for the complete taxonomy audit, membership tables, and rationale.
+//
+// Composer Phase 3W: twenty-third horizontal calibration pass -- six
+// independent aromatic seed/spice canonical keys grouped only for
+// workflow efficiency, never as one ranking family: coriander, caraway,
+// cumin, fennel, anise, and starAnise. Per the coverage audit's own
+// explicit correction, anise and starAnise are related only by a
+// similar licorice-like aromatic effect -- they remain two distinct
+// materials with distinct botanical identities, never a generic/
+// specific variant pair; starAnise carries its own bespoke image,
+// never reusing anise.jpg, and no score or membership is inherited
+// between them. cardamom, cinnamon, nutmeg, cloves, ginger, the
+// pepper-family keys, saffron, artemisia, and wormwood were all
+// re-confirmed as their own distinct, already-established canonical
+// keys, out of scope for this phase. 212 VIP Black legitimately
+// carries both fennel and anise, and Spicebomb Extreme legitimately
+// carries both caraway and cumin, each pair independently scored,
+// never cross-credited. Across 4 coriander, 3 caraway, 1 cumin, 1
+// fennel, 1 anise, and 1 starAnise fragrance/note pairs, this phase's
+// own calibration changes zero individual pairs. 212 VIP Black's
+// already-scored anise: 6 held up as internally consistent, correctly
+// trailing its own established blackVanilla: 7. No canonical-data
+// correction was made or recommended -- no fragrance's own accords,
+// name, or shortName singled out any remaining unscored member for a
+// first score under the strict editorial caution against inferring
+// identity from generic seed-spice or anisic character alone. See
+// noteProminenceHorizontalCalibration3W.test.js for the complete
+// taxonomy audit, membership tables, and rationale.
 export const NOTE_PROMINENCE_BY_ID = {
   1: { seaNotes: 10, calone: 9, bergamot: 7, jasmine: 5, whiteMusk: 4 }, // Acqua di Gio EDT
   2: { lemon: 7, rosemary: 5, patchouli: 4 }, // Light Blue Pour Homme EDT

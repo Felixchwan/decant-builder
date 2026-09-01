@@ -1783,3 +1783,95 @@ describe("Note Explorer 'Most prominent' sort reflects the Phase 3V calibrated o
     expect(incenseMatches.map((match) => match.id)).toContain(304);
   });
 });
+
+// Composer Phase 3W: horizontal note-family calibration regression for
+// six independent aromatic seed/spice canonical keys (coriander,
+// caraway, cumin, fennel, anise, starAnise), run against the real
+// catalog. The underlying data (taxonomy audit, canonical-data sanity
+// audit, exact scores, canonical-pyramid immutability) is proven in
+// packages/catalog/tests/noteProminenceHorizontalCalibration3W.test.js;
+// this describe block only proves the existing, unmodified sort algorithm
+// produces the approved relative order per exact key -- scored fragrances
+// sort descending, unscored members trail after every scored one, and
+// containment stays strict per key. Phase 3W changed zero prominence
+// values, so every order below is identical to the pre-Phase-3W catalog.
+describe("Note Explorer 'Most prominent' sort reflects the Phase 3W calibrated order, per distinct canonical key", () => {
+  it("coriander (4 members, all unscored): preserves catalog order with no forced ranking", () => {
+    const matches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "coriander" });
+    expect(matches.map((match) => match.id).sort((a, b) => a - b)).toEqual([1, 13, 20, 501]);
+
+    const sorted = sortNoteExplorerMatchesByProminence(matches, "coriander");
+    expect(sorted.map((match) => match.id)).toEqual(matches.map((match) => match.id));
+  });
+
+  it("caraway (3 members, all unscored): preserves catalog order with no forced ranking", () => {
+    const matches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "caraway" });
+    expect(matches.map((match) => match.id).sort((a, b) => a - b)).toEqual([5, 118, 212]);
+
+    const sorted = sortNoteExplorerMatchesByProminence(matches, "caraway");
+    expect(sorted.map((match) => match.id)).toEqual(matches.map((match) => match.id));
+  });
+
+  it("cumin: Spicebomb Extreme is the sole member and remains unscored", () => {
+    const matches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "cumin" });
+    expect(matches.map((match) => match.id)).toEqual([212]);
+
+    const sorted = sortNoteExplorerMatchesByProminence(matches, "cumin");
+    expect(sorted.map((match) => match.id)).toEqual([212]);
+  });
+
+  it("fennel: 212 VIP Black is the sole member and remains unscored, distinct from its own already-scored anise", () => {
+    const matches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "fennel" });
+    expect(matches.map((match) => match.id)).toEqual([106]);
+
+    const sorted = sortNoteExplorerMatchesByProminence(matches, "fennel");
+    expect(sorted.map((match) => match.id)).toEqual([106]);
+  });
+
+  it("anise: 212 VIP Black is the sole member and is already scored, independent of its own unscored fennel", () => {
+    const matches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "anise" });
+    expect(matches.map((match) => match.id)).toEqual([106]);
+
+    const sorted = sortNoteExplorerMatchesByProminence(matches, "anise");
+    expect(sorted.map((match) => match.id)).toEqual([106]);
+  });
+
+  it("starAnise: Sauvage EDP is the sole member and remains unscored -- never inherits anise's score or membership", () => {
+    const matches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "starAnise" });
+    expect(matches.map((match) => match.id)).toEqual([202]);
+
+    const sorted = sortNoteExplorerMatchesByProminence(matches, "starAnise");
+    expect(sorted.map((match) => match.id)).toEqual([202]);
+  });
+
+  it("never treats an adjacent spicy/aromatic material as one of the six in-scope keys -- searching one canonical key never returns a fragrance whose only relevant note is a different material", () => {
+    const nonMemberExamples = [
+      { noteId: "coriander", excludeId: 5, label: "Le Male: cardamom only" },
+      { noteId: "caraway", excludeId: 14, label: "Halloween Man: cinnamon only" },
+      { noteId: "cumin", excludeId: 5, label: "Le Male: cinnamon only" },
+      { noteId: "fennel", excludeId: 15, label: "Polo Black: wormwood only" },
+      { noteId: "anise", excludeId: 15, label: "Polo Black: wormwood only" },
+      { noteId: "starAnise", excludeId: 28, label: "Tous Man: sichuanPepper only" },
+    ];
+    for (const { noteId, excludeId } of nonMemberExamples) {
+      const matches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId });
+      expect(matches.map((match) => match.id)).not.toContain(excludeId);
+    }
+
+    // 212 VIP Black legitimately carries both fennel and anise, and
+    // Spicebomb Extreme legitimately carries both caraway and cumin --
+    // confirming coexistence never causes cross-contamination between
+    // exact keys, and anise/starAnise never share membership.
+    const fennelMatches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "fennel" });
+    const aniseMatches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "anise" });
+    const caraway3WMatches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "caraway" });
+    const cuminMatches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "cumin" });
+    const starAniseMatches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "starAnise" });
+    expect(fennelMatches.map((match) => match.id)).toContain(106);
+    expect(aniseMatches.map((match) => match.id)).toContain(106);
+    expect(caraway3WMatches.map((match) => match.id)).toContain(212);
+    expect(cuminMatches.map((match) => match.id)).toContain(212);
+    expect(aniseMatches.map((match) => match.id)).not.toContain(202);
+    expect(starAniseMatches.map((match) => match.id)).not.toContain(106);
+  });
+});
