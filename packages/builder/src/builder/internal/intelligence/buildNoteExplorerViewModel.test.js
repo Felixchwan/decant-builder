@@ -1875,3 +1875,120 @@ describe("Note Explorer 'Most prominent' sort reflects the Phase 3W calibrated o
     expect(starAniseMatches.map((match) => match.id)).not.toContain(106);
   });
 });
+
+// Composer Phase 3X: horizontal note-family calibration regression for
+// nine independent minor-floral canonical keys (lilyOfTheValley,
+// hyacinth, osmanthus, cyclamen, magnolia, freesia, frangipani,
+// mignonette, whiteLotus), run against the real catalog. The underlying
+// data (taxonomy audit, canonical-data sanity audit, exact scores,
+// canonical-pyramid immutability) is proven in
+// packages/catalog/tests/noteProminenceHorizontalCalibration3X.test.js;
+// this describe block only proves the existing, unmodified sort algorithm
+// produces the approved relative order per exact key -- scored fragrances
+// sort descending, unscored members trail after every scored one, and
+// containment stays strict per key. Phase 3X changed zero prominence
+// values, so every order below is identical to the pre-Phase-3X catalog.
+describe("Note Explorer 'Most prominent' sort reflects the Phase 3X calibrated order, per distinct canonical key", () => {
+  it("lilyOfTheValley (3 members, all unscored): preserves catalog order with no forced ranking", () => {
+    const matches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "lilyOfTheValley" });
+    expect(matches.map((match) => match.id).sort((a, b) => a - b)).toEqual([9, 101, 501]);
+
+    const sorted = sortNoteExplorerMatchesByProminence(matches, "lilyOfTheValley");
+    expect(sorted.map((match) => match.id)).toEqual(matches.map((match) => match.id));
+  });
+
+  it("hyacinth (2 members, both unscored): preserves catalog order with no forced ranking", () => {
+    const matches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "hyacinth" });
+    expect(matches.map((match) => match.id)).toEqual([1, 3]);
+
+    const sorted = sortNoteExplorerMatchesByProminence(matches, "hyacinth");
+    expect(sorted.map((match) => match.id)).toEqual([1, 3]);
+  });
+
+  it("osmanthus (2 members, both unscored): preserves catalog order with no forced ranking", () => {
+    const matches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "osmanthus" });
+    expect(matches.map((match) => match.id)).toEqual([304, 403]);
+
+    const sorted = sortNoteExplorerMatchesByProminence(matches, "osmanthus");
+    expect(sorted.map((match) => match.id)).toEqual([304, 403]);
+  });
+
+  it("cyclamen: Acqua di Gio EDT is the sole member and remains unscored", () => {
+    const matches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "cyclamen" });
+    expect(matches.map((match) => match.id)).toEqual([1]);
+
+    const sorted = sortNoteExplorerMatchesByProminence(matches, "cyclamen");
+    expect(sorted.map((match) => match.id)).toEqual([1]);
+  });
+
+  it("magnolia: Legend EDP is the sole member and remains unscored, distinct from its own already-scored jasmine", () => {
+    const matches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "magnolia" });
+    expect(matches.map((match) => match.id)).toEqual([23]);
+
+    const sorted = sortNoteExplorerMatchesByProminence(matches, "magnolia");
+    expect(sorted.map((match) => match.id)).toEqual([23]);
+  });
+
+  it("freesia: Acqua di Gio EDT is the sole member and remains unscored", () => {
+    const matches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "freesia" });
+    expect(matches.map((match) => match.id)).toEqual([1]);
+
+    const sorted = sortNoteExplorerMatchesByProminence(matches, "freesia");
+    expect(sorted.map((match) => match.id)).toEqual([1]);
+  });
+
+  it("frangipani: Birds of Paradise for Him is the sole member and is already scored", () => {
+    const matches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "frangipani" });
+    expect(matches.map((match) => match.id)).toEqual([107]);
+
+    const sorted = sortNoteExplorerMatchesByProminence(matches, "frangipani");
+    expect(sorted.map((match) => match.id)).toEqual([107]);
+  });
+
+  it("mignonette: Acqua di Gio EDT is the sole member and remains unscored", () => {
+    const matches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "mignonette" });
+    expect(matches.map((match) => match.id)).toEqual([1]);
+
+    const sorted = sortNoteExplorerMatchesByProminence(matches, "mignonette");
+    expect(sorted.map((match) => match.id)).toEqual([1]);
+  });
+
+  it("whiteLotus: Bvlgari Man Rain Essence is the sole member and is already scored", () => {
+    const matches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "whiteLotus" });
+    expect(matches.map((match) => match.id)).toEqual([105]);
+
+    const sorted = sortNoteExplorerMatchesByProminence(matches, "whiteLotus");
+    expect(sorted.map((match) => match.id)).toEqual([105]);
+  });
+
+  it("never treats an adjacent floral material as one of the nine in-scope keys -- searching one canonical key never returns a fragrance whose only relevant note is a different material", () => {
+    const nonMemberExamples = [
+      { noteId: "lilyOfTheValley", excludeId: 1, label: "Acqua di Gio EDT: jasmine only" },
+      { noteId: "hyacinth", excludeId: 9, label: "Fierce: jasmine only" },
+      { noteId: "osmanthus", excludeId: 1, label: "Acqua di Gio EDT: rose only" },
+      { noteId: "cyclamen", excludeId: 9, label: "Fierce: jasmine only" },
+      { noteId: "magnolia", excludeId: 1, label: "Acqua di Gio EDT: jasmine only" },
+      { noteId: "freesia", excludeId: 9, label: "Fierce: jasmine only" },
+      { noteId: "frangipani", excludeId: 3, label: "Versace Pour Homme: geranium only" },
+      { noteId: "mignonette", excludeId: 9, label: "Fierce: jasmine only" },
+      { noteId: "whiteLotus", excludeId: 1, label: "Acqua di Gio EDT: rose only" },
+    ];
+    for (const { noteId, excludeId } of nonMemberExamples) {
+      const matches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId });
+      expect(matches.map((match) => match.id)).not.toContain(excludeId);
+    }
+
+    // Acqua di Gio EDT legitimately carries four in-scope keys
+    // simultaneously (hyacinth, cyclamen, freesia, mignonette) --
+    // confirming coexistence never causes cross-contamination between
+    // exact keys.
+    const hyacinthMatches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "hyacinth" });
+    const cyclamenMatches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "cyclamen" });
+    const freesiaMatches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "freesia" });
+    const mignonetteMatches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "mignonette" });
+    expect(hyacinthMatches.map((match) => match.id)).toContain(1);
+    expect(cyclamenMatches.map((match) => match.id)).toContain(1);
+    expect(freesiaMatches.map((match) => match.id)).toContain(1);
+    expect(mignonetteMatches.map((match) => match.id)).toContain(1);
+  });
+});

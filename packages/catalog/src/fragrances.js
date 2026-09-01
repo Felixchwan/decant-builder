@@ -3948,6 +3948,33 @@ const DEFAULT_SEASON_WEIGHTS = {
 // identity from generic seed-spice or anisic character alone. See
 // noteProminenceHorizontalCalibration3W.test.js for the complete
 // taxonomy audit, membership tables, and rationale.
+//
+// Composer Phase 3X: twenty-fourth horizontal calibration pass -- nine
+// independent minor-floral canonical keys grouped only for workflow
+// efficiency, never as one ranking family: lilyOfTheValley, hyacinth,
+// osmanthus, cyclamen, magnolia, freesia, frangipani, mignonette, and
+// whiteLotus. jasmine, rose, roseDeMai, violet, violetLeaf, iris,
+// geranium, orangeBlossom, and neroli were all re-confirmed as their
+// own distinct, already-established canonical keys, out of scope for
+// this phase. Acqua di Gio EDT legitimately carries four in-scope keys
+// simultaneously (hyacinth, cyclamen, freesia, mignonette), all
+// independently unscored inside its own 13-note middle-note list,
+// whose own accords tag never even mentions "floral" -- reinforcing
+// that these are genuinely diffuse background notes, not misassigned
+// identities. Across 3 lilyOfTheValley, 2 hyacinth, 2 osmanthus, 1
+// cyclamen, 1 magnolia, 1 freesia, 1 frangipani, 1 mignonette, and 1
+// whiteLotus fragrance/note pairs, this phase's own calibration changes
+// zero individual pairs. Birds of Paradise for Him's already-scored
+// frangipani: 5 and Bvlgari Man Rain Essence's already-scored
+// whiteLotus: 5 both held up as internally consistent, each one of
+// only 2-3 total middle notes in its own fragrance. No canonical-data
+// correction was made or recommended -- generic "white floral"/
+// "floral" accord tags on Essenza and Versace Pour Homme were not
+// treated as sufficient evidence to promote lilyOfTheValley or
+// hyacinth, per the strict editorial caution against inferring
+// identity from generic floral impression alone. See
+// noteProminenceHorizontalCalibration3X.test.js for the complete
+// taxonomy audit, membership tables, and rationale.
 export const NOTE_PROMINENCE_BY_ID = {
   1: { seaNotes: 10, calone: 9, bergamot: 7, jasmine: 5, whiteMusk: 4 }, // Acqua di Gio EDT
   2: { lemon: 7, rosemary: 5, patchouli: 4 }, // Light Blue Pour Homme EDT
