@@ -1992,3 +1992,38 @@ describe("Note Explorer 'Most prominent' sort reflects the Phase 3X calibrated o
     expect(mignonetteMatches.map((match) => match.id)).toContain(1);
   });
 });
+
+// Composer Phase 3Y: horizontal note-family calibration regression for
+// a single standalone canonical key (coumarin), run against the real
+// catalog. The underlying data (taxonomy audit, canonical-data sanity
+// audit, exact scores, canonical-pyramid immutability) is proven in
+// packages/catalog/tests/noteProminenceHorizontalCalibration3Y.test.js;
+// this describe block only proves the existing, unmodified sort algorithm
+// produces the approved relative order -- scored fragrances sort
+// descending, unscored members trail after every scored one, and
+// containment stays strict. Phase 3Y changed zero prominence values, so
+// the order below is identical to the pre-Phase-3Y catalog.
+describe("Note Explorer 'Most prominent' sort reflects the Phase 3Y calibrated order for coumarin", () => {
+  it("coumarin (4 members): Luna Rossa Black leads, down through La Nuit de L'Homme and Layton, then Legend EDT (unscored) trails", () => {
+    const matches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "coumarin" });
+    expect(matches.map((match) => match.id).sort((a, b) => a - b)).toEqual([4, 118, 209, 404]);
+
+    const sorted = sortNoteExplorerMatchesByProminence(matches, "coumarin");
+    expect(sorted.map((match) => match.id)).toEqual([209, 118, 404, 4]);
+
+    const rank = new Map(sorted.map((match, index) => [match.id, index]));
+    const lastScoredRank = rank.get(404);
+    expect(rank.get(4)).toBeGreaterThan(lastScoredRank); // the unscored member trails every scored one
+  });
+
+  it("never treats an adjacent sweet/powdery/aromatic material as coumarin -- searching coumarin never returns a fragrance whose only relevant note is a different material", () => {
+    const nonMemberExamples = [
+      { noteId: "coumarin", excludeId: 3, label: "Versace Pour Homme: tonkaBean only" },
+      { noteId: "coumarin", excludeId: 5, label: "Le Male: lavender only" },
+    ];
+    for (const { noteId, excludeId } of nonMemberExamples) {
+      const matches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId });
+      expect(matches.map((match) => match.id)).not.toContain(excludeId);
+    }
+  });
+});

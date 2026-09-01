@@ -3975,6 +3975,29 @@ const DEFAULT_SEASON_WEIGHTS = {
 // identity from generic floral impression alone. See
 // noteProminenceHorizontalCalibration3X.test.js for the complete
 // taxonomy audit, membership tables, and rationale.
+//
+// Composer Phase 3Y: twenty-fifth horizontal calibration pass -- a
+// single standalone canonical key, calibrated on its own: coumarin.
+// tonkaBean, vanilla, bourbonVanilla, madagascarVanilla, blackVanilla,
+// almond, powderyNotes, and lavender were all re-confirmed as their own
+// distinct, already-established canonical keys -- coumarin is never
+// treated as an inferred proxy for any of them, for generic sweetness,
+// powderiness, hay-like character, or fougère structure. Legend EDT's
+// coumarin sits in a classic fougère structure with no accords-level
+// evidence isolating it from its own already-scored lavender: 7 /
+// tonkaBean: 6, and was correctly left unscored rather than inferred
+// from fougère/tonka-heavy structure. La Nuit de L'Homme's coumarin: 6
+// already outranks its own lavender: 5, confirming a genuinely
+// differentiated axis, not an inherited one. Luna Rossa Black's
+// coumarin: 7 is its single highest-scored note with no competing
+// tonka/vanilla/lavender present at all. Layton's coumarin: 4 sits
+// correctly modest below its own lavender: 9 and vanilla: 7. Across 4
+// coumarin fragrance/note pairs, this phase's own calibration changes
+// zero individual pairs. No canonical-data correction was made or
+// recommended -- coumarin is never renamed to or from tonkaBean despite
+// co-occurring in Legend EDT. See
+// noteProminenceHorizontalCalibration3Y.test.js for the complete
+// taxonomy audit, membership table, and rationale.
 export const NOTE_PROMINENCE_BY_ID = {
   1: { seaNotes: 10, calone: 9, bergamot: 7, jasmine: 5, whiteMusk: 4 }, // Acqua di Gio EDT
   2: { lemon: 7, rosemary: 5, patchouli: 4 }, // Light Blue Pour Homme EDT
