@@ -1,0 +1,5525 @@
+{
+  "generatedAt": "phase-3-review-matrix",
+  "anchors": [
+    "Layton",
+    "La Nuit de L'Homme",
+    "Tuxedo",
+    "Hacivat",
+    "Torino21",
+    "Mefisto",
+    "Prada L'Homme"
+  ],
+  "rows": [
+    {
+      "anchorId": 404,
+      "anchorName": "Layton",
+      "signal": "notes",
+      "rank": 1,
+      "candidateId": 31,
+      "candidateName": "Viking Cairo",
+      "score": 0.2631578947368421,
+      "sharedEvidence": [
+        "lavender",
+        "bergamot",
+        "geranium",
+        "vanilla",
+        "cardamom"
+      ],
+      "support": {
+        "unionSize": 19
+      },
+      "humanSimilarityRating": null,
+      "rightReasonRating": null,
+      "reviewerNotes": null,
+      "signalsPresent": [
+        "notes"
+      ]
+    },
+    {
+      "anchorId": 404,
+      "anchorName": "Layton",
+      "signal": "notes",
+      "rank": 2,
+      "candidateId": 211,
+      "candidateName": "Born In Roma Coral Fantasy",
+      "score": 0.2631578947368421,
+      "sharedEvidence": [
+        "lavender",
+        "bergamot",
+        "geranium",
+        "cardamom",
+        "patchouli"
+      ],
+      "support": {
+        "unionSize": 19
+      },
+      "humanSimilarityRating": null,
+      "rightReasonRating": null,
+      "reviewerNotes": null,
+      "signalsPresent": [
+        "notes"
+      ]
+    },
+    {
+      "anchorId": 404,
+      "anchorName": "Layton",
+      "signal": "notes",
+      "rank": 3,
+      "candidateId": 208,
+      "candidateName": "Prada L'Homme",
+      "score": 0.23809523809523808,
+      "sharedEvidence": [
+        "geranium",
+        "violet",
+        "cardamom",
+        "sandalwood",
+        "patchouli"
+      ],
+      "support": {
+        "unionSize": 21
+      },
+      "humanSimilarityRating": null,
+      "rightReasonRating": null,
+      "reviewerNotes": null,
+      "signalsPresent": [
+        "notes"
+      ]
+    },
+    {
+      "anchorId": 404,
+      "anchorName": "Layton",
+      "signal": "notes",
+      "rank": 4,
+      "candidateId": 4,
+      "candidateName": "Legend EDT",
+      "score": 0.22727272727272727,
+      "sharedEvidence": [
+        "lavender",
+        "bergamot",
+        "geranium",
+        "sandalwood",
+        "coumarin"
+      ],
+      "support": {
+        "unionSize": 22
+      },
+      "humanSimilarityRating": null,
+      "rightReasonRating": null,
+      "reviewerNotes": null,
+      "signalsPresent": [
+        "notes",
+        "vibes"
+      ]
+    },
+    {
+      "anchorId": 404,
+      "anchorName": "Layton",
+      "signal": "notes",
+      "rank": 5,
+      "candidateId": 19,
+      "candidateName": "Club de Nuit Intense Man",
+      "score": 0.22727272727272727,
+      "sharedEvidence": [
+        "apple",
+        "bergamot",
+        "jasmine",
+        "vanilla",
+        "patchouli"
+      ],
+      "support": {
+        "unionSize": 22
+      },
+      "humanSimilarityRating": null,
+      "rightReasonRating": null,
+      "reviewerNotes": null,
+      "signalsPresent": [
+        "notes"
+      ]
+    },
+    {
+      "anchorId": 404,
+      "anchorName": "Layton",
+      "signal": "accords",
+      "rank": 1,
+      "candidateId": 21,
+      "candidateName": "Halloween Man Mystery",
+      "score": 0.8,
+      "sharedEvidence": [
+        "sweet",
+        "warm spicy",
+        "woody",
+        "vanilla"
+      ],
+      "support": {
+        "unionSize": 5
+      },
+      "humanSimilarityRating": null,
+      "rightReasonRating": null,
+      "reviewerNotes": null,
+      "signalsPresent": [
+        "accords"
+      ]
+    },
+    {
+      "anchorId": 404,
+      "anchorName": "Layton",
+      "signal": "accords",
+      "rank": 2,
+      "candidateId": 204,
+      "candidateName": "Replica By The Fireplace",
+      "score": 0.6,
+      "sharedEvidence": [
+        "sweet",
+        "warm spicy",
+        "woody"
+      ],
+      "support": {
+        "unionSize": 5
+      },
+      "humanSimilarityRating": null,
+      "rightReasonRating": null,
+      "reviewerNotes": null,
+      "signalsPresent": [
+        "accords"
+      ]
+    },
+    {
+      "anchorId": 404,
+      "anchorName": "Layton",
+      "signal": "accords",
+      "rank": 3,
+      "candidateId": 301,
+      "candidateName": "Allure Homme Edition Blanche EDP",
+      "score": 0.6,
+      "sharedEvidence": [
+        "sweet",
+        "woody",
+        "vanilla"
+      ],
+      "support": {
+        "unionSize": 5
+      },
+      "humanSimilarityRating": null,
+      "rightReasonRating": null,
+      "reviewerNotes": null,
+      "signalsPresent": [
+        "accords"
+      ]
+    },
+    {
+      "anchorId": 404,
+      "anchorName": "Layton",
+      "signal": "accords",
+      "rank": 4,
+      "candidateId": 304,
+      "candidateName": "Divine Vanille",
+      "score": 0.6,
+      "sharedEvidence": [
+        "sweet",
+        "warm spicy",
+        "vanilla"
+      ],
+      "support": {
+        "unionSize": 5
+      },
+      "humanSimilarityRating": null,
+      "rightReasonRating": null,
+      "reviewerNotes": null,
+      "signalsPresent": [
+        "accords"
+      ]
+    },
+    {
+      "anchorId": 404,
+      "anchorName": "Layton",
+      "signal": "accords",
+      "rank": 5,
+      "candidateId": 403,
+      "candidateName": "Carlisle",
+      "score": 0.6,
+      "sharedEvidence": [
+        "sweet",
+        "warm spicy",
+        "woody"
+      ],
+      "support": {
+        "unionSize": 5
+      },
+      "humanSimilarityRating": null,
+      "rightReasonRating": null,
+      "reviewerNotes": null,
+      "signalsPresent": [
+        "accords",
+        "vibes"
+      ]
+    },
+    {
+      "anchorId": 404,
+      "anchorName": "Layton",
+      "signal": "vibes",
+      "rank": 1,
+      "candidateId": 303,
+      "candidateName": "Bois Imperial",
+      "score": 0.42857142857142855,
+      "sharedEvidence": [
+        "versatile",
+        "confident",
+        "elegant"
+      ],
+      "support": {
+        "unionSize": 7
+      },
+      "humanSimilarityRating": null,
+      "rightReasonRating": null,
+      "reviewerNotes": null,
+      "signalsPresent": [
+        "vibes"
+      ]
+    },
+    {
+      "anchorId": 404,
+      "anchorName": "Layton",
+      "signal": "vibes",
+      "rank": 2,
+      "candidateId": 403,
+      "candidateName": "Carlisle",
+      "score": 0.42857142857142855,
+      "sharedEvidence": [
+        "luxurious",
+        "confident",
+        "elegant"
+      ],
+      "support": {
+        "unionSize": 7
+      },
+      "humanSimilarityRating": null,
+      "rightReasonRating": null,
+      "reviewerNotes": null,
+      "signalsPresent": [
+        "accords",
+        "vibes"
+      ]
+    },
+    {
+      "anchorId": 404,
+      "anchorName": "Layton",
+      "signal": "vibes",
+      "rank": 3,
+      "candidateId": 501,
+      "candidateName": "Tuxedo",
+      "score": 0.42857142857142855,
+      "sharedEvidence": [
+        "luxurious",
+        "confident",
+        "elegant"
+      ],
+      "support": {
+        "unionSize": 7
+      },
+      "humanSimilarityRating": null,
+      "rightReasonRating": null,
+      "reviewerNotes": null,
+      "signalsPresent": [
+        "vibes"
+      ]
+    },
+    {
+      "anchorId": 404,
+      "anchorName": "Layton",
+      "signal": "vibes",
+      "rank": 4,
+      "candidateId": 4,
+      "candidateName": "Legend EDT",
+      "score": 0.3333333333333333,
+      "sharedEvidence": [
+        "confident",
+        "approachable"
+      ],
+      "support": {
+        "unionSize": 6
+      },
+      "humanSimilarityRating": null,
+      "rightReasonRating": null,
+      "reviewerNotes": null,
+      "signalsPresent": [
+        "notes",
+        "vibes"
+      ]
+    },
+    {
+      "anchorId": 404,
+      "anchorName": "Layton",
+      "signal": "vibes",
+      "rank": 5,
+      "candidateId": 10,
+      "candidateName": "L'Homme Idéal EDT",
+      "score": 0.3333333333333333,
+      "sharedEvidence": [
+        "versatile",
+        "elegant"
+      ],
+      "support": {
+        "unionSize": 6
+      },
+      "humanSimilarityRating": null,
+      "rightReasonRating": null,
+      "reviewerNotes": null,
+      "signalsPresent": [
+        "vibes"
+      ]
+    },
+    {
+      "anchorId": 404,
+      "anchorName": "Layton",
+      "signal": "prominence",
+      "rank": 1,
+      "candidateId": 5,
+      "candidateName": "Le Male",
+      "score": 0.9411764705882353,
+      "sharedEvidence": [
+        {
+          "noteId": "lavender",
+          "anchorScore": 9,
+          "candidateScore": 9
+        },
+        {
+          "noteId": "vanilla",
+          "anchorScore": 7,
+          "candidateScore": 8
+        }
+      ],
+      "support": {
+        "mutuallyScoredCount": 2,
+        "coverageFraction": 0.5
+      },
+      "humanSimilarityRating": null,
+      "rightReasonRating": null,
+      "reviewerNotes": null,
+      "signalsPresent": [
+        "prominence"
+      ]
+    },
+    {
+      "anchorId": 404,
+      "anchorName": "Layton",
+      "signal": "prominence",
+      "rank": 2,
+      "candidateId": 113,
+      "candidateName": "Le Male Le Parfum",
+      "score": 0.7083333333333334,
+      "sharedEvidence": [
+        {
+          "noteId": "lavender",
+          "anchorScore": 9,
+          "candidateScore": 6
+        },
+        {
+          "noteId": "vanilla",
+          "anchorScore": 7,
+          "candidateScore": 8
+        },
+        {
+          "noteId": "cardamom",
+          "anchorScore": 4,
+          "candidateScore": 7
+        }
+      ],
+      "support": {
+        "mutuallyScoredCount": 3,
+        "coverageFraction": 0.75
+      },
+      "humanSimilarityRating": null,
+      "rightReasonRating": null,
+      "reviewerNotes": null,
+      "signalsPresent": [
+        "prominence"
+      ]
+    },
+    {
+      "anchorId": 404,
+      "anchorName": "Layton",
+      "signal": "prominence",
+      "rank": 3,
+      "candidateId": 118,
+      "candidateName": "La Nuit de L'Homme",
+      "score": 0.5416666666666666,
+      "sharedEvidence": [
+        {
+          "noteId": "lavender",
+          "anchorScore": 9,
+          "candidateScore": 5
+        },
+        {
+          "noteId": "cardamom",
+          "anchorScore": 4,
+          "candidateScore": 9
+        },
+        {
+          "noteId": "coumarin",
+          "anchorScore": 4,
+          "candidateScore": 6
+        }
+      ],
+      "support": {
+        "mutuallyScoredCount": 3,
+        "coverageFraction": 0.75
+      },
+      "humanSimilarityRating": null,
+      "rightReasonRating": null,
+      "reviewerNotes": null,
+      "signalsPresent": [
+        "prominence"
+      ]
+    },
+    {
+      "anchorId": 118,
+      "anchorName": "La Nuit de L'Homme",
+      "signal": "notes",
+      "rank": 1,
+      "candidateId": 5,
+      "candidateName": "Le Male",
+      "score": 0.3333333333333333,
+      "sharedEvidence": [
+        "cardamom",
+        "lavender",
+        "bergamot",
+        "cedar",
+        "caraway"
+      ],
+      "support": {
+        "unionSize": 15
+      },
+      "humanSimilarityRating": null,
+      "rightReasonRating": null,
+      "reviewerNotes": null,
+      "signalsPresent": [
+        "accords",
+        "notes"
+      ]
+    },
+    {
+      "anchorId": 118,
+      "anchorName": "La Nuit de L'Homme",
+      "signal": "notes",
+      "rank": 2,
+      "candidateId": 34,
+      "candidateName": "Givenchy Pour Homme Blue Label",
+      "score": 0.3333333333333333,
+      "sharedEvidence": [
+        "cardamom",
+        "lavender",
+        "bergamot",
+        "vetiver"
+      ],
+      "support": {
+        "unionSize": 12
+      },
+      "humanSimilarityRating": null,
+      "rightReasonRating": null,
+      "reviewerNotes": null,
+      "signalsPresent": [
+        "notes"
+      ]
+    },
+    {
+      "anchorId": 118,
+      "anchorName": "La Nuit de L'Homme",
+      "signal": "notes",
+      "rank": 3,
+      "candidateId": 211,
+      "candidateName": "Born In Roma Coral Fantasy",
+      "score": 0.3333333333333333,
+      "sharedEvidence": [
+        "cardamom",
+        "lavender",
+        "bergamot",
+        "vetiver"
+      ],
+      "support": {
+        "unionSize": 12
+      },
+      "humanSimilarityRating": null,
+      "rightReasonRating": null,
+      "reviewerNotes": null,
+      "signalsPresent": [
+        "notes"
+      ]
+    },
+    {
+      "anchorId": 118,
+      "anchorName": "La Nuit de L'Homme",
+      "signal": "notes",
+      "rank": 4,
+      "candidateId": 108,
+      "candidateName": "Bad Boy Cobalt Parfum Electrique",
+      "score": 0.25,
+      "sharedEvidence": [
+        "lavender",
+        "cedar",
+        "vetiver"
+      ],
+      "support": {
+        "unionSize": 12
+      },
+      "humanSimilarityRating": null,
+      "rightReasonRating": null,
+      "reviewerNotes": null,
+      "signalsPresent": [
+        "notes"
+      ]
+    },
+    {
+      "anchorId": 118,
+      "anchorName": "La Nuit de L'Homme",
+      "signal": "notes",
+      "rank": 5,
+      "candidateId": 31,
+      "candidateName": "Viking Cairo",
+      "score": 0.23076923076923078,
+      "sharedEvidence": [
+        "cardamom",
+        "lavender",
+        "bergamot"
+      ],
+      "support": {
+        "unionSize": 13
+      },
+      "humanSimilarityRating": null,
+      "rightReasonRating": null,
+      "reviewerNotes": null,
+      "signalsPresent": [
+        "notes"
+      ]
+    },
+    {
+      "anchorId": 118,
+      "anchorName": "La Nuit de L'Homme",
+      "signal": "accords",
+      "rank": 1,
+      "candidateId": 5,
+      "candidateName": "Le Male",
+      "score": 0.6666666666666666,
+      "sharedEvidence": [
+        "warm spicy",
+        "aromatic",
+        "powdery",
+        "sweet"
+      ],
+      "support": {
+        "unionSize": 6
+      },
+      "humanSimilarityRating": null,
+      "rightReasonRating": null,
+      "reviewerNotes": null,
+      "signalsPresent": [
+        "accords",
+        "notes"
+      ]
+    },
+    {
+      "anchorId": 118,
+      "anchorName": "La Nuit de L'Homme",
+      "signal": "accords",
+      "rank": 2,
+      "candidateId": 21,
+      "candidateName": "Halloween Man Mystery",
+      "score": 0.6666666666666666,
+      "sharedEvidence": [
+        "warm spicy",
+        "aromatic",
+        "woody",
+        "sweet"
+      ],
+      "support": {
+        "unionSize": 6
+      },
+      "humanSimilarityRating": null,
+      "rightReasonRating": null,
+      "reviewerNotes": null,
+      "signalsPresent": [
+        "accords"
+      ]
+    },
+    {
+      "anchorId": 118,
+      "anchorName": "La Nuit de L'Homme",
+      "signal": "accords",
+      "rank": 3,
+      "candidateId": 203,
+      "candidateName": "Loewe 7 Cobalt",
+      "score": 0.5,
+      "sharedEvidence": [
+        "warm spicy",
+        "aromatic",
+        "woody"
+      ],
+      "support": {
+        "unionSize": 6
+      },
+      "humanSimilarityRating": null,
+      "rightReasonRating": null,
+      "reviewerNotes": null,
+      "signalsPresent": [
+        "accords"
+      ]
+    },
+    {
+      "anchorId": 118,
+      "anchorName": "La Nuit de L'Homme",
+      "signal": "accords",
+      "rank": 4,
+      "candidateId": 204,
+      "candidateName": "Replica By The Fireplace",
+      "score": 0.5,
+      "sharedEvidence": [
+        "warm spicy",
+        "woody",
+        "sweet"
+      ],
+      "support": {
+        "unionSize": 6
+      },
+      "humanSimilarityRating": null,
+      "rightReasonRating": null,
+      "reviewerNotes": null,
+      "signalsPresent": [
+        "accords"
+      ]
+    },
+    {
+      "anchorId": 118,
+      "anchorName": "La Nuit de L'Homme",
+      "signal": "accords",
+      "rank": 5,
+      "candidateId": 402,
+      "candidateName": "Sauvage Elixir",
+      "score": 0.5,
+      "sharedEvidence": [
+        "warm spicy",
+        "aromatic",
+        "woody"
+      ],
+      "support": {
+        "unionSize": 6
+      },
+      "humanSimilarityRating": null,
+      "rightReasonRating": null,
+      "reviewerNotes": null,
+      "signalsPresent": [
+        "accords"
+      ]
+    },
+    {
+      "anchorId": 118,
+      "anchorName": "La Nuit de L'Homme",
+      "signal": "vibes",
+      "rank": 1,
+      "candidateId": 104,
+      "candidateName": "Armani Code EDT",
+      "score": 1,
+      "sharedEvidence": [
+        "seductive",
+        "elegant",
+        "warm",
+        "classic"
+      ],
+      "support": {
+        "unionSize": 4
+      },
+      "humanSimilarityRating": null,
+      "rightReasonRating": null,
+      "reviewerNotes": null,
+      "signalsPresent": [
+        "vibes"
+      ]
+    },
+    {
+      "anchorId": 118,
+      "anchorName": "La Nuit de L'Homme",
+      "signal": "vibes",
+      "rank": 2,
+      "candidateId": 13,
+      "candidateName": "The One for Men EDP",
+      "score": 0.75,
+      "sharedEvidence": [
+        "seductive",
+        "elegant",
+        "warm"
+      ],
+      "support": {
+        "unionSize": 4
+      },
+      "humanSimilarityRating": null,
+      "rightReasonRating": null,
+      "reviewerNotes": null,
+      "signalsPresent": [
+        "vibes"
+      ]
+    },
+    {
+      "anchorId": 118,
+      "anchorName": "La Nuit de L'Homme",
+      "signal": "vibes",
+      "rank": 3,
+      "candidateId": 113,
+      "candidateName": "Le Male Le Parfum",
+      "score": 0.6,
+      "sharedEvidence": [
+        "seductive",
+        "elegant",
+        "warm"
+      ],
+      "support": {
+        "unionSize": 5
+      },
+      "humanSimilarityRating": null,
+      "rightReasonRating": null,
+      "reviewerNotes": null,
+      "signalsPresent": [
+        "prominence",
+        "vibes"
+      ]
+    },
+    {
+      "anchorId": 118,
+      "anchorName": "La Nuit de L'Homme",
+      "signal": "vibes",
+      "rank": 4,
+      "candidateId": 205,
+      "candidateName": "Gentleman EDP",
+      "score": 0.6,
+      "sharedEvidence": [
+        "seductive",
+        "elegant",
+        "warm"
+      ],
+      "support": {
+        "unionSize": 5
+      },
+      "humanSimilarityRating": null,
+      "rightReasonRating": null,
+      "reviewerNotes": null,
+      "signalsPresent": [
+        "vibes"
+      ]
+    },
+    {
+      "anchorId": 118,
+      "anchorName": "La Nuit de L'Homme",
+      "signal": "vibes",
+      "rank": 5,
+      "candidateId": 304,
+      "candidateName": "Divine Vanille",
+      "score": 0.5,
+      "sharedEvidence": [
+        "seductive",
+        "elegant",
+        "warm"
+      ],
+      "support": {
+        "unionSize": 6
+      },
+      "humanSimilarityRating": null,
+      "rightReasonRating": null,
+      "reviewerNotes": null,
+      "signalsPresent": [
+        "vibes"
+      ]
+    },
+    {
+      "anchorId": 118,
+      "anchorName": "La Nuit de L'Homme",
+      "signal": "prominence",
+      "rank": 1,
+      "candidateId": 113,
+      "candidateName": "Le Male Le Parfum",
+      "score": 0.8,
+      "sharedEvidence": [
+        {
+          "noteId": "cardamom",
+          "anchorScore": 9,
+          "candidateScore": 7
+        },
+        {
+          "noteId": "lavender",
+          "anchorScore": 5,
+          "candidateScore": 6
+        }
+      ],
+      "support": {
+        "mutuallyScoredCount": 2,
+        "coverageFraction": 0.5
+      },
+      "humanSimilarityRating": null,
+      "rightReasonRating": null,
+      "reviewerNotes": null,
+      "signalsPresent": [
+        "prominence",
+        "vibes"
+      ]
+    },
+    {
+      "anchorId": 118,
+      "anchorName": "La Nuit de L'Homme",
+      "signal": "prominence",
+      "rank": 2,
+      "candidateId": 404,
+      "candidateName": "Layton",
+      "score": 0.5416666666666666,
+      "sharedEvidence": [
+        {
+          "noteId": "cardamom",
+          "anchorScore": 9,
+          "candidateScore": 4
+        },
+        {
+          "noteId": "coumarin",
+          "anchorScore": 6,
+          "candidateScore": 4
+        },
+        {
+          "noteId": "lavender",
+          "anchorScore": 5,
+          "candidateScore": 9
+        }
+      ],
+      "support": {
+        "mutuallyScoredCount": 3,
+        "coverageFraction": 0.75
+      },
+      "humanSimilarityRating": null,
+      "rightReasonRating": null,
+      "reviewerNotes": null,
+      "signalsPresent": [
+        "prominence"
+      ]
+    },
+    {
+      "anchorId": 501,
+      "anchorName": "Tuxedo",
+      "signal": "notes",
+      "rank": 1,
+      "candidateId": 19,
+      "candidateName": "Club de Nuit Intense Man",
+      "score": 0.23529411764705882,
+      "sharedEvidence": [
+        "bergamot",
+        "rose",
+        "patchouli",
+        "ambergris"
+      ],
+      "support": {
+        "unionSize": 17
+      },
+      "humanSimilarityRating": null,
+      "rightReasonRating": null,
+      "reviewerNotes": null,
+      "signalsPresent": [
+        "notes"
+      ]
+    },
+    {
+      "anchorId": 501,
+      "anchorName": "Tuxedo",
+      "signal": "notes",
+      "rank": 2,
+      "candidateId": 205,
+      "candidateName": "Gentleman EDP",
+      "score": 0.1875,
+      "sharedEvidence": [
+        "bergamot",
+        "blackPepper",
+        "patchouli"
+      ],
+      "support": {
+        "unionSize": 16
+      },
+      "humanSimilarityRating": null,
+      "rightReasonRating": null,
+      "reviewerNotes": null,
+      "signalsPresent": [
+        "notes",
+        "vibes"
+      ]
+    },
+    {
+      "anchorId": 501,
+      "anchorName": "Tuxedo",
+      "signal": "notes",
+      "rank": 3,
+      "candidateId": 306,
+      "candidateName": "Acqua di Gio Elixir",
+      "score": 0.1875,
+      "sharedEvidence": [
+        "violetLeaf",
+        "bergamot",
+        "patchouli"
+      ],
+      "support": {
+        "unionSize": 16
+      },
+      "humanSimilarityRating": null,
+      "rightReasonRating": null,
+      "reviewerNotes": null,
+      "signalsPresent": [
+        "notes"
+      ]
+    },
+    {
+      "anchorId": 501,
+      "anchorName": "Tuxedo",
+      "signal": "notes",
+      "rank": 4,
+      "candidateId": 101,
+      "candidateName": "Essenza",
+      "score": 0.18181818181818182,
+      "sharedEvidence": [
+        "bergamot",
+        "rose",
+        "lilyOfTheValley",
+        "patchouli"
+      ],
+      "support": {
+        "unionSize": 22
+      },
+      "humanSimilarityRating": null,
+      "rightReasonRating": null,
+      "reviewerNotes": null,
+      "signalsPresent": [
+        "notes"
+      ]
+    },
+    {
+      "anchorId": 501,
+      "anchorName": "Tuxedo",
+      "signal": "notes",
+      "rank": 5,
+      "candidateId": 17,
+      "candidateName": "Gentlemen Only",
+      "score": 0.16666666666666666,
+      "sharedEvidence": [
+        "violetLeaf",
+        "bergamot",
+        "patchouli"
+      ],
+      "support": {
+        "unionSize": 18
+      },
+      "humanSimilarityRating": null,
+      "rightReasonRating": null,
+      "reviewerNotes": null,
+      "signalsPresent": [
+        "notes"
+      ]
+    },
+    {
+      "anchorId": 501,
+      "anchorName": "Tuxedo",
+      "signal": "accords",
+      "rank": 1,
+      "candidateId": 202,
+      "candidateName": "Sauvage EDP",
+      "score": 0.6,
+      "sharedEvidence": [
+        "amber",
+        "vanilla",
+        "fresh spicy"
+      ],
+      "support": {
+        "unionSize": 5
+      },
+      "humanSimilarityRating": null,
+      "rightReasonRating": null,
+      "reviewerNotes": null,
+      "signalsPresent": [
+        "accords"
+      ]
+    },
+    {
+      "anchorId": 501,
+      "anchorName": "Tuxedo",
+      "signal": "accords",
+      "rank": 2,
+      "candidateId": 6,
+      "candidateName": "Eros EDP",
+      "score": 0.5,
+      "sharedEvidence": [
+        "amber",
+        "vanilla",
+        "fresh spicy"
+      ],
+      "support": {
+        "unionSize": 6
+      },
+      "humanSimilarityRating": null,
+      "rightReasonRating": null,
+      "reviewerNotes": null,
+      "signalsPresent": [
+        "accords"
+      ]
+    },
+    {
+      "anchorId": 501,
+      "anchorName": "Tuxedo",
+      "signal": "accords",
+      "rank": 3,
+      "candidateId": 116,
+      "candidateName": "Invictus Victory",
+      "score": 0.5,
+      "sharedEvidence": [
+        "amber",
+        "vanilla",
+        "fresh spicy"
+      ],
+      "support": {
+        "unionSize": 6
+      },
+      "humanSimilarityRating": null,
+      "rightReasonRating": null,
+      "reviewerNotes": null,
+      "signalsPresent": [
+        "accords"
+      ]
+    },
+    {
+      "anchorId": 501,
+      "anchorName": "Tuxedo",
+      "signal": "accords",
+      "rank": 4,
+      "candidateId": 410,
+      "candidateName": "Il Padrino",
+      "score": 0.5,
+      "sharedEvidence": [
+        "patchouli",
+        "amber",
+        "vanilla"
+      ],
+      "support": {
+        "unionSize": 6
+      },
+      "humanSimilarityRating": null,
+      "rightReasonRating": null,
+      "reviewerNotes": null,
+      "signalsPresent": [
+        "accords"
+      ]
+    },
+    {
+      "anchorId": 501,
+      "anchorName": "Tuxedo",
+      "signal": "accords",
+      "rank": 5,
+      "candidateId": 303,
+      "candidateName": "Bois Imperial",
+      "score": 0.3333333333333333,
+      "sharedEvidence": [
+        "amber",
+        "fresh spicy"
+      ],
+      "support": {
+        "unionSize": 6
+      },
+      "humanSimilarityRating": null,
+      "rightReasonRating": null,
+      "reviewerNotes": null,
+      "signalsPresent": [
+        "accords"
+      ]
+    },
+    {
+      "anchorId": 501,
+      "anchorName": "Tuxedo",
+      "signal": "vibes",
+      "rank": 1,
+      "candidateId": 403,
+      "candidateName": "Carlisle",
+      "score": 0.6666666666666666,
+      "sharedEvidence": [
+        "luxurious",
+        "elegant",
+        "seductive",
+        "confident"
+      ],
+      "support": {
+        "unionSize": 6
+      },
+      "humanSimilarityRating": null,
+      "rightReasonRating": null,
+      "reviewerNotes": null,
+      "signalsPresent": [
+        "vibes"
+      ]
+    },
+    {
+      "anchorId": 501,
+      "anchorName": "Tuxedo",
+      "signal": "vibes",
+      "rank": 2,
+      "candidateId": 113,
+      "candidateName": "Le Male Le Parfum",
+      "score": 0.5,
+      "sharedEvidence": [
+        "elegant",
+        "seductive",
+        "sophisticated"
+      ],
+      "support": {
+        "unionSize": 6
+      },
+      "humanSimilarityRating": null,
+      "rightReasonRating": null,
+      "reviewerNotes": null,
+      "signalsPresent": [
+        "vibes"
+      ]
+    },
+    {
+      "anchorId": 501,
+      "anchorName": "Tuxedo",
+      "signal": "vibes",
+      "rank": 3,
+      "candidateId": 205,
+      "candidateName": "Gentleman EDP",
+      "score": 0.5,
+      "sharedEvidence": [
+        "elegant",
+        "seductive",
+        "sophisticated"
+      ],
+      "support": {
+        "unionSize": 6
+      },
+      "humanSimilarityRating": null,
+      "rightReasonRating": null,
+      "reviewerNotes": null,
+      "signalsPresent": [
+        "notes",
+        "vibes"
+      ]
+    },
+    {
+      "anchorId": 501,
+      "anchorName": "Tuxedo",
+      "signal": "vibes",
+      "rank": 4,
+      "candidateId": 406,
+      "candidateName": "Hacivat",
+      "score": 0.5,
+      "sharedEvidence": [
+        "luxurious",
+        "confident",
+        "sophisticated"
+      ],
+      "support": {
+        "unionSize": 6
+      },
+      "humanSimilarityRating": null,
+      "rightReasonRating": null,
+      "reviewerNotes": null,
+      "signalsPresent": [
+        "vibes"
+      ]
+    },
+    {
+      "anchorId": 501,
+      "anchorName": "Tuxedo",
+      "signal": "vibes",
+      "rank": 5,
+      "candidateId": 402,
+      "candidateName": "Sauvage Elixir",
+      "score": 0.42857142857142855,
+      "sharedEvidence": [
+        "elegant",
+        "seductive",
+        "confident"
+      ],
+      "support": {
+        "unionSize": 7
+      },
+      "humanSimilarityRating": null,
+      "rightReasonRating": null,
+      "reviewerNotes": null,
+      "signalsPresent": [
+        "vibes"
+      ]
+    },
+    {
+      "anchorId": 406,
+      "anchorName": "Hacivat",
+      "signal": "notes",
+      "rank": 1,
+      "candidateId": 23,
+      "candidateName": "Legend EDP",
+      "score": 0.3333333333333333,
+      "sharedEvidence": [
+        "bergamot",
+        "jasmine",
+        "woodyNotes",
+        "oakmoss"
+      ],
+      "support": {
+        "unionSize": 12
+      },
+      "humanSimilarityRating": null,
+      "rightReasonRating": null,
+      "reviewerNotes": null,
+      "signalsPresent": [
+        "notes"
+      ]
+    },
+    {
+      "anchorId": 406,
+      "anchorName": "Hacivat",
+      "signal": "notes",
+      "rank": 2,
+      "candidateId": 115,
+      "candidateName": "Cedrat Boise",
+      "score": 0.29411764705882354,
+      "sharedEvidence": [
+        "bergamot",
+        "jasmine",
+        "patchouli",
+        "oakmoss",
+        "cedar"
+      ],
+      "support": {
+        "unionSize": 17
+      },
+      "humanSimilarityRating": null,
+      "rightReasonRating": null,
+      "reviewerNotes": null,
+      "signalsPresent": [
+        "notes",
+        "vibes"
+      ]
+    },
+    {
+      "anchorId": 406,
+      "anchorName": "Hacivat",
+      "signal": "notes",
+      "rank": 3,
+      "candidateId": 302,
+      "candidateName": "Allure Homme Sport Superleggera",
+      "score": 0.2857142857142857,
+      "sharedEvidence": [
+        "grapefruit",
+        "patchouli",
+        "cedarwood",
+        "woodyNotes"
+      ],
+      "support": {
+        "unionSize": 14
+      },
+      "humanSimilarityRating": null,
+      "rightReasonRating": null,
+      "reviewerNotes": null,
+      "signalsPresent": [
+        "accords",
+        "notes"
+      ]
+    },
+    {
+      "anchorId": 406,
+      "anchorName": "Hacivat",
+      "signal": "notes",
+      "rank": 4,
+      "candidateId": 102,
+      "candidateName": "Fico di Amalfi",
+      "score": 0.26666666666666666,
+      "sharedEvidence": [
+        "bergamot",
+        "grapefruit",
+        "jasmine",
+        "cedar"
+      ],
+      "support": {
+        "unionSize": 15
+      },
+      "humanSimilarityRating": null,
+      "rightReasonRating": null,
+      "reviewerNotes": null,
+      "signalsPresent": [
+        "notes"
+      ]
+    },
+    {
+      "anchorId": 406,
+      "anchorName": "Hacivat",
+      "signal": "notes",
+      "rank": 5,
+      "candidateId": 12,
+      "candidateName": "CH Men",
+      "score": 0.23809523809523808,
+      "sharedEvidence": [
+        "bergamot",
+        "grapefruit",
+        "jasmine",
+        "woodyNotes",
+        "oakmoss"
+      ],
+      "support": {
+        "unionSize": 21
+      },
+      "humanSimilarityRating": null,
+      "rightReasonRating": null,
+      "reviewerNotes": null,
+      "signalsPresent": [
+        "notes"
+      ]
+    },
+    {
+      "anchorId": 406,
+      "anchorName": "Hacivat",
+      "signal": "accords",
+      "rank": 1,
+      "candidateId": 302,
+      "candidateName": "Allure Homme Sport Superleggera",
+      "score": 0.5,
+      "sharedEvidence": [
+        "woody",
+        "citrus",
+        "fresh"
+      ],
+      "support": {
+        "unionSize": 6
+      },
+      "humanSimilarityRating": null,
+      "rightReasonRating": null,
+      "reviewerNotes": null,
+      "signalsPresent": [
+        "accords",
+        "notes"
+      ]
+    },
+    {
+      "anchorId": 406,
+      "anchorName": "Hacivat",
+      "signal": "accords",
+      "rank": 2,
+      "candidateId": 305,
+      "candidateName": "Orange X Santal",
+      "score": 0.5,
+      "sharedEvidence": [
+        "woody",
+        "citrus",
+        "fresh"
+      ],
+      "support": {
+        "unionSize": 6
+      },
+      "humanSimilarityRating": null,
+      "rightReasonRating": null,
+      "reviewerNotes": null,
+      "signalsPresent": [
+        "accords"
+      ]
+    },
+    {
+      "anchorId": 406,
+      "anchorName": "Hacivat",
+      "signal": "accords",
+      "rank": 3,
+      "candidateId": 19,
+      "candidateName": "Club de Nuit Intense Man",
+      "score": 0.42857142857142855,
+      "sharedEvidence": [
+        "fruity",
+        "woody",
+        "citrus"
+      ],
+      "support": {
+        "unionSize": 7
+      },
+      "humanSimilarityRating": null,
+      "rightReasonRating": null,
+      "reviewerNotes": null,
+      "signalsPresent": [
+        "accords"
+      ]
+    },
+    {
+      "anchorId": 406,
+      "anchorName": "Hacivat",
+      "signal": "accords",
+      "rank": 4,
+      "candidateId": 24,
+      "candidateName": "Legend Red",
+      "score": 0.42857142857142855,
+      "sharedEvidence": [
+        "fruity",
+        "woody",
+        "citrus"
+      ],
+      "support": {
+        "unionSize": 7
+      },
+      "humanSimilarityRating": null,
+      "rightReasonRating": null,
+      "reviewerNotes": null,
+      "signalsPresent": [
+        "accords"
+      ]
+    },
+    {
+      "anchorId": 406,
+      "anchorName": "Hacivat",
+      "signal": "accords",
+      "rank": 5,
+      "candidateId": 28,
+      "candidateName": "Tous Man",
+      "score": 0.42857142857142855,
+      "sharedEvidence": [
+        "fruity",
+        "woody",
+        "citrus"
+      ],
+      "support": {
+        "unionSize": 7
+      },
+      "humanSimilarityRating": null,
+      "rightReasonRating": null,
+      "reviewerNotes": null,
+      "signalsPresent": [
+        "accords"
+      ]
+    },
+    {
+      "anchorId": 406,
+      "anchorName": "Hacivat",
+      "signal": "vibes",
+      "rank": 1,
+      "candidateId": 501,
+      "candidateName": "Tuxedo",
+      "score": 0.5,
+      "sharedEvidence": [
+        "sophisticated",
+        "confident",
+        "luxurious"
+      ],
+      "support": {
+        "unionSize": 6
+      },
+      "humanSimilarityRating": null,
+      "rightReasonRating": null,
+      "reviewerNotes": null,
+      "signalsPresent": [
+        "vibes"
+      ]
+    },
+    {
+      "anchorId": 406,
+      "anchorName": "Hacivat",
+      "signal": "vibes",
+      "rank": 2,
+      "candidateId": 114,
+      "candidateName": "Game of Spades Wildcard",
+      "score": 0.3333333333333333,
+      "sharedEvidence": [
+        "fresh",
+        "confident"
+      ],
+      "support": {
+        "unionSize": 6
+      },
+      "humanSimilarityRating": null,
+      "rightReasonRating": null,
+      "reviewerNotes": null,
+      "signalsPresent": [
+        "vibes"
+      ]
+    },
+    {
+      "anchorId": 406,
+      "anchorName": "Hacivat",
+      "signal": "vibes",
+      "rank": 3,
+      "candidateId": 115,
+      "candidateName": "Cedrat Boise",
+      "score": 0.3333333333333333,
+      "sharedEvidence": [
+        "fresh",
+        "confident"
+      ],
+      "support": {
+        "unionSize": 6
+      },
+      "humanSimilarityRating": null,
+      "rightReasonRating": null,
+      "reviewerNotes": null,
+      "signalsPresent": [
+        "notes",
+        "vibes"
+      ]
+    },
+    {
+      "anchorId": 406,
+      "anchorName": "Hacivat",
+      "signal": "vibes",
+      "rank": 4,
+      "candidateId": 206,
+      "candidateName": "Polo Blue Parfum",
+      "score": 0.3333333333333333,
+      "sharedEvidence": [
+        "fresh",
+        "confident"
+      ],
+      "support": {
+        "unionSize": 6
+      },
+      "humanSimilarityRating": null,
+      "rightReasonRating": null,
+      "reviewerNotes": null,
+      "signalsPresent": [
+        "vibes"
+      ]
+    },
+    {
+      "anchorId": 406,
+      "anchorName": "Hacivat",
+      "signal": "vibes",
+      "rank": 5,
+      "candidateId": 210,
+      "candidateName": "Born In Roma EDT",
+      "score": 0.3333333333333333,
+      "sharedEvidence": [
+        "fresh",
+        "confident"
+      ],
+      "support": {
+        "unionSize": 6
+      },
+      "humanSimilarityRating": null,
+      "rightReasonRating": null,
+      "reviewerNotes": null,
+      "signalsPresent": [
+        "vibes"
+      ]
+    },
+    {
+      "anchorId": 406,
+      "anchorName": "Hacivat",
+      "signal": "prominence",
+      "rank": 1,
+      "candidateId": 111,
+      "candidateName": "Terre d'Hermès EDT",
+      "score": 0.7272727272727273,
+      "sharedEvidence": [
+        {
+          "noteId": "cedar",
+          "anchorScore": 4,
+          "candidateScore": 6
+        },
+        {
+          "noteId": "patchouli",
+          "anchorScore": 4,
+          "candidateScore": 5
+        }
+      ],
+      "support": {
+        "mutuallyScoredCount": 2,
+        "coverageFraction": 0.5
+      },
+      "humanSimilarityRating": null,
+      "rightReasonRating": null,
+      "reviewerNotes": null,
+      "signalsPresent": [
+        "prominence"
+      ]
+    },
+    {
+      "anchorId": 408,
+      "anchorName": "Torino21",
+      "signal": "notes",
+      "rank": 1,
+      "candidateId": 19,
+      "candidateName": "Club de Nuit Intense Man",
+      "score": 0.23529411764705882,
+      "sharedEvidence": [
+        "lemon",
+        "blackCurrant",
+        "jasmine",
+        "musk"
+      ],
+      "support": {
+        "unionSize": 17
+      },
+      "humanSimilarityRating": null,
+      "rightReasonRating": null,
+      "reviewerNotes": null,
+      "signalsPresent": [
+        "notes"
+      ]
+    },
+    {
+      "anchorId": 408,
+      "anchorName": "Torino21",
+      "signal": "notes",
+      "rank": 2,
+      "candidateId": 110,
+      "candidateName": "Concentré d'Orange Verte",
+      "score": 0.21428571428571427,
+      "sharedEvidence": [
+        "mint",
+        "lemon",
+        "basil"
+      ],
+      "support": {
+        "unionSize": 14
+      },
+      "humanSimilarityRating": null,
+      "rightReasonRating": null,
+      "reviewerNotes": null,
+      "signalsPresent": [
+        "accords",
+        "notes",
+        "prominence",
+        "vibes"
+      ]
+    },
+    {
+      "anchorId": 408,
+      "anchorName": "Torino21",
+      "signal": "notes",
+      "rank": 3,
+      "candidateId": 2,
+      "candidateName": "Light Blue Pour Homme EDT",
+      "score": 0.2,
+      "sharedEvidence": [
+        "lemon",
+        "rosemary"
+      ],
+      "support": {
+        "unionSize": 10
+      },
+      "humanSimilarityRating": null,
+      "rightReasonRating": null,
+      "reviewerNotes": null,
+      "signalsPresent": [
+        "notes"
+      ]
+    },
+    {
+      "anchorId": 408,
+      "anchorName": "Torino21",
+      "signal": "notes",
+      "rank": 4,
+      "candidateId": 31,
+      "candidateName": "Viking Cairo",
+      "score": 0.2,
+      "sharedEvidence": [
+        "lemon",
+        "lavender",
+        "musk"
+      ],
+      "support": {
+        "unionSize": 15
+      },
+      "humanSimilarityRating": null,
+      "rightReasonRating": null,
+      "reviewerNotes": null,
+      "signalsPresent": [
+        "notes"
+      ]
+    },
+    {
+      "anchorId": 408,
+      "anchorName": "Torino21",
+      "signal": "notes",
+      "rank": 5,
+      "candidateId": 119,
+      "candidateName": "Mirto di Panarea",
+      "score": 0.2,
+      "sharedEvidence": [
+        "lemon",
+        "basil",
+        "jasmine"
+      ],
+      "support": {
+        "unionSize": 15
+      },
+      "humanSimilarityRating": null,
+      "rightReasonRating": null,
+      "reviewerNotes": null,
+      "signalsPresent": [
+        "notes"
+      ]
+    },
+    {
+      "anchorId": 408,
+      "anchorName": "Torino21",
+      "signal": "accords",
+      "rank": 1,
+      "candidateId": 18,
+      "candidateName": "L.12.12 Blanc EDP",
+      "score": 0.6666666666666666,
+      "sharedEvidence": [
+        "aromatic",
+        "green",
+        "fresh spicy",
+        "citrus"
+      ],
+      "support": {
+        "unionSize": 6
+      },
+      "humanSimilarityRating": null,
+      "rightReasonRating": null,
+      "reviewerNotes": null,
+      "signalsPresent": [
+        "accords"
+      ]
+    },
+    {
+      "anchorId": 408,
+      "anchorName": "Torino21",
+      "signal": "accords",
+      "rank": 2,
+      "candidateId": 34,
+      "candidateName": "Givenchy Pour Homme Blue Label",
+      "score": 0.6666666666666666,
+      "sharedEvidence": [
+        "aromatic",
+        "fresh spicy",
+        "citrus",
+        "fresh"
+      ],
+      "support": {
+        "unionSize": 6
+      },
+      "humanSimilarityRating": null,
+      "rightReasonRating": null,
+      "reviewerNotes": null,
+      "signalsPresent": [
+        "accords"
+      ]
+    },
+    {
+      "anchorId": 408,
+      "anchorName": "Torino21",
+      "signal": "accords",
+      "rank": 3,
+      "candidateId": 103,
+      "candidateName": "Mandarino di Sicilia",
+      "score": 0.6666666666666666,
+      "sharedEvidence": [
+        "aromatic",
+        "green",
+        "citrus",
+        "fresh"
+      ],
+      "support": {
+        "unionSize": 6
+      },
+      "humanSimilarityRating": null,
+      "rightReasonRating": null,
+      "reviewerNotes": null,
+      "signalsPresent": [
+        "accords",
+        "vibes"
+      ]
+    },
+    {
+      "anchorId": 408,
+      "anchorName": "Torino21",
+      "signal": "accords",
+      "rank": 4,
+      "candidateId": 110,
+      "candidateName": "Concentré d'Orange Verte",
+      "score": 0.6666666666666666,
+      "sharedEvidence": [
+        "aromatic",
+        "green",
+        "citrus",
+        "fresh"
+      ],
+      "support": {
+        "unionSize": 6
+      },
+      "humanSimilarityRating": null,
+      "rightReasonRating": null,
+      "reviewerNotes": null,
+      "signalsPresent": [
+        "accords",
+        "notes",
+        "prominence",
+        "vibes"
+      ]
+    },
+    {
+      "anchorId": 408,
+      "anchorName": "Torino21",
+      "signal": "accords",
+      "rank": 5,
+      "candidateId": 100,
+      "candidateName": "Arancia di Capri",
+      "score": 0.6,
+      "sharedEvidence": [
+        "aromatic",
+        "citrus",
+        "fresh"
+      ],
+      "support": {
+        "unionSize": 5
+      },
+      "humanSimilarityRating": null,
+      "rightReasonRating": null,
+      "reviewerNotes": null,
+      "signalsPresent": [
+        "accords"
+      ]
+    },
+    {
+      "anchorId": 408,
+      "anchorName": "Torino21",
+      "signal": "vibes",
+      "rank": 1,
+      "candidateId": 24,
+      "candidateName": "Legend Red",
+      "score": 0.4,
+      "sharedEvidence": [
+        "fresh",
+        "energetic"
+      ],
+      "support": {
+        "unionSize": 5
+      },
+      "humanSimilarityRating": null,
+      "rightReasonRating": null,
+      "reviewerNotes": null,
+      "signalsPresent": [
+        "vibes"
+      ]
+    },
+    {
+      "anchorId": 408,
+      "anchorName": "Torino21",
+      "signal": "vibes",
+      "rank": 2,
+      "candidateId": 110,
+      "candidateName": "Concentré d'Orange Verte",
+      "score": 0.3333333333333333,
+      "sharedEvidence": [
+        "fresh",
+        "green"
+      ],
+      "support": {
+        "unionSize": 6
+      },
+      "humanSimilarityRating": null,
+      "rightReasonRating": null,
+      "reviewerNotes": null,
+      "signalsPresent": [
+        "accords",
+        "notes",
+        "prominence",
+        "vibes"
+      ]
+    },
+    {
+      "anchorId": 408,
+      "anchorName": "Torino21",
+      "signal": "vibes",
+      "rank": 3,
+      "candidateId": 405,
+      "candidateName": "Mefisto",
+      "score": 0.3333333333333333,
+      "sharedEvidence": [
+        "fresh",
+        "luxurious"
+      ],
+      "support": {
+        "unionSize": 6
+      },
+      "humanSimilarityRating": null,
+      "rightReasonRating": null,
+      "reviewerNotes": null,
+      "signalsPresent": [
+        "vibes"
+      ]
+    },
+    {
+      "anchorId": 408,
+      "anchorName": "Torino21",
+      "signal": "vibes",
+      "rank": 4,
+      "candidateId": 406,
+      "candidateName": "Hacivat",
+      "score": 0.3333333333333333,
+      "sharedEvidence": [
+        "fresh",
+        "luxurious"
+      ],
+      "support": {
+        "unionSize": 6
+      },
+      "humanSimilarityRating": null,
+      "rightReasonRating": null,
+      "reviewerNotes": null,
+      "signalsPresent": [
+        "vibes"
+      ]
+    },
+    {
+      "anchorId": 408,
+      "anchorName": "Torino21",
+      "signal": "vibes",
+      "rank": 5,
+      "candidateId": 103,
+      "candidateName": "Mandarino di Sicilia",
+      "score": 0.2857142857142857,
+      "sharedEvidence": [
+        "fresh",
+        "energetic"
+      ],
+      "support": {
+        "unionSize": 7
+      },
+      "humanSimilarityRating": null,
+      "rightReasonRating": null,
+      "reviewerNotes": null,
+      "signalsPresent": [
+        "accords",
+        "vibes"
+      ]
+    },
+    {
+      "anchorId": 408,
+      "anchorName": "Torino21",
+      "signal": "prominence",
+      "rank": 1,
+      "candidateId": 110,
+      "candidateName": "Concentré d'Orange Verte",
+      "score": 0.8235294117647058,
+      "sharedEvidence": [
+        {
+          "noteId": "mint",
+          "anchorScore": 9,
+          "candidateScore": 6
+        },
+        {
+          "noteId": "basil",
+          "anchorScore": 8,
+          "candidateScore": 8
+        }
+      ],
+      "support": {
+        "mutuallyScoredCount": 2,
+        "coverageFraction": 0.5
+      },
+      "humanSimilarityRating": null,
+      "rightReasonRating": null,
+      "reviewerNotes": null,
+      "signalsPresent": [
+        "accords",
+        "notes",
+        "prominence",
+        "vibes"
+      ]
+    },
+    {
+      "anchorId": 405,
+      "anchorName": "Mefisto",
+      "signal": "notes",
+      "rank": 1,
+      "candidateId": 114,
+      "candidateName": "Game of Spades Wildcard",
+      "score": 0.42857142857142855,
+      "sharedEvidence": [
+        "bergamot",
+        "lemon",
+        "lavender",
+        "musk",
+        "amber",
+        "cedar"
+      ],
+      "support": {
+        "unionSize": 14
+      },
+      "humanSimilarityRating": null,
+      "rightReasonRating": null,
+      "reviewerNotes": null,
+      "signalsPresent": [
+        "notes"
+      ]
+    },
+    {
+      "anchorId": 405,
+      "anchorName": "Mefisto",
+      "signal": "notes",
+      "rank": 2,
+      "candidateId": 31,
+      "candidateName": "Viking Cairo",
+      "score": 0.35714285714285715,
+      "sharedEvidence": [
+        "bergamot",
+        "lemon",
+        "lavender",
+        "musk",
+        "amber"
+      ],
+      "support": {
+        "unionSize": 14
+      },
+      "humanSimilarityRating": null,
+      "rightReasonRating": null,
+      "reviewerNotes": null,
+      "signalsPresent": [
+        "notes"
+      ]
+    },
+    {
+      "anchorId": 405,
+      "anchorName": "Mefisto",
+      "signal": "notes",
+      "rank": 3,
+      "candidateId": 107,
+      "candidateName": "Birds of Paradise for Him",
+      "score": 0.35714285714285715,
+      "sharedEvidence": [
+        "bergamot",
+        "lavender",
+        "musk",
+        "amber",
+        "sandalwood"
+      ],
+      "support": {
+        "unionSize": 14
+      },
+      "humanSimilarityRating": null,
+      "rightReasonRating": null,
+      "reviewerNotes": null,
+      "signalsPresent": [
+        "notes"
+      ]
+    },
+    {
+      "anchorId": 405,
+      "anchorName": "Mefisto",
+      "signal": "notes",
+      "rank": 4,
+      "candidateId": 119,
+      "candidateName": "Mirto di Panarea",
+      "score": 0.35714285714285715,
+      "sharedEvidence": [
+        "bergamot",
+        "lemon",
+        "rose",
+        "amber",
+        "cedar"
+      ],
+      "support": {
+        "unionSize": 14
+      },
+      "humanSimilarityRating": null,
+      "rightReasonRating": null,
+      "reviewerNotes": null,
+      "signalsPresent": [
+        "notes"
+      ]
+    },
+    {
+      "anchorId": 405,
+      "anchorName": "Mefisto",
+      "signal": "notes",
+      "rank": 5,
+      "candidateId": 3,
+      "candidateName": "Versace Pour Homme",
+      "score": 0.3125,
+      "sharedEvidence": [
+        "bergamot",
+        "lemon",
+        "musk",
+        "amber",
+        "cedar"
+      ],
+      "support": {
+        "unionSize": 16
+      },
+      "humanSimilarityRating": null,
+      "rightReasonRating": null,
+      "reviewerNotes": null,
+      "signalsPresent": [
+        "accords",
+        "notes"
+      ]
+    },
+    {
+      "anchorId": 405,
+      "anchorName": "Mefisto",
+      "signal": "accords",
+      "rank": 1,
+      "candidateId": 3,
+      "candidateName": "Versace Pour Homme",
+      "score": 0.6666666666666666,
+      "sharedEvidence": [
+        "citrus",
+        "aromatic",
+        "fresh spicy",
+        "floral"
+      ],
+      "support": {
+        "unionSize": 6
+      },
+      "humanSimilarityRating": null,
+      "rightReasonRating": null,
+      "reviewerNotes": null,
+      "signalsPresent": [
+        "accords",
+        "notes"
+      ]
+    },
+    {
+      "anchorId": 405,
+      "anchorName": "Mefisto",
+      "signal": "accords",
+      "rank": 2,
+      "candidateId": 117,
+      "candidateName": "YSL L'Homme",
+      "score": 0.6666666666666666,
+      "sharedEvidence": [
+        "citrus",
+        "aromatic",
+        "fresh spicy",
+        "powdery"
+      ],
+      "support": {
+        "unionSize": 6
+      },
+      "humanSimilarityRating": null,
+      "rightReasonRating": null,
+      "reviewerNotes": null,
+      "signalsPresent": [
+        "accords"
+      ]
+    },
+    {
+      "anchorId": 405,
+      "anchorName": "Mefisto",
+      "signal": "accords",
+      "rank": 3,
+      "candidateId": 2,
+      "candidateName": "Light Blue Pour Homme EDT",
+      "score": 0.5,
+      "sharedEvidence": [
+        "citrus",
+        "aromatic",
+        "fresh spicy"
+      ],
+      "support": {
+        "unionSize": 6
+      },
+      "humanSimilarityRating": null,
+      "rightReasonRating": null,
+      "reviewerNotes": null,
+      "signalsPresent": [
+        "accords"
+      ]
+    },
+    {
+      "anchorId": 405,
+      "anchorName": "Mefisto",
+      "signal": "accords",
+      "rank": 4,
+      "candidateId": 201,
+      "candidateName": "Dior Homme Sport",
+      "score": 0.5,
+      "sharedEvidence": [
+        "citrus",
+        "aromatic",
+        "fresh spicy"
+      ],
+      "support": {
+        "unionSize": 6
+      },
+      "humanSimilarityRating": null,
+      "rightReasonRating": null,
+      "reviewerNotes": null,
+      "signalsPresent": [
+        "accords"
+      ]
+    },
+    {
+      "anchorId": 405,
+      "anchorName": "Mefisto",
+      "signal": "accords",
+      "rank": 5,
+      "candidateId": 1,
+      "candidateName": "Acqua di Gio EDT",
+      "score": 0.42857142857142855,
+      "sharedEvidence": [
+        "citrus",
+        "aromatic",
+        "fresh spicy"
+      ],
+      "support": {
+        "unionSize": 7
+      },
+      "humanSimilarityRating": null,
+      "rightReasonRating": null,
+      "reviewerNotes": null,
+      "signalsPresent": [
+        "accords",
+        "vibes"
+      ]
+    },
+    {
+      "anchorId": 405,
+      "anchorName": "Mefisto",
+      "signal": "vibes",
+      "rank": 1,
+      "candidateId": 1,
+      "candidateName": "Acqua di Gio EDT",
+      "score": 0.4,
+      "sharedEvidence": [
+        "fresh",
+        "classic"
+      ],
+      "support": {
+        "unionSize": 5
+      },
+      "humanSimilarityRating": null,
+      "rightReasonRating": null,
+      "reviewerNotes": null,
+      "signalsPresent": [
+        "accords",
+        "vibes"
+      ]
+    },
+    {
+      "anchorId": 405,
+      "anchorName": "Mefisto",
+      "signal": "vibes",
+      "rank": 2,
+      "candidateId": 101,
+      "candidateName": "Essenza",
+      "score": 0.3333333333333333,
+      "sharedEvidence": [
+        "elegant",
+        "classic"
+      ],
+      "support": {
+        "unionSize": 6
+      },
+      "humanSimilarityRating": null,
+      "rightReasonRating": null,
+      "reviewerNotes": null,
+      "signalsPresent": [
+        "vibes"
+      ]
+    },
+    {
+      "anchorId": 405,
+      "anchorName": "Mefisto",
+      "signal": "vibes",
+      "rank": 3,
+      "candidateId": 104,
+      "candidateName": "Armani Code EDT",
+      "score": 0.3333333333333333,
+      "sharedEvidence": [
+        "elegant",
+        "classic"
+      ],
+      "support": {
+        "unionSize": 6
+      },
+      "humanSimilarityRating": null,
+      "rightReasonRating": null,
+      "reviewerNotes": null,
+      "signalsPresent": [
+        "vibes"
+      ]
+    },
+    {
+      "anchorId": 405,
+      "anchorName": "Mefisto",
+      "signal": "vibes",
+      "rank": 4,
+      "candidateId": 110,
+      "candidateName": "Concentré d'Orange Verte",
+      "score": 0.3333333333333333,
+      "sharedEvidence": [
+        "fresh",
+        "classic"
+      ],
+      "support": {
+        "unionSize": 6
+      },
+      "humanSimilarityRating": null,
+      "rightReasonRating": null,
+      "reviewerNotes": null,
+      "signalsPresent": [
+        "vibes"
+      ]
+    },
+    {
+      "anchorId": 405,
+      "anchorName": "Mefisto",
+      "signal": "vibes",
+      "rank": 5,
+      "candidateId": 111,
+      "candidateName": "Terre d'Hermès EDT",
+      "score": 0.3333333333333333,
+      "sharedEvidence": [
+        "elegant",
+        "classic"
+      ],
+      "support": {
+        "unionSize": 6
+      },
+      "humanSimilarityRating": null,
+      "rightReasonRating": null,
+      "reviewerNotes": null,
+      "signalsPresent": [
+        "vibes"
+      ]
+    },
+    {
+      "anchorId": 208,
+      "anchorName": "Prada L'Homme",
+      "signal": "notes",
+      "rank": 1,
+      "candidateId": 214,
+      "candidateName": "Prada L'Homme L'Eau",
+      "score": 0.38461538461538464,
+      "sharedEvidence": [
+        "neroli",
+        "iris",
+        "amber",
+        "cedar",
+        "sandalwood"
+      ],
+      "support": {
+        "unionSize": 13
+      },
+      "humanSimilarityRating": null,
+      "rightReasonRating": null,
+      "reviewerNotes": null,
+      "signalsPresent": [
+        "accords",
+        "notes",
+        "prominence",
+        "vibes"
+      ]
+    },
+    {
+      "anchorId": 208,
+      "anchorName": "Prada L'Homme",
+      "signal": "notes",
+      "rank": 2,
+      "candidateId": 29,
+      "candidateName": "Versace Eros Flame",
+      "score": 0.25,
+      "sharedEvidence": [
+        "blackPepper",
+        "geranium",
+        "cedar",
+        "patchouli",
+        "sandalwood"
+      ],
+      "support": {
+        "unionSize": 20
+      },
+      "humanSimilarityRating": null,
+      "rightReasonRating": null,
+      "reviewerNotes": null,
+      "signalsPresent": [
+        "notes"
+      ]
+    },
+    {
+      "anchorId": 208,
+      "anchorName": "Prada L'Homme",
+      "signal": "notes",
+      "rank": 3,
+      "candidateId": 404,
+      "candidateName": "Layton",
+      "score": 0.23809523809523808,
+      "sharedEvidence": [
+        "cardamom",
+        "violet",
+        "geranium",
+        "patchouli",
+        "sandalwood"
+      ],
+      "support": {
+        "unionSize": 21
+      },
+      "humanSimilarityRating": null,
+      "rightReasonRating": null,
+      "reviewerNotes": null,
+      "signalsPresent": [
+        "notes"
+      ]
+    },
+    {
+      "anchorId": 208,
+      "anchorName": "Prada L'Homme",
+      "signal": "notes",
+      "rank": 4,
+      "candidateId": 114,
+      "candidateName": "Game of Spades Wildcard",
+      "score": 0.23529411764705882,
+      "sharedEvidence": [
+        "blackPepper",
+        "geranium",
+        "amber",
+        "cedar"
+      ],
+      "support": {
+        "unionSize": 17
+      },
+      "humanSimilarityRating": null,
+      "rightReasonRating": null,
+      "reviewerNotes": null,
+      "signalsPresent": [
+        "notes"
+      ]
+    },
+    {
+      "anchorId": 208,
+      "anchorName": "Prada L'Homme",
+      "signal": "notes",
+      "rank": 5,
+      "candidateId": 402,
+      "candidateName": "Sauvage Elixir",
+      "score": 0.23529411764705882,
+      "sharedEvidence": [
+        "cardamom",
+        "amber",
+        "patchouli",
+        "sandalwood"
+      ],
+      "support": {
+        "unionSize": 17
+      },
+      "humanSimilarityRating": null,
+      "rightReasonRating": null,
+      "reviewerNotes": null,
+      "signalsPresent": [
+        "accords",
+        "notes"
+      ]
+    },
+    {
+      "anchorId": 208,
+      "anchorName": "Prada L'Homme",
+      "signal": "accords",
+      "rank": 1,
+      "candidateId": 214,
+      "candidateName": "Prada L'Homme L'Eau",
+      "score": 0.6666666666666666,
+      "sharedEvidence": [
+        "powdery",
+        "iris",
+        "amber",
+        "clean"
+      ],
+      "support": {
+        "unionSize": 6
+      },
+      "humanSimilarityRating": null,
+      "rightReasonRating": null,
+      "reviewerNotes": null,
+      "signalsPresent": [
+        "accords",
+        "notes",
+        "prominence",
+        "vibes"
+      ]
+    },
+    {
+      "anchorId": 208,
+      "anchorName": "Prada L'Homme",
+      "signal": "accords",
+      "rank": 2,
+      "candidateId": 209,
+      "candidateName": "Luna Rossa Black",
+      "score": 0.42857142857142855,
+      "sharedEvidence": [
+        "powdery",
+        "amber",
+        "woody"
+      ],
+      "support": {
+        "unionSize": 7
+      },
+      "humanSimilarityRating": null,
+      "rightReasonRating": null,
+      "reviewerNotes": null,
+      "signalsPresent": [
+        "accords"
+      ]
+    },
+    {
+      "anchorId": 208,
+      "anchorName": "Prada L'Homme",
+      "signal": "accords",
+      "rank": 3,
+      "candidateId": 303,
+      "candidateName": "Bois Imperial",
+      "score": 0.2857142857142857,
+      "sharedEvidence": [
+        "amber",
+        "woody"
+      ],
+      "support": {
+        "unionSize": 7
+      },
+      "humanSimilarityRating": null,
+      "rightReasonRating": null,
+      "reviewerNotes": null,
+      "signalsPresent": [
+        "accords"
+      ]
+    },
+    {
+      "anchorId": 208,
+      "anchorName": "Prada L'Homme",
+      "signal": "accords",
+      "rank": 4,
+      "candidateId": 402,
+      "candidateName": "Sauvage Elixir",
+      "score": 0.2857142857142857,
+      "sharedEvidence": [
+        "amber",
+        "woody"
+      ],
+      "support": {
+        "unionSize": 7
+      },
+      "humanSimilarityRating": null,
+      "rightReasonRating": null,
+      "reviewerNotes": null,
+      "signalsPresent": [
+        "accords",
+        "notes"
+      ]
+    },
+    {
+      "anchorId": 208,
+      "anchorName": "Prada L'Homme",
+      "signal": "accords",
+      "rank": 5,
+      "candidateId": 403,
+      "candidateName": "Carlisle",
+      "score": 0.2857142857142857,
+      "sharedEvidence": [
+        "amber",
+        "woody"
+      ],
+      "support": {
+        "unionSize": 7
+      },
+      "humanSimilarityRating": null,
+      "rightReasonRating": null,
+      "reviewerNotes": null,
+      "signalsPresent": [
+        "accords"
+      ]
+    },
+    {
+      "anchorId": 208,
+      "anchorName": "Prada L'Homme",
+      "signal": "vibes",
+      "rank": 1,
+      "candidateId": 214,
+      "candidateName": "Prada L'Homme L'Eau",
+      "score": 0.6,
+      "sharedEvidence": [
+        "clean",
+        "elegant",
+        "soft"
+      ],
+      "support": {
+        "unionSize": 5
+      },
+      "humanSimilarityRating": null,
+      "rightReasonRating": null,
+      "reviewerNotes": null,
+      "signalsPresent": [
+        "accords",
+        "notes",
+        "prominence",
+        "vibes"
+      ]
+    },
+    {
+      "anchorId": 208,
+      "anchorName": "Prada L'Homme",
+      "signal": "vibes",
+      "rank": 2,
+      "candidateId": 301,
+      "candidateName": "Allure Homme Edition Blanche EDP",
+      "score": 0.5,
+      "sharedEvidence": [
+        "clean",
+        "elegant",
+        "sophisticated"
+      ],
+      "support": {
+        "unionSize": 6
+      },
+      "humanSimilarityRating": null,
+      "rightReasonRating": null,
+      "reviewerNotes": null,
+      "signalsPresent": [
+        "vibes"
+      ]
+    },
+    {
+      "anchorId": 208,
+      "anchorName": "Prada L'Homme",
+      "signal": "vibes",
+      "rank": 3,
+      "candidateId": 409,
+      "candidateName": "Orphéon EDP",
+      "score": 0.42857142857142855,
+      "sharedEvidence": [
+        "elegant",
+        "sophisticated",
+        "soft"
+      ],
+      "support": {
+        "unionSize": 7
+      },
+      "humanSimilarityRating": null,
+      "rightReasonRating": null,
+      "reviewerNotes": null,
+      "signalsPresent": [
+        "vibes"
+      ]
+    },
+    {
+      "anchorId": 208,
+      "anchorName": "Prada L'Homme",
+      "signal": "vibes",
+      "rank": 4,
+      "candidateId": 17,
+      "candidateName": "Gentlemen Only",
+      "score": 0.4,
+      "sharedEvidence": [
+        "clean",
+        "elegant"
+      ],
+      "support": {
+        "unionSize": 5
+      },
+      "humanSimilarityRating": null,
+      "rightReasonRating": null,
+      "reviewerNotes": null,
+      "signalsPresent": [
+        "vibes"
+      ]
+    },
+    {
+      "anchorId": 208,
+      "anchorName": "Prada L'Homme",
+      "signal": "vibes",
+      "rank": 5,
+      "candidateId": 23,
+      "candidateName": "Legend EDP",
+      "score": 0.4,
+      "sharedEvidence": [
+        "clean",
+        "elegant"
+      ],
+      "support": {
+        "unionSize": 5
+      },
+      "humanSimilarityRating": null,
+      "rightReasonRating": null,
+      "reviewerNotes": null,
+      "signalsPresent": [
+        "vibes"
+      ]
+    },
+    {
+      "anchorId": 208,
+      "anchorName": "Prada L'Homme",
+      "signal": "prominence",
+      "rank": 1,
+      "candidateId": 214,
+      "candidateName": "Prada L'Homme L'Eau",
+      "score": 0.7333333333333333,
+      "sharedEvidence": [
+        {
+          "noteId": "iris",
+          "anchorScore": 9,
+          "candidateScore": 6
+        },
+        {
+          "noteId": "neroli",
+          "anchorScore": 6,
+          "candidateScore": 5
+        }
+      ],
+      "support": {
+        "mutuallyScoredCount": 2,
+        "coverageFraction": 0.6666666666666666
+      },
+      "humanSimilarityRating": null,
+      "rightReasonRating": null,
+      "reviewerNotes": null,
+      "signalsPresent": [
+        "accords",
+        "notes",
+        "prominence",
+        "vibes"
+      ]
+    }
+  ],
+  "insufficientProminenceEvidence": {
+    "Layton": [
+      {
+        "anchorId": 404,
+        "anchorName": "Layton",
+        "candidateId": 6,
+        "candidateName": "Eros EDP",
+        "score": 1,
+        "mutuallyScoredNotes": [
+          {
+            "noteId": "vanilla",
+            "anchorScore": 7,
+            "candidateScore": 7
+          }
+        ],
+        "mutuallyScoredCount": 1,
+        "coverageFraction": 0.25
+      },
+      {
+        "anchorId": 404,
+        "anchorName": "Layton",
+        "candidateId": 29,
+        "candidateName": "Versace Eros Flame",
+        "score": 1,
+        "mutuallyScoredNotes": [
+          {
+            "noteId": "vanilla",
+            "anchorScore": 7,
+            "candidateScore": 7
+          }
+        ],
+        "mutuallyScoredCount": 1,
+        "coverageFraction": 0.3333333333333333
+      },
+      {
+        "anchorId": 404,
+        "anchorName": "Layton",
+        "candidateId": 213,
+        "candidateName": "YSL Y EDP",
+        "score": 0.8888888888888888,
+        "mutuallyScoredNotes": [
+          {
+            "noteId": "apple",
+            "anchorScore": 9,
+            "candidateScore": 8
+          }
+        ],
+        "mutuallyScoredCount": 1,
+        "coverageFraction": 0.3333333333333333
+      },
+      {
+        "anchorId": 404,
+        "anchorName": "Layton",
+        "candidateId": 212,
+        "candidateName": "Spicebomb Extreme",
+        "score": 0.875,
+        "mutuallyScoredNotes": [
+          {
+            "noteId": "vanilla",
+            "anchorScore": 7,
+            "candidateScore": 8
+          }
+        ],
+        "mutuallyScoredCount": 1,
+        "coverageFraction": 0.2
+      },
+      {
+        "anchorId": 404,
+        "anchorName": "Layton",
+        "candidateId": 21,
+        "candidateName": "Halloween Man Mystery",
+        "score": 0.8571428571428571,
+        "mutuallyScoredNotes": [
+          {
+            "noteId": "vanilla",
+            "anchorScore": 7,
+            "candidateScore": 6
+          }
+        ],
+        "mutuallyScoredCount": 1,
+        "coverageFraction": 0.3333333333333333
+      },
+      {
+        "anchorId": 404,
+        "anchorName": "Layton",
+        "candidateId": 13,
+        "candidateName": "The One for Men EDP",
+        "score": 0.8,
+        "mutuallyScoredNotes": [
+          {
+            "noteId": "cardamom",
+            "anchorScore": 4,
+            "candidateScore": 5
+          }
+        ],
+        "mutuallyScoredCount": 1,
+        "coverageFraction": 0.2
+      },
+      {
+        "anchorId": 404,
+        "anchorName": "Layton",
+        "candidateId": 24,
+        "candidateName": "Legend Red",
+        "score": 0.8,
+        "mutuallyScoredNotes": [
+          {
+            "noteId": "cardamom",
+            "anchorScore": 4,
+            "candidateScore": 5
+          }
+        ],
+        "mutuallyScoredCount": 1,
+        "coverageFraction": 0.25
+      },
+      {
+        "anchorId": 404,
+        "anchorName": "Layton",
+        "candidateId": 31,
+        "candidateName": "Viking Cairo",
+        "score": 0.8,
+        "mutuallyScoredNotes": [
+          {
+            "noteId": "cardamom",
+            "anchorScore": 4,
+            "candidateScore": 5
+          }
+        ],
+        "mutuallyScoredCount": 1,
+        "coverageFraction": 0.5
+      },
+      {
+        "anchorId": 404,
+        "anchorName": "Layton",
+        "candidateId": 4,
+        "candidateName": "Legend EDT",
+        "score": 0.7777777777777778,
+        "mutuallyScoredNotes": [
+          {
+            "noteId": "lavender",
+            "anchorScore": 9,
+            "candidateScore": 7
+          }
+        ],
+        "mutuallyScoredCount": 1,
+        "coverageFraction": 0.3333333333333333
+      },
+      {
+        "anchorId": 404,
+        "anchorName": "Layton",
+        "candidateId": 20,
+        "candidateName": "F by Ferragamo Black",
+        "score": 0.7777777777777778,
+        "mutuallyScoredNotes": [
+          {
+            "noteId": "lavender",
+            "anchorScore": 9,
+            "candidateScore": 7
+          }
+        ],
+        "mutuallyScoredCount": 1,
+        "coverageFraction": 0.3333333333333333
+      },
+      {
+        "anchorId": 404,
+        "anchorName": "Layton",
+        "candidateId": 14,
+        "candidateName": "Halloween Man",
+        "score": 0.7142857142857143,
+        "mutuallyScoredNotes": [
+          {
+            "noteId": "vanilla",
+            "anchorScore": 7,
+            "candidateScore": 5
+          }
+        ],
+        "mutuallyScoredCount": 1,
+        "coverageFraction": 0.3333333333333333
+      },
+      {
+        "anchorId": 404,
+        "anchorName": "Layton",
+        "candidateId": 116,
+        "candidateName": "Invictus Victory",
+        "score": 0.7142857142857143,
+        "mutuallyScoredNotes": [
+          {
+            "noteId": "vanilla",
+            "anchorScore": 7,
+            "candidateScore": 5
+          }
+        ],
+        "mutuallyScoredCount": 1,
+        "coverageFraction": 0.3333333333333333
+      },
+      {
+        "anchorId": 404,
+        "anchorName": "Layton",
+        "candidateId": 202,
+        "candidateName": "Sauvage EDP",
+        "score": 0.7142857142857143,
+        "mutuallyScoredNotes": [
+          {
+            "noteId": "vanilla",
+            "anchorScore": 7,
+            "candidateScore": 5
+          }
+        ],
+        "mutuallyScoredCount": 1,
+        "coverageFraction": 0.25
+      },
+      {
+        "anchorId": 404,
+        "anchorName": "Layton",
+        "candidateId": 403,
+        "candidateName": "Carlisle",
+        "score": 0.7142857142857143,
+        "mutuallyScoredNotes": [
+          {
+            "noteId": "vanilla",
+            "anchorScore": 7,
+            "candidateScore": 5
+          }
+        ],
+        "mutuallyScoredCount": 1,
+        "coverageFraction": 0.5
+      },
+      {
+        "anchorId": 404,
+        "anchorName": "Layton",
+        "candidateId": 410,
+        "candidateName": "Il Padrino",
+        "score": 0.7142857142857143,
+        "mutuallyScoredNotes": [
+          {
+            "noteId": "vanilla",
+            "anchorScore": 7,
+            "candidateScore": 5
+          }
+        ],
+        "mutuallyScoredCount": 1,
+        "coverageFraction": 0.5
+      },
+      {
+        "anchorId": 404,
+        "anchorName": "Layton",
+        "candidateId": 104,
+        "candidateName": "Armani Code EDT",
+        "score": 0.6666666666666666,
+        "mutuallyScoredNotes": [
+          {
+            "noteId": "lavender",
+            "anchorScore": 9,
+            "candidateScore": 6
+          }
+        ],
+        "mutuallyScoredCount": 1,
+        "coverageFraction": 0.25
+      },
+      {
+        "anchorId": 404,
+        "anchorName": "Layton",
+        "candidateId": 204,
+        "candidateName": "Replica By The Fireplace",
+        "score": 0.5714285714285714,
+        "mutuallyScoredNotes": [
+          {
+            "noteId": "vanilla",
+            "anchorScore": 7,
+            "candidateScore": 4
+          }
+        ],
+        "mutuallyScoredCount": 1,
+        "coverageFraction": 0.25
+      },
+      {
+        "anchorId": 404,
+        "anchorName": "Layton",
+        "candidateId": 209,
+        "candidateName": "Luna Rossa Black",
+        "score": 0.5714285714285714,
+        "mutuallyScoredNotes": [
+          {
+            "noteId": "coumarin",
+            "anchorScore": 4,
+            "candidateScore": 7
+          }
+        ],
+        "mutuallyScoredCount": 1,
+        "coverageFraction": 0.3333333333333333
+      },
+      {
+        "anchorId": 404,
+        "anchorName": "Layton",
+        "candidateId": 28,
+        "candidateName": "Tous Man",
+        "score": 0.5555555555555556,
+        "mutuallyScoredNotes": [
+          {
+            "noteId": "apple",
+            "anchorScore": 9,
+            "candidateScore": 5
+          }
+        ],
+        "mutuallyScoredCount": 1,
+        "coverageFraction": 0.3333333333333333
+      },
+      {
+        "anchorId": 404,
+        "anchorName": "Layton",
+        "candidateId": 8,
+        "candidateName": "The Most Wanted",
+        "score": 0.5,
+        "mutuallyScoredNotes": [
+          {
+            "noteId": "cardamom",
+            "anchorScore": 4,
+            "candidateScore": 8
+          }
+        ],
+        "mutuallyScoredCount": 1,
+        "coverageFraction": 0.5
+      },
+      {
+        "anchorId": 404,
+        "anchorName": "Layton",
+        "candidateId": 33,
+        "candidateName": "Jaguar Pace",
+        "score": 0.4444444444444444,
+        "mutuallyScoredNotes": [
+          {
+            "noteId": "apple",
+            "anchorScore": 9,
+            "candidateScore": 4
+          }
+        ],
+        "mutuallyScoredCount": 1,
+        "coverageFraction": 0.3333333333333333
+      },
+      {
+        "anchorId": 404,
+        "anchorName": "Layton",
+        "candidateId": 114,
+        "candidateName": "Game of Spades Wildcard",
+        "score": 0.4444444444444444,
+        "mutuallyScoredNotes": [
+          {
+            "noteId": "apple",
+            "anchorScore": 9,
+            "candidateScore": 4
+          }
+        ],
+        "mutuallyScoredCount": 1,
+        "coverageFraction": 0.5
+      }
+    ],
+    "La Nuit de L'Homme": [
+      {
+        "anchorId": 118,
+        "anchorName": "La Nuit de L'Homme",
+        "candidateId": 8,
+        "candidateName": "The Most Wanted",
+        "score": 0.8888888888888888,
+        "mutuallyScoredNotes": [
+          {
+            "noteId": "cardamom",
+            "anchorScore": 9,
+            "candidateScore": 8
+          }
+        ],
+        "mutuallyScoredCount": 1,
+        "coverageFraction": 0.5
+      },
+      {
+        "anchorId": 118,
+        "anchorName": "La Nuit de L'Homme",
+        "candidateId": 209,
+        "candidateName": "Luna Rossa Black",
+        "score": 0.8571428571428571,
+        "mutuallyScoredNotes": [
+          {
+            "noteId": "coumarin",
+            "anchorScore": 6,
+            "candidateScore": 7
+          }
+        ],
+        "mutuallyScoredCount": 1,
+        "coverageFraction": 0.3333333333333333
+      },
+      {
+        "anchorId": 118,
+        "anchorName": "La Nuit de L'Homme",
+        "candidateId": 104,
+        "candidateName": "Armani Code EDT",
+        "score": 0.8333333333333334,
+        "mutuallyScoredNotes": [
+          {
+            "noteId": "lavender",
+            "anchorScore": 5,
+            "candidateScore": 6
+          }
+        ],
+        "mutuallyScoredCount": 1,
+        "coverageFraction": 0.25
+      },
+      {
+        "anchorId": 118,
+        "anchorName": "La Nuit de L'Homme",
+        "candidateId": 306,
+        "candidateName": "Acqua di Gio Elixir",
+        "score": 0.75,
+        "mutuallyScoredNotes": [
+          {
+            "noteId": "vetiver",
+            "anchorScore": 3,
+            "candidateScore": 4
+          }
+        ],
+        "mutuallyScoredCount": 1,
+        "coverageFraction": 0.25
+      },
+      {
+        "anchorId": 118,
+        "anchorName": "La Nuit de L'Homme",
+        "candidateId": 4,
+        "candidateName": "Legend EDT",
+        "score": 0.7142857142857143,
+        "mutuallyScoredNotes": [
+          {
+            "noteId": "lavender",
+            "anchorScore": 5,
+            "candidateScore": 7
+          }
+        ],
+        "mutuallyScoredCount": 1,
+        "coverageFraction": 0.3333333333333333
+      },
+      {
+        "anchorId": 118,
+        "anchorName": "La Nuit de L'Homme",
+        "candidateId": 20,
+        "candidateName": "F by Ferragamo Black",
+        "score": 0.7142857142857143,
+        "mutuallyScoredNotes": [
+          {
+            "noteId": "lavender",
+            "anchorScore": 5,
+            "candidateScore": 7
+          }
+        ],
+        "mutuallyScoredCount": 1,
+        "coverageFraction": 0.3333333333333333
+      },
+      {
+        "anchorId": 118,
+        "anchorName": "La Nuit de L'Homme",
+        "candidateId": 9,
+        "candidateName": "Fierce",
+        "score": 0.6,
+        "mutuallyScoredNotes": [
+          {
+            "noteId": "vetiver",
+            "anchorScore": 3,
+            "candidateScore": 5
+          }
+        ],
+        "mutuallyScoredCount": 1,
+        "coverageFraction": 0.3333333333333333
+      },
+      {
+        "anchorId": 118,
+        "anchorName": "La Nuit de L'Homme",
+        "candidateId": 27,
+        "candidateName": "Touch for Men",
+        "score": 0.6,
+        "mutuallyScoredNotes": [
+          {
+            "noteId": "vetiver",
+            "anchorScore": 3,
+            "candidateScore": 5
+          }
+        ],
+        "mutuallyScoredCount": 1,
+        "coverageFraction": 0.5
+      },
+      {
+        "anchorId": 118,
+        "anchorName": "La Nuit de L'Homme",
+        "candidateId": 5,
+        "candidateName": "Le Male",
+        "score": 0.5555555555555556,
+        "mutuallyScoredNotes": [
+          {
+            "noteId": "lavender",
+            "anchorScore": 5,
+            "candidateScore": 9
+          }
+        ],
+        "mutuallyScoredCount": 1,
+        "coverageFraction": 0.25
+      },
+      {
+        "anchorId": 118,
+        "anchorName": "La Nuit de L'Homme",
+        "candidateId": 13,
+        "candidateName": "The One for Men EDP",
+        "score": 0.5555555555555556,
+        "mutuallyScoredNotes": [
+          {
+            "noteId": "cardamom",
+            "anchorScore": 9,
+            "candidateScore": 5
+          }
+        ],
+        "mutuallyScoredCount": 1,
+        "coverageFraction": 0.25
+      },
+      {
+        "anchorId": 118,
+        "anchorName": "La Nuit de L'Homme",
+        "candidateId": 24,
+        "candidateName": "Legend Red",
+        "score": 0.5555555555555556,
+        "mutuallyScoredNotes": [
+          {
+            "noteId": "cardamom",
+            "anchorScore": 9,
+            "candidateScore": 5
+          }
+        ],
+        "mutuallyScoredCount": 1,
+        "coverageFraction": 0.25
+      },
+      {
+        "anchorId": 118,
+        "anchorName": "La Nuit de L'Homme",
+        "candidateId": 31,
+        "candidateName": "Viking Cairo",
+        "score": 0.5555555555555556,
+        "mutuallyScoredNotes": [
+          {
+            "noteId": "cardamom",
+            "anchorScore": 9,
+            "candidateScore": 5
+          }
+        ],
+        "mutuallyScoredCount": 1,
+        "coverageFraction": 0.5
+      },
+      {
+        "anchorId": 118,
+        "anchorName": "La Nuit de L'Homme",
+        "candidateId": 34,
+        "candidateName": "Givenchy Pour Homme Blue Label",
+        "score": 0.5,
+        "mutuallyScoredNotes": [
+          {
+            "noteId": "vetiver",
+            "anchorScore": 3,
+            "candidateScore": 6
+          }
+        ],
+        "mutuallyScoredCount": 1,
+        "coverageFraction": 0.3333333333333333
+      },
+      {
+        "anchorId": 118,
+        "anchorName": "La Nuit de L'Homme",
+        "candidateId": 206,
+        "candidateName": "Polo Blue Parfum",
+        "score": 0.5,
+        "mutuallyScoredNotes": [
+          {
+            "noteId": "vetiver",
+            "anchorScore": 3,
+            "candidateScore": 6
+          }
+        ],
+        "mutuallyScoredCount": 1,
+        "coverageFraction": 0.3333333333333333
+      },
+      {
+        "anchorId": 118,
+        "anchorName": "La Nuit de L'Homme",
+        "candidateId": 210,
+        "candidateName": "Born In Roma EDT",
+        "score": 0.5,
+        "mutuallyScoredNotes": [
+          {
+            "noteId": "vetiver",
+            "anchorScore": 3,
+            "candidateScore": 6
+          }
+        ],
+        "mutuallyScoredCount": 1,
+        "coverageFraction": 0.5
+      },
+      {
+        "anchorId": 118,
+        "anchorName": "La Nuit de L'Homme",
+        "candidateId": 111,
+        "candidateName": "Terre d'Hermès EDT",
+        "score": 0.375,
+        "mutuallyScoredNotes": [
+          {
+            "noteId": "vetiver",
+            "anchorScore": 3,
+            "candidateScore": 8
+          }
+        ],
+        "mutuallyScoredCount": 1,
+        "coverageFraction": 0.25
+      }
+    ],
+    "Tuxedo": [
+      {
+        "anchorId": 501,
+        "anchorName": "Tuxedo",
+        "candidateId": 306,
+        "candidateName": "Acqua di Gio Elixir",
+        "score": 0.7777777777777778,
+        "mutuallyScoredNotes": [
+          {
+            "noteId": "patchouli",
+            "anchorScore": 9,
+            "candidateScore": 7
+          }
+        ],
+        "mutuallyScoredCount": 1,
+        "coverageFraction": 0.5
+      },
+      {
+        "anchorId": 501,
+        "anchorName": "Tuxedo",
+        "candidateId": 205,
+        "candidateName": "Gentleman EDP",
+        "score": 0.6666666666666666,
+        "mutuallyScoredNotes": [
+          {
+            "noteId": "patchouli",
+            "anchorScore": 9,
+            "candidateScore": 6
+          }
+        ],
+        "mutuallyScoredCount": 1,
+        "coverageFraction": 0.5
+      },
+      {
+        "anchorId": 501,
+        "anchorName": "Tuxedo",
+        "candidateId": 206,
+        "candidateName": "Polo Blue Parfum",
+        "score": 0.6666666666666666,
+        "mutuallyScoredNotes": [
+          {
+            "noteId": "patchouli",
+            "anchorScore": 9,
+            "candidateScore": 6
+          }
+        ],
+        "mutuallyScoredCount": 1,
+        "coverageFraction": 0.5
+      },
+      {
+        "anchorId": 501,
+        "anchorName": "Tuxedo",
+        "candidateId": 209,
+        "candidateName": "Luna Rossa Black",
+        "score": 0.6666666666666666,
+        "mutuallyScoredNotes": [
+          {
+            "noteId": "patchouli",
+            "anchorScore": 9,
+            "candidateScore": 6
+          }
+        ],
+        "mutuallyScoredCount": 1,
+        "coverageFraction": 0.5
+      },
+      {
+        "anchorId": 501,
+        "anchorName": "Tuxedo",
+        "candidateId": 410,
+        "candidateName": "Il Padrino",
+        "score": 0.6666666666666666,
+        "mutuallyScoredNotes": [
+          {
+            "noteId": "patchouli",
+            "anchorScore": 9,
+            "candidateScore": 6
+          }
+        ],
+        "mutuallyScoredCount": 1,
+        "coverageFraction": 0.5
+      },
+      {
+        "anchorId": 501,
+        "anchorName": "Tuxedo",
+        "candidateId": 212,
+        "candidateName": "Spicebomb Extreme",
+        "score": 0.625,
+        "mutuallyScoredNotes": [
+          {
+            "noteId": "bourbonVanilla",
+            "anchorScore": 5,
+            "candidateScore": 8
+          }
+        ],
+        "mutuallyScoredCount": 1,
+        "coverageFraction": 0.5
+      },
+      {
+        "anchorId": 501,
+        "anchorName": "Tuxedo",
+        "candidateId": 21,
+        "candidateName": "Halloween Man Mystery",
+        "score": 0.5555555555555556,
+        "mutuallyScoredNotes": [
+          {
+            "noteId": "patchouli",
+            "anchorScore": 9,
+            "candidateScore": 5
+          }
+        ],
+        "mutuallyScoredCount": 1,
+        "coverageFraction": 0.5
+      },
+      {
+        "anchorId": 501,
+        "anchorName": "Tuxedo",
+        "candidateId": 33,
+        "candidateName": "Jaguar Pace",
+        "score": 0.5555555555555556,
+        "mutuallyScoredNotes": [
+          {
+            "noteId": "patchouli",
+            "anchorScore": 9,
+            "candidateScore": 5
+          }
+        ],
+        "mutuallyScoredCount": 1,
+        "coverageFraction": 0.5
+      },
+      {
+        "anchorId": 501,
+        "anchorName": "Tuxedo",
+        "candidateId": 109,
+        "candidateName": "K EDP Intense",
+        "score": 0.5555555555555556,
+        "mutuallyScoredNotes": [
+          {
+            "noteId": "patchouli",
+            "anchorScore": 9,
+            "candidateScore": 5
+          }
+        ],
+        "mutuallyScoredCount": 1,
+        "coverageFraction": 0.5
+      },
+      {
+        "anchorId": 501,
+        "anchorName": "Tuxedo",
+        "candidateId": 110,
+        "candidateName": "Concentré d'Orange Verte",
+        "score": 0.5555555555555556,
+        "mutuallyScoredNotes": [
+          {
+            "noteId": "patchouli",
+            "anchorScore": 9,
+            "candidateScore": 5
+          }
+        ],
+        "mutuallyScoredCount": 1,
+        "coverageFraction": 0.5
+      },
+      {
+        "anchorId": 501,
+        "anchorName": "Tuxedo",
+        "candidateId": 111,
+        "candidateName": "Terre d'Hermès EDT",
+        "score": 0.5555555555555556,
+        "mutuallyScoredNotes": [
+          {
+            "noteId": "patchouli",
+            "anchorScore": 9,
+            "candidateScore": 5
+          }
+        ],
+        "mutuallyScoredCount": 1,
+        "coverageFraction": 0.5
+      },
+      {
+        "anchorId": 501,
+        "anchorName": "Tuxedo",
+        "candidateId": 2,
+        "candidateName": "Light Blue Pour Homme EDT",
+        "score": 0.4444444444444444,
+        "mutuallyScoredNotes": [
+          {
+            "noteId": "patchouli",
+            "anchorScore": 9,
+            "candidateScore": 4
+          }
+        ],
+        "mutuallyScoredCount": 1,
+        "coverageFraction": 0.5
+      },
+      {
+        "anchorId": 501,
+        "anchorName": "Tuxedo",
+        "candidateId": 25,
+        "candidateName": "Montblanc Explorer",
+        "score": 0.4444444444444444,
+        "mutuallyScoredNotes": [
+          {
+            "noteId": "patchouli",
+            "anchorScore": 9,
+            "candidateScore": 4
+          }
+        ],
+        "mutuallyScoredCount": 1,
+        "coverageFraction": 0.5
+      },
+      {
+        "anchorId": 501,
+        "anchorName": "Tuxedo",
+        "candidateId": 101,
+        "candidateName": "Essenza",
+        "score": 0.4444444444444444,
+        "mutuallyScoredNotes": [
+          {
+            "noteId": "patchouli",
+            "anchorScore": 9,
+            "candidateScore": 4
+          }
+        ],
+        "mutuallyScoredCount": 1,
+        "coverageFraction": 0.5
+      },
+      {
+        "anchorId": 501,
+        "anchorName": "Tuxedo",
+        "candidateId": 406,
+        "candidateName": "Hacivat",
+        "score": 0.4444444444444444,
+        "mutuallyScoredNotes": [
+          {
+            "noteId": "patchouli",
+            "anchorScore": 9,
+            "candidateScore": 4
+          }
+        ],
+        "mutuallyScoredCount": 1,
+        "coverageFraction": 0.5
+      }
+    ],
+    "Hacivat": [
+      {
+        "anchorId": 406,
+        "anchorName": "Hacivat",
+        "candidateId": 2,
+        "candidateName": "Light Blue Pour Homme EDT",
+        "score": 1,
+        "mutuallyScoredNotes": [
+          {
+            "noteId": "patchouli",
+            "anchorScore": 4,
+            "candidateScore": 4
+          }
+        ],
+        "mutuallyScoredCount": 1,
+        "coverageFraction": 0.3333333333333333
+      },
+      {
+        "anchorId": 406,
+        "anchorName": "Hacivat",
+        "candidateId": 3,
+        "candidateName": "Versace Pour Homme",
+        "score": 1,
+        "mutuallyScoredNotes": [
+          {
+            "noteId": "cedar",
+            "anchorScore": 4,
+            "candidateScore": 4
+          }
+        ],
+        "mutuallyScoredCount": 1,
+        "coverageFraction": 0.3333333333333333
+      },
+      {
+        "anchorId": 406,
+        "anchorName": "Hacivat",
+        "candidateId": 17,
+        "candidateName": "Gentlemen Only",
+        "score": 1,
+        "mutuallyScoredNotes": [
+          {
+            "noteId": "cedar",
+            "anchorScore": 4,
+            "candidateScore": 4
+          }
+        ],
+        "mutuallyScoredCount": 1,
+        "coverageFraction": 0.25
+      },
+      {
+        "anchorId": 406,
+        "anchorName": "Hacivat",
+        "candidateId": 19,
+        "candidateName": "Club de Nuit Intense Man",
+        "score": 1,
+        "mutuallyScoredNotes": [
+          {
+            "noteId": "pineapple",
+            "anchorScore": 8,
+            "candidateScore": 8
+          }
+        ],
+        "mutuallyScoredCount": 1,
+        "coverageFraction": 0.25
+      },
+      {
+        "anchorId": 406,
+        "anchorName": "Hacivat",
+        "candidateId": 22,
+        "candidateName": "Legend Blue",
+        "score": 1,
+        "mutuallyScoredNotes": [
+          {
+            "noteId": "cedar",
+            "anchorScore": 4,
+            "candidateScore": 4
+          }
+        ],
+        "mutuallyScoredCount": 1,
+        "coverageFraction": 0.25
+      },
+      {
+        "anchorId": 406,
+        "anchorName": "Hacivat",
+        "candidateId": 25,
+        "candidateName": "Montblanc Explorer",
+        "score": 1,
+        "mutuallyScoredNotes": [
+          {
+            "noteId": "patchouli",
+            "anchorScore": 4,
+            "candidateScore": 4
+          }
+        ],
+        "mutuallyScoredCount": 1,
+        "coverageFraction": 0.25
+      },
+      {
+        "anchorId": 406,
+        "anchorName": "Hacivat",
+        "candidateId": 101,
+        "candidateName": "Essenza",
+        "score": 1,
+        "mutuallyScoredNotes": [
+          {
+            "noteId": "patchouli",
+            "anchorScore": 4,
+            "candidateScore": 4
+          }
+        ],
+        "mutuallyScoredCount": 1,
+        "coverageFraction": 0.3333333333333333
+      },
+      {
+        "anchorId": 406,
+        "anchorName": "Hacivat",
+        "candidateId": 104,
+        "candidateName": "Armani Code EDT",
+        "score": 1,
+        "mutuallyScoredNotes": [
+          {
+            "noteId": "cedar",
+            "anchorScore": 4,
+            "candidateScore": 4
+          }
+        ],
+        "mutuallyScoredCount": 1,
+        "coverageFraction": 0.25
+      },
+      {
+        "anchorId": 406,
+        "anchorName": "Hacivat",
+        "candidateId": 117,
+        "candidateName": "YSL L'Homme",
+        "score": 1,
+        "mutuallyScoredNotes": [
+          {
+            "noteId": "cedar",
+            "anchorScore": 4,
+            "candidateScore": 4
+          }
+        ],
+        "mutuallyScoredCount": 1,
+        "coverageFraction": 0.25
+      },
+      {
+        "anchorId": 406,
+        "anchorName": "Hacivat",
+        "candidateId": 21,
+        "candidateName": "Halloween Man Mystery",
+        "score": 0.8,
+        "mutuallyScoredNotes": [
+          {
+            "noteId": "patchouli",
+            "anchorScore": 4,
+            "candidateScore": 5
+          }
+        ],
+        "mutuallyScoredCount": 1,
+        "coverageFraction": 0.3333333333333333
+      },
+      {
+        "anchorId": 406,
+        "anchorName": "Hacivat",
+        "candidateId": 33,
+        "candidateName": "Jaguar Pace",
+        "score": 0.8,
+        "mutuallyScoredNotes": [
+          {
+            "noteId": "patchouli",
+            "anchorScore": 4,
+            "candidateScore": 5
+          }
+        ],
+        "mutuallyScoredCount": 1,
+        "coverageFraction": 0.3333333333333333
+      },
+      {
+        "anchorId": 406,
+        "anchorName": "Hacivat",
+        "candidateId": 109,
+        "candidateName": "K EDP Intense",
+        "score": 0.8,
+        "mutuallyScoredNotes": [
+          {
+            "noteId": "patchouli",
+            "anchorScore": 4,
+            "candidateScore": 5
+          }
+        ],
+        "mutuallyScoredCount": 1,
+        "coverageFraction": 0.3333333333333333
+      },
+      {
+        "anchorId": 406,
+        "anchorName": "Hacivat",
+        "candidateId": 110,
+        "candidateName": "Concentré d'Orange Verte",
+        "score": 0.8,
+        "mutuallyScoredNotes": [
+          {
+            "noteId": "patchouli",
+            "anchorScore": 4,
+            "candidateScore": 5
+          }
+        ],
+        "mutuallyScoredCount": 1,
+        "coverageFraction": 0.25
+      },
+      {
+        "anchorId": 406,
+        "anchorName": "Hacivat",
+        "candidateId": 23,
+        "candidateName": "Legend EDP",
+        "score": 0.75,
+        "mutuallyScoredNotes": [
+          {
+            "noteId": "oakmoss",
+            "anchorScore": 8,
+            "candidateScore": 6
+          }
+        ],
+        "mutuallyScoredCount": 1,
+        "coverageFraction": 0.3333333333333333
+      },
+      {
+        "anchorId": 406,
+        "anchorName": "Hacivat",
+        "candidateId": 112,
+        "candidateName": "Le Beau Le Parfum",
+        "score": 0.75,
+        "mutuallyScoredNotes": [
+          {
+            "noteId": "pineapple",
+            "anchorScore": 8,
+            "candidateScore": 6
+          }
+        ],
+        "mutuallyScoredCount": 1,
+        "coverageFraction": 0.3333333333333333
+      },
+      {
+        "anchorId": 406,
+        "anchorName": "Hacivat",
+        "candidateId": 407,
+        "candidateName": "Summer Hammer",
+        "score": 0.75,
+        "mutuallyScoredNotes": [
+          {
+            "noteId": "pineapple",
+            "anchorScore": 8,
+            "candidateScore": 6
+          }
+        ],
+        "mutuallyScoredCount": 1,
+        "coverageFraction": 0.25
+      },
+      {
+        "anchorId": 406,
+        "anchorName": "Hacivat",
+        "candidateId": 115,
+        "candidateName": "Cedrat Boise",
+        "score": 0.6666666666666666,
+        "mutuallyScoredNotes": [
+          {
+            "noteId": "cedar",
+            "anchorScore": 4,
+            "candidateScore": 6
+          }
+        ],
+        "mutuallyScoredCount": 1,
+        "coverageFraction": 0.3333333333333333
+      },
+      {
+        "anchorId": 406,
+        "anchorName": "Hacivat",
+        "candidateId": 205,
+        "candidateName": "Gentleman EDP",
+        "score": 0.6666666666666666,
+        "mutuallyScoredNotes": [
+          {
+            "noteId": "patchouli",
+            "anchorScore": 4,
+            "candidateScore": 6
+          }
+        ],
+        "mutuallyScoredCount": 1,
+        "coverageFraction": 0.25
+      },
+      {
+        "anchorId": 406,
+        "anchorName": "Hacivat",
+        "candidateId": 206,
+        "candidateName": "Polo Blue Parfum",
+        "score": 0.6666666666666666,
+        "mutuallyScoredNotes": [
+          {
+            "noteId": "patchouli",
+            "anchorScore": 4,
+            "candidateScore": 6
+          }
+        ],
+        "mutuallyScoredCount": 1,
+        "coverageFraction": 0.3333333333333333
+      },
+      {
+        "anchorId": 406,
+        "anchorName": "Hacivat",
+        "candidateId": 209,
+        "candidateName": "Luna Rossa Black",
+        "score": 0.6666666666666666,
+        "mutuallyScoredNotes": [
+          {
+            "noteId": "patchouli",
+            "anchorScore": 4,
+            "candidateScore": 6
+          }
+        ],
+        "mutuallyScoredCount": 1,
+        "coverageFraction": 0.3333333333333333
+      },
+      {
+        "anchorId": 406,
+        "anchorName": "Hacivat",
+        "candidateId": 409,
+        "candidateName": "Orphéon EDP",
+        "score": 0.6666666666666666,
+        "mutuallyScoredNotes": [
+          {
+            "noteId": "cedar",
+            "anchorScore": 4,
+            "candidateScore": 6
+          }
+        ],
+        "mutuallyScoredCount": 1,
+        "coverageFraction": 0.25
+      },
+      {
+        "anchorId": 406,
+        "anchorName": "Hacivat",
+        "candidateId": 410,
+        "candidateName": "Il Padrino",
+        "score": 0.6666666666666666,
+        "mutuallyScoredNotes": [
+          {
+            "noteId": "patchouli",
+            "anchorScore": 4,
+            "candidateScore": 6
+          }
+        ],
+        "mutuallyScoredCount": 1,
+        "coverageFraction": 0.5
+      },
+      {
+        "anchorId": 406,
+        "anchorName": "Hacivat",
+        "candidateId": 306,
+        "candidateName": "Acqua di Gio Elixir",
+        "score": 0.5714285714285714,
+        "mutuallyScoredNotes": [
+          {
+            "noteId": "patchouli",
+            "anchorScore": 4,
+            "candidateScore": 7
+          }
+        ],
+        "mutuallyScoredCount": 1,
+        "coverageFraction": 0.25
+      },
+      {
+        "anchorId": 406,
+        "anchorName": "Hacivat",
+        "candidateId": 501,
+        "candidateName": "Tuxedo",
+        "score": 0.4444444444444444,
+        "mutuallyScoredNotes": [
+          {
+            "noteId": "patchouli",
+            "anchorScore": 4,
+            "candidateScore": 9
+          }
+        ],
+        "mutuallyScoredCount": 1,
+        "coverageFraction": 0.5
+      }
+    ],
+    "Torino21": [
+      {
+        "anchorId": 408,
+        "anchorName": "Torino21",
+        "candidateId": 2,
+        "candidateName": "Light Blue Pour Homme EDT",
+        "score": 1,
+        "mutuallyScoredNotes": [
+          {
+            "noteId": "rosemary",
+            "anchorScore": 5,
+            "candidateScore": 5
+          }
+        ],
+        "mutuallyScoredCount": 1,
+        "coverageFraction": 0.3333333333333333
+      },
+      {
+        "anchorId": 408,
+        "anchorName": "Torino21",
+        "candidateId": 115,
+        "candidateName": "Cedrat Boise",
+        "score": 1,
+        "mutuallyScoredNotes": [
+          {
+            "noteId": "blackCurrant",
+            "anchorScore": 3,
+            "candidateScore": 3
+          }
+        ],
+        "mutuallyScoredCount": 1,
+        "coverageFraction": 0.3333333333333333
+      },
+      {
+        "anchorId": 408,
+        "anchorName": "Torino21",
+        "candidateId": 119,
+        "candidateName": "Mirto di Panarea",
+        "score": 0.875,
+        "mutuallyScoredNotes": [
+          {
+            "noteId": "basil",
+            "anchorScore": 8,
+            "candidateScore": 7
+          }
+        ],
+        "mutuallyScoredCount": 1,
+        "coverageFraction": 0.3333333333333333
+      },
+      {
+        "anchorId": 408,
+        "anchorName": "Torino21",
+        "candidateId": 5,
+        "candidateName": "Le Male",
+        "score": 0.7777777777777778,
+        "mutuallyScoredNotes": [
+          {
+            "noteId": "mint",
+            "anchorScore": 9,
+            "candidateScore": 7
+          }
+        ],
+        "mutuallyScoredCount": 1,
+        "coverageFraction": 0.25
+      },
+      {
+        "anchorId": 408,
+        "anchorName": "Torino21",
+        "candidateId": 117,
+        "candidateName": "YSL L'Homme",
+        "score": 0.625,
+        "mutuallyScoredNotes": [
+          {
+            "noteId": "basil",
+            "anchorScore": 8,
+            "candidateScore": 5
+          }
+        ],
+        "mutuallyScoredCount": 1,
+        "coverageFraction": 0.25
+      },
+      {
+        "anchorId": 408,
+        "anchorName": "Torino21",
+        "candidateId": 305,
+        "candidateName": "Orange X Santal",
+        "score": 0.625,
+        "mutuallyScoredNotes": [
+          {
+            "noteId": "basil",
+            "anchorScore": 8,
+            "candidateScore": 5
+          }
+        ],
+        "mutuallyScoredCount": 1,
+        "coverageFraction": 0.3333333333333333
+      },
+      {
+        "anchorId": 408,
+        "anchorName": "Torino21",
+        "candidateId": 6,
+        "candidateName": "Eros EDP",
+        "score": 0.5555555555555556,
+        "mutuallyScoredNotes": [
+          {
+            "noteId": "mint",
+            "anchorScore": 9,
+            "candidateScore": 5
+          }
+        ],
+        "mutuallyScoredCount": 1,
+        "coverageFraction": 0.25
+      },
+      {
+        "anchorId": 408,
+        "anchorName": "Torino21",
+        "candidateId": 19,
+        "candidateName": "Club de Nuit Intense Man",
+        "score": 0.5,
+        "mutuallyScoredNotes": [
+          {
+            "noteId": "blackCurrant",
+            "anchorScore": 3,
+            "candidateScore": 6
+          }
+        ],
+        "mutuallyScoredCount": 1,
+        "coverageFraction": 0.25
+      },
+      {
+        "anchorId": 408,
+        "anchorName": "Torino21",
+        "candidateId": 303,
+        "candidateName": "Bois Imperial",
+        "score": 0.5,
+        "mutuallyScoredNotes": [
+          {
+            "noteId": "basil",
+            "anchorScore": 8,
+            "candidateScore": 4
+          }
+        ],
+        "mutuallyScoredCount": 1,
+        "coverageFraction": 0.3333333333333333
+      },
+      {
+        "anchorId": 408,
+        "anchorName": "Torino21",
+        "candidateId": 13,
+        "candidateName": "The One for Men EDP",
+        "score": 0.375,
+        "mutuallyScoredNotes": [
+          {
+            "noteId": "basil",
+            "anchorScore": 8,
+            "candidateScore": 3
+          }
+        ],
+        "mutuallyScoredCount": 1,
+        "coverageFraction": 0.25
+      },
+      {
+        "anchorId": 408,
+        "anchorName": "Torino21",
+        "candidateId": 203,
+        "candidateName": "Loewe 7 Cobalt",
+        "score": 0.375,
+        "mutuallyScoredNotes": [
+          {
+            "noteId": "blackCurrant",
+            "anchorScore": 3,
+            "candidateScore": 8
+          }
+        ],
+        "mutuallyScoredCount": 1,
+        "coverageFraction": 0.25
+      },
+      {
+        "anchorId": 408,
+        "anchorName": "Torino21",
+        "candidateId": 401,
+        "candidateName": "Silver Mountain Water",
+        "score": 0.375,
+        "mutuallyScoredNotes": [
+          {
+            "noteId": "blackCurrant",
+            "anchorScore": 3,
+            "candidateScore": 8
+          }
+        ],
+        "mutuallyScoredCount": 1,
+        "coverageFraction": 0.25
+      }
+    ],
+    "Mefisto": [
+      {
+        "anchorId": 405,
+        "anchorName": "Mefisto",
+        "candidateId": 24,
+        "candidateName": "Legend Red",
+        "score": 1,
+        "mutuallyScoredNotes": [
+          {
+            "noteId": "grapefruit",
+            "anchorScore": 5,
+            "candidateScore": 5
+          }
+        ],
+        "mutuallyScoredCount": 1,
+        "coverageFraction": 0.3333333333333333
+      },
+      {
+        "anchorId": 405,
+        "anchorName": "Mefisto",
+        "candidateId": 214,
+        "candidateName": "Prada L'Homme L'Eau",
+        "score": 1,
+        "mutuallyScoredNotes": [
+          {
+            "noteId": "iris",
+            "anchorScore": 6,
+            "candidateScore": 6
+          }
+        ],
+        "mutuallyScoredCount": 1,
+        "coverageFraction": 0.3333333333333333
+      },
+      {
+        "anchorId": 405,
+        "anchorName": "Mefisto",
+        "candidateId": 13,
+        "candidateName": "The One for Men EDP",
+        "score": 0.8333333333333334,
+        "mutuallyScoredNotes": [
+          {
+            "noteId": "grapefruit",
+            "anchorScore": 5,
+            "candidateScore": 6
+          }
+        ],
+        "mutuallyScoredCount": 1,
+        "coverageFraction": 0.3333333333333333
+      },
+      {
+        "anchorId": 405,
+        "anchorName": "Mefisto",
+        "candidateId": 205,
+        "candidateName": "Gentleman EDP",
+        "score": 0.75,
+        "mutuallyScoredNotes": [
+          {
+            "noteId": "iris",
+            "anchorScore": 6,
+            "candidateScore": 8
+          }
+        ],
+        "mutuallyScoredCount": 1,
+        "coverageFraction": 0.3333333333333333
+      },
+      {
+        "anchorId": 405,
+        "anchorName": "Mefisto",
+        "candidateId": 26,
+        "candidateName": "Polo Red EDT",
+        "score": 0.7142857142857143,
+        "mutuallyScoredNotes": [
+          {
+            "noteId": "grapefruit",
+            "anchorScore": 5,
+            "candidateScore": 7
+          }
+        ],
+        "mutuallyScoredCount": 1,
+        "coverageFraction": 0.3333333333333333
+      },
+      {
+        "anchorId": 405,
+        "anchorName": "Mefisto",
+        "candidateId": 34,
+        "candidateName": "Givenchy Pour Homme Blue Label",
+        "score": 0.7142857142857143,
+        "mutuallyScoredNotes": [
+          {
+            "noteId": "grapefruit",
+            "anchorScore": 5,
+            "candidateScore": 7
+          }
+        ],
+        "mutuallyScoredCount": 1,
+        "coverageFraction": 0.3333333333333333
+      },
+      {
+        "anchorId": 405,
+        "anchorName": "Mefisto",
+        "candidateId": 111,
+        "candidateName": "Terre d'Hermès EDT",
+        "score": 0.7142857142857143,
+        "mutuallyScoredNotes": [
+          {
+            "noteId": "grapefruit",
+            "anchorScore": 5,
+            "candidateScore": 7
+          }
+        ],
+        "mutuallyScoredCount": 1,
+        "coverageFraction": 0.3333333333333333
+      },
+      {
+        "anchorId": 405,
+        "anchorName": "Mefisto",
+        "candidateId": 302,
+        "candidateName": "Allure Homme Sport Superleggera",
+        "score": 0.7142857142857143,
+        "mutuallyScoredNotes": [
+          {
+            "noteId": "grapefruit",
+            "anchorScore": 5,
+            "candidateScore": 7
+          }
+        ],
+        "mutuallyScoredCount": 1,
+        "coverageFraction": 0.3333333333333333
+      },
+      {
+        "anchorId": 405,
+        "anchorName": "Mefisto",
+        "candidateId": 113,
+        "candidateName": "Le Male Le Parfum",
+        "score": 0.6666666666666666,
+        "mutuallyScoredNotes": [
+          {
+            "noteId": "iris",
+            "anchorScore": 6,
+            "candidateScore": 4
+          }
+        ],
+        "mutuallyScoredCount": 1,
+        "coverageFraction": 0.3333333333333333
+      },
+      {
+        "anchorId": 405,
+        "anchorName": "Mefisto",
+        "candidateId": 208,
+        "candidateName": "Prada L'Homme",
+        "score": 0.6666666666666666,
+        "mutuallyScoredNotes": [
+          {
+            "noteId": "iris",
+            "anchorScore": 6,
+            "candidateScore": 9
+          }
+        ],
+        "mutuallyScoredCount": 1,
+        "coverageFraction": 0.3333333333333333
+      }
+    ],
+    "Prada L'Homme": [
+      {
+        "anchorId": 208,
+        "anchorName": "Prada L'Homme",
+        "candidateId": 26,
+        "candidateName": "Polo Red EDT",
+        "score": 1,
+        "mutuallyScoredNotes": [
+          {
+            "noteId": "amber",
+            "anchorScore": 5,
+            "candidateScore": 5
+          }
+        ],
+        "mutuallyScoredCount": 1,
+        "coverageFraction": 0.3333333333333333
+      },
+      {
+        "anchorId": 208,
+        "anchorName": "Prada L'Homme",
+        "candidateId": 28,
+        "candidateName": "Tous Man",
+        "score": 1,
+        "mutuallyScoredNotes": [
+          {
+            "noteId": "amber",
+            "anchorScore": 5,
+            "candidateScore": 5
+          }
+        ],
+        "mutuallyScoredCount": 1,
+        "coverageFraction": 0.3333333333333333
+      },
+      {
+        "anchorId": 208,
+        "anchorName": "Prada L'Homme",
+        "candidateId": 31,
+        "candidateName": "Viking Cairo",
+        "score": 1,
+        "mutuallyScoredNotes": [
+          {
+            "noteId": "amber",
+            "anchorScore": 5,
+            "candidateScore": 5
+          }
+        ],
+        "mutuallyScoredCount": 1,
+        "coverageFraction": 0.5
+      },
+      {
+        "anchorId": 208,
+        "anchorName": "Prada L'Homme",
+        "candidateId": 32,
+        "candidateName": "Guess Man Gold",
+        "score": 1,
+        "mutuallyScoredNotes": [
+          {
+            "noteId": "amber",
+            "anchorScore": 5,
+            "candidateScore": 5
+          }
+        ],
+        "mutuallyScoredCount": 1,
+        "coverageFraction": 0.5
+      },
+      {
+        "anchorId": 208,
+        "anchorName": "Prada L'Homme",
+        "candidateId": 209,
+        "candidateName": "Luna Rossa Black",
+        "score": 1,
+        "mutuallyScoredNotes": [
+          {
+            "noteId": "amber",
+            "anchorScore": 5,
+            "candidateScore": 5
+          }
+        ],
+        "mutuallyScoredCount": 1,
+        "coverageFraction": 0.3333333333333333
+      },
+      {
+        "anchorId": 208,
+        "anchorName": "Prada L'Homme",
+        "candidateId": 302,
+        "candidateName": "Allure Homme Sport Superleggera",
+        "score": 1,
+        "mutuallyScoredNotes": [
+          {
+            "noteId": "amber",
+            "anchorScore": 5,
+            "candidateScore": 5
+          }
+        ],
+        "mutuallyScoredCount": 1,
+        "coverageFraction": 0.25
+      },
+      {
+        "anchorId": 208,
+        "anchorName": "Prada L'Homme",
+        "candidateId": 205,
+        "candidateName": "Gentleman EDP",
+        "score": 0.8888888888888888,
+        "mutuallyScoredNotes": [
+          {
+            "noteId": "iris",
+            "anchorScore": 9,
+            "candidateScore": 8
+          }
+        ],
+        "mutuallyScoredCount": 1,
+        "coverageFraction": 0.25
+      },
+      {
+        "anchorId": 208,
+        "anchorName": "Prada L'Homme",
+        "candidateId": 13,
+        "candidateName": "The One for Men EDP",
+        "score": 0.8333333333333334,
+        "mutuallyScoredNotes": [
+          {
+            "noteId": "amber",
+            "anchorScore": 5,
+            "candidateScore": 6
+          }
+        ],
+        "mutuallyScoredCount": 1,
+        "coverageFraction": 0.25
+      },
+      {
+        "anchorId": 208,
+        "anchorName": "Prada L'Homme",
+        "candidateId": 20,
+        "candidateName": "F by Ferragamo Black",
+        "score": 0.8333333333333334,
+        "mutuallyScoredNotes": [
+          {
+            "noteId": "amber",
+            "anchorScore": 5,
+            "candidateScore": 6
+          }
+        ],
+        "mutuallyScoredCount": 1,
+        "coverageFraction": 0.3333333333333333
+      },
+      {
+        "anchorId": 208,
+        "anchorName": "Prada L'Homme",
+        "candidateId": 405,
+        "candidateName": "Mefisto",
+        "score": 0.6666666666666666,
+        "mutuallyScoredNotes": [
+          {
+            "noteId": "iris",
+            "anchorScore": 9,
+            "candidateScore": 6
+          }
+        ],
+        "mutuallyScoredCount": 1,
+        "coverageFraction": 0.3333333333333333
+      },
+      {
+        "anchorId": 208,
+        "anchorName": "Prada L'Homme",
+        "candidateId": 113,
+        "candidateName": "Le Male Le Parfum",
+        "score": 0.4444444444444444,
+        "mutuallyScoredNotes": [
+          {
+            "noteId": "iris",
+            "anchorScore": 9,
+            "candidateScore": 4
+          }
+        ],
+        "mutuallyScoredCount": 1,
+        "coverageFraction": 0.25
+      }
+    ]
+  },
+  "convergence": [
+    {
+      "anchorId": 208,
+      "anchorName": "Prada L'Homme",
+      "candidateId": 214,
+      "candidateName": "Prada L'Homme L'Eau",
+      "signalsPresent": [
+        "accords",
+        "notes",
+        "prominence",
+        "vibes"
+      ],
+      "signalCount": 4
+    },
+    {
+      "anchorId": 408,
+      "anchorName": "Torino21",
+      "candidateId": 110,
+      "candidateName": "Concentré d'Orange Verte",
+      "signalsPresent": [
+        "accords",
+        "notes",
+        "prominence",
+        "vibes"
+      ],
+      "signalCount": 4
+    },
+    {
+      "anchorId": 118,
+      "anchorName": "La Nuit de L'Homme",
+      "candidateId": 5,
+      "candidateName": "Le Male",
+      "signalsPresent": [
+        "accords",
+        "notes"
+      ],
+      "signalCount": 2
+    },
+    {
+      "anchorId": 118,
+      "anchorName": "La Nuit de L'Homme",
+      "candidateId": 113,
+      "candidateName": "Le Male Le Parfum",
+      "signalsPresent": [
+        "prominence",
+        "vibes"
+      ],
+      "signalCount": 2
+    },
+    {
+      "anchorId": 208,
+      "anchorName": "Prada L'Homme",
+      "candidateId": 402,
+      "candidateName": "Sauvage Elixir",
+      "signalsPresent": [
+        "accords",
+        "notes"
+      ],
+      "signalCount": 2
+    },
+    {
+      "anchorId": 404,
+      "anchorName": "Layton",
+      "candidateId": 4,
+      "candidateName": "Legend EDT",
+      "signalsPresent": [
+        "notes",
+        "vibes"
+      ],
+      "signalCount": 2
+    },
+    {
+      "anchorId": 404,
+      "anchorName": "Layton",
+      "candidateId": 403,
+      "candidateName": "Carlisle",
+      "signalsPresent": [
+        "accords",
+        "vibes"
+      ],
+      "signalCount": 2
+    },
+    {
+      "anchorId": 405,
+      "anchorName": "Mefisto",
+      "candidateId": 1,
+      "candidateName": "Acqua di Gio EDT",
+      "signalsPresent": [
+        "accords",
+        "vibes"
+      ],
+      "signalCount": 2
+    },
+    {
+      "anchorId": 405,
+      "anchorName": "Mefisto",
+      "candidateId": 3,
+      "candidateName": "Versace Pour Homme",
+      "signalsPresent": [
+        "accords",
+        "notes"
+      ],
+      "signalCount": 2
+    },
+    {
+      "anchorId": 406,
+      "anchorName": "Hacivat",
+      "candidateId": 115,
+      "candidateName": "Cedrat Boise",
+      "signalsPresent": [
+        "notes",
+        "vibes"
+      ],
+      "signalCount": 2
+    },
+    {
+      "anchorId": 406,
+      "anchorName": "Hacivat",
+      "candidateId": 302,
+      "candidateName": "Allure Homme Sport Superleggera",
+      "signalsPresent": [
+        "accords",
+        "notes"
+      ],
+      "signalCount": 2
+    },
+    {
+      "anchorId": 408,
+      "anchorName": "Torino21",
+      "candidateId": 103,
+      "candidateName": "Mandarino di Sicilia",
+      "signalsPresent": [
+        "accords",
+        "vibes"
+      ],
+      "signalCount": 2
+    },
+    {
+      "anchorId": 501,
+      "anchorName": "Tuxedo",
+      "candidateId": 205,
+      "candidateName": "Gentleman EDP",
+      "signalsPresent": [
+        "notes",
+        "vibes"
+      ],
+      "signalCount": 2
+    },
+    {
+      "anchorId": 118,
+      "anchorName": "La Nuit de L'Homme",
+      "candidateId": 13,
+      "candidateName": "The One for Men EDP",
+      "signalsPresent": [
+        "vibes"
+      ],
+      "signalCount": 1
+    },
+    {
+      "anchorId": 118,
+      "anchorName": "La Nuit de L'Homme",
+      "candidateId": 21,
+      "candidateName": "Halloween Man Mystery",
+      "signalsPresent": [
+        "accords"
+      ],
+      "signalCount": 1
+    },
+    {
+      "anchorId": 118,
+      "anchorName": "La Nuit de L'Homme",
+      "candidateId": 31,
+      "candidateName": "Viking Cairo",
+      "signalsPresent": [
+        "notes"
+      ],
+      "signalCount": 1
+    },
+    {
+      "anchorId": 118,
+      "anchorName": "La Nuit de L'Homme",
+      "candidateId": 34,
+      "candidateName": "Givenchy Pour Homme Blue Label",
+      "signalsPresent": [
+        "notes"
+      ],
+      "signalCount": 1
+    },
+    {
+      "anchorId": 118,
+      "anchorName": "La Nuit de L'Homme",
+      "candidateId": 104,
+      "candidateName": "Armani Code EDT",
+      "signalsPresent": [
+        "vibes"
+      ],
+      "signalCount": 1
+    },
+    {
+      "anchorId": 118,
+      "anchorName": "La Nuit de L'Homme",
+      "candidateId": 108,
+      "candidateName": "Bad Boy Cobalt Parfum Electrique",
+      "signalsPresent": [
+        "notes"
+      ],
+      "signalCount": 1
+    },
+    {
+      "anchorId": 118,
+      "anchorName": "La Nuit de L'Homme",
+      "candidateId": 203,
+      "candidateName": "Loewe 7 Cobalt",
+      "signalsPresent": [
+        "accords"
+      ],
+      "signalCount": 1
+    },
+    {
+      "anchorId": 118,
+      "anchorName": "La Nuit de L'Homme",
+      "candidateId": 204,
+      "candidateName": "Replica By The Fireplace",
+      "signalsPresent": [
+        "accords"
+      ],
+      "signalCount": 1
+    },
+    {
+      "anchorId": 118,
+      "anchorName": "La Nuit de L'Homme",
+      "candidateId": 205,
+      "candidateName": "Gentleman EDP",
+      "signalsPresent": [
+        "vibes"
+      ],
+      "signalCount": 1
+    },
+    {
+      "anchorId": 118,
+      "anchorName": "La Nuit de L'Homme",
+      "candidateId": 211,
+      "candidateName": "Born In Roma Coral Fantasy",
+      "signalsPresent": [
+        "notes"
+      ],
+      "signalCount": 1
+    },
+    {
+      "anchorId": 118,
+      "anchorName": "La Nuit de L'Homme",
+      "candidateId": 304,
+      "candidateName": "Divine Vanille",
+      "signalsPresent": [
+        "vibes"
+      ],
+      "signalCount": 1
+    },
+    {
+      "anchorId": 118,
+      "anchorName": "La Nuit de L'Homme",
+      "candidateId": 402,
+      "candidateName": "Sauvage Elixir",
+      "signalsPresent": [
+        "accords"
+      ],
+      "signalCount": 1
+    },
+    {
+      "anchorId": 118,
+      "anchorName": "La Nuit de L'Homme",
+      "candidateId": 404,
+      "candidateName": "Layton",
+      "signalsPresent": [
+        "prominence"
+      ],
+      "signalCount": 1
+    },
+    {
+      "anchorId": 208,
+      "anchorName": "Prada L'Homme",
+      "candidateId": 17,
+      "candidateName": "Gentlemen Only",
+      "signalsPresent": [
+        "vibes"
+      ],
+      "signalCount": 1
+    },
+    {
+      "anchorId": 208,
+      "anchorName": "Prada L'Homme",
+      "candidateId": 23,
+      "candidateName": "Legend EDP",
+      "signalsPresent": [
+        "vibes"
+      ],
+      "signalCount": 1
+    },
+    {
+      "anchorId": 208,
+      "anchorName": "Prada L'Homme",
+      "candidateId": 29,
+      "candidateName": "Versace Eros Flame",
+      "signalsPresent": [
+        "notes"
+      ],
+      "signalCount": 1
+    },
+    {
+      "anchorId": 208,
+      "anchorName": "Prada L'Homme",
+      "candidateId": 114,
+      "candidateName": "Game of Spades Wildcard",
+      "signalsPresent": [
+        "notes"
+      ],
+      "signalCount": 1
+    },
+    {
+      "anchorId": 208,
+      "anchorName": "Prada L'Homme",
+      "candidateId": 209,
+      "candidateName": "Luna Rossa Black",
+      "signalsPresent": [
+        "accords"
+      ],
+      "signalCount": 1
+    },
+    {
+      "anchorId": 208,
+      "anchorName": "Prada L'Homme",
+      "candidateId": 301,
+      "candidateName": "Allure Homme Edition Blanche EDP",
+      "signalsPresent": [
+        "vibes"
+      ],
+      "signalCount": 1
+    },
+    {
+      "anchorId": 208,
+      "anchorName": "Prada L'Homme",
+      "candidateId": 303,
+      "candidateName": "Bois Imperial",
+      "signalsPresent": [
+        "accords"
+      ],
+      "signalCount": 1
+    },
+    {
+      "anchorId": 208,
+      "anchorName": "Prada L'Homme",
+      "candidateId": 403,
+      "candidateName": "Carlisle",
+      "signalsPresent": [
+        "accords"
+      ],
+      "signalCount": 1
+    },
+    {
+      "anchorId": 208,
+      "anchorName": "Prada L'Homme",
+      "candidateId": 404,
+      "candidateName": "Layton",
+      "signalsPresent": [
+        "notes"
+      ],
+      "signalCount": 1
+    },
+    {
+      "anchorId": 208,
+      "anchorName": "Prada L'Homme",
+      "candidateId": 409,
+      "candidateName": "Orphéon EDP",
+      "signalsPresent": [
+        "vibes"
+      ],
+      "signalCount": 1
+    },
+    {
+      "anchorId": 404,
+      "anchorName": "Layton",
+      "candidateId": 5,
+      "candidateName": "Le Male",
+      "signalsPresent": [
+        "prominence"
+      ],
+      "signalCount": 1
+    },
+    {
+      "anchorId": 404,
+      "anchorName": "Layton",
+      "candidateId": 10,
+      "candidateName": "L'Homme Idéal EDT",
+      "signalsPresent": [
+        "vibes"
+      ],
+      "signalCount": 1
+    },
+    {
+      "anchorId": 404,
+      "anchorName": "Layton",
+      "candidateId": 19,
+      "candidateName": "Club de Nuit Intense Man",
+      "signalsPresent": [
+        "notes"
+      ],
+      "signalCount": 1
+    },
+    {
+      "anchorId": 404,
+      "anchorName": "Layton",
+      "candidateId": 21,
+      "candidateName": "Halloween Man Mystery",
+      "signalsPresent": [
+        "accords"
+      ],
+      "signalCount": 1
+    },
+    {
+      "anchorId": 404,
+      "anchorName": "Layton",
+      "candidateId": 31,
+      "candidateName": "Viking Cairo",
+      "signalsPresent": [
+        "notes"
+      ],
+      "signalCount": 1
+    },
+    {
+      "anchorId": 404,
+      "anchorName": "Layton",
+      "candidateId": 113,
+      "candidateName": "Le Male Le Parfum",
+      "signalsPresent": [
+        "prominence"
+      ],
+      "signalCount": 1
+    },
+    {
+      "anchorId": 404,
+      "anchorName": "Layton",
+      "candidateId": 118,
+      "candidateName": "La Nuit de L'Homme",
+      "signalsPresent": [
+        "prominence"
+      ],
+      "signalCount": 1
+    },
+    {
+      "anchorId": 404,
+      "anchorName": "Layton",
+      "candidateId": 204,
+      "candidateName": "Replica By The Fireplace",
+      "signalsPresent": [
+        "accords"
+      ],
+      "signalCount": 1
+    },
+    {
+      "anchorId": 404,
+      "anchorName": "Layton",
+      "candidateId": 208,
+      "candidateName": "Prada L'Homme",
+      "signalsPresent": [
+        "notes"
+      ],
+      "signalCount": 1
+    },
+    {
+      "anchorId": 404,
+      "anchorName": "Layton",
+      "candidateId": 211,
+      "candidateName": "Born In Roma Coral Fantasy",
+      "signalsPresent": [
+        "notes"
+      ],
+      "signalCount": 1
+    },
+    {
+      "anchorId": 404,
+      "anchorName": "Layton",
+      "candidateId": 301,
+      "candidateName": "Allure Homme Edition Blanche EDP",
+      "signalsPresent": [
+        "accords"
+      ],
+      "signalCount": 1
+    },
+    {
+      "anchorId": 404,
+      "anchorName": "Layton",
+      "candidateId": 303,
+      "candidateName": "Bois Imperial",
+      "signalsPresent": [
+        "vibes"
+      ],
+      "signalCount": 1
+    },
+    {
+      "anchorId": 404,
+      "anchorName": "Layton",
+      "candidateId": 304,
+      "candidateName": "Divine Vanille",
+      "signalsPresent": [
+        "accords"
+      ],
+      "signalCount": 1
+    },
+    {
+      "anchorId": 404,
+      "anchorName": "Layton",
+      "candidateId": 501,
+      "candidateName": "Tuxedo",
+      "signalsPresent": [
+        "vibes"
+      ],
+      "signalCount": 1
+    },
+    {
+      "anchorId": 405,
+      "anchorName": "Mefisto",
+      "candidateId": 2,
+      "candidateName": "Light Blue Pour Homme EDT",
+      "signalsPresent": [
+        "accords"
+      ],
+      "signalCount": 1
+    },
+    {
+      "anchorId": 405,
+      "anchorName": "Mefisto",
+      "candidateId": 31,
+      "candidateName": "Viking Cairo",
+      "signalsPresent": [
+        "notes"
+      ],
+      "signalCount": 1
+    },
+    {
+      "anchorId": 405,
+      "anchorName": "Mefisto",
+      "candidateId": 101,
+      "candidateName": "Essenza",
+      "signalsPresent": [
+        "vibes"
+      ],
+      "signalCount": 1
+    },
+    {
+      "anchorId": 405,
+      "anchorName": "Mefisto",
+      "candidateId": 104,
+      "candidateName": "Armani Code EDT",
+      "signalsPresent": [
+        "vibes"
+      ],
+      "signalCount": 1
+    },
+    {
+      "anchorId": 405,
+      "anchorName": "Mefisto",
+      "candidateId": 107,
+      "candidateName": "Birds of Paradise for Him",
+      "signalsPresent": [
+        "notes"
+      ],
+      "signalCount": 1
+    },
+    {
+      "anchorId": 405,
+      "anchorName": "Mefisto",
+      "candidateId": 110,
+      "candidateName": "Concentré d'Orange Verte",
+      "signalsPresent": [
+        "vibes"
+      ],
+      "signalCount": 1
+    },
+    {
+      "anchorId": 405,
+      "anchorName": "Mefisto",
+      "candidateId": 111,
+      "candidateName": "Terre d'Hermès EDT",
+      "signalsPresent": [
+        "vibes"
+      ],
+      "signalCount": 1
+    },
+    {
+      "anchorId": 405,
+      "anchorName": "Mefisto",
+      "candidateId": 114,
+      "candidateName": "Game of Spades Wildcard",
+      "signalsPresent": [
+        "notes"
+      ],
+      "signalCount": 1
+    },
+    {
+      "anchorId": 405,
+      "anchorName": "Mefisto",
+      "candidateId": 117,
+      "candidateName": "YSL L'Homme",
+      "signalsPresent": [
+        "accords"
+      ],
+      "signalCount": 1
+    },
+    {
+      "anchorId": 405,
+      "anchorName": "Mefisto",
+      "candidateId": 119,
+      "candidateName": "Mirto di Panarea",
+      "signalsPresent": [
+        "notes"
+      ],
+      "signalCount": 1
+    },
+    {
+      "anchorId": 405,
+      "anchorName": "Mefisto",
+      "candidateId": 201,
+      "candidateName": "Dior Homme Sport",
+      "signalsPresent": [
+        "accords"
+      ],
+      "signalCount": 1
+    },
+    {
+      "anchorId": 406,
+      "anchorName": "Hacivat",
+      "candidateId": 12,
+      "candidateName": "CH Men",
+      "signalsPresent": [
+        "notes"
+      ],
+      "signalCount": 1
+    },
+    {
+      "anchorId": 406,
+      "anchorName": "Hacivat",
+      "candidateId": 19,
+      "candidateName": "Club de Nuit Intense Man",
+      "signalsPresent": [
+        "accords"
+      ],
+      "signalCount": 1
+    },
+    {
+      "anchorId": 406,
+      "anchorName": "Hacivat",
+      "candidateId": 23,
+      "candidateName": "Legend EDP",
+      "signalsPresent": [
+        "notes"
+      ],
+      "signalCount": 1
+    },
+    {
+      "anchorId": 406,
+      "anchorName": "Hacivat",
+      "candidateId": 24,
+      "candidateName": "Legend Red",
+      "signalsPresent": [
+        "accords"
+      ],
+      "signalCount": 1
+    },
+    {
+      "anchorId": 406,
+      "anchorName": "Hacivat",
+      "candidateId": 28,
+      "candidateName": "Tous Man",
+      "signalsPresent": [
+        "accords"
+      ],
+      "signalCount": 1
+    },
+    {
+      "anchorId": 406,
+      "anchorName": "Hacivat",
+      "candidateId": 102,
+      "candidateName": "Fico di Amalfi",
+      "signalsPresent": [
+        "notes"
+      ],
+      "signalCount": 1
+    },
+    {
+      "anchorId": 406,
+      "anchorName": "Hacivat",
+      "candidateId": 111,
+      "candidateName": "Terre d'Hermès EDT",
+      "signalsPresent": [
+        "prominence"
+      ],
+      "signalCount": 1
+    },
+    {
+      "anchorId": 406,
+      "anchorName": "Hacivat",
+      "candidateId": 114,
+      "candidateName": "Game of Spades Wildcard",
+      "signalsPresent": [
+        "vibes"
+      ],
+      "signalCount": 1
+    },
+    {
+      "anchorId": 406,
+      "anchorName": "Hacivat",
+      "candidateId": 206,
+      "candidateName": "Polo Blue Parfum",
+      "signalsPresent": [
+        "vibes"
+      ],
+      "signalCount": 1
+    },
+    {
+      "anchorId": 406,
+      "anchorName": "Hacivat",
+      "candidateId": 210,
+      "candidateName": "Born In Roma EDT",
+      "signalsPresent": [
+        "vibes"
+      ],
+      "signalCount": 1
+    },
+    {
+      "anchorId": 406,
+      "anchorName": "Hacivat",
+      "candidateId": 305,
+      "candidateName": "Orange X Santal",
+      "signalsPresent": [
+        "accords"
+      ],
+      "signalCount": 1
+    },
+    {
+      "anchorId": 406,
+      "anchorName": "Hacivat",
+      "candidateId": 501,
+      "candidateName": "Tuxedo",
+      "signalsPresent": [
+        "vibes"
+      ],
+      "signalCount": 1
+    },
+    {
+      "anchorId": 408,
+      "anchorName": "Torino21",
+      "candidateId": 2,
+      "candidateName": "Light Blue Pour Homme EDT",
+      "signalsPresent": [
+        "notes"
+      ],
+      "signalCount": 1
+    },
+    {
+      "anchorId": 408,
+      "anchorName": "Torino21",
+      "candidateId": 18,
+      "candidateName": "L.12.12 Blanc EDP",
+      "signalsPresent": [
+        "accords"
+      ],
+      "signalCount": 1
+    },
+    {
+      "anchorId": 408,
+      "anchorName": "Torino21",
+      "candidateId": 19,
+      "candidateName": "Club de Nuit Intense Man",
+      "signalsPresent": [
+        "notes"
+      ],
+      "signalCount": 1
+    },
+    {
+      "anchorId": 408,
+      "anchorName": "Torino21",
+      "candidateId": 24,
+      "candidateName": "Legend Red",
+      "signalsPresent": [
+        "vibes"
+      ],
+      "signalCount": 1
+    },
+    {
+      "anchorId": 408,
+      "anchorName": "Torino21",
+      "candidateId": 31,
+      "candidateName": "Viking Cairo",
+      "signalsPresent": [
+        "notes"
+      ],
+      "signalCount": 1
+    },
+    {
+      "anchorId": 408,
+      "anchorName": "Torino21",
+      "candidateId": 34,
+      "candidateName": "Givenchy Pour Homme Blue Label",
+      "signalsPresent": [
+        "accords"
+      ],
+      "signalCount": 1
+    },
+    {
+      "anchorId": 408,
+      "anchorName": "Torino21",
+      "candidateId": 100,
+      "candidateName": "Arancia di Capri",
+      "signalsPresent": [
+        "accords"
+      ],
+      "signalCount": 1
+    },
+    {
+      "anchorId": 408,
+      "anchorName": "Torino21",
+      "candidateId": 119,
+      "candidateName": "Mirto di Panarea",
+      "signalsPresent": [
+        "notes"
+      ],
+      "signalCount": 1
+    },
+    {
+      "anchorId": 408,
+      "anchorName": "Torino21",
+      "candidateId": 405,
+      "candidateName": "Mefisto",
+      "signalsPresent": [
+        "vibes"
+      ],
+      "signalCount": 1
+    },
+    {
+      "anchorId": 408,
+      "anchorName": "Torino21",
+      "candidateId": 406,
+      "candidateName": "Hacivat",
+      "signalsPresent": [
+        "vibes"
+      ],
+      "signalCount": 1
+    },
+    {
+      "anchorId": 501,
+      "anchorName": "Tuxedo",
+      "candidateId": 6,
+      "candidateName": "Eros EDP",
+      "signalsPresent": [
+        "accords"
+      ],
+      "signalCount": 1
+    },
+    {
+      "anchorId": 501,
+      "anchorName": "Tuxedo",
+      "candidateId": 17,
+      "candidateName": "Gentlemen Only",
+      "signalsPresent": [
+        "notes"
+      ],
+      "signalCount": 1
+    },
+    {
+      "anchorId": 501,
+      "anchorName": "Tuxedo",
+      "candidateId": 19,
+      "candidateName": "Club de Nuit Intense Man",
+      "signalsPresent": [
+        "notes"
+      ],
+      "signalCount": 1
+    },
+    {
+      "anchorId": 501,
+      "anchorName": "Tuxedo",
+      "candidateId": 101,
+      "candidateName": "Essenza",
+      "signalsPresent": [
+        "notes"
+      ],
+      "signalCount": 1
+    },
+    {
+      "anchorId": 501,
+      "anchorName": "Tuxedo",
+      "candidateId": 113,
+      "candidateName": "Le Male Le Parfum",
+      "signalsPresent": [
+        "vibes"
+      ],
+      "signalCount": 1
+    },
+    {
+      "anchorId": 501,
+      "anchorName": "Tuxedo",
+      "candidateId": 116,
+      "candidateName": "Invictus Victory",
+      "signalsPresent": [
+        "accords"
+      ],
+      "signalCount": 1
+    },
+    {
+      "anchorId": 501,
+      "anchorName": "Tuxedo",
+      "candidateId": 202,
+      "candidateName": "Sauvage EDP",
+      "signalsPresent": [
+        "accords"
+      ],
+      "signalCount": 1
+    },
+    {
+      "anchorId": 501,
+      "anchorName": "Tuxedo",
+      "candidateId": 303,
+      "candidateName": "Bois Imperial",
+      "signalsPresent": [
+        "accords"
+      ],
+      "signalCount": 1
+    },
+    {
+      "anchorId": 501,
+      "anchorName": "Tuxedo",
+      "candidateId": 306,
+      "candidateName": "Acqua di Gio Elixir",
+      "signalsPresent": [
+        "notes"
+      ],
+      "signalCount": 1
+    },
+    {
+      "anchorId": 501,
+      "anchorName": "Tuxedo",
+      "candidateId": 402,
+      "candidateName": "Sauvage Elixir",
+      "signalsPresent": [
+        "vibes"
+      ],
+      "signalCount": 1
+    },
+    {
+      "anchorId": 501,
+      "anchorName": "Tuxedo",
+      "candidateId": 403,
+      "candidateName": "Carlisle",
+      "signalsPresent": [
+        "vibes"
+      ],
+      "signalCount": 1
+    },
+    {
+      "anchorId": 501,
+      "anchorName": "Tuxedo",
+      "candidateId": 406,
+      "candidateName": "Hacivat",
+      "signalsPresent": [
+        "vibes"
+      ],
+      "signalCount": 1
+    },
+    {
+      "anchorId": 501,
+      "anchorName": "Tuxedo",
+      "candidateId": 410,
+      "candidateName": "Il Padrino",
+      "signalsPresent": [
+        "accords"
+      ],
+      "signalCount": 1
+    }
+  ]
+}
