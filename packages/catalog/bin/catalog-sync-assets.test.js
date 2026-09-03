@@ -61,7 +61,7 @@ describe("catalog-sync-assets", () => {
     const sourceFiles = walk(CATALOG_ASSET_SOURCE);
     const destinationFiles = walk(destination);
 
-    expect(result).toEqual({ copied: 384, destination });
+    expect(result).toEqual({ copied: 385, destination });
     expect(destinationFiles).toEqual(sourceFiles);
     destinationFiles.forEach((relativePath) => {
       expect(hash(destination, relativePath)).toBe(hash(CATALOG_ASSET_SOURCE, relativePath));

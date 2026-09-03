@@ -124,7 +124,6 @@ const BERGAMOT_FAMILY = {
   404: undefined,
   405: undefined,
   406: undefined,
-  407: undefined,
   410: undefined,
   501: undefined,
 };
@@ -173,6 +172,7 @@ const GRAPEFRUIT_FAMILY = {
   102: undefined,
   111: 7,
   207: undefined,
+  215: undefined,
   302: 7,
   402: undefined,
   405: 5,
@@ -188,6 +188,7 @@ const GREEN_MANDARIN_FAMILY = {
   17: undefined,
   103: 7,
   104: 5,
+  215: undefined,
   306: undefined,
 };
 
@@ -238,7 +239,6 @@ const MUSK_FAMILY = {
   304: undefined,
   401: 5,
   405: undefined,
-  407: 4,
   408: undefined,
   500: undefined,
 };
@@ -365,8 +365,8 @@ describe("Composer Phase 3D canonical-data sanity audit", () => {
 describe("Composer Phase 3D horizontal calibration -- citrus/orange and musk canonical-key families", () => {
   const perfumesById = new Map(perfumes.map((perfume) => [perfume.id, perfume]));
 
-  it("has exactly 87 catalog fragrances to search for exhaustive family membership", () => {
-    expect(perfumes).toHaveLength(87);
+  it("has exactly 88 catalog fragrances to search for exhaustive family membership", () => {
+    expect(perfumes).toHaveLength(88);
   });
 
   for (const [noteId, family] of Object.entries(ALL_FAMILIES)) {
@@ -459,15 +459,15 @@ describe("Composer Phase 3D horizontal calibration -- citrus/orange and musk can
     });
   });
 
-  it("bergamot (40 members) and musk (23 members) stay overwhelmingly unscored -- common presence was never treated as evidence of genuine prominence", () => {
+  it("bergamot (39 members) and musk (22 members) stay overwhelmingly unscored -- common presence was never treated as evidence of genuine prominence", () => {
     const bergamotScoredCount = Object.values(BERGAMOT_FAMILY).filter((score) => score !== undefined).length;
     const muskScoredCount = Object.values(MUSK_FAMILY).filter((score) => score !== undefined).length;
 
-    expect(Object.keys(BERGAMOT_FAMILY)).toHaveLength(40);
+    expect(Object.keys(BERGAMOT_FAMILY)).toHaveLength(39);
     expect(bergamotScoredCount).toBe(6);
 
-    expect(Object.keys(MUSK_FAMILY)).toHaveLength(23);
-    expect(muskScoredCount).toBe(4);
+    expect(Object.keys(MUSK_FAMILY)).toHaveLength(22);
+    expect(muskScoredCount).toBe(3);
   });
 
   // The Note Explorer "Most prominent" sort verification for every

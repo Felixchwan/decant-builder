@@ -52,6 +52,7 @@ const SAGE_FAMILY = {
   203: 6,
   210: undefined,
   213: 5,
+  215: undefined,
 };
 
 const CLARY_SAGE_FAMILY = {
@@ -61,6 +62,7 @@ const CLARY_SAGE_FAMILY = {
   24: undefined,
   25: undefined,
   109: undefined,
+  120: undefined,
   206: undefined,
   207: undefined,
   211: undefined,
@@ -82,6 +84,7 @@ const GERANIUM_FAMILY = {
   208: undefined,
   211: undefined,
   213: undefined,
+  215: undefined,
   404: undefined,
 };
 
@@ -142,8 +145,8 @@ describe("Composer Phase 3N canonical-data sanity audit", () => {
 describe("Composer Phase 3N horizontal calibration -- sage family and geranium", () => {
   const perfumesById = new Map(perfumes.map((perfume) => [perfume.id, perfume]));
 
-  it("has exactly 87 catalog fragrances to search for exhaustive family membership", () => {
-    expect(perfumes).toHaveLength(87);
+  it("has exactly 88 catalog fragrances to search for exhaustive family membership", () => {
+    expect(perfumes).toHaveLength(88);
   });
 
   for (const [noteId, family] of Object.entries(ALL_FAMILIES)) {

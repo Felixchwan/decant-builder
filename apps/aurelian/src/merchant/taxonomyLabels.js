@@ -130,6 +130,8 @@ export const aurelianTaxonomyLabels = {
   "taxonomy.pomarose": "Pomarose",
   "taxonomy.siamBenzoin": "Benjuí de Siam",
   "taxonomy.texasCedar": "Cedro de Texas",
+  "taxonomy.virginiaCedar": "Cedro de Virginia",
+  "taxonomy.orris": "Raíz de Lirio",
   "taxonomy.australianSandalwood": "Sándalo Australiano",
   "taxonomy.cypress": "Ciprés",
   "taxonomy.greenTea": "Té Verde",

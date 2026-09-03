@@ -1313,6 +1313,23 @@ baseNotes: ["caramel", "musk"],
 },
 
 {
+  id: 120,
+  name: "Ralph's Club",
+  shortName: "Ralph's Club",
+  brand: "Ralph Lauren",
+  points: 1.5,
+  imageAssetKey: "perfumes/silver/ralphs-club.png",
+  accords: ["aromatic", "woody", "fresh spicy"],
+  topNotes: ["lavender", "clarySage"],
+  middleNotes: ["virginiaCedar"],
+  baseNotes: ["vetiver"],
+  generalNotes: [],
+  seasons: ["spring", "fall", "winter"],
+  occasions: ["daily", "office", "casual", "date"],
+  vibes: ["fresh", "confident", "modern", "versatile"],
+},
+
+{
   id: 201,
   name: "Dior Homme Sport",
   shortName: "Homme Sport",
@@ -2070,6 +2087,61 @@ baseNotes: ["caramel", "musk"],
 },
 
 {
+  id: 215,
+  name: "Ralph's Club Elixir",
+  shortName: "Ralph's Club Elixir",
+  brand: "Ralph Lauren",
+  points: 2,
+  imageAssetKey: "perfumes/gold/ralphs-club-elixir.png",
+
+  accords: [
+    "leather",
+    "aromatic",
+    "woody",
+    "warm spicy",
+    "amber",
+  ],
+
+  topNotes: [
+    "cardamom",
+    "greenMandarin",
+    "grapefruit",
+  ],
+
+  middleNotes: [
+    "orris",
+    "lavender",
+    "sage",
+    "geranium",
+  ],
+
+  baseNotes: [
+    "leather",
+    "olibanum",
+    "patchouli",
+    "firBalsam",
+  ],
+
+  seasons: [
+    "fall",
+    "winter",
+  ],
+
+  occasions: [
+    "date",
+    "night",
+    "special",
+  ],
+
+  vibes: [
+    "bold",
+    "warm",
+    "sophisticated",
+    "intense",
+  ],
+},
+
+{
   id: 301,
   name: "Allure Homme Edition Blanche EDP",
   shortName: "Edition Blanche",
@@ -2717,62 +2789,6 @@ baseNotes: ["caramel", "musk"],
 },
 
 {
-  id: 407,
-  name: "Summer Hammer",
-  shortName: "Summer Hammer",
-  brand: "Lorenzo Pazzaglia",
-  points: 4,
-  imageAssetKey: "perfumes/diamond/summer-hammer.png",
-
-  accords: [
-    "tropical",
-    "fruity",
-    "sweet",
-    "aquatic",
-    "woody",
-  ],
-
-  topNotes: [
-    "greenMango",
-    "pineapple",
-    "fruityNotes",
-    "coconut",
-    "bergamot",
-  ],
-
-  middleNotes: [
-    "coconut",
-    "seaNotes",
-    "jasmine",
-  ],
-
-  baseNotes: [
-    "musk",
-    "vetiver",
-    "sandalwood",
-    "amber",
-  ],
-
-  seasons: [
-    "spring",
-    "summer",
-  ],
-
-  occasions: [
-    "vacation",
-    "casual",
-    "special",
-  ],
-
-  vibes: [
-    "tropical",
-    "playful",
-    "bright",
-    "unique",
-  ],
-},
-
-{
   id: 408,
   name: "Torino21",
   shortName: "Torino21",
@@ -3134,7 +3150,6 @@ const SEASON_WEIGHTS_BY_ID = {
   404: { spring: 5, summer: 1, fall: 9, winter: 9 },
   405: { spring: 9, summer: 8, fall: 4, winter: 2 },
   406: { spring: 8, summer: 8, fall: 6, winter: 3 },
-  407: { spring: 8, summer: 10, fall: 3, winter: 1 },
   408: { spring: 9, summer: 9, fall: 4, winter: 1 },
   409: { spring: 7, summer: 4, fall: 8, winter: 6 },
   410: { spring: 4, summer: 1, fall: 9, winter: 8 },
@@ -3444,8 +3459,11 @@ const DEFAULT_SEASON_WEIGHTS = {
 //
 // Composer Phase 3G: seventh horizontal calibration pass -- the iris and
 // leather canonical-key families. Iris keys: iris -- the only true
-// canonical iris-identity key (no "orris"/"orrisRoot" key exists in the
-// taxonomy). Leather keys: leather, suede -- both real, separately-named
+// canonical iris-identity key at the time (no "orris"/"orrisRoot" key
+// existed in the taxonomy yet; a genuine, separately-scoped orris key was
+// added later for Ralph's Club Elixir's documented "Orris" source note --
+// see notes.js -- never a member of this phase's own iris family).
+// Leather keys: leather, suede -- both real, separately-named
 // materials kept deliberately distinct (CH Men and Guess Man Gold each
 // legitimately carry their own suede score alongside, or instead of,
 // leather). violetLeaf, powderyNotes, birch, birchLeaf, and leatherwood
@@ -3797,8 +3815,9 @@ const DEFAULT_SEASON_WEIGHTS = {
 // seaNotes, never conflated; pine, fir, firBalsam, rosemary, sage,
 // clarySage, basil, and cypress were re-confirmed distinct from juniper.
 // Mirto di Panarea carries both seaNotes and juniper, and Summer Hammer
-// carries both pineapple and seaNotes -- each pair independently scored,
-// never cross-credited. Across 6 pineapple, 6 seaNotes, and 6 juniper
+// (since removed from the catalog) carried both pineapple and seaNotes --
+// each pair independently scored, never cross-credited. Across 6
+// pineapple, 6 seaNotes, and 6 juniper
 // fragrance/note pairs, this phase's own calibration changes zero
 // individual pairs. Every already-scored entry held up as internally
 // consistent, including the explicit comparison anchors: Acqua di Gio
@@ -4103,7 +4122,6 @@ export const NOTE_PROMINENCE_BY_ID = {
   404: { apple: 9, lavender: 9, vanilla: 7, cardamom: 4, coumarin: 4 }, // Layton
   405: { iris: 6, grapefruit: 5, rose: 4 }, // Mefisto
   406: { pineapple: 8, oakmoss: 8, cedar: 4, patchouli: 4 }, // Hacivat
-  407: { coconut: 7, pineapple: 6, seaNotes: 5, musk: 4 }, // Summer Hammer
   408: { mint: 9, basil: 8, rosemary: 5, blackCurrant: 3 }, // Torino21
   409: { powderyNotes: 7, juniper: 6, cedar: 6, jasmine: 5, tonkaBean: 4 }, // Orphéon EDP
   410: { patchouli: 6, vanilla: 5 }, // Il Padrino

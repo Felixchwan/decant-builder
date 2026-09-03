@@ -65,6 +65,7 @@ const CARDAMOM_FAMILY = {
   206: undefined,
   208: undefined,
   211: undefined,
+  215: undefined,
   402: undefined,
   404: 4,
 };
@@ -153,8 +154,8 @@ describe("Composer Phase 3K canonical-data sanity audit", () => {
 describe("Composer Phase 3K horizontal calibration -- cardamom and cinnamon canonical-key families", () => {
   const perfumesById = new Map(perfumes.map((perfume) => [perfume.id, perfume]));
 
-  it("has exactly 87 catalog fragrances to search for exhaustive family membership", () => {
-    expect(perfumes).toHaveLength(87);
+  it("has exactly 88 catalog fragrances to search for exhaustive family membership", () => {
+    expect(perfumes).toHaveLength(88);
   });
 
   for (const [noteId, family] of Object.entries(ALL_FAMILIES)) {

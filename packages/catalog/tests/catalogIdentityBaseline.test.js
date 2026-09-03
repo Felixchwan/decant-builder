@@ -5,8 +5,8 @@ import { fragrances as perfumes } from "@discovery-box/catalog";
 
 const SUPPORTED_SEASONS = ["spring", "summer", "fall", "winter"];
 describe("catalog identity baseline", () => {
-  it("freezes the exact 87-record ID order", () => {
-    expect(perfumes).toHaveLength(87);
+  it("freezes the exact 88-record ID order", () => {
+    expect(perfumes).toHaveLength(88);
     expect(perfumes.map(({ id }) => id)).toEqual(
       CATALOG_IDENTITY_BASELINE.map(([id]) => id)
     );

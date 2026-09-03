@@ -97,7 +97,6 @@ const PHASE_2G_BATCH = {
   201: { aldehydes: 6, elemi: 5 },
   207: { seaNotes: 6, greenMango: 5, ambroxan: 4 },
   405: { iris: 6, grapefruit: 5, rose: 4 },
-  407: { coconut: 7, pineapple: 6, seaNotes: 5, musk: 4 },
 };
 
 const PHASE_2H_BATCH = {
@@ -135,6 +134,16 @@ const PHASE_2I_BATCH = {
   211: { tobacco: 6, redApple: 7 }, // Phase 3B: redApple 5 -> 7 (horizontal calibration)
   214: { iris: 6, powderyNotes: 6, neroli: 5 },
 };
+
+// Post-vertical-pass catalog additions: Ralph's Club (120) and Ralph's
+// Club Elixir (215) were added to the catalog after the seven-batch
+// vertical pass above concluded, from a merchant-supplied note pyramid
+// only -- no perceptual review evidence (the standard this batch and
+// every PHASE_2* batch above holds itself to) exists for either yet, so
+// unlike Prada L'Homme L'Eau/Orphéon EDP/Il Padrino, neither was seeded
+// with a prominence entry at the time of its own addition. Missing
+// prominence is valid and intentional here, not an oversight -- see the
+// two tests below that exempt them explicitly.
 
 function getPerfumeNoteIds(perfume) {
   return [
@@ -303,19 +312,41 @@ describe("Composer Phase 2J note-prominence seed batch (final vertical-pass batc
     });
   });
 
-  it("covers exactly 87/87 catalog fragrances with a NOTE_PROMINENCE_BY_ID entry -- the vertical pass is complete", () => {
-    expect(perfumes).toHaveLength(87);
-    expect(Object.keys(NOTE_PROMINENCE_BY_ID)).toHaveLength(87);
+  it("covers exactly 86/86 of the vertical pass's own reviewed fragrances with a NOTE_PROMINENCE_BY_ID entry -- the vertical pass itself is complete", () => {
+    // The vertical pass reviewed the original 87-fragrance catalog to full
+    // coverage. Summer Hammer (407), one of those 87, was later removed
+    // from the catalog entirely -- taking its entry with it -- leaving 86
+    // originally-reviewed fragrances, all still covered. Ralph's Club
+    // (120) and Ralph's Club Elixir (215) were added afterward and were
+    // never part of this review effort; they are asserted unscored below,
+    // not counted here.
+    const postVerticalPassAdditionIds = new Set([120, 215]);
+    const originallyReviewedPerfumes = perfumes.filter((perfume) => !postVerticalPassAdditionIds.has(perfume.id));
 
-    for (const perfume of perfumes) {
+    expect(perfumes).toHaveLength(88);
+    expect(originallyReviewedPerfumes).toHaveLength(86);
+    expect(Object.keys(NOTE_PROMINENCE_BY_ID)).toHaveLength(86);
+
+    for (const perfume of originallyReviewedPerfumes) {
       expect(NOTE_PROMINENCE_BY_ID, `${perfume.name} (id ${perfume.id}) should have a prominence entry`).toHaveProperty(
         String(perfume.id)
       );
     }
   });
 
-  it("leaves no fragrance with the never-reviewed default-empty prominence object -- every fragrance now has at least one editorial score", () => {
+  it("leaves no originally-reviewed fragrance with the never-reviewed default-empty prominence object -- every fragrance the vertical pass covered has at least one editorial score", () => {
+    // Ralph's Club (120) and Ralph's Club Elixir (215) are the two
+    // deliberate exceptions: added from a merchant note pyramid only, with
+    // no perceptual-prominence review evidence yet. An empty
+    // noteProminence object is the valid, honest state for them -- never
+    // replaced with an invented score to force this test green.
+    const postVerticalPassAdditionIds = new Set([120, 215]);
+
     for (const perfume of perfumes) {
+      if (postVerticalPassAdditionIds.has(perfume.id)) {
+        expect(perfume.noteProminence, `${perfume.name} should remain unscored pending review`).toEqual({});
+        continue;
+      }
       expect(Object.keys(perfume.noteProminence).length, `${perfume.name} should have at least one score`).toBeGreaterThan(0);
     }
   });

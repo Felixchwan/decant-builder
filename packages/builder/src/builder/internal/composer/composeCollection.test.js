@@ -560,14 +560,15 @@ describe("composeCollection", () => {
       preferredVibes: ["fresh", "clean", "warm", "elegant"],
     };
 
-    // Recomputed after adding 3 new real catalog entries (ids 35, 214, 410):
-    // Graphite (35, bronze) legitimately outcompetes some previously-picked
-    // items on this budget/preference scenario -- a real, expected
-    // consequence of adding new inventory that fits, not a regression.
+    // Recomputed after removing Summer Hammer (407, diamond) from the
+    // catalog and adding the 2 new Ralph Lauren entries (120, 215): with
+    // 407 gone, Composer's search legitimately settles on 107 and 404 in
+    // its place on this budget/preference scenario -- a real, expected
+    // consequence of the catalog change, not a regression.
     expect(
       composeRealCatalog({ ...baseRequest, collectionStyle: "premium_focus" }, "best")
         .collectionIds
-    ).toEqual([35, 109, 208, 210, 302, 407, 409]);
+    ).toEqual([35, 107, 208, 210, 302, 404, 409]);
     expect(
       composeRealCatalog({ ...baseRequest, collectionStyle: "more_variety" }, "best")
         .collectionIds

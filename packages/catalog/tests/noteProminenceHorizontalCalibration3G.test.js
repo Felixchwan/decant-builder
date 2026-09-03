@@ -70,6 +70,7 @@ const LEATHER_FAMILY = {
   30: 9,
   109: 6,
   115: undefined,
+  215: undefined,
   306: 5,
 };
 
@@ -103,9 +104,16 @@ function getPerfumeNoteIds(perfume) {
 }
 
 describe("Composer Phase 3G taxonomy audit", () => {
-  it("finds exactly 1 true canonical iris-family key in the note dictionary -- no orris/orrisRoot variant exists", () => {
+  it("finds exactly 1 true canonical iris-family key in the note dictionary -- as of Phase 3G, no orris/orrisRoot variant existed", () => {
+    // As of this phase, no catalog fragrance's own source data had ever
+    // named "orris" -- that changed later with Ralph's Club Elixir, whose
+    // merchant-supplied note pyramid explicitly names "Orris" (perceptually
+    // related to but a documented-distinct source material from iris),
+    // adding a genuine, separately-scoped orris key -- see notes.js. That
+    // key was never part of this phase's own 7-member iris family and
+    // carries no member of its own here.
     expect(notes.iris).toMatchObject({ name: "Iris", family: "floral" });
-    expect(notes.orris).toBeUndefined();
+    expect(notes.orris).toMatchObject({ name: "Orris" });
     expect(notes.orrisRoot).toBeUndefined();
   });
 
@@ -152,8 +160,8 @@ describe("Composer Phase 3G canonical-data sanity audit", () => {
 describe("Composer Phase 3G horizontal calibration -- iris and leather canonical-key families", () => {
   const perfumesById = new Map(perfumes.map((perfume) => [perfume.id, perfume]));
 
-  it("has exactly 87 catalog fragrances to search for exhaustive family membership", () => {
-    expect(perfumes).toHaveLength(87);
+  it("has exactly 88 catalog fragrances to search for exhaustive family membership", () => {
+    expect(perfumes).toHaveLength(88);
   });
 
   for (const [noteId, family] of Object.entries(ALL_FAMILIES)) {

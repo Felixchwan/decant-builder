@@ -32,10 +32,12 @@ import { NOTE_PROMINENCE_BY_ID } from "../src/fragrances.js";
 // seaNotes -- never conflated. No canonical-data correction was made in
 // this phase.
 //
-// Across 6 pineapple, 6 seaNotes, and 6 juniper fragrance/note pairs --
-// Mirto di Panarea carries both seaNotes and juniper, and Summer Hammer
-// carries both pineapple and seaNotes -- this phase's own calibration
-// changes zero individual pairs. Every already-scored entry held up as
+// Across 5 pineapple, 5 seaNotes, and 6 juniper fragrance/note pairs --
+// Mirto di Panarea carries both seaNotes and juniper -- this phase's own
+// calibration changes zero individual pairs. (Summer Hammer, which
+// originally also carried both pineapple and seaNotes, was later removed
+// from the catalog entirely -- see fragrances.js -- dropping both families
+// from 6 members to 5.) Every already-scored entry held up as
 // internally consistent, including Acqua di Gio EDT's seaNotes: 10
 // (correctly the maximum, absolute defining signature of the fragrance
 // that originated the aquatic genre), Club de Nuit Intense Man's
@@ -50,7 +52,6 @@ const PINEAPPLE_FAMILY = {
   28: undefined,
   112: 6,
   406: 8,
-  407: 6,
 };
 
 const SEA_NOTES_FAMILY = {
@@ -59,7 +60,6 @@ const SEA_NOTES_FAMILY = {
   119: 6,
   207: 6,
   306: 6,
-  407: 5,
 };
 
 const JUNIPER_FAMILY = {
@@ -150,19 +150,17 @@ describe("Composer Phase 3R canonical-data sanity audit", () => {
     }
   });
 
-  it("confirms Mirto di Panarea and Summer Hammer legitimately carry two in-scope exact keys each, independently scored", () => {
+  it("confirms Mirto di Panarea legitimately carries two in-scope exact keys, independently scored", () => {
     expect(NOTE_PROMINENCE_BY_ID[119].seaNotes).toBe(6);
     expect(NOTE_PROMINENCE_BY_ID[119].juniper).toBeUndefined();
-    expect(NOTE_PROMINENCE_BY_ID[407].pineapple).toBe(6);
-    expect(NOTE_PROMINENCE_BY_ID[407].seaNotes).toBe(5);
   });
 });
 
 describe("Composer Phase 3R horizontal calibration -- pineapple, seaNotes, and juniper", () => {
   const perfumesById = new Map(perfumes.map((perfume) => [perfume.id, perfume]));
 
-  it("has exactly 87 catalog fragrances to search for exhaustive family membership", () => {
-    expect(perfumes).toHaveLength(87);
+  it("has exactly 88 catalog fragrances to search for exhaustive family membership", () => {
+    expect(perfumes).toHaveLength(88);
   });
 
   for (const [noteId, family] of Object.entries(ALL_FAMILIES)) {

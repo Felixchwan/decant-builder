@@ -213,8 +213,8 @@ describe("Composer Phase 3A canonical-data correction", () => {
 describe("Composer Phase 3A horizontal calibration -- basil and blackCurrant", () => {
   const perfumesById = new Map(perfumes.map((perfume) => [perfume.id, perfume]));
 
-  it("has exactly 87 catalog fragrances to search for exhaustive family membership", () => {
-    expect(perfumes).toHaveLength(87);
+  it("has exactly 88 catalog fragrances to search for exhaustive family membership", () => {
+    expect(perfumes).toHaveLength(88);
   });
 
   it("basil family membership is exhaustive: exactly these 8 ids (including the newly-corrected id 110) carry basil anywhere in their canonical notes", () => {

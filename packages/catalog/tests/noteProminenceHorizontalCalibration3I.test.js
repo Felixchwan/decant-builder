@@ -72,7 +72,6 @@ const JASMINE_FAMILY = {
   119: undefined,
   404: undefined,
   406: undefined,
-  407: undefined,
   408: undefined,
   409: 5,
 };
@@ -168,8 +167,8 @@ describe("Composer Phase 3I canonical-data sanity audit", () => {
 describe("Composer Phase 3I horizontal calibration -- rose and jasmine canonical-key families", () => {
   const perfumesById = new Map(perfumes.map((perfume) => [perfume.id, perfume]));
 
-  it("has exactly 87 catalog fragrances to search for exhaustive family membership", () => {
-    expect(perfumes).toHaveLength(87);
+  it("has exactly 88 catalog fragrances to search for exhaustive family membership", () => {
+    expect(perfumes).toHaveLength(88);
   });
 
   for (const [noteId, family] of Object.entries(ALL_FAMILIES)) {

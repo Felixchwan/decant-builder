@@ -30,7 +30,6 @@ const PHASE_2G_BATCH = {
   201: { aldehydes: 6, elemi: 5 },
   207: { seaNotes: 6, greenMango: 5, ambroxan: 4 },
   405: { iris: 6, grapefruit: 5, rose: 4 },
-  407: { coconut: 7, pineapple: 6, seaNotes: 5, musk: 4 },
 };
 
 // Pinned exactly as approved in the three prior batches -- this batch must
@@ -91,7 +90,7 @@ function getPerfumeNoteIds(perfume) {
 describe("Composer Phase 2G note-prominence seed batch", () => {
   const perfumesById = new Map(perfumes.map((perfume) => [perfume.id, perfume]));
 
-  it("adds this batch's 15 fragrance IDs to NOTE_PROMINENCE_BY_ID", () => {
+  it("adds this batch's 14 fragrance IDs to NOTE_PROMINENCE_BY_ID", () => {
     // A subset check, not an exact-set check: NOTE_PROMINENCE_BY_ID also
     // holds the later Phase 2H batch (see noteProminenceSeedBatch2H.test.js,
     // which asserts the combined exact key set across all five batches) --
@@ -186,11 +185,6 @@ describe("Composer Phase 2G note-prominence seed batch", () => {
     expect(perfumesById.get(112)).toMatchObject({
       name: "Le Beau Le Parfum",
       middleNotes: ["coconut", "woodyNotes"],
-    });
-    expect(perfumesById.get(407)).toMatchObject({
-      name: "Summer Hammer",
-      topNotes: ["greenMango", "pineapple", "fruityNotes", "coconut", "bergamot"],
-      middleNotes: ["coconut", "seaNotes", "jasmine"],
     });
   });
 

@@ -47,10 +47,10 @@ describe("Aurelian application foundation", () => {
     expect(aurelianConfig.finalization.customerFieldLabels.city).toBe("Municipio");
   });
 
-  it("owns an explicit 87-ID manifest and canonical projection", () => {
-    expect(aurelianAvailableIds).toHaveLength(87);
-    expect(new Set(aurelianAvailableIds).size).toBe(87);
-    expect(aurelianCatalog).toHaveLength(87);
+  it("owns an explicit 88-ID manifest and canonical projection", () => {
+    expect(aurelianAvailableIds).toHaveLength(88);
+    expect(new Set(aurelianAvailableIds).size).toBe(88);
+    expect(aurelianCatalog).toHaveLength(88);
     const projection = createMerchantCatalog({ source: fragrances, availableIds: aurelianAvailableIds });
     projection.forEach((record, index) => expect(record).toBe(aurelianCatalog[index]));
   });
@@ -118,10 +118,8 @@ describe("Aurelian application foundation", () => {
     expect(markup).toContain("hero-media__fallback");
     expect(HERO_MEDIA_SEQUENCE.map(({ src }) => src)).toEqual([
       "/media/torino-21.mp4",
-      "/media/summer-hammer.mp4",
     ]);
-    expect(nextHeroMediaIndex(0)).toBe(1);
-    expect(nextHeroMediaIndex(1)).toBe(0);
+    expect(nextHeroMediaIndex(0)).toBe(0);
     const stylesheet = readFileSync(join(APP_ROOT, "src", "app", "globals.css"), "utf8");
     expect(stylesheet).toMatch(/prefers-reduced-motion[\s\S]*\.hero-media__video\s*\{\s*display:none/);
   });

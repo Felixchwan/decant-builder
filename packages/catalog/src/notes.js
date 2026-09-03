@@ -569,4 +569,20 @@ rum: { name: "Rum", family: "sweet", noteImageAssetKey: "notes/rum.jpg" },
 // existing "almond" (the raw nut) -- kept separate rather than merged,
 // reusing almond.jpg as the closest existing visual match.
 amaretto: { name: "Amaretto", family: "sweet", noteImageAssetKey: "notes/almond.jpg" },
+
+// Virginia Cedar is a distinct botanical origin-qualified variant of the
+// existing generic "cedar"/"cedarwood" (same established pattern as
+// texasCedar), added for Ralph's Club -- reuses cedar.jpg as the closest
+// existing visual match rather than a new photo.
+virginiaCedar: { name: "Virginia Cedar", noteImageAssetKey: "notes/cedar.jpg" },
+
+// Orris (the processed iris rhizome/root used in perfumery) is a
+// perceptually-related but explicitly distinct source material from the
+// existing "iris" (the flower) -- our canonical-identity rule requires an
+// explicit documented identity, not perceptual resemblance, to justify
+// collapsing two source notes into one key. No catalog fragrance's own
+// source data had ever named "orris" before Ralph's Club Elixir, so no
+// prior canonical ruling merged them; kept separate rather than reusing
+// iris, reusing iris.jpg as the closest existing visual match.
+orris: { name: "Orris", family: "floral", noteImageAssetKey: "notes/iris.jpg" },
 };

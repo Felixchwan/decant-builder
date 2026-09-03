@@ -98,7 +98,6 @@ const PHASE_2G_BATCH = {
   201: { aldehydes: 6, elemi: 5 },
   207: { seaNotes: 6, greenMango: 5, ambroxan: 4 },
   405: { iris: 6, grapefruit: 5, rose: 4 },
-  407: { coconut: 7, pineapple: 6, seaNotes: 5, musk: 4 },
 };
 
 function getPerfumeNoteIds(perfume) {

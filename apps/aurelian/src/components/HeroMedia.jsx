@@ -5,16 +5,16 @@ import { createCatalogAssetResolver } from "@discovery-box/catalog";
 import { aurelianCatalog } from "../merchant/catalog.js";
 
 const resolveAsset = createCatalogAssetResolver({ basePath: "/catalog-assets" });
-const featured = [aurelianCatalog[3], aurelianCatalog[34], aurelianCatalog[61]];
+// Looked up by id (Legend EDT, Graphite, Polo Deep Blue Parfum) rather than
+// raw array position -- catalog additions/removals elsewhere in the
+// manifest must never silently swap out these three fallback bottles.
+const FEATURED_IDS = [4, 35, 207];
+const featured = FEATURED_IDS.map((id) => aurelianCatalog.find((fragrance) => fragrance.id === id));
 
 export const HERO_MEDIA_SEQUENCE = [
   {
     poster: featured[1],
     src: "/media/torino-21.mp4",
-  },
-  {
-    poster: aurelianCatalog.find((fragrance) => fragrance.id === 407),
-    src: "/media/summer-hammer.mp4",
   },
 ];
 
@@ -32,7 +32,21 @@ export function HeroMedia() {
     if (!video) return;
 
     const advanceVideo = () => {
-      setActiveVideoIndex((currentIndex) => nextHeroMediaIndex(currentIndex));
+      setActiveVideoIndex((currentIndex) => {
+        const nextIndex = nextHeroMediaIndex(currentIndex);
+        if (nextIndex === currentIndex) {
+          // A single-entry sequence has nothing to advance to -- restart
+          // this same video directly, since setting state to its current
+          // value is a React no-op and would never retrigger the
+          // [activeVideoIndex] effect below that (re)plays it.
+          video.currentTime = 0;
+          const playPromise = video.play();
+          if (playPromise && typeof playPromise.catch === "function") {
+            playPromise.catch(() => {});
+          }
+        }
+        return nextIndex;
+      });
     };
 
     video.addEventListener("ended", advanceVideo);
