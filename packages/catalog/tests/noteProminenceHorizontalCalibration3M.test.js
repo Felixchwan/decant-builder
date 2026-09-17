@@ -71,6 +71,7 @@ const NUTMEG_FAMILY = {
   27: undefined,
   32: undefined,
   202: undefined,
+  216: undefined,
   306: undefined,
   402: 6,
   403: undefined,
@@ -81,6 +82,7 @@ const CLOVES_FAMILY = {
   203: 4,
   204: 6,
   205: 5,
+  216: undefined,
 };
 
 const GINGER_FLOWER_FAMILY = { 14: undefined };
@@ -160,8 +162,8 @@ describe("Composer Phase 3M canonical-data sanity audit", () => {
 describe("Composer Phase 3M horizontal calibration -- ginger, nutmeg, and clove canonical-key families", () => {
   const perfumesById = new Map(perfumes.map((perfume) => [perfume.id, perfume]));
 
-  it("has exactly 88 catalog fragrances to search for exhaustive family membership", () => {
-    expect(perfumes).toHaveLength(88);
+  it("has exactly 90 catalog fragrances to search for exhaustive family membership", () => {
+    expect(perfumes).toHaveLength(90);
   });
 
   for (const [noteId, family] of Object.entries(ALL_FAMILIES)) {

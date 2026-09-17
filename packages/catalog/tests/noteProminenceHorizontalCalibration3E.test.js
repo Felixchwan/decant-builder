@@ -104,6 +104,8 @@ const PATCHOULI_FAMILY = {
   209: 6,
   211: undefined,
   215: undefined,
+  216: undefined,
+  217: undefined,
   302: undefined,
   303: undefined,
   304: undefined,
@@ -193,8 +195,8 @@ describe("Composer Phase 3E canonical-data sanity audit", () => {
 describe("Composer Phase 3E horizontal calibration -- sandalwood and patchouli canonical-key families", () => {
   const perfumesById = new Map(perfumes.map((perfume) => [perfume.id, perfume]));
 
-  it("has exactly 88 catalog fragrances to search for exhaustive family membership", () => {
-    expect(perfumes).toHaveLength(88);
+  it("has exactly 90 catalog fragrances to search for exhaustive family membership", () => {
+    expect(perfumes).toHaveLength(90);
   });
 
   for (const [noteId, family] of Object.entries(ALL_FAMILIES)) {

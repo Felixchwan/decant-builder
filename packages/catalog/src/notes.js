@@ -585,4 +585,49 @@ virginiaCedar: { name: "Virginia Cedar", noteImageAssetKey: "notes/cedar.jpg" },
 // prior canonical ruling merged them; kept separate rather than reusing
 // iris, reusing iris.jpg as the closest existing visual match.
 orris: { name: "Orris", family: "floral", noteImageAssetKey: "notes/iris.jpg" },
+
+// Chili Pepper (Capsicum) is a real, distinct Fragrantica note from the
+// existing peppercorn-family keys (blackPepper, pinkPepper, sichuanPepper
+// -- genus Piper, botanically unrelated), added for Spicebomb Night Vision
+// EDP. No existing asset depicts Capsicum, so this uses a dedicated photo:
+// "Chilli pepper.jpg" by Pascal Kings, via Wikimedia Commons, CC BY-SA 3.0
+// (https://commons.wikimedia.org/wiki/File:Chilli_pepper.jpg), cropped
+// square to match this dictionary's note-thumbnail framing.
+chiliPepper: { name: "Chili Pepper", family: "spicy", noteImageAssetKey: "notes/chiliPepper.jpg" },
+
+// Mastic / Lentisque (the perfumery resin from Pistacia lentiscus,
+// sometimes labeled "Lentisque" in French-language sources -- the same
+// single material under two names, not two notes) is genuinely absent
+// from this dictionary and visually distinct from the other established
+// resins (labdanum, olibanum, benzoin), added for Spicebomb Night Vision
+// EDP. No existing asset depicts it, so this uses a dedicated photo:
+// "Mastichové kryštály.jpg" (mastic resin tears/crystals) by Palden
+// Dorenský, via Wikimedia Commons, CC BY-SA 4.0
+// (https://commons.wikimedia.org/wiki/File:Mastichov%C3%A9_kry%C5%A1t%C3%A1ly.jpg),
+// cropped square to match this dictionary's note-thumbnail framing.
+mastic: { name: "Mastic / Lentisque", family: "resinous", noteImageAssetKey: "notes/mastic.jpg" },
+
+// Pistachio is a distinct nut from the existing almond/chestnut keys --
+// its own real Fragrantica note, not a variant or derivative of either,
+// so it is not reused per this dictionary's own established reuse rule
+// (only genuine variants/derivatives, e.g. amaretto/almond, reuse an
+// unrelated ingredient's photo). Added for Spicebomb Night Vision EDP.
+// No existing asset depicts it, so this uses a dedicated photo:
+// "Pistachio.jpg" by Kobi Schutz, via Wikimedia Commons, CC BY-SA 3.0
+// (https://commons.wikimedia.org/wiki/File:Pistachio.jpg), cropped square
+// to match this dictionary's note-thumbnail framing.
+pistachio: { name: "Pistachio", noteImageAssetKey: "notes/pistachio.jpg" },
+
+// Nutty Notes is a generic umbrella descriptor (the same kind of concept
+// as the existing fruityNotes/spicyNotes/woodyNotes/orientalNotes generic
+// keys) for an unspecified nutty impression -- kept distinct from the
+// specific pistachio key above rather than collapsed into it, since a
+// generic "nutty" character is not the same claim as one named nut. Added
+// for Spicebomb Night Vision EDP. No existing asset depicts a generic nut
+// assortment, so this uses a dedicated photo: "Liat Portal for Foodie
+// Disorder - Mixed nuts assortment.jpg" by HaJunkiyada, via Wikimedia
+// Commons, CC BY-SA 4.0
+// (https://commons.wikimedia.org/wiki/File:Liat_Portal_for_Foodie_Disorder_-_Mixed_nuts_assortment.jpg),
+// cropped square to match this dictionary's note-thumbnail framing.
+nuttyNotes: { name: "Nutty Notes", noteImageAssetKey: "notes/nuttyNotes.jpg" },
 };

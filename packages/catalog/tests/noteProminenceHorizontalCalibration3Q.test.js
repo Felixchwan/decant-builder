@@ -47,6 +47,7 @@ const ROSEMARY_FAMILY = {
   29: undefined,
   33: undefined,
   101: undefined,
+  216: undefined,
   408: 5,
 };
 
@@ -121,8 +122,8 @@ describe("Composer Phase 3Q canonical-data sanity audit", () => {
 describe("Composer Phase 3Q horizontal calibration -- rosemary and ambroxan", () => {
   const perfumesById = new Map(perfumes.map((perfume) => [perfume.id, perfume]));
 
-  it("has exactly 88 catalog fragrances to search for exhaustive family membership", () => {
-    expect(perfumes).toHaveLength(88);
+  it("has exactly 90 catalog fragrances to search for exhaustive family membership", () => {
+    expect(perfumes).toHaveLength(90);
   });
 
   for (const [noteId, family] of Object.entries(ALL_FAMILIES)) {

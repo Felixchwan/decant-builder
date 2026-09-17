@@ -2142,6 +2142,101 @@ baseNotes: ["caramel", "musk"],
 },
 
 {
+  id: 216,
+  name: "Spicebomb Night Vision Eau de Parfum",
+  shortName: "Spicebomb Night Vision EDP",
+  brand: "Viktor&Rolf",
+  points: 2,
+  imageAssetKey: "perfumes/gold/spicebomb-night-vision-edp.png",
+
+  accords: [
+    "fresh spicy",
+    "aromatic",
+    "warm spicy",
+    "woody",
+    "green",
+    "amber",
+    "fresh",
+    "nutty",
+    "fruity",
+    "balsamic",
+  ],
+
+  topNotes: [
+    "greenApple",
+    "cardamom",
+    "blackPepper",
+    "nutmeg",
+    "chiliPepper",
+    "cloves",
+    "lemon",
+    "grapefruit",
+  ],
+
+  middleNotes: [
+    "lavender",
+    "mint",
+    "clarySage",
+    "rosemary",
+    "mastic",
+    "coriander",
+  ],
+
+  baseNotes: [
+    "pistachio",
+    "nuttyNotes",
+    "firBalsam",
+    "cedar",
+    "benzoin",
+    "peruBalsam",
+    "olibanum",
+    "patchouli",
+    "labdanum",
+  ],
+
+  seasons: [],
+  occasions: [],
+  vibes: [],
+},
+
+{
+  id: 217,
+  name: "Patchouli Ink",
+  shortName: "Patchouli Ink",
+  brand: "Montblanc",
+  points: 2,
+  imageAssetKey: "perfumes/gold/patchouli-ink.png",
+
+  accords: [
+    "patchouli",
+    "woody",
+    "aromatic",
+    "vanilla",
+    "warm spicy",
+    "earthy",
+    "balsamic",
+    "citrus",
+  ],
+
+  topNotes: [
+    "bergamot",
+  ],
+
+  middleNotes: [
+    "ink",
+  ],
+
+  baseNotes: [
+    "patchouli",
+    "vanilla",
+  ],
+
+  seasons: [],
+  occasions: [],
+  vibes: [],
+},
+
+{
   id: 301,
   name: "Allure Homme Edition Blanche EDP",
   shortName: "Edition Blanche",

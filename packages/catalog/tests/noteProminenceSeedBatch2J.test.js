@@ -317,13 +317,14 @@ describe("Composer Phase 2J note-prominence seed batch (final vertical-pass batc
     // coverage. Summer Hammer (407), one of those 87, was later removed
     // from the catalog entirely -- taking its entry with it -- leaving 86
     // originally-reviewed fragrances, all still covered. Ralph's Club
-    // (120) and Ralph's Club Elixir (215) were added afterward and were
-    // never part of this review effort; they are asserted unscored below,
-    // not counted here.
-    const postVerticalPassAdditionIds = new Set([120, 215]);
+    // (120), Ralph's Club Elixir (215), Spicebomb Night Vision EDP (216),
+    // and Patchouli Ink (217) were added afterward and were never part of
+    // this review effort; they are asserted unscored below, not counted
+    // here.
+    const postVerticalPassAdditionIds = new Set([120, 215, 216, 217]);
     const originallyReviewedPerfumes = perfumes.filter((perfume) => !postVerticalPassAdditionIds.has(perfume.id));
 
-    expect(perfumes).toHaveLength(88);
+    expect(perfumes).toHaveLength(90);
     expect(originallyReviewedPerfumes).toHaveLength(86);
     expect(Object.keys(NOTE_PROMINENCE_BY_ID)).toHaveLength(86);
 
@@ -335,12 +336,13 @@ describe("Composer Phase 2J note-prominence seed batch (final vertical-pass batc
   });
 
   it("leaves no originally-reviewed fragrance with the never-reviewed default-empty prominence object -- every fragrance the vertical pass covered has at least one editorial score", () => {
-    // Ralph's Club (120) and Ralph's Club Elixir (215) are the two
-    // deliberate exceptions: added from a merchant note pyramid only, with
-    // no perceptual-prominence review evidence yet. An empty
-    // noteProminence object is the valid, honest state for them -- never
-    // replaced with an invented score to force this test green.
-    const postVerticalPassAdditionIds = new Set([120, 215]);
+    // Ralph's Club (120), Ralph's Club Elixir (215), Spicebomb Night
+    // Vision EDP (216), and Patchouli Ink (217) are the deliberate
+    // exceptions: each added from a merchant note pyramid only, with no
+    // perceptual-prominence review evidence yet. An empty noteProminence
+    // object is the valid, honest state for them -- never replaced with an
+    // invented score to force this test green.
+    const postVerticalPassAdditionIds = new Set([120, 215, 216, 217]);
 
     for (const perfume of perfumes) {
       if (postVerticalPassAdditionIds.has(perfume.id)) {

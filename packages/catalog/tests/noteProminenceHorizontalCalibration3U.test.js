@@ -64,11 +64,12 @@ const OLIBANUM_FAMILY = {
   206: undefined,
   213: undefined,
   215: undefined,
+  216: undefined,
 };
 
-const LABDANUM_FAMILY = { 20: undefined, 410: undefined };
+const LABDANUM_FAMILY = { 20: undefined, 216: undefined, 410: undefined };
 const OPOPONAX_FAMILY = { 403: undefined, 500: undefined };
-const PERU_BALSAM_FAMILY = { 32: undefined, 204: undefined };
+const PERU_BALSAM_FAMILY = { 32: undefined, 204: undefined, 216: undefined };
 const AMBERMAX_FAMILY = { 404: undefined };
 
 const ALL_FAMILIES = {
@@ -147,8 +148,8 @@ describe("Composer Phase 3U canonical-data sanity audit", () => {
 describe("Composer Phase 3U horizontal calibration -- seven amber/resinous-adjacent standalone keys", () => {
   const perfumesById = new Map(perfumes.map((perfume) => [perfume.id, perfume]));
 
-  it("has exactly 88 catalog fragrances to search for exhaustive family membership", () => {
-    expect(perfumes).toHaveLength(88);
+  it("has exactly 90 catalog fragrances to search for exhaustive family membership", () => {
+    expect(perfumes).toHaveLength(90);
   });
 
   for (const [noteId, family] of Object.entries(ALL_FAMILIES)) {

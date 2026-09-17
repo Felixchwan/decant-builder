@@ -111,6 +111,7 @@ const APPLE_FAMILY = {
 };
 
 const GREEN_APPLE_FAMILY = {
+  216: undefined,
   403: undefined,
 };
 
@@ -127,6 +128,7 @@ const MINT_FAMILY = {
   5: 7,
   6: 5,
   110: 6,
+  216: undefined,
   408: 9,
 };
 
@@ -209,8 +211,8 @@ describe("Composer Phase 3B taxonomy audit", () => {
 describe("Composer Phase 3B horizontal calibration -- apple and mint canonical-key families", () => {
   const perfumesById = new Map(perfumes.map((perfume) => [perfume.id, perfume]));
 
-  it("has exactly 88 catalog fragrances to search for exhaustive family membership", () => {
-    expect(perfumes).toHaveLength(88);
+  it("has exactly 90 catalog fragrances to search for exhaustive family membership", () => {
+    expect(perfumes).toHaveLength(90);
   });
 
   for (const [noteId, family] of Object.entries(ALL_FAMILIES)) {

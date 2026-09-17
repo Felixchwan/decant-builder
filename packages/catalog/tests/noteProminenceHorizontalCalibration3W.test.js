@@ -51,6 +51,7 @@ const CORIANDER_FAMILY = {
   1: undefined,
   13: undefined,
   20: undefined,
+  216: undefined,
   501: undefined,
 };
 
@@ -161,8 +162,8 @@ describe("Composer Phase 3W canonical-data sanity audit", () => {
 describe("Composer Phase 3W horizontal calibration -- six independent aromatic seed/spice keys", () => {
   const perfumesById = new Map(perfumes.map((perfume) => [perfume.id, perfume]));
 
-  it("has exactly 88 catalog fragrances to search for exhaustive family membership", () => {
-    expect(perfumes).toHaveLength(88);
+  it("has exactly 90 catalog fragrances to search for exhaustive family membership", () => {
+    expect(perfumes).toHaveLength(90);
   });
 
   for (const [noteId, family] of Object.entries(ALL_FAMILIES)) {

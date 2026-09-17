@@ -339,6 +339,8 @@ export const enUS = {
   "recommendation.accord.ozonic": "Adds airy freshness",
   "recommendation.accord.salty": "Adds salty freshness",
   "recommendation.accord.white_floral": "Adds white-floral lift",
+  "recommendation.accord.nutty": "Adds nutty warmth",
+  "recommendation.accord.balsamic": "Adds balsamic depth",
   "recommendation.notePalette": "Expands the note palette",
   "recommendation.seasonFallback": "Expands {value} coverage",
   "recommendation.occasionFallback": "Improves {value} coverage",

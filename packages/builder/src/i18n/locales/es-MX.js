@@ -339,6 +339,8 @@ export const esMX = {
   "recommendation.accord.ozonic": "Agrega frescura aireada",
   "recommendation.accord.salty": "Agrega frescura salina",
   "recommendation.accord.white_floral": "Agrega lift de flores blancas",
+  "recommendation.accord.nutty": "Agrega calidez avellanada",
+  "recommendation.accord.balsamic": "Agrega profundidad balsámica",
   "recommendation.notePalette": "Amplía la paleta de notas",
   "recommendation.seasonFallback": "Amplía la cobertura de {value}",
   "recommendation.occasionFallback": "Mejora la cobertura de {value}",

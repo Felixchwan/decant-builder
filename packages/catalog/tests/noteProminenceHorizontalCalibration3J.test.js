@@ -104,6 +104,7 @@ const LAVENDER_FAMILY = {
   211: undefined,
   212: undefined,
   215: undefined,
+  216: undefined,
   306: undefined,
   402: undefined,
   404: 9,
@@ -191,8 +192,8 @@ describe("Composer Phase 3J canonical-data sanity audit", () => {
 describe("Composer Phase 3J horizontal calibration -- tonka bean and lavender canonical-key families", () => {
   const perfumesById = new Map(perfumes.map((perfume) => [perfume.id, perfume]));
 
-  it("has exactly 88 catalog fragrances to search for exhaustive family membership", () => {
-    expect(perfumes).toHaveLength(88);
+  it("has exactly 90 catalog fragrances to search for exhaustive family membership", () => {
+    expect(perfumes).toHaveLength(90);
   });
 
   for (const [noteId, family] of Object.entries(ALL_FAMILIES)) {

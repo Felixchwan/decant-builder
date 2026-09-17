@@ -42,7 +42,7 @@ function expectedIds() {
 }
 
 function assertCurrentCatalog(catalog) {
-  expect(catalog).toHaveLength(88);
+  expect(catalog).toHaveLength(90);
   expect(catalog.map(({ id }) => id)).toEqual(expectedIds());
   expect(catalog.map(({ id, points }) => [id, points])).toEqual(
     CATALOG_IDENTITY_BASELINE.map(([id, , points]) => [id, points])
@@ -55,9 +55,9 @@ describe("merchant catalog composition", () => {
     builderCalls.length = 0;
   });
 
-  it("gives each merchant an explicit independent 88-ID manifest", () => {
-    expect(discoveryDecantsAvailableIds).toHaveLength(88);
-    expect(aurelianAvailableIds).toHaveLength(88);
+  it("gives each merchant an explicit independent 90-ID manifest", () => {
+    expect(discoveryDecantsAvailableIds).toHaveLength(90);
+    expect(aurelianAvailableIds).toHaveLength(90);
     expect(discoveryDecantsAvailableIds).toEqual(expectedIds());
     expect(aurelianAvailableIds).toEqual(expectedIds());
     expect(discoveryDecantsAvailableIds).not.toBe(aurelianAvailableIds);
