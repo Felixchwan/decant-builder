@@ -2194,9 +2194,25 @@ baseNotes: ["caramel", "musk"],
     "labdanum",
   ],
 
-  seasons: [],
-  occasions: [],
-  vibes: [],
+  seasons: [
+    "spring",
+    "fall",
+    "winter",
+  ],
+
+  occasions: [
+    "night",
+    "date",
+    "casual",
+    "club",
+  ],
+
+  vibes: [
+    "versatile",
+    "fresh",
+    "confident",
+    "energetic",
+  ],
 },
 
 {
@@ -2231,9 +2247,25 @@ baseNotes: ["caramel", "musk"],
     "vanilla",
   ],
 
-  seasons: [],
-  occasions: [],
-  vibes: [],
+  seasons: [
+    "spring",
+    "fall",
+    "winter",
+  ],
+
+  occasions: [
+    "night",
+    "date",
+    "formal",
+    "office",
+  ],
+
+  vibes: [
+    "dark",
+    "elegant",
+    "sophisticated",
+    "calm",
+  ],
 },
 
 {
