@@ -359,6 +359,22 @@ body:has(.discovery-intent) #builder-entry-header { display:none; }
 .builder-page { padding-bottom:5rem; }
 .builder-loading { min-height:30rem; display:grid; place-items:center; color:var(--muted); }
 .builder-page > .builder-theme-root { width:min(1440px,100%); margin-inline:auto; }
+/* Collapsing the right panel is a request for more catalog width, but this
+   1440px cap (not the shared package's own .app, further in) is what's
+   actually binding at wide viewports -- confirmed live: at both 1920px and
+   2560px collapsed, the catalog track plateaued at the identical ~1342px,
+   since raising the real viewport past 1440px no longer changed this box's
+   own rendered width at all. Only widen it while a descendant .layout is
+   in the collapsed state (:has(), already used elsewhere in this file) so
+   every other consumer of the 1440px cap -- the docked header slot and
+   #builder-entry-header width-match above, both keyed to this exact value
+   and already scoped to the expanded case only (see the intro-header rule's
+   own comment) -- keeps seeing the unchanged base rule. Reuses .app's own
+   pre-existing 2200px value (packages/builder styles.css) rather than a new
+   number: that's the shared package's own deliberate top-level content-width
+   ceiling, already applied to both hosts, so this just stops being the
+   tighter of the two caps instead of introducing a third one. */
+.builder-page > .builder-theme-root:has(.layout--panel-collapsed) { width:min(2200px,100%); }
 @media (max-width:900px) {
   .desktop-nav,.desktop-cta,.site-header__builder-slot { display:none; }
   .mobile-menu { display:block; position:relative; }

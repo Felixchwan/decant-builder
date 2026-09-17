@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest";
 const builderCss = readFileSync(new URL("../../styles.css", import.meta.url), "utf8").replace(/\r\n/g, "\n");
 const originalRulesStart = builderCss.indexOf(":where(.builder-scope) .app {");
 const transformedOriginalRules = builderCss.slice(originalRulesStart);
-const BASELINE_SHA256 = "b3631e79180cfb40180d713710ebb5c3f8e3309cc16878b422c0d49f5727c7b0";
+const BASELINE_SHA256 = "33dd74781f7772f4cc6c13788de9933f67f5928390415dabe101d0da01241716";
 const unitDefinitions = [...builderCss.matchAll(/(--builder-unit-(\d+)):\s*([\d.]+)px;/g)];
 const unitReferences = [...builderCss.matchAll(/var\((--builder-unit-(\d+))\)/g)];
 
@@ -70,7 +70,7 @@ describe("Builder stylesheet namespace", () => {
     expect(createHash("sha256").update(recovered).digest("hex")).toBe(BASELINE_SHA256);
     expect((builderCss.match(/!important/g) || [])).toHaveLength(17);
     expect((builderCss.match(/color-mix\(/g) || [])).toHaveLength(171);
-    expect((builderCss.match(/var\([^,()]+,/g) || [])).toHaveLength(239);
+    expect((builderCss.match(/var\([^,()]+,/g) || [])).toHaveLength(240);
   });
 
   it("defines a complete fixed-length token set for every former rem magnitude", () => {

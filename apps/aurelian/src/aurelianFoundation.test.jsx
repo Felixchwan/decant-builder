@@ -257,6 +257,27 @@ describe("Aurelian application foundation", () => {
     expect(capMatch[1]).toMatch(/margin-inline:\s*auto/);
   });
 
+  it("widens the builder root's cap only while the panel is collapsed, leaving the expanded cap and its dependents alone", () => {
+    const stylesheet = readFileSync(join(APP_ROOT, "src", "app", "globals.css"), "utf8");
+    // Collapsing the right panel is a request for more catalog width, but
+    // the base 1440px cap above (not the shared package's own .app) is what
+    // actually binds at wide viewports once the real viewport exceeds it --
+    // confirmed live: 1920px and 2560px collapsed produced the identical
+    // catalog width until this override existed. Scoped with :has() to the
+    // collapsed state specifically, so the base rule asserted above (and
+    // everything keyed to its exact 1440px value -- the docked header slot
+    // and #builder-entry-header width-match, both already documented as
+    // expanded-only) keeps seeing it unchanged.
+    const collapsedCapMatch = stylesheet.match(
+      /\.builder-page > \.builder-theme-root:has\(\.layout--panel-collapsed\)\s*\{([^}]*)\}/
+    );
+    expect(collapsedCapMatch).not.toBeNull();
+    // Reuses .app's own pre-existing 2200px ceiling (packages/builder
+    // styles.css) rather than a new number -- that's the shared package's
+    // own top-level content-width cap, already applied to both hosts.
+    expect(collapsedCapMatch[1]).toMatch(/width:\s*min\(2200px,\s*100%\)/);
+  });
+
   it("gives the docked card the same background/blur as the header it visually sits inside, not the shared package's default surface", () => {
     const stylesheet = readFileSync(join(APP_ROOT, "src", "app", "globals.css"), "utf8");
     const headerMatch = stylesheet.match(/\.site-header\s*\{([^}]*)\}/);

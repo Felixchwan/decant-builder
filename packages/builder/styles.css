@@ -3570,15 +3570,18 @@
   }
 
   :where(.builder-scope) .layout.layout--panel-collapsed .catalog-grid {
-    /* Collapsed reclaims the panel's width for the catalog -- letting it
-       fall back to the same natural auto-fill/minmax behavior every other
-       catalog surface already uses (the shared base .catalog-grid rule
-       this host's own --custom override normally replaces) is what
-       actually takes advantage of that reclaimed width, rather than
-       staying capped at a column count sized for the narrower,
-       panel-constrained layout. */
-    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-    justify-content: normal;
+    /* Collapsed reclaims the panel's width for the catalog. Previously
+       fell back to the shared minmax(260px, 1fr) auto-fill rule -- but an
+       unbounded 1fr max stretches whatever columns happen to fit to fill
+       the row, instead of adding more of them (e.g. jumping straight from
+       3 columns to 4 much-wider ones, then staying at 4 no matter how
+       much wider the viewport got). Reclaimed width should add columns at
+       the same capped card width used above/when expanded, not inflate
+       existing cards -- so this keeps the same fixed max-card-width +
+       centered-row strategy, just auto-fit-computed instead of a fixed
+       count, since the freed-up width genuinely varies by viewport. */
+    grid-template-columns: repeat(auto-fit, minmax(220px, 237px));
+    justify-content: center;
   }
 }
 
@@ -6510,20 +6513,29 @@
 }
 
 :where(.builder-scope) .perfume-subtitle {
-  margin-top: 4px;
+  /* Subordinate to the perfume name, not a competing label: centered with
+     the rest of the identity block (name/brand), muted by default like
+     every other secondary line on the card, and only as bold as a normal
+     caption. A fragrance-specific subtitleColor (e.g. Tuxedo's) still
+     applies via inline style on top of this. */
+  margin-top: 2px;
   margin-bottom: 2px;
 
-  color: #d4c46a;
+  color: var(--builder-color-text-muted, #94a3b8);
 
   font-size: var(--builder-unit-075);
-  font-weight: 800;
-  letter-spacing: 0.08em;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  text-align: center;
 }
 
 :where(.builder-scope) .perfume-subtitle-glow {
-  text-shadow:
-    0 0 8px rgba(251, 191, 36, 0.45),
-    0 0 16px rgba(251, 191, 36, 0.20);
+  /* Previously a bright dual-layer glow that read as a badge rather than
+     secondary text; removed so an opted-in glow fragrance doesn't stand
+     out more than the perfume name itself. The class is kept (rather than
+     removed from PerfumeCard) so a future, more subtle treatment has
+     somewhere to attach without a JSX change. */
+  text-shadow: none;
 }
 
 :where(.builder-scope) .selected-subtitle {

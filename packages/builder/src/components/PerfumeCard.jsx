@@ -45,9 +45,7 @@ function PerfumeCard({
                   className={`perfume-subtitle ${
                     perfume.subtitleGlow ? "perfume-subtitle-glow" : ""
                   }`}
-                  style={{
-                    color: perfume.subtitleColor || "#fbbf24",
-                  }}
+                  style={perfume.subtitleColor ? { color: perfume.subtitleColor } : undefined}
                 >
                   {perfume.subtitle}
                 </p>
