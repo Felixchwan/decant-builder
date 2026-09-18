@@ -1,4 +1,4 @@
-import { forwardRef, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { Fragment, forwardRef, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { flushSync } from "react-dom";
 import { createRoot } from "react-dom/client";
 import { toBlob } from "html-to-image";
@@ -1897,9 +1897,31 @@ function NoteExplorerModal({
     [catalogPerfumes, notes]
   );
 
+  // The first note ever selected is the root/primary note for this
+  // exploration session -- selectedNoteIds is the one canonical source of
+  // truth (no parallel "root" state to drift out of sync with it), and by
+  // construction its first entry never changes identity except via a full
+  // reset (see handleSelectNote below), regardless of how many secondary
+  // notes are added or removed afterward.
+  const rootSelectedNoteId = selectedNoteIds[0] || null;
+
   const normalizedQuery = normalizeNoteSearchText(searchQuery);
+  // Search only ever narrows the master list's own visible rows -- it never
+  // touches selection, matches, or facets. The one exception: the active
+  // root's row must never disappear merely because the current search text
+  // no longer matches its name, since the inline exploration block below is
+  // anchored to that exact row -- losing the row would make the block
+  // (and, confusingly, the ability to reset via clicking it) vanish out
+  // from under an active exploration for a reason unrelated to the
+  // exploration itself. A secondary note's own row has no such anchor (its
+  // selected state is shown inside the block, not as a second inline
+  // expansion), so it is not force-included.
   const filteredNoteOptions = normalizedQuery
-    ? noteOptions.filter((option) => normalizeNoteSearchText(option.name).includes(normalizedQuery))
+    ? noteOptions.filter(
+        (option) =>
+          normalizeNoteSearchText(option.name).includes(normalizedQuery) ||
+          option.noteId === rootSelectedNoteId
+      )
     : noteOptions;
 
   // Progressive intersection: matches always reflect every currently
@@ -1942,18 +1964,30 @@ function NoteExplorerModal({
       ? t("noteExplorer.resultsHeadingMultiple", { notes: selectedNoteLabels.join(" + ") })
       : t("noteExplorer.resultsHeading", { note: selectedNoteLabels[0] || "" });
 
-  // One handler for every way a note's selection can change: picking an
-  // unselected note (from the master list or a related-note chip) adds it,
-  // and picking an already-selected one (from the master list or its own
-  // chip's remove control) removes it. Related-note chips are only ever
-  // rendered for notes NOT already selected, so their click always takes
-  // the add branch.
-  const handleToggleNote = (noteId) => {
-    setSelectedNoteIds((currentNoteIds) =>
-      currentNoteIds.includes(noteId)
+  // One handler for every way a note's selection can change. Three cases,
+  // checked in order:
+  // 1. The root (selectedNoteIds[0]) clicked again -- a full reset, not a
+  //    single-note removal. Clears every selected note (root and every
+  //    secondary), which collapses the inline exploration block and
+  //    restores both panes to their initial state, since everything else
+  //    derives from selectedNoteIds/rootSelectedNoteId.
+  // 2. An already-selected SECONDARY note clicked (from its own chip's
+  //    remove control, or by re-clicking its master-list row) -- removes
+  //    only that note, recomputing matches/facets against what remains.
+  //    The root is explicitly exempted from this branch by case 1 above.
+  // 3. An unselected note clicked (from the master list or a related-note
+  //    chip) -- adds it. If nothing is selected yet this becomes the new
+  //    root; otherwise it narrows the existing AND intersection.
+  const handleSelectNote = (noteId) => {
+    setSelectedNoteIds((currentNoteIds) => {
+      if (currentNoteIds.length > 0 && noteId === currentNoteIds[0]) {
+        return [];
+      }
+
+      return currentNoteIds.includes(noteId)
         ? currentNoteIds.filter((id) => id !== noteId)
-        : [...currentNoteIds, noteId]
-    );
+        : [...currentNoteIds, noteId];
+    });
   };
 
   return renderOwnedPortal(
@@ -1992,13 +2026,23 @@ function NoteExplorerModal({
           ) : (
             <div className="notes-grid note-explorer-notes-grid">
               {filteredNoteOptions.map((option) => (
-                <NoteExplorerNoteButton
-                  key={option.noteId}
-                  option={option}
-                  translator={translator}
-                  isSelected={selectedNoteIds.includes(option.noteId)}
-                  onSelect={() => handleToggleNote(option.noteId)}
-                />
+                <Fragment key={option.noteId}>
+                  <NoteExplorerNoteButton
+                    option={option}
+                    translator={translator}
+                    isSelected={selectedNoteIds.includes(option.noteId)}
+                    onSelect={() => handleSelectNote(option.noteId)}
+                  />
+                  {option.noteId === rootSelectedNoteId && (
+                    <NoteExplorerInlineExploration
+                      secondaryNoteIds={selectedNoteIds.slice(1)}
+                      secondaryNoteLabels={selectedNoteLabels.slice(1)}
+                      relatedNoteFacets={relatedNoteFacets}
+                      translator={translator}
+                      onSelectNote={handleSelectNote}
+                    />
+                  )}
+                </Fragment>
               ))}
             </div>
           )}
@@ -2006,79 +2050,38 @@ function NoteExplorerModal({
           <div className="note-explorer-results">
             {selectedNoteIds.length === 0 ? (
               <p className="note-explorer-empty-message">{t("noteExplorer.selectNotePrompt")}</p>
+            ) : matches.length === 0 ? (
+              <p className="note-explorer-empty-message">
+                {t(
+                  selectedNoteIds.length > 1
+                    ? "noteExplorer.noResultsCombination"
+                    : "noteExplorer.noResults"
+                )}
+              </p>
             ) : (
               <>
-                <div className="note-explorer-selected-chips">
-                  {selectedNoteIds.map((noteId, index) => (
-                    <NoteExplorerSelectedChip
-                      key={noteId}
-                      noteId={noteId}
-                      label={selectedNoteLabels[index]}
+                <div className="note-explorer-results-header">
+                  <h4 className="note-explorer-results-heading">{resultsHeading}</h4>
+                  <label className="note-explorer-sort">
+                    <span>{t("noteExplorer.sortLabel")}</span>
+                    <select value={sortOrder} onChange={(event) => setSortOrder(event.target.value)}>
+                      <option value="catalog">{t("noteExplorer.sortCatalogOrder")}</option>
+                      <option value="prominence">{t("noteExplorer.sortMostProminent")}</option>
+                    </select>
+                  </label>
+                </div>
+                <div className="note-explorer-results-list">
+                  {displayedMatches.map((perfume) => (
+                    <NoteExplorerResultRow
+                      key={perfume.id}
+                      perfume={perfume}
                       translator={translator}
-                      onRemove={handleToggleNote}
+                      isAlreadyAdded={selectedPerfumeIds.has(perfume.id)}
+                      isBoxFull={isBoxFull}
+                      onAddPerfume={onAddPerfume}
                     />
                   ))}
                 </div>
-
-                <div className="note-explorer-related-notes">
-                  <span className="note-explorer-related-notes-label">
-                    {t("noteExplorer.relatedNotesLabel")}
-                  </span>
-                  {relatedNoteFacets.length === 0 ? (
-                    <p className="note-explorer-empty-message note-explorer-related-notes-empty">
-                      {t("noteExplorer.noRelatedNotes")}
-                    </p>
-                  ) : (
-                    <div className="note-explorer-related-notes-chips">
-                      {relatedNoteFacets.map((facet) => (
-                        <NoteExplorerRelatedChip
-                          key={facet.noteId}
-                          facet={facet}
-                          translator={translator}
-                          onSelect={handleToggleNote}
-                        />
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                {matches.length === 0 ? (
-                  <p className="note-explorer-empty-message">
-                    {t(
-                      selectedNoteIds.length > 1
-                        ? "noteExplorer.noResultsCombination"
-                        : "noteExplorer.noResults"
-                    )}
-                  </p>
-                ) : (
-                  <>
-                    <div className="note-explorer-results-header">
-                      <h4 className="note-explorer-results-heading">{resultsHeading}</h4>
-                      <label className="note-explorer-sort">
-                        <span>{t("noteExplorer.sortLabel")}</span>
-                        <select
-                          value={sortOrder}
-                          onChange={(event) => setSortOrder(event.target.value)}
-                        >
-                          <option value="catalog">{t("noteExplorer.sortCatalogOrder")}</option>
-                          <option value="prominence">{t("noteExplorer.sortMostProminent")}</option>
-                        </select>
-                      </label>
-                    </div>
-                    <div className="note-explorer-results-list">
-                      {displayedMatches.map((perfume) => (
-                        <NoteExplorerResultRow
-                          key={perfume.id}
-                          perfume={perfume}
-                          translator={translator}
-                          isAlreadyAdded={selectedPerfumeIds.has(perfume.id)}
-                          isBoxFull={isBoxFull}
-                          onAddPerfume={onAddPerfume}
-                        />
-                      ))}
-                    </div>
-                  </>
-                )}
               </>
             )}
           </div>
@@ -2136,6 +2139,55 @@ function NoteExplorerSelectedChip({ noteId, label, translator, onRemove }) {
         <span aria-hidden="true">×</span>
       </button>
     </span>
+  );
+}
+
+// Renders directly beneath the root note's own master-list row (see the
+// Fragment in NoteExplorerModal above) -- never as a floating header, so the
+// "I selected this note, and these are the notes that combine with it"
+// relationship stays visually obvious. grid-column: 1 / -1 (in styles.css)
+// is what lets it span the full row width of the two-column notes grid
+// instead of being squeezed into the root's own single grid cell.
+function NoteExplorerInlineExploration({
+  secondaryNoteIds,
+  secondaryNoteLabels,
+  relatedNoteFacets,
+  translator,
+  onSelectNote,
+}) {
+  const { t } = translator;
+
+  return (
+    <div className="note-explorer-inline-exploration">
+      {secondaryNoteIds.length > 0 && (
+        <div className="note-explorer-selected-chips">
+          {secondaryNoteIds.map((noteId, index) => (
+            <NoteExplorerSelectedChip
+              key={noteId}
+              noteId={noteId}
+              label={secondaryNoteLabels[index]}
+              translator={translator}
+              onRemove={onSelectNote}
+            />
+          ))}
+        </div>
+      )}
+
+      <div className="note-explorer-related-notes">
+        <span className="note-explorer-related-notes-label">{t("noteExplorer.relatedNotesLabel")}</span>
+        {relatedNoteFacets.length === 0 ? (
+          <p className="note-explorer-empty-message note-explorer-related-notes-empty">
+            {t("noteExplorer.noRelatedNotes")}
+          </p>
+        ) : (
+          <div className="note-explorer-related-notes-chips">
+            {relatedNoteFacets.map((facet) => (
+              <NoteExplorerRelatedChip key={facet.noteId} facet={facet} translator={translator} onSelect={onSelectNote} />
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
   );
 }
 

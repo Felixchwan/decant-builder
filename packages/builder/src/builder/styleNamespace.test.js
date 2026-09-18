@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest";
 const builderCss = readFileSync(new URL("../../styles.css", import.meta.url), "utf8").replace(/\r\n/g, "\n");
 const originalRulesStart = builderCss.indexOf(":where(.builder-scope) .app {");
 const transformedOriginalRules = builderCss.slice(originalRulesStart);
-const BASELINE_SHA256 = "7371b6724c6e419b5b4db11297cdbd3c7a77551102208c6a1aca7305354ad1b5";
+const BASELINE_SHA256 = "10885736eb3e8287c56761b58c2afcd809011ac33b75c4cc803760e2c0413657";
 const unitDefinitions = [...builderCss.matchAll(/(--builder-unit-(\d+)):\s*([\d.]+)px;/g)];
 const unitReferences = [...builderCss.matchAll(/var\((--builder-unit-(\d+))\)/g)];
 
@@ -69,8 +69,8 @@ describe("Builder stylesheet namespace", () => {
       .replace(/var\(--builder-unit-(\d+)\)/g, (_, digits) => `${remMagnitude(digits)}rem`);
     expect(createHash("sha256").update(recovered).digest("hex")).toBe(BASELINE_SHA256);
     expect((builderCss.match(/!important/g) || [])).toHaveLength(17);
-    expect((builderCss.match(/color-mix\(/g) || [])).toHaveLength(177);
-    expect((builderCss.match(/var\([^,()]+,/g) || [])).toHaveLength(251);
+    expect((builderCss.match(/color-mix\(/g) || [])).toHaveLength(179);
+    expect((builderCss.match(/var\([^,()]+,/g) || [])).toHaveLength(253);
   });
 
   it("defines a complete fixed-length token set for every former rem magnitude", () => {
@@ -99,7 +99,7 @@ describe("Builder stylesheet namespace", () => {
 
   it("binds every ordinary selector to the neutral scope exactly once", () => {
     const selectors = collectRuleSelectors(builderCss);
-    expect(selectors).toHaveLength(1269);
+    expect(selectors).toHaveLength(1270);
     selectors.forEach((selector) => {
       expect(selector.startsWith(":where(.builder-scope)")).toBe(true);
       expect(selector.match(/:where\(\.builder-scope\)/g)).toHaveLength(1);

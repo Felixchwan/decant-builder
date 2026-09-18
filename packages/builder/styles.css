@@ -5992,6 +5992,17 @@
   line-height: 1.45;
 }
 
+:where(.builder-scope) .note-explorer-inline-exploration {
+  grid-column: 1 / -1;
+  display: grid;
+  gap: 10px;
+  margin: -2px 0 4px;
+  padding: 10px 12px;
+  border: 1px solid color-mix(in srgb, var(--builder-color-accent, #4ade80) 20%, transparent);
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--builder-color-accent, #4ade80) 6%, transparent);
+}
+
 :where(.builder-scope) .note-explorer-selected-chips {
   display: flex;
   flex-wrap: wrap;

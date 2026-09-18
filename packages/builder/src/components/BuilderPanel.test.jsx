@@ -1365,7 +1365,7 @@ describe("Composer Phase 2A: Note Explorer", () => {
   });
 
   it("uses a distinct combination-specific zero-result message once 2+ notes are selected, not the single-note message (a 3-note AND with no shared fragrance is a combination gap, not a per-note one)", () => {
-    const zeroResultsStart = modalSource.indexOf("{matches.length === 0 ? (");
+    const zeroResultsStart = modalSource.indexOf("matches.length === 0 ? (");
     const zeroResultsSource = modalSource.slice(zeroResultsStart, zeroResultsStart + 300);
 
     expect(zeroResultsSource).toContain("selectedNoteIds.length > 1");
@@ -1387,6 +1387,158 @@ describe("Composer Phase 2A: Note Explorer", () => {
 
   it("introduces no Aurelian- or Discovery-Decants-specific vocabulary in the shared Builder component", () => {
     expect(modalSource).not.toMatch(/Aurelian|Discovery Decants/i);
+  });
+});
+
+// Left/right pane reorganization: the master note list (left) now owns the
+// entire exploration -- root selection, secondary selections, and the
+// related-note ("Combina con") facets -- while the results pane (right)
+// renders perfumes only. selectedNoteIds remains the one canonical piece of
+// state (no parallel rootSelectedNoteId state to drift out of sync);
+// rootSelectedNoteId is a plain derived read (selectedNoteIds[0]), and the
+// AND/co-occurrence algorithm itself (getNoteExplorerMatchesForNoteIds,
+// buildNoteExplorerRelatedNoteFacets) is untouched -- exercised directly in
+// buildNoteExplorerViewModel.test.js. These are wiring-only source-contract
+// checks, same createPortal constraint as the Phase 2A block above; the
+// actual interactive behavior (root reset, secondary add/remove, search
+// pinning the root row) was proven in a real browser as part of this
+// round's validation.
+describe("Note Explorer: root note + inline related-note exploration (left pane), results-only right pane", () => {
+  const modalStart = normalizedPanelSource.indexOf("function NoteExplorerModal(");
+  const modalEnd = normalizedPanelSource.indexOf("function DiscoveryBoxCoachmark(");
+  const modalSource = normalizedPanelSource.slice(modalStart, modalEnd);
+
+  // [1] selecting first note establishes root
+  it("derives the root/primary note as selectedNoteIds[0] -- the first note ever selected, not a separately-tracked piece of state", () => {
+    expect(modalSource).toContain("const rootSelectedNoteId = selectedNoteIds[0] || null;");
+    // Only one useState call manages selection -- rootSelectedNoteId is a
+    // plain derived read, so there is exactly one source of truth to keep
+    // in sync.
+    expect(modalSource.match(/setSelectedNoteIds\(\[\]\)|useState\(\[\]\)/g).length).toBeGreaterThan(0);
+    expect(modalSource).not.toContain("useState(null)");
+  });
+
+  // [2][9] related facets render directly beneath the root note in the left
+  // pane, anchored to the root's own grid position (not a fixed index),
+  // so it stays put through progressive filtering.
+  it("renders the inline exploration block as a sibling immediately after the root's own master-list button, inside the notes grid -- never inside the results pane", () => {
+    const gridStart = modalSource.indexOf('<div className="notes-grid note-explorer-notes-grid">');
+    const gridEnd = modalSource.indexOf("</div>", modalSource.indexOf("</Fragment>"));
+    const gridSource = modalSource.slice(gridStart, gridEnd);
+
+    expect(gridSource).toContain("<NoteExplorerNoteButton");
+    expect(gridSource).toContain("option.noteId === rootSelectedNoteId");
+    expect(gridSource).toContain("<NoteExplorerInlineExploration");
+    // The button renders before the conditional block in source order, and
+    // both live inside the same per-option Fragment -- so the block always
+    // sits immediately beneath whichever grid row is currently the root,
+    // never at a fixed index or in a separate header.
+    expect(gridSource.indexOf("<NoteExplorerNoteButton")).toBeLessThan(
+      gridSource.indexOf("<NoteExplorerInlineExploration")
+    );
+  });
+
+  // [3] right pane no longer renders "Combina con" / selected chips
+  it("renders no selected-chip or related-note facet UI inside the results pane -- that pane is results-only now", () => {
+    const resultsStart = modalSource.indexOf('<div className="note-explorer-results">');
+    const resultsEnd = modalSource.indexOf("</div>\n        </div>\n      </div>");
+    const resultsSource = modalSource.slice(resultsStart, resultsEnd);
+
+    expect(resultsSource).not.toContain("note-explorer-selected-chips");
+    expect(resultsSource).not.toContain("note-explorer-related-notes");
+    expect(resultsSource).not.toContain("relatedNotesLabel");
+    expect(resultsSource).not.toContain("NoteExplorerSelectedChip");
+    expect(resultsSource).not.toContain("NoteExplorerRelatedChip");
+    // What IS still there: the heading, the sort control, and the list.
+    expect(resultsSource).toContain("note-explorer-results-heading");
+    expect(resultsSource).toContain("note-explorer-sort");
+    expect(resultsSource).toContain("note-explorer-results-list");
+  });
+
+  // [4] selecting a related note preserves root and narrows results (AND
+  // semantics unchanged) -- proven by wiring: the add branch appends, so
+  // whatever was already selected (the root at index 0) is preserved.
+  it("adds an unselected note (from the master list or a related-note chip) by appending, never by replacing the existing selection", () => {
+    const handlerStart = modalSource.indexOf("const handleSelectNote = (noteId) => {");
+    const handlerEnd = modalSource.indexOf("};", handlerStart) + 2;
+    const handlerSource = modalSource.slice(handlerStart, handlerEnd);
+
+    expect(handlerSource).toContain("[...currentNoteIds, noteId]");
+    expect(modalSource).toContain("onSelect={() => handleSelectNote(option.noteId)}");
+    expect(modalSource).toContain("onSelectNote={handleSelectNote}");
+  });
+
+  // [5] clicking an already-selected SECONDARY note removes only that note
+  it("removes a secondary note (not the root) via a plain filter, leaving every other selection -- including the root -- untouched", () => {
+    const handlerStart = modalSource.indexOf("const handleSelectNote = (noteId) => {");
+    const handlerEnd = modalSource.indexOf("};", handlerStart) + 2;
+    const handlerSource = modalSource.slice(handlerStart, handlerEnd);
+
+    expect(handlerSource).toContain("currentNoteIds.filter((id) => id !== noteId)");
+    // The removal branch is only reached once the root-reset branch above
+    // it has already returned for the root's own id -- so this filter can
+    // never fire for noteId === currentNoteIds[0].
+    const resetIndex = handlerSource.indexOf("return [];");
+    const filterIndex = handlerSource.indexOf("currentNoteIds.filter");
+    expect(resetIndex).toBeGreaterThan(-1);
+    expect(resetIndex).toBeLessThan(filterIndex);
+  });
+
+  // [6] clicking the root note performs a full reset, not a single-note
+  // removal
+  it("resets to an empty selection when the clicked note is the current root -- checked before the generic remove/add branches", () => {
+    const handlerStart = modalSource.indexOf("const handleSelectNote = (noteId) => {");
+    const handlerEnd = modalSource.indexOf("};", handlerStart) + 2;
+    const handlerSource = modalSource.slice(handlerStart, handlerEnd);
+
+    expect(handlerSource).toContain("if (currentNoteIds.length > 0 && noteId === currentNoteIds[0]) {");
+    expect(handlerSource).toContain("return [];");
+  });
+
+  // [7] full reset restores the initial note-list/result state
+  it("falls back to the original unfiltered master list and the original results prompt once selectedNoteIds is empty, with no separate reset-only branch needed", () => {
+    // The right pane's very first check is selectedNoteIds.length === 0 --
+    // the same check that gates the original entry prompt, so an empty
+    // selection (whether from first render or from a root reset) always
+    // renders the exact same state.
+    const resultsStart = modalSource.indexOf('<div className="note-explorer-results">');
+    const resultsBranchSource = modalSource.slice(resultsStart, resultsStart + 200);
+    expect(resultsBranchSource).toContain("selectedNoteIds.length === 0");
+    expect(resultsBranchSource).toContain('t("noteExplorer.selectNotePrompt")');
+
+    // rootSelectedNoteId is null once selectedNoteIds is empty, so the
+    // search force-include and the inline-exploration condition both
+    // naturally stop matching anything -- no separate "is this a reset"
+    // flag is threaded through either.
+    expect(modalSource).toContain("const rootSelectedNoteId = selectedNoteIds[0] || null;");
+  });
+
+  // [8] related facets recompute after adding/removing secondary
+  // selections -- the same buildNoteExplorerRelatedNoteFacets call, keyed
+  // on selectedNoteIds, that the previous round's tests already exercise
+  // exhaustively against real containment data.
+  it("recomputes relatedNoteFacets from the live matches/selectedNoteIds on every render via useMemo, the exact call the co-occurrence algorithm tests exercise", () => {
+    expect(modalSource).toContain(
+      "buildNoteExplorerRelatedNoteFacets({ notes, matchingPerfumes: matches, selectedNoteIds })"
+    );
+    expect(modalSource).toContain("[notes, matches, selectedNoteIds]");
+  });
+
+  // [10] search + active root behavior is deterministic: the root's own
+  // row is force-included regardless of the search query.
+  it("keeps the root's own row in filteredNoteOptions even when the search query would otherwise exclude it", () => {
+    expect(modalSource).toContain("option.noteId === rootSelectedNoteId");
+    const filterStart = modalSource.indexOf("const filteredNoteOptions = normalizedQuery");
+    const filterEnd = modalSource.indexOf(": noteOptions;", filterStart) + ": noteOptions;".length;
+    const filterSource = modalSource.slice(filterStart, filterEnd);
+    expect(filterSource).toContain("normalizeNoteSearchText(option.name).includes(normalizedQuery)");
+    expect(filterSource).toContain("option.noteId === rootSelectedNoteId");
+  });
+
+  it("spans the inline exploration block across the full notes-grid row (styles.css), so it reads as one block beneath the root rather than being squeezed into its grid cell", () => {
+    const ruleMatch = appCss.match(/:where\(\.builder-scope\) \.note-explorer-inline-exploration \{([^}]*)\}/);
+    expect(ruleMatch, "expected a .note-explorer-inline-exploration rule").toBeTruthy();
+    expect(ruleMatch[1]).toMatch(/grid-column:\s*1 \/ -1;/);
   });
 });
 
