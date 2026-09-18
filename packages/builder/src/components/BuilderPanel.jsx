@@ -1875,7 +1875,10 @@ function NoteExplorerModal({
   portalRoot,
   onClose,
 }) {
-  const translator = createTranslator(builderConfig.locale, builderConfig.taxonomyLabels);
+  const translator = useMemo(
+    () => createTranslator(builderConfig.locale, builderConfig.taxonomyLabels),
+    [builderConfig.locale, builderConfig.taxonomyLabels]
+  );
   const { t } = translator;
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedNoteIds, setSelectedNoteIds] = useState([]);
@@ -1892,9 +1895,22 @@ function NoteExplorerModal({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [onClose]);
 
+  // resolveLabel reuses the exact same translator.label(...) call the
+  // master-list button already makes to render each note's name -- one
+  // localization mechanism, never a second competing one -- so the master
+  // list is always sorted by, and searchable by, precisely the text the
+  // user is actually looking at. translator is itself memoized above (keyed
+  // on locale/taxonomyLabels), so depending on it here doesn't recompute
+  // noteOptions on every unrelated render either.
   const noteOptions = useMemo(
-    () => buildNoteExplorerNoteOptions({ catalogPerfumes, notes }),
-    [catalogPerfumes, notes]
+    () =>
+      buildNoteExplorerNoteOptions({
+        catalogPerfumes,
+        notes,
+        locale: translator.locale,
+        resolveLabel: (noteId, fallback) => translator.label("notes", noteId, fallback),
+      }),
+    [catalogPerfumes, notes, translator]
   );
 
   // The first note ever selected is the root/primary note for this
@@ -1916,11 +1932,19 @@ function NoteExplorerModal({
   // exploration itself. A secondary note's own row has no such anchor (its
   // selected state is shown inside the block, not as a second inline
   // expansion), so it is not force-included.
+  // Every note is findable by its canonical key, its raw catalog name, AND
+  // its current localized label -- so a note stays searchable by its
+  // English/canonical identity even while the UI is in Spanish (or any
+  // other locale), and by whatever translated label is actually on screen.
+  // Options already carry `label` precomputed via the same resolveLabel
+  // hook noteOptions was built with (see above), so no second label
+  // resolution/interpretation is introduced here.
   const filteredNoteOptions = normalizedQuery
     ? noteOptions.filter(
         (option) =>
-          normalizeNoteSearchText(option.name).includes(normalizedQuery) ||
-          option.noteId === rootSelectedNoteId
+          normalizeNoteSearchText(`${option.noteId} ${option.name} ${option.label}`).includes(
+            normalizedQuery
+          ) || option.noteId === rootSelectedNoteId
       )
     : noteOptions;
 

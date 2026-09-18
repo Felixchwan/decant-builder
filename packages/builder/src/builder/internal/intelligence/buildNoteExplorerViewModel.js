@@ -10,7 +10,19 @@ import { getPerfumeNoteIds } from "../../../utils/noteUtils.js";
 // this file is the catalog-wide sibling of that box-scoped view model, not a
 // replacement for it.
 
-export function buildNoteExplorerNoteOptions({ catalogPerfumes = [], notes = {} } = {}) {
+// `resolveLabel(noteId, fallbackName)` is an optional caller-supplied hook
+// (e.g. `(noteId, fallback) => translator.label("notes", noteId, fallback)`)
+// for the CURRENT localized display label -- this file has no i18n
+// dependency of its own and never will (packages/builder's i18n lives
+// alongside it, but this view-model stays a pure function of catalog data
+// plus whatever label a caller hands it, so it works identically whether or
+// not a host ever localizes note names). Omitting resolveLabel keeps every
+// existing caller's exact prior behavior: label falls back to the raw
+// catalog name, so sorting/search behave exactly as before localization was
+// introduced. `locale` (a BCP47 tag, or omitted for the runtime default)
+// only affects collation order via Intl.Collator below -- it never affects
+// which notes are included or how they're counted.
+export function buildNoteExplorerNoteOptions({ catalogPerfumes = [], notes = {}, locale, resolveLabel } = {}) {
   const safeCatalogPerfumes = Array.isArray(catalogPerfumes) ? catalogPerfumes : [];
   const safeNotes = notes && typeof notes === "object" ? notes : {};
   const optionsByNoteId = new Map();
@@ -30,9 +42,12 @@ export function buildNoteExplorerNoteOptions({ catalogPerfumes = [], notes = {} 
       }
 
       if (!optionsByNoteId.has(noteId)) {
+        const name = note.name || formatNoteId(noteId);
+
         optionsByNoteId.set(noteId, {
           noteId,
-          name: note.name || formatNoteId(noteId),
+          name,
+          label: typeof resolveLabel === "function" ? resolveLabel(noteId, name) : name,
           image: note.noteImage || "",
           perfumeCount: 0,
         });
@@ -42,7 +57,16 @@ export function buildNoteExplorerNoteOptions({ catalogPerfumes = [], notes = {} 
     });
   });
 
-  return [...optionsByNoteId.values()].sort(compareNoteOptions);
+  // sensitivity: "base" matches the case/diacritic-insensitive comparison
+  // this project already uses elsewhere for note text (see
+  // normalizeNoteSearchText in BuilderPanel.jsx) -- ties still resolve to a
+  // deterministic order via the canonical id, never left to collator
+  // implementation-defined stability.
+  const collator = new Intl.Collator(locale || undefined, { sensitivity: "base" });
+
+  return [...optionsByNoteId.values()].sort((firstOption, secondOption) =>
+    compareNoteOptions(firstOption, secondOption, collator)
+  );
 }
 
 // Catalog-order filter, not a sort -- Phase 2A deliberately infers no
@@ -226,10 +250,13 @@ export function annotateNoteExplorerMatchesWithProminenceLevel(matches, noteId) 
   }));
 }
 
-function compareNoteOptions(firstOption, secondOption) {
-  const labelComparison = firstOption.name.localeCompare(secondOption.name, undefined, {
-    sensitivity: "base",
-  });
+// Sorts by the CURRENT localized label (falls back to the raw catalog name
+// when no resolveLabel was supplied -- see buildNoteExplorerNoteOptions
+// above), via the caller's locale-aware collator, so the master list reads
+// alphabetically in whichever language is actually on screen. Canonical id
+// is only ever the deterministic tie-break, never the primary sort key.
+function compareNoteOptions(firstOption, secondOption, collator) {
+  const labelComparison = collator.compare(firstOption.label, secondOption.label);
 
   if (labelComparison !== 0) {
     return labelComparison;

@@ -7,7 +7,10 @@ import { buildCollectionSummary } from "../builder/internal/intelligence/buildCo
 import { buildComposerRecommendations } from "../builder/internal/recommendations/buildComposerRecommendations.js";
 import {
   annotateNoteExplorerMatchesWithProminenceLevel,
+  buildNoteExplorerNoteOptions,
+  buildNoteExplorerRelatedNoteFacets,
   getNoteExplorerMatches,
+  getNoteExplorerMatchesForNoteIds,
   sortNoteExplorerMatchesByProminence,
 } from "../builder/internal/intelligence/buildNoteExplorerViewModel.js";
 import { aurelianConfig } from "../../../../apps/aurelian/src/merchant/config.js";
@@ -1315,9 +1318,9 @@ describe("Composer Phase 2A: Note Explorer", () => {
   });
 
   it("derives note options from the live, catalog-wide catalogPerfumes prop (not selectedPerfumes/the box), via buildNoteExplorerNoteOptions", () => {
-    expect(modalSource).toContain(
-      "buildNoteExplorerNoteOptions({ catalogPerfumes, notes })"
-    );
+    expect(modalSource).toContain("buildNoteExplorerNoteOptions({");
+    expect(modalSource).toContain("catalogPerfumes,");
+    expect(modalSource).toContain("notes,");
     expect(modalSource).not.toContain("selectedPerfumes");
   });
 
@@ -1531,7 +1534,7 @@ describe("Note Explorer: root note + inline related-note exploration (left pane)
     const filterStart = modalSource.indexOf("const filteredNoteOptions = normalizedQuery");
     const filterEnd = modalSource.indexOf(": noteOptions;", filterStart) + ": noteOptions;".length;
     const filterSource = modalSource.slice(filterStart, filterEnd);
-    expect(filterSource).toContain("normalizeNoteSearchText(option.name).includes(normalizedQuery)");
+    expect(filterSource).toContain("normalizeNoteSearchText(`${option.noteId} ${option.name} ${option.label}`)");
     expect(filterSource).toContain("option.noteId === rootSelectedNoteId");
   });
 
@@ -1539,6 +1542,158 @@ describe("Note Explorer: root note + inline related-note exploration (left pane)
     const ruleMatch = appCss.match(/:where\(\.builder-scope\) \.note-explorer-inline-exploration \{([^}]*)\}/);
     expect(ruleMatch, "expected a .note-explorer-inline-exploration rule").toBeTruthy();
     expect(ruleMatch[1]).toMatch(/grid-column:\s*1 \/ -1;/);
+  });
+});
+
+// Note Explorer localized search + locale-aware alphabetical sort. Root
+// cause of the reported bug: buildNoteExplorerNoteOptions previously
+// derived option.name (and sorted/searched by it) purely from the
+// catalog's own raw English note.name, never from the CURRENT localized
+// label a real host (Aurelian) resolves via translator.label(...) using
+// its own taxonomyLabels overrides -- so a note was only ever findable/
+// sortable by its canonical English identity, regardless of what the UI
+// actually displayed. buildNoteExplorerNoteOptions now accepts an optional
+// resolveLabel hook (BuilderPanel.jsx passes the exact translator.label
+// call the master-list button already uses to render each name -- one
+// localization mechanism, not two) plus a locale for Intl.Collator-based
+// sorting; every option carries both its raw canonical `name` and its
+// resolved `label`, and search matches against noteId + name + label
+// together, so canonical/English and localized text are both always
+// searchable. These tests exercise the real exported view-model function
+// against the real catalog and the real Aurelian/English translators
+// (createTranslator + aurelianConfig.taxonomyLabels) -- no synthetic label
+// fixtures. filterOptions below is a local, test-only mirror of
+// BuilderPanel.jsx's own filteredNoteOptions predicate (proven identical
+// via source-string assertions above); it exists only so this real-data
+// coverage doesn't require rendering the modal, which createPortal makes
+// impossible under renderToStaticMarkup.
+describe("Note Explorer: localized search + locale-aware alphabetical sort (real catalog/i18n data)", () => {
+  const aurelianTranslator = createTranslator(aurelianConfig.locale, aurelianConfig.taxonomyLabels);
+  const englishTranslator = createTranslator("en-US");
+
+  function normalizeSearchText(value) {
+    return String(value || "")
+      .trim()
+      .toLowerCase()
+      .normalize("NFKD")
+      .replace(/\p{Diacritic}/gu, "");
+  }
+
+  function filterOptions(options, query, rootNoteId = null) {
+    const normalizedQuery = normalizeSearchText(query);
+    if (!normalizedQuery) {
+      return options;
+    }
+    return options.filter(
+      (option) =>
+        normalizeSearchText(`${option.noteId} ${option.name} ${option.label}`).includes(normalizedQuery) ||
+        option.noteId === rootNoteId
+    );
+  }
+
+  const esOptions = buildNoteExplorerNoteOptions({
+    catalogPerfumes: perfumes,
+    notes,
+    locale: aurelianTranslator.locale,
+    resolveLabel: (noteId, fallback) => aurelianTranslator.label("notes", noteId, fallback),
+  });
+
+  it("real taxonomyLabels resolve the three example notes to their known Spanish labels (sanity check for every test below)", () => {
+    const byId = Object.fromEntries(esOptions.map((option) => [option.noteId, option.label]));
+    expect(byId.grapefruit).toBe("Toronja");
+    expect(byId.bergamot).toBe("Bergamota");
+    expect(byId.patchouli).toBe("Pachulí");
+  });
+
+  it("[1] Spanish localized search: 'toronja' finds the grapefruit note (previously returned nothing)", () => {
+    const results = filterOptions(esOptions, "toronja");
+    expect(results.map((option) => option.noteId)).toContain("grapefruit");
+  });
+
+  it("[2] canonical English search still works while the Spanish UI is active: 'grapefruit' still finds Toronja", () => {
+    const results = filterOptions(esOptions, "grapefruit");
+    const match = results.find((option) => option.noteId === "grapefruit");
+    expect(match).toBeTruthy();
+    expect(match.label).toBe("Toronja");
+  });
+
+  it("[3] diacritic-insensitive search: 'pachuli' finds Pachulí", () => {
+    const results = filterOptions(esOptions, "pachuli");
+    const match = results.find((option) => option.noteId === "patchouli");
+    expect(match).toBeTruthy();
+    expect(match.label).toBe("Pachulí");
+  });
+
+  it("[4] exact accented localized search: 'pachulí' also finds it", () => {
+    const results = filterOptions(esOptions, "pachulí");
+    expect(results.map((option) => option.noteId)).toContain("patchouli");
+  });
+
+  it("[5] case-insensitive search, for both the canonical identity and the localized label", () => {
+    expect(filterOptions(esOptions, "TORONJA").map((option) => option.noteId)).toContain("grapefruit");
+    expect(filterOptions(esOptions, "BERGAMOT").map((option) => option.noteId)).toContain("bergamot");
+    expect(filterOptions(esOptions, "Bergamota").map((option) => option.noteId)).toContain("bergamot");
+  });
+
+  it("does not hardcode a Spanish synonym table -- the same normalization+combination handles every note pair identically, not a per-note lookup", () => {
+    expect(filterOptions(esOptions, "bergamot").map((option) => option.noteId)).toContain("bergamot");
+    expect(filterOptions(esOptions, "bergamota").map((option) => option.noteId)).toContain("bergamot");
+  });
+
+  it("[6] the master list is sorted alphabetically by the current Spanish labels, using locale-aware (es-MX) collation", () => {
+    const labels = esOptions.map((option) => option.label);
+    const collator = new Intl.Collator("es-MX", { sensitivity: "base" });
+    const expectedOrder = [...labels].sort((a, b) => collator.compare(a, b));
+
+    expect(labels).toEqual(expectedOrder);
+  });
+
+  it("[7] English locale sorts alphabetically by English display labels (no taxonomyLabels override, so labels are the raw catalog names)", () => {
+    const enOptions = buildNoteExplorerNoteOptions({
+      catalogPerfumes: perfumes,
+      notes,
+      locale: englishTranslator.locale,
+      resolveLabel: (noteId, fallback) => englishTranslator.label("notes", noteId, fallback),
+    });
+    const labels = enOptions.map((option) => option.label);
+    const collator = new Intl.Collator("en-US", { sensitivity: "base" });
+    const expectedOrder = [...labels].sort((a, b) => collator.compare(a, b));
+
+    expect(labels).toEqual(expectedOrder);
+    expect(enOptions.find((option) => option.noteId === "grapefruit").label).toBe("Grapefruit");
+  });
+
+  it("[8] filtered search results preserve the same localized alphabetical ordering as the unfiltered list", () => {
+    const filtered = filterOptions(esOptions, "a");
+    expect(filtered.length).toBeGreaterThan(1);
+
+    const collator = new Intl.Collator("es-MX", { sensitivity: "base" });
+    const expectedOrder = [...filtered].sort((a, b) => collator.compare(a.label, b.label));
+    expect(filtered.map((option) => option.noteId)).toEqual(expectedOrder.map((option) => option.noteId));
+  });
+
+  it("[9] an active root note stays force-visible against a real, deliberately nonmatching search query", () => {
+    const results = filterOptions(esOptions, "zzz-no-such-note", "grapefruit");
+    expect(results.map((option) => option.noteId)).toEqual(["grapefruit"]);
+  });
+
+  it("[10] related-note facets stay ordered by co-occurrence count descending, never reshuffled alphabetically by this round's localization changes", () => {
+    const matches = getNoteExplorerMatchesForNoteIds({ catalogPerfumes: perfumes, noteIds: ["grapefruit"] });
+    const facets = buildNoteExplorerRelatedNoteFacets({
+      notes,
+      matchingPerfumes: matches,
+      selectedNoteIds: ["grapefruit"],
+    });
+    const counts = facets.map((facet) => facet.count);
+
+    expect(facets.length).toBeGreaterThan(1);
+    expect(counts).toEqual([...counts].sort((a, b) => b - a));
+
+    // Confirm the actual order is genuinely count-driven, not coincidentally
+    // alphabetical: an alphabetical-by-name resort of the same facets must
+    // differ from the real (count-ranked) order.
+    const alphabeticalOrder = [...facets].sort((a, b) => a.name.localeCompare(b.name));
+    expect(facets.map((facet) => facet.noteId)).not.toEqual(alphabeticalOrder.map((facet) => facet.noteId));
   });
 });
 

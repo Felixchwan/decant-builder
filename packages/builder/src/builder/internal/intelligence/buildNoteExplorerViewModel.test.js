@@ -98,6 +98,70 @@ describe("buildNoteExplorerNoteOptions", () => {
   it("returns no options for an empty catalog", () => {
     expect(buildNoteExplorerNoteOptions({ catalogPerfumes: [], notes })).toEqual([]);
   });
+
+  // Localized label + locale-aware sort. Full real-catalog/real-i18n
+  // coverage (the toronja/grapefruit/pachulí examples) lives in
+  // BuilderPanel.test.jsx, alongside the search-filter predicate that
+  // consumes `label`; these are the isolated, fixture-only unit tests for
+  // the mechanism itself.
+  it("defaults label to the raw catalog name when no resolveLabel is supplied, preserving every prior caller's exact behavior", () => {
+    const options = buildNoteExplorerNoteOptions({ catalogPerfumes: catalog, notes });
+    const bergamotOption = options.find((option) => option.noteId === "bergamot");
+
+    expect(bergamotOption.label).toBe("Bergamot");
+  });
+
+  it("uses resolveLabel(noteId, fallbackName) for label when supplied, passing the resolved raw name through as the fallback argument", () => {
+    const options = buildNoteExplorerNoteOptions({
+      catalogPerfumes: catalog,
+      notes,
+      resolveLabel: (noteId, fallback) => (noteId === "bergamot" ? "Bergamota" : fallback),
+    });
+    const bergamotOption = options.find((option) => option.noteId === "bergamot");
+    const vanillaOption = options.find((option) => option.noteId === "vanilla");
+
+    expect(bergamotOption.label).toBe("Bergamota");
+    expect(bergamotOption.name).toBe("Bergamot"); // raw name is untouched
+    expect(vanillaOption.label).toBe("Vanilla"); // resolveLabel's own fallback branch
+  });
+
+  it("sorts by the resolved label, not the raw name, once resolveLabel changes their relative order", () => {
+    // Swap display order: relabel "Vanilla" so it now sorts before
+    // "Bergamot" and "Patchouli" -- if sorting still used the raw name,
+    // the order would stay Bergamot/Patchouli/Vanilla.
+    const options = buildNoteExplorerNoteOptions({
+      catalogPerfumes: catalog,
+      notes,
+      resolveLabel: (noteId, fallback) => (noteId === "vanilla" ? "Aardvark" : fallback),
+    });
+
+    expect(options.map((option) => option.noteId)).toEqual(["vanilla", "bergamot", "patchouli"]);
+  });
+
+  it("sorts using the supplied locale's collation via Intl.Collator, not a fixed/default locale", () => {
+    const options = buildNoteExplorerNoteOptions({
+      catalogPerfumes: catalog,
+      notes,
+      locale: "es-MX",
+      resolveLabel: (noteId, fallback) => fallback,
+    });
+
+    // Same three plain-ASCII names sort identically under es-MX and the
+    // default collation -- this proves the `locale` option is threaded
+    // through to a real Intl.Collator (no locale value throws or is
+    // silently ignored), not that es-MX collation reorders this exact set.
+    expect(options.map((option) => option.name)).toEqual(["Bergamot", "Patchouli", "Vanilla"]);
+  });
+
+  it("still breaks ties on canonical id deterministically once two notes resolve to the same label", () => {
+    const options = buildNoteExplorerNoteOptions({
+      catalogPerfumes: catalog,
+      notes,
+      resolveLabel: () => "Same Label",
+    });
+
+    expect(options.map((option) => option.noteId)).toEqual(["bergamot", "patchouli", "vanilla"]);
+  });
 });
 
 describe("getNoteExplorerMatches", () => {
