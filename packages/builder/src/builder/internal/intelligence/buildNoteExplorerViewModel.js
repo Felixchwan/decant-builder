@@ -67,6 +67,98 @@ export function getNoteExplorerMatches({ catalogPerfumes = [], noteId } = {}) {
   });
 }
 
+// Progressive co-occurrence facet filtering: AND semantics across every
+// selected note, built strictly on top of the same containment primitive
+// (getPerfumeNoteIds) getNoteExplorerMatches itself uses -- never a second,
+// competing interpretation of "does this perfume carry this note". Kept as
+// its own function (rather than changing getNoteExplorerMatches' signature)
+// so every existing single-note caller/test is untouched; the two are
+// equivalent when noteIds has exactly one entry.
+export function getNoteExplorerMatchesForNoteIds({ catalogPerfumes = [], noteIds = [] } = {}) {
+  const safeCatalogPerfumes = Array.isArray(catalogPerfumes) ? catalogPerfumes : [];
+  const safeNoteIds = (Array.isArray(noteIds) ? noteIds : []).filter(Boolean);
+
+  if (safeNoteIds.length === 0) {
+    return [];
+  }
+
+  return safeCatalogPerfumes.filter((perfume) => {
+    if (!perfume || typeof perfume !== "object") {
+      return false;
+    }
+
+    const perfumeNoteIds = new Set(getPerfumeNoteIds(perfume));
+    return safeNoteIds.every((noteId) => perfumeNoteIds.has(noteId));
+  });
+}
+
+// Related-note facets for progressive exploration: given the perfumes that
+// already match every currently-selected note, collect every OTHER
+// canonical note those perfumes carry, with a count of how many of them
+// carry it -- i.e. "how many of the current matches would remain if this
+// note were added too". Selected notes are excluded (selecting one again is
+// a no-op, never an option). Never touches the full catalog or re-derives
+// containment differently from getNoteExplorerMatchesForNoteIds above --
+// matchingPerfumes is expected to already be that function's own output.
+export function buildNoteExplorerRelatedNoteFacets({
+  notes = {},
+  matchingPerfumes = [],
+  selectedNoteIds = [],
+} = {}) {
+  const safeNotes = notes && typeof notes === "object" ? notes : {};
+  const safeMatches = Array.isArray(matchingPerfumes) ? matchingPerfumes : [];
+  const excludedNoteIds = new Set((Array.isArray(selectedNoteIds) ? selectedNoteIds : []).filter(Boolean));
+
+  const countByNoteId = new Map();
+
+  safeMatches.forEach((perfume) => {
+    if (!perfume || typeof perfume !== "object") {
+      return;
+    }
+
+    const uniqueNoteIds = new Set(getPerfumeNoteIds(perfume).filter(Boolean));
+
+    uniqueNoteIds.forEach((noteId) => {
+      if (excludedNoteIds.has(noteId) || !safeNotes[noteId]) {
+        return;
+      }
+
+      countByNoteId.set(noteId, (countByNoteId.get(noteId) || 0) + 1);
+    });
+  });
+
+  // The note dictionary's own key order is its canonical order (see
+  // packages/catalog/src/notes.js's own "Canonical fragrance-note
+  // dictionary" heading) -- used only to break ties deterministically,
+  // never to reshuffle notes with different counts.
+  const canonicalIndexByNoteId = new Map(Object.keys(safeNotes).map((noteId, index) => [noteId, index]));
+
+  return [...countByNoteId.entries()]
+    .map(([noteId, count]) => {
+      const note = safeNotes[noteId];
+      return {
+        noteId,
+        name: note.name || formatNoteId(noteId),
+        image: note.noteImage || "",
+        count,
+      };
+    })
+    .sort((firstFacet, secondFacet) => {
+      if (secondFacet.count !== firstFacet.count) {
+        return secondFacet.count - firstFacet.count;
+      }
+
+      const firstIndex = canonicalIndexByNoteId.has(firstFacet.noteId)
+        ? canonicalIndexByNoteId.get(firstFacet.noteId)
+        : Number.MAX_SAFE_INTEGER;
+      const secondIndex = canonicalIndexByNoteId.has(secondFacet.noteId)
+        ? canonicalIndexByNoteId.get(secondFacet.noteId)
+        : Number.MAX_SAFE_INTEGER;
+
+      return firstIndex - secondIndex;
+    });
+}
+
 // Composer Phase 2D: an opt-in reordering of an already-computed match list
 // (from getNoteExplorerMatches), never a filter -- every perfume passed in
 // comes back out, exactly once, so containment/visibility is untouched by

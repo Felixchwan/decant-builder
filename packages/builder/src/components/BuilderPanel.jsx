@@ -21,7 +21,8 @@ import { buildScentLibraryViewModel } from "../builder/internal/intelligence/bui
 import {
   annotateNoteExplorerMatchesWithProminenceLevel,
   buildNoteExplorerNoteOptions,
-  getNoteExplorerMatches,
+  buildNoteExplorerRelatedNoteFacets,
+  getNoteExplorerMatchesForNoteIds,
   sortNoteExplorerMatchesByProminence,
 } from "../builder/internal/intelligence/buildNoteExplorerViewModel.js";
 import { isCuratorBonusUnlocked as deriveCuratorBonusUnlocked } from "../builder/internal/curatorBonus/isCuratorBonusUnlocked.js";
@@ -1858,7 +1859,12 @@ function buildVisibleProposalItems(proposal) {
 // fallback and note-pill visual language already established by the Scent
 // Library above -- no new design language, no new mutation path, no new
 // note/perfume relationship data (buildNoteExplorerNoteOptions/
-// getNoteExplorerMatches derive everything live from catalogPerfumes/notes).
+// getNoteExplorerMatchesForNoteIds/buildNoteExplorerRelatedNoteFacets derive
+// everything live from catalogPerfumes/notes). Selection is now a set, not a
+// single id -- selecting more than one note narrows results with AND
+// semantics (progressive co-occurrence filtering), and the related-note
+// chips beneath the selected-note row let a user keep narrowing without
+// returning to the master list.
 function NoteExplorerModal({
   builderConfig,
   catalogPerfumes,
@@ -1872,7 +1878,7 @@ function NoteExplorerModal({
   const translator = createTranslator(builderConfig.locale, builderConfig.taxonomyLabels);
   const { t } = translator;
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedNoteId, setSelectedNoteId] = useState(null);
+  const [selectedNoteIds, setSelectedNoteIds] = useState([]);
   const [sortOrder, setSortOrder] = useState("catalog");
 
   useEffect(() => {
@@ -1896,22 +1902,58 @@ function NoteExplorerModal({
     ? noteOptions.filter((option) => normalizeNoteSearchText(option.name).includes(normalizedQuery))
     : noteOptions;
 
-  const selectedNoteOption = noteOptions.find((option) => option.noteId === selectedNoteId) || null;
+  // Progressive intersection: matches always reflect every currently
+  // selected note (AND semantics), whether that note was added from the
+  // master list or from a related-note chip -- there is only ever one path
+  // to "selected", so there is only ever one path to "matching".
   const matches = useMemo(
-    () => getNoteExplorerMatches({ catalogPerfumes, noteId: selectedNoteId }),
-    [catalogPerfumes, selectedNoteId]
+    () => getNoteExplorerMatchesForNoteIds({ catalogPerfumes, noteIds: selectedNoteIds }),
+    [catalogPerfumes, selectedNoteIds]
   );
+
+  // The prominence sort/annotation pipeline is still single-note by design
+  // (a fragrance has one noteProminence score per note, not a combined
+  // score across several) -- the most recently added note anchors it, so
+  // choosing "most prominent" after narrowing keeps ranking by the note the
+  // user just asked about, not a stale first pick.
+  const prominenceAnchorNoteId = selectedNoteIds[selectedNoteIds.length - 1] || null;
+
   const displayedMatches = useMemo(() => {
     const sortedMatches =
       sortOrder === "prominence"
-        ? sortNoteExplorerMatchesByProminence(matches, selectedNoteId)
+        ? sortNoteExplorerMatchesByProminence(matches, prominenceAnchorNoteId)
         : matches;
 
-    return annotateNoteExplorerMatchesWithProminenceLevel(sortedMatches, selectedNoteId);
-  }, [matches, sortOrder, selectedNoteId]);
+    return annotateNoteExplorerMatchesWithProminenceLevel(sortedMatches, prominenceAnchorNoteId);
+  }, [matches, sortOrder, prominenceAnchorNoteId]);
 
-  const handleSelectNote = (noteId) => {
-    setSelectedNoteId((currentNoteId) => (currentNoteId === noteId ? null : noteId));
+  const relatedNoteFacets = useMemo(
+    () => buildNoteExplorerRelatedNoteFacets({ notes, matchingPerfumes: matches, selectedNoteIds }),
+    [notes, matches, selectedNoteIds]
+  );
+
+  const selectedNoteLabels = selectedNoteIds.map((noteId) => {
+    const option = noteOptions.find((candidate) => candidate.noteId === noteId);
+    return translator.label("notes", noteId, option ? option.name : noteId);
+  });
+
+  const resultsHeading =
+    selectedNoteIds.length > 1
+      ? t("noteExplorer.resultsHeadingMultiple", { notes: selectedNoteLabels.join(" + ") })
+      : t("noteExplorer.resultsHeading", { note: selectedNoteLabels[0] || "" });
+
+  // One handler for every way a note's selection can change: picking an
+  // unselected note (from the master list or a related-note chip) adds it,
+  // and picking an already-selected one (from the master list or its own
+  // chip's remove control) removes it. Related-note chips are only ever
+  // rendered for notes NOT already selected, so their click always takes
+  // the add branch.
+  const handleToggleNote = (noteId) => {
+    setSelectedNoteIds((currentNoteIds) =>
+      currentNoteIds.includes(noteId)
+        ? currentNoteIds.filter((id) => id !== noteId)
+        : [...currentNoteIds, noteId]
+    );
   };
 
   return renderOwnedPortal(
@@ -1954,49 +1996,89 @@ function NoteExplorerModal({
                   key={option.noteId}
                   option={option}
                   translator={translator}
-                  isSelected={option.noteId === selectedNoteId}
-                  onSelect={() => handleSelectNote(option.noteId)}
+                  isSelected={selectedNoteIds.includes(option.noteId)}
+                  onSelect={() => handleToggleNote(option.noteId)}
                 />
               ))}
             </div>
           )}
 
           <div className="note-explorer-results">
-            {!selectedNoteOption ? (
+            {selectedNoteIds.length === 0 ? (
               <p className="note-explorer-empty-message">{t("noteExplorer.selectNotePrompt")}</p>
-            ) : matches.length === 0 ? (
-              <p className="note-explorer-empty-message">{t("noteExplorer.noResults")}</p>
             ) : (
               <>
-                <div className="note-explorer-results-header">
-                  <h4 className="note-explorer-results-heading">
-                    {t("noteExplorer.resultsHeading", {
-                      note: translator.label("notes", selectedNoteOption.noteId, selectedNoteOption.name),
-                    })}
-                  </h4>
-                  <label className="note-explorer-sort">
-                    <span>{t("noteExplorer.sortLabel")}</span>
-                    <select
-                      value={sortOrder}
-                      onChange={(event) => setSortOrder(event.target.value)}
-                    >
-                      <option value="catalog">{t("noteExplorer.sortCatalogOrder")}</option>
-                      <option value="prominence">{t("noteExplorer.sortMostProminent")}</option>
-                    </select>
-                  </label>
-                </div>
-                <div className="note-explorer-results-list">
-                  {displayedMatches.map((perfume) => (
-                    <NoteExplorerResultRow
-                      key={perfume.id}
-                      perfume={perfume}
+                <div className="note-explorer-selected-chips">
+                  {selectedNoteIds.map((noteId, index) => (
+                    <NoteExplorerSelectedChip
+                      key={noteId}
+                      noteId={noteId}
+                      label={selectedNoteLabels[index]}
                       translator={translator}
-                      isAlreadyAdded={selectedPerfumeIds.has(perfume.id)}
-                      isBoxFull={isBoxFull}
-                      onAddPerfume={onAddPerfume}
+                      onRemove={handleToggleNote}
                     />
                   ))}
                 </div>
+
+                <div className="note-explorer-related-notes">
+                  <span className="note-explorer-related-notes-label">
+                    {t("noteExplorer.relatedNotesLabel")}
+                  </span>
+                  {relatedNoteFacets.length === 0 ? (
+                    <p className="note-explorer-empty-message note-explorer-related-notes-empty">
+                      {t("noteExplorer.noRelatedNotes")}
+                    </p>
+                  ) : (
+                    <div className="note-explorer-related-notes-chips">
+                      {relatedNoteFacets.map((facet) => (
+                        <NoteExplorerRelatedChip
+                          key={facet.noteId}
+                          facet={facet}
+                          translator={translator}
+                          onSelect={handleToggleNote}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {matches.length === 0 ? (
+                  <p className="note-explorer-empty-message">
+                    {t(
+                      selectedNoteIds.length > 1
+                        ? "noteExplorer.noResultsCombination"
+                        : "noteExplorer.noResults"
+                    )}
+                  </p>
+                ) : (
+                  <>
+                    <div className="note-explorer-results-header">
+                      <h4 className="note-explorer-results-heading">{resultsHeading}</h4>
+                      <label className="note-explorer-sort">
+                        <span>{t("noteExplorer.sortLabel")}</span>
+                        <select
+                          value={sortOrder}
+                          onChange={(event) => setSortOrder(event.target.value)}
+                        >
+                          <option value="catalog">{t("noteExplorer.sortCatalogOrder")}</option>
+                          <option value="prominence">{t("noteExplorer.sortMostProminent")}</option>
+                        </select>
+                      </label>
+                    </div>
+                    <div className="note-explorer-results-list">
+                      {displayedMatches.map((perfume) => (
+                        <NoteExplorerResultRow
+                          key={perfume.id}
+                          perfume={perfume}
+                          translator={translator}
+                          isAlreadyAdded={selectedPerfumeIds.has(perfume.id)}
+                          isBoxFull={isBoxFull}
+                          onAddPerfume={onAddPerfume}
+                        />
+                      ))}
+                    </div>
+                  </>
+                )}
               </>
             )}
           </div>
@@ -2036,6 +2118,41 @@ function NoteExplorerNoteButton({ option, translator, isSelected, onSelect }) {
         <span className="scent-library-count-sr">{countLabel}</span>
       </button>
     </div>
+  );
+}
+
+function NoteExplorerSelectedChip({ noteId, label, translator, onRemove }) {
+  const { t } = translator;
+
+  return (
+    <span className="note-explorer-selected-chip">
+      {label}
+      <button
+        type="button"
+        className="note-explorer-selected-chip-remove"
+        onClick={() => onRemove(noteId)}
+        aria-label={t("noteExplorer.removeNoteAria", { note: label })}
+      >
+        <span aria-hidden="true">×</span>
+      </button>
+    </span>
+  );
+}
+
+function NoteExplorerRelatedChip({ facet, translator, onSelect }) {
+  const { t } = translator;
+  const displayName = translator.label("notes", facet.noteId, facet.name);
+
+  return (
+    <button
+      type="button"
+      className="note-explorer-related-chip"
+      onClick={() => onSelect(facet.noteId)}
+      aria-label={t("noteExplorer.relatedNoteAria", { note: displayName, count: facet.count })}
+    >
+      <span>{displayName}</span>
+      <span className="note-explorer-related-chip-count" aria-hidden="true">×{facet.count}</span>
+    </button>
   );
 }
 

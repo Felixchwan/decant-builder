@@ -5992,6 +5992,98 @@
   line-height: 1.45;
 }
 
+:where(.builder-scope) .note-explorer-selected-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+:where(.builder-scope) .note-explorer-selected-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 6px 6px 12px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--builder-color-accent, #4ade80) 42%, transparent);
+  background: color-mix(in srgb, var(--builder-color-accent, #4ade80) 16%, transparent);
+  color: var(--builder-color-accent, #bbf7d0);
+  font-size: var(--builder-unit-078);
+  font-weight: 800;
+}
+
+:where(.builder-scope) .note-explorer-selected-chip-remove {
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: none;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--builder-color-accent, #4ade80) 22%, transparent);
+  color: inherit;
+  font-size: var(--builder-unit-072);
+  line-height: 1;
+}
+
+:where(.builder-scope) .note-explorer-selected-chip-remove:hover,
+:where(.builder-scope) .note-explorer-selected-chip-remove:focus-visible {
+  background: color-mix(in srgb, var(--builder-color-accent, #4ade80) 38%, transparent);
+  outline: none;
+}
+
+:where(.builder-scope) .note-explorer-related-notes {
+  display: grid;
+  gap: 6px;
+}
+
+:where(.builder-scope) .note-explorer-related-notes-label {
+  color: var(--builder-color-text-muted, #94a3b8);
+  font-size: var(--builder-unit-072);
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+:where(.builder-scope) .note-explorer-related-notes-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+:where(.builder-scope) .note-explorer-related-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border: 1px solid rgba(148, 163, 184, 0.24);
+  border-radius: 999px;
+  padding: 6px 12px;
+  background: var(--builder-color-surface-elevated, rgba(15, 23, 42, 0.72));
+  color: var(--builder-color-text, #ecfdf5);
+  font-size: var(--builder-unit-078);
+  font-weight: 700;
+  transition:
+    border-color 160ms ease,
+    background-color 160ms ease,
+    transform 160ms ease;
+}
+
+:where(.builder-scope) .note-explorer-related-chip:hover,
+:where(.builder-scope) .note-explorer-related-chip:focus-visible {
+  border-color: color-mix(in srgb, var(--builder-color-accent, #86efac) 42%, transparent);
+  background: color-mix(in srgb, var(--builder-color-accent, #4ade80) 10%, transparent);
+  outline: none;
+  transform: translateY(-1px);
+}
+
+:where(.builder-scope) .note-explorer-related-chip-count {
+  color: var(--builder-color-text-muted, #94a3b8);
+  font-weight: 800;
+}
+
+:where(.builder-scope) .note-explorer-related-notes-empty {
+  font-size: var(--builder-unit-078);
+}
+
 :where(.builder-scope) .review-finalize-status {
   margin: 10px 0 0;
   color: var(--builder-color-accent, #86efac);

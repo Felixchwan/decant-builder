@@ -1321,9 +1321,9 @@ describe("Composer Phase 2A: Note Explorer", () => {
     expect(modalSource).not.toContain("selectedPerfumes");
   });
 
-  it("derives note matches for the selected note via getNoteExplorerMatches, the same containment-based view-model function -- no inline duplicate note-matching logic", () => {
+  it("derives note matches for every selected note via getNoteExplorerMatchesForNoteIds (AND semantics), the same containment-based view-model function -- no inline duplicate note-matching logic", () => {
     expect(modalSource).toContain(
-      "getNoteExplorerMatches({ catalogPerfumes, noteId: selectedNoteId })"
+      "getNoteExplorerMatchesForNoteIds({ catalogPerfumes, noteIds: selectedNoteIds })"
     );
   });
 
@@ -1361,7 +1361,22 @@ describe("Composer Phase 2A: Note Explorer", () => {
 
   it("shows a localized prompt before any note is selected, and a distinct localized empty state when a selected note somehow has no matches", () => {
     expect(modalSource).toContain('t("noteExplorer.selectNotePrompt")');
-    expect(modalSource).toContain('t("noteExplorer.noResults")');
+    expect(modalSource).toContain('"noteExplorer.noResults"');
+  });
+
+  it("uses a distinct combination-specific zero-result message once 2+ notes are selected, not the single-note message (a 3-note AND with no shared fragrance is a combination gap, not a per-note one)", () => {
+    const zeroResultsStart = modalSource.indexOf("{matches.length === 0 ? (");
+    const zeroResultsSource = modalSource.slice(zeroResultsStart, zeroResultsStart + 300);
+
+    expect(zeroResultsSource).toContain("selectedNoteIds.length > 1");
+    expect(zeroResultsSource).toContain('"noteExplorer.noResultsCombination"');
+    expect(zeroResultsSource).toContain('"noteExplorer.noResults"');
+  });
+
+  it("resolves the real es-MX combination-specific zero-result string exactly", () => {
+    expect(esMX["noteExplorer.noResultsCombination"]).toBe(
+      "Ninguna fragancia contiene esta combinación de notas."
+    );
   });
 
   it("normalizes note search text (case/diacritic-insensitive) the same way the main catalog search already does, rather than a new ad hoc comparison", () => {
@@ -1394,7 +1409,7 @@ describe("Composer Phase 2D: Note Explorer prominence sorting", () => {
     const displayedSource = modalSource.slice(displayedStart, displayedStart + 260);
 
     expect(displayedSource).toContain('sortOrder === "prominence"');
-    expect(displayedSource).toContain("sortNoteExplorerMatchesByProminence(matches, selectedNoteId)");
+    expect(displayedSource).toContain("sortNoteExplorerMatchesByProminence(matches, prominenceAnchorNoteId)");
     expect(displayedSource).toContain(": matches");
     expect(displayedSource).not.toContain("catalogPerfumes");
   });
@@ -1458,9 +1473,9 @@ describe("Note Explorer qualitative prominence level display", () => {
     const displayedEnd = modalSource.indexOf("const handleSelectNote");
     const displayedSource = modalSource.slice(displayedStart, displayedEnd);
 
-    const sortIndex = displayedSource.indexOf("sortNoteExplorerMatchesByProminence(matches, selectedNoteId)");
+    const sortIndex = displayedSource.indexOf("sortNoteExplorerMatchesByProminence(matches, prominenceAnchorNoteId)");
     const annotateIndex = displayedSource.indexOf(
-      "annotateNoteExplorerMatchesWithProminenceLevel(sortedMatches, selectedNoteId)"
+      "annotateNoteExplorerMatchesWithProminenceLevel(sortedMatches, prominenceAnchorNoteId)"
     );
     expect(sortIndex).toBeGreaterThan(-1);
     expect(annotateIndex).toBeGreaterThan(-1);

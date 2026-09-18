@@ -1,9 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { fragrances as catalogFragrances } from "@discovery-box/catalog";
+import { fragrances as catalogFragrances, notes as catalogNotes } from "@discovery-box/catalog";
 import {
   annotateNoteExplorerMatchesWithProminenceLevel,
   buildNoteExplorerNoteOptions,
+  buildNoteExplorerRelatedNoteFacets,
   getNoteExplorerMatches,
+  getNoteExplorerMatchesForNoteIds,
   sortNoteExplorerMatchesByProminence,
 } from "./buildNoteExplorerViewModel.js";
 
@@ -127,6 +129,323 @@ describe("getNoteExplorerMatches", () => {
 
   it("returns an empty array for a note nothing in the catalog carries", () => {
     expect(getNoteExplorerMatches({ catalogPerfumes: catalog, noteId: "saffron" })).toEqual([]);
+  });
+});
+
+// Progressive co-occurrence / faceted note filtering. getNoteExplorerMatchesForNoteIds
+// applies AND semantics across every selected note on top of the exact same
+// containment primitive getNoteExplorerMatches itself uses (getPerfumeNoteIds) --
+// never a second, competing interpretation of note presence -- and
+// buildNoteExplorerRelatedNoteFacets derives the "combines with" suggestions
+// strictly from the already-narrowed match set, excluding whatever is
+// already selected.
+//
+// Fixture: co-occurrence describe block deliberately uses its OWN local
+// notes dictionary and catalog (not the outer `notes`/`catalog` fixtures
+// above), so its canonical-order assertions are self-contained and never
+// drift if the outer fixture's key order changes for unrelated reasons.
+// Object.keys() order below IS the canonical order (see notesForCoOccurrence).
+describe("getNoteExplorerMatchesForNoteIds / buildNoteExplorerRelatedNoteFacets: progressive co-occurrence filtering", () => {
+  const notesForCoOccurrence = {
+    ink: { name: "Ink" },
+    vanilla: { name: "Vanilla" },
+    patchouli: { name: "Patchouli" },
+    bergamot: { name: "Bergamot" },
+    rose: { name: "Rose" },
+    musk: { name: "Musk" },
+  };
+
+  // 901: ink (middle) + bergamot (top) + patchouli/vanilla (base) via
+  // noteProminence scores that must never influence containment.
+  // 902: ink+rose (middle) + musk/patchouli (base), rose supplied via
+  // generalNotes to prove that shape counts too, not just top/middle/base.
+  // 903: ink only (top), unscored -- proves an unscored note is still a
+  // full member.
+  // 904/905: no ink at all -- must always be excluded from ink-anchored
+  // matches, whatever else they carry.
+  const perfumeInkPatchouliVanilla = perfume(901, {
+    topNotes: ["bergamot"],
+    middleNotes: ["ink"],
+    baseNotes: ["patchouli", "vanilla"],
+    noteProminence: { ink: 9, bergamot: 2, patchouli: 4 },
+  });
+  const perfumeInkRoseMuskPatchouli = perfume(902, {
+    middleNotes: ["ink"],
+    baseNotes: ["musk", "patchouli"],
+    generalNotes: ["rose"],
+  });
+  const perfumeInkOnlyUnscored = perfume(903, { topNotes: ["ink"] });
+  const perfumeNoInkRoseOnly = perfume(904, { topNotes: ["rose"] });
+  const perfumeNoInkVanillaOnly = perfume(905, { baseNotes: ["vanilla"] });
+  const coOccurrenceCatalog = [
+    perfumeInkPatchouliVanilla,
+    perfumeInkRoseMuskPatchouli,
+    perfumeInkOnlyUnscored,
+    perfumeNoInkRoseOnly,
+    perfumeNoInkVanillaOnly,
+  ];
+
+  describe("getNoteExplorerMatchesForNoteIds", () => {
+    it("[1] one selected note returns every fragrance containing it, excluding every fragrance that does not", () => {
+      const matches = getNoteExplorerMatchesForNoteIds({
+        catalogPerfumes: coOccurrenceCatalog,
+        noteIds: ["ink"],
+      });
+      expect(matches.map((match) => match.id)).toEqual([901, 902, 903]);
+    });
+
+    it("[5] a second selected note applies AND semantics, narrowing to fragrances containing both", () => {
+      const matches = getNoteExplorerMatchesForNoteIds({
+        catalogPerfumes: coOccurrenceCatalog,
+        noteIds: ["ink", "patchouli"],
+      });
+      expect(matches.map((match) => match.id)).toEqual([901, 902]);
+    });
+
+    it("[6] a third selected note continues progressive intersection", () => {
+      const matches = getNoteExplorerMatchesForNoteIds({
+        catalogPerfumes: coOccurrenceCatalog,
+        noteIds: ["ink", "patchouli", "vanilla"],
+      });
+      expect(matches.map((match) => match.id)).toEqual([901]);
+    });
+
+    it("[7] removing a selected note broadens results back, recomputing the intersection rather than caching the narrower set", () => {
+      const narrowed = getNoteExplorerMatchesForNoteIds({
+        catalogPerfumes: coOccurrenceCatalog,
+        noteIds: ["ink", "patchouli", "vanilla"],
+      });
+      const broadened = getNoteExplorerMatchesForNoteIds({
+        catalogPerfumes: coOccurrenceCatalog,
+        noteIds: ["ink", "patchouli"],
+      });
+      expect(narrowed.map((match) => match.id)).toEqual([901]);
+      expect(broadened.map((match) => match.id)).toEqual([901, 902]);
+    });
+
+    it("[8] AND semantics are order-independent -- selecting notes in a different order (as a related-note chip vs. the master list would) never changes the result", () => {
+      const viaMasterListOrder = getNoteExplorerMatchesForNoteIds({
+        catalogPerfumes: coOccurrenceCatalog,
+        noteIds: ["ink", "patchouli"],
+      });
+      const viaRelatedChipOrder = getNoteExplorerMatchesForNoteIds({
+        catalogPerfumes: coOccurrenceCatalog,
+        noteIds: ["patchouli", "ink"],
+      });
+      expect(viaRelatedChipOrder.map((match) => match.id)).toEqual(viaMasterListOrder.map((match) => match.id));
+    });
+
+    it("[9] a combination with no common fragrance returns an empty array rather than throwing", () => {
+      const matches = getNoteExplorerMatchesForNoteIds({
+        catalogPerfumes: coOccurrenceCatalog,
+        noteIds: ["ink", "vanilla", "rose"],
+      });
+      expect(matches).toEqual([]);
+    });
+
+    it("[11] an unscored note, or one with a low noteProminence value, is still a full member -- prominence never gates membership", () => {
+      const matches = getNoteExplorerMatchesForNoteIds({
+        catalogPerfumes: coOccurrenceCatalog,
+        noteIds: ["ink"],
+      });
+      expect(matches.map((match) => match.id)).toContain(903); // ink present, no noteProminence entry at all
+      expect(matches.map((match) => match.id)).toContain(901); // ink present, scored 9 -- score irrelevant either way
+    });
+
+    it("[12] membership never depends on which pyramid tier (or generalNotes) carries the note", () => {
+      const matches = getNoteExplorerMatchesForNoteIds({
+        catalogPerfumes: coOccurrenceCatalog,
+        noteIds: ["ink", "rose"],
+      });
+      // rose reaches 902 only via generalNotes -- still counted.
+      expect(matches.map((match) => match.id)).toEqual([902]);
+    });
+
+    it("returns an empty array when no note is selected, and never mutates the input catalog", () => {
+      expect(getNoteExplorerMatchesForNoteIds({ catalogPerfumes: coOccurrenceCatalog, noteIds: [] })).toEqual([]);
+      const before = [...coOccurrenceCatalog];
+      getNoteExplorerMatchesForNoteIds({ catalogPerfumes: coOccurrenceCatalog, noteIds: ["ink"] });
+      expect(coOccurrenceCatalog).toEqual(before);
+    });
+  });
+
+  describe("buildNoteExplorerRelatedNoteFacets", () => {
+    it("[2][3] computes options only from the current matching set, excluding every already-selected note", () => {
+      const matches = getNoteExplorerMatchesForNoteIds({
+        catalogPerfumes: coOccurrenceCatalog,
+        noteIds: ["ink"],
+      });
+      const facets = buildNoteExplorerRelatedNoteFacets({
+        notes: notesForCoOccurrence,
+        matchingPerfumes: matches,
+        selectedNoteIds: ["ink"],
+      });
+      const facetIds = facets.map((facet) => facet.noteId);
+
+      expect(facetIds).not.toContain("ink"); // already selected
+      expect(facetIds.sort()).toEqual(["bergamot", "musk", "patchouli", "rose", "vanilla"].sort());
+    });
+
+    it("[4][10] counts co-occurrence correctly and orders by count desc, then canonical dictionary order as a tie-break", () => {
+      const matches = getNoteExplorerMatchesForNoteIds({
+        catalogPerfumes: coOccurrenceCatalog,
+        noteIds: ["ink"],
+      });
+      const facets = buildNoteExplorerRelatedNoteFacets({
+        notes: notesForCoOccurrence,
+        matchingPerfumes: matches,
+        selectedNoteIds: ["ink"],
+      });
+
+      const countByNoteId = Object.fromEntries(facets.map((facet) => [facet.noteId, facet.count]));
+      expect(countByNoteId).toEqual({ patchouli: 2, vanilla: 1, bergamot: 1, rose: 1, musk: 1 });
+
+      // patchouli (count 2) leads despite not being first canonically; the
+      // four count-1 notes then follow in notesForCoOccurrence's own key
+      // order (vanilla, bergamot, rose, musk), not alphabetically (rose
+      // would otherwise sort before vanilla).
+      expect(facets.map((facet) => facet.noteId)).toEqual(["patchouli", "vanilla", "bergamot", "rose", "musk"]);
+    });
+
+    it("recomputes correctly as selection narrows further", () => {
+      const matches = getNoteExplorerMatchesForNoteIds({
+        catalogPerfumes: coOccurrenceCatalog,
+        noteIds: ["ink", "patchouli"],
+      });
+      const facets = buildNoteExplorerRelatedNoteFacets({
+        notes: notesForCoOccurrence,
+        matchingPerfumes: matches,
+        selectedNoteIds: ["ink", "patchouli"],
+      });
+
+      expect(facets.map((facet) => facet.noteId)).toEqual(["vanilla", "bergamot", "rose", "musk"]);
+      expect(facets.every((facet) => facet.count === 1)).toBe(true);
+    });
+
+    it("[7] removing a selected note recomputes facets back to the broader set, not a cached/stale narrower one", () => {
+      const narrowedMatches = getNoteExplorerMatchesForNoteIds({
+        catalogPerfumes: coOccurrenceCatalog,
+        noteIds: ["ink", "patchouli", "vanilla"],
+      });
+      const narrowedFacets = buildNoteExplorerRelatedNoteFacets({
+        notes: notesForCoOccurrence,
+        matchingPerfumes: narrowedMatches,
+        selectedNoteIds: ["ink", "patchouli", "vanilla"],
+      });
+      expect(narrowedFacets.map((facet) => facet.noteId)).toEqual(["bergamot"]);
+
+      // Remove "vanilla" -- back to the ["ink","patchouli"] case above.
+      const broadenedMatches = getNoteExplorerMatchesForNoteIds({
+        catalogPerfumes: coOccurrenceCatalog,
+        noteIds: ["ink", "patchouli"],
+      });
+      const broadenedFacets = buildNoteExplorerRelatedNoteFacets({
+        notes: notesForCoOccurrence,
+        matchingPerfumes: broadenedMatches,
+        selectedNoteIds: ["ink", "patchouli"],
+      });
+      expect(broadenedFacets.map((facet) => facet.noteId)).toEqual(["vanilla", "bergamot", "rose", "musk"]);
+    });
+
+    it("[9] returns no facets for a zero-result match set, rather than throwing", () => {
+      const matches = getNoteExplorerMatchesForNoteIds({
+        catalogPerfumes: coOccurrenceCatalog,
+        noteIds: ["ink", "vanilla", "rose"],
+      });
+      expect(matches).toEqual([]);
+      expect(
+        buildNoteExplorerRelatedNoteFacets({
+          notes: notesForCoOccurrence,
+          matchingPerfumes: matches,
+          selectedNoteIds: ["ink", "vanilla", "rose"],
+        })
+      ).toEqual([]);
+    });
+
+    it("carries the raw catalog note name through for display, matching buildNoteExplorerNoteOptions' own convention", () => {
+      const matches = getNoteExplorerMatchesForNoteIds({
+        catalogPerfumes: coOccurrenceCatalog,
+        noteIds: ["ink", "patchouli", "vanilla"],
+      });
+      const facets = buildNoteExplorerRelatedNoteFacets({
+        notes: notesForCoOccurrence,
+        matchingPerfumes: matches,
+        selectedNoteIds: ["ink", "patchouli", "vanilla"],
+      });
+      expect(facets).toEqual([{ noteId: "bergamot", name: "Bergamot", image: "", count: 1 }]);
+    });
+
+    it("the invariant: selecting a related note with count N yields exactly N matches when added to the current selection", () => {
+      const selectedNoteIds = ["ink"];
+      const matches = getNoteExplorerMatchesForNoteIds({ catalogPerfumes: coOccurrenceCatalog, noteIds: selectedNoteIds });
+      const facets = buildNoteExplorerRelatedNoteFacets({ notes: notesForCoOccurrence, matchingPerfumes: matches, selectedNoteIds });
+
+      facets.forEach((facet) => {
+        const narrowedMatches = getNoteExplorerMatchesForNoteIds({
+          catalogPerfumes: coOccurrenceCatalog,
+          noteIds: [...selectedNoteIds, facet.noteId],
+        });
+        expect(narrowedMatches).toHaveLength(facet.count);
+      });
+    });
+  });
+
+  // [13] Real-catalog regression: `ink` is carried by exactly two live
+  // catalog fragrances, Patchouli Ink (217) and Squid (500) -- verified
+  // directly against packages/catalog/src/fragrances.js, not assumed. This
+  // is the exact example from the feature request: selecting `vanilla`
+  // narrows to Patchouli Ink alone (it has a vanilla base note, Squid does
+  // not); selecting `incense` narrows to Squid alone (it has an incense top
+  // note, Patchouli Ink does not).
+  describe("real-catalog regression: ink / vanilla / incense", () => {
+    it("ink alone matches exactly Patchouli Ink (217) and Squid (500)", () => {
+      const matches = getNoteExplorerMatchesForNoteIds({ catalogPerfumes: catalogFragrances, noteIds: ["ink"] });
+      expect(matches.map((match) => match.id).sort((a, b) => a - b)).toEqual([217, 500]);
+    });
+
+    it("ink + vanilla narrows to Patchouli Ink alone", () => {
+      const matches = getNoteExplorerMatchesForNoteIds({
+        catalogPerfumes: catalogFragrances,
+        noteIds: ["ink", "vanilla"],
+      });
+      expect(matches.map((match) => match.id)).toEqual([217]);
+    });
+
+    it("ink + incense narrows to Squid alone", () => {
+      const matches = getNoteExplorerMatchesForNoteIds({
+        catalogPerfumes: catalogFragrances,
+        noteIds: ["ink", "incense"],
+      });
+      expect(matches.map((match) => match.id)).toEqual([500]);
+    });
+
+    it("the related-note facets for ink include vanilla and incense, each shared with exactly one of the two ink fragrances", () => {
+      const matches = getNoteExplorerMatchesForNoteIds({ catalogPerfumes: catalogFragrances, noteIds: ["ink"] });
+      const facets = buildNoteExplorerRelatedNoteFacets({
+        notes: catalogNotes,
+        matchingPerfumes: matches,
+        selectedNoteIds: ["ink"],
+      });
+      const facetByNoteId = Object.fromEntries(facets.map((facet) => [facet.noteId, facet]));
+
+      expect(facetByNoteId.vanilla.count).toBe(1);
+      expect(facetByNoteId.incense.count).toBe(1);
+      expect(facetByNoteId.ink).toBeUndefined();
+    });
+
+    it("the count invariant holds against the live catalog: every ink-related facet's count equals the size of the intersection it predicts", () => {
+      const selectedNoteIds = ["ink"];
+      const matches = getNoteExplorerMatchesForNoteIds({ catalogPerfumes: catalogFragrances, noteIds: selectedNoteIds });
+      const facets = buildNoteExplorerRelatedNoteFacets({ notes: catalogNotes, matchingPerfumes: matches, selectedNoteIds });
+
+      facets.forEach((facet) => {
+        const narrowedMatches = getNoteExplorerMatchesForNoteIds({
+          catalogPerfumes: catalogFragrances,
+          noteIds: [...selectedNoteIds, facet.noteId],
+        });
+        expect(narrowedMatches).toHaveLength(facet.count);
+      });
+    });
   });
 });
 
