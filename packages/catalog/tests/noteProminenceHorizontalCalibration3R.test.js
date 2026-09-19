@@ -50,6 +50,7 @@ const PINEAPPLE_FAMILY = {
   4: undefined,
   19: 8,
   28: undefined,
+  30: 9, // Vibrant Leather Bogoss -- later explicit editorial direction (pineapple is very prominent)
   112: 6,
   406: 8,
 };

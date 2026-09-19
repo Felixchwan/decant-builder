@@ -91,7 +91,9 @@ const ADJACENT_EXCLUDED_KEYS = ["violetLeaf", "powderyNotes", "birch", "birchLea
 // pinned so this phase is provably scoped to only the 1 approved change
 // above.
 const UNRELATED_VALUES_BY_ID = {
-  30: { bergamot: 5 },
+  // pineapple: 9 was added later (explicit editorial direction, outside this
+  // phase) alongside the corrected note pyramid asserted below.
+  30: { bergamot: 5, pineapple: 9 },
 };
 
 function getPerfumeNoteIds(perfume) {
@@ -249,9 +251,11 @@ describe("Composer Phase 3G horizontal calibration -- iris and leather canonical
   it("leaves the touched fragrance's canonical note pyramid exactly as it was -- no canonical note data was changed in this phase", () => {
     expect(perfumesById.get(30)).toMatchObject({
       name: "Vibrant Leather Bogoss",
-      topNotes: ["bergamot"],
-      middleNotes: ["bamboo"],
-      baseNotes: ["leather", "woodyNotes"],
+      // Later source-backed pyramid correction (outside this phase); leather
+      // itself, the only key this phase scored, is unchanged.
+      topNotes: ["lemon", "grapefruit", "bergamot"],
+      middleNotes: ["pineapple"],
+      baseNotes: ["cedar", "leather", "patchouli"],
     });
   });
 

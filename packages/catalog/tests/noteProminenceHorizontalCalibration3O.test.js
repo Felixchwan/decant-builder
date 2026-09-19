@@ -48,7 +48,6 @@ const WOODY_NOTES_FAMILY = {
   12: undefined,
   23: undefined,
   26: undefined,
-  30: undefined,
   112: undefined,
   113: undefined,
   201: undefined,
@@ -193,7 +192,7 @@ describe("Composer Phase 3O horizontal calibration -- the collective woodyNotes 
 
   it("leaves every unrelated prominence value on all 13 touched fragrances exactly as it was -- this phase changes zero scores", () => {
     expect(NOTE_PROMINENCE_BY_ID[7]).toEqual({ leather: 8, ginger: 7, maninka: 5 });
-    expect(NOTE_PROMINENCE_BY_ID[30]).toEqual({ leather: 9, bergamot: 5 });
+    expect(NOTE_PROMINENCE_BY_ID[30]).toEqual({ leather: 9, pineapple: 9, bergamot: 5 });
     expect(NOTE_PROMINENCE_BY_ID[113]).toEqual({ cardamom: 7, vanilla: 8, lavender: 6, iris: 4 });
     expect(NOTE_PROMINENCE_BY_ID[301]).toEqual({ sandalwood: 7, madagascarVanilla: 6, lemon: 5 });
     expect(NOTE_PROMINENCE_BY_ID[303]).toEqual({ akigalawood: 10, ambroxan: 6, basil: 4 });
@@ -201,10 +200,10 @@ describe("Composer Phase 3O horizontal calibration -- the collective woodyNotes 
   });
 
   it("leaves canonical note data completely unchanged in this phase -- no pyramid was edited for any woodyNotes member", () => {
-    expect(perfumesById.get(30)).toMatchObject({
-      name: "Vibrant Leather Bogoss",
-      baseNotes: ["leather", "woodyNotes"],
-    });
+    // Vibrant Leather Bogoss (30) was a woodyNotes member when this phase ran;
+    // a later source-backed pyramid correction replaced woodyNotes with
+    // cedar/patchouli, so it is no longer asserted or listed as a member.
+    expect(perfumesById.get(30).baseNotes).not.toContain("woodyNotes");
     expect(perfumesById.get(303)).toMatchObject({
       name: "Bois Imperial",
       generalNotes: expect.arrayContaining(["akigalawood", "woodyNotes"]),

@@ -242,6 +242,7 @@ const CEDAR_FAMILY = {
   27: undefined,
   28: undefined,
   29: undefined,
+  30: undefined,
   102: undefined,
   103: undefined,
   104: 4,

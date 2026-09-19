@@ -31,7 +31,7 @@ const PHASE_2H_BATCH = {
   27: { whiteMusk: 6, vetiver: 5 },
   28: { orange: 6, apple: 5, amber: 5 },
   29: { vanilla: 7, chinotto: 6, tonkaBean: 5 },
-  30: { leather: 9, bergamot: 5 }, // Phase 3G: leather 7 -> 9 (horizontal calibration)
+  30: { leather: 9, pineapple: 9, bergamot: 5 }, // Phase 3G: leather 7 -> 9 (horizontal calibration); pineapple: 9 added later by explicit editorial direction
   31: { amber: 5, cardamom: 5 },
   32: { suede: 5, amber: 5 },
   33: { cashmeran: 6, patchouli: 5, apple: 4 },
@@ -239,8 +239,9 @@ describe("Composer Phase 2H note-prominence seed batch", () => {
     });
     expect(perfumesById.get(30)).toMatchObject({
       name: "Vibrant Leather Bogoss",
-      topNotes: ["bergamot"],
-      baseNotes: ["leather", "woodyNotes"],
+      // Later source-backed pyramid correction (outside this batch).
+      topNotes: ["lemon", "grapefruit", "bergamot"],
+      baseNotes: ["cedar", "leather", "patchouli"],
     });
   });
 

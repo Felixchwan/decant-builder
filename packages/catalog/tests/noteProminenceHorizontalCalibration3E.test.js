@@ -90,6 +90,7 @@ const PATCHOULI_FAMILY = {
   21: 5,
   25: 4,
   29: undefined,
+  30: undefined,
   33: 5,
   101: 4,
   103: undefined,
@@ -105,7 +106,7 @@ const PATCHOULI_FAMILY = {
   211: undefined,
   215: undefined,
   216: undefined,
-  217: undefined,
+  217: 9, // Patchouli Ink -- later explicit editorial direction (previously unscored in this phase)
   302: undefined,
   303: undefined,
   304: undefined,
@@ -290,14 +291,14 @@ describe("Composer Phase 3E horizontal calibration -- sandalwood and patchouli c
     });
   });
 
-  it("has exactly one 9-10 score across both families (Tuxedo's patchouli) -- reflecting a genuinely documented signature identity, not generic earthiness", () => {
+  it("has exactly two 9-10 scores across both families (Tuxedo's patchouli and, per later explicit editorial direction, Patchouli Ink's patchouli) -- each reflecting a genuinely documented signature identity, not generic earthiness", () => {
     const allScores = Object.entries(ALL_FAMILIES).flatMap(([noteId, family]) =>
       Object.entries(family)
         .filter(([, value]) => value !== undefined && value >= 9)
         .map(([id, value]) => `${id}:${noteId}:${value}`)
     );
 
-    expect(allScores).toEqual(["501:patchouli:9"]);
+    expect(allScores).toEqual(["217:patchouli:9", "501:patchouli:9"]);
   });
 
   // The Note Explorer "Most prominent" sort verification for sandalwood

@@ -757,9 +757,9 @@ brand: "Zara",
 points: 1,
 imageAssetKey: "perfumes/bronze/batch-02/vibrant-leather-bogoss.png",
 accords: ["citrus", "leather", "woody", "fresh", "green"],
-topNotes: ["bergamot"],
-middleNotes: ["bamboo"],
-baseNotes: ["leather", "woodyNotes"],
+topNotes: ["lemon", "grapefruit", "bergamot"],
+middleNotes: ["pineapple"],
+baseNotes: ["cedar", "leather", "patchouli"],
 generalNotes: [],
 seasons: ["spring", "summer", "fall"],
 occasions: ["daily", "casual", "office"],
@@ -4197,7 +4197,7 @@ export const NOTE_PROMINENCE_BY_ID = {
   27: { whiteMusk: 6, vetiver: 5 }, // Touch for Men
   28: { orange: 6, apple: 5, amber: 5 }, // Tous Man
   29: { vanilla: 7, chinotto: 6, tonkaBean: 5 }, // Versace Eros Flame
-  30: { leather: 9, bergamot: 5 }, // Vibrant Leather Bogoss
+  30: { leather: 9, pineapple: 9, bergamot: 5 }, // Vibrant Leather Bogoss
   31: { amber: 5, cardamom: 5 }, // Viking Cairo
   32: { suede: 5, amber: 5 }, // Guess Man Gold
   33: { cashmeran: 6, patchouli: 5, apple: 4 }, // Jaguar Pace
@@ -4237,6 +4237,7 @@ export const NOTE_PROMINENCE_BY_ID = {
   212: { tobacco: 9, vanilla: 8, bourbonVanilla: 8, cinnamon: 6, blackPepper: 5 }, // Spicebomb Extreme
   213: { ginger: 6, apple: 8, sage: 5 }, // YSL Y EDP
   214: { iris: 6, powderyNotes: 6, neroli: 5 }, // Prada L'Homme L'Eau
+  217: { patchouli: 9 }, // Patchouli Ink
   301: { sandalwood: 7, madagascarVanilla: 6, lemon: 5 }, // Allure Homme Édition Blanche
   302: { grapefruit: 7, whiteMusk: 6, amber: 5, cedarwood: 4 }, // Allure Homme Sport Superleggera
   303: { akigalawood: 10, ambroxan: 6, basil: 4 }, // Bois Imperial (generalNotes)

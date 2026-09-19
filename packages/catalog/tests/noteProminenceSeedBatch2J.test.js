@@ -111,7 +111,7 @@ const PHASE_2H_BATCH = {
   27: { whiteMusk: 6, vetiver: 5 },
   28: { orange: 6, apple: 5, amber: 5 },
   29: { vanilla: 7, chinotto: 6, tonkaBean: 5 },
-  30: { leather: 9, bergamot: 5 }, // Phase 3G: leather 7 -> 9 (horizontal calibration)
+  30: { leather: 9, pineapple: 9, bergamot: 5 }, // Phase 3G: leather 7 -> 9 (horizontal calibration); pineapple: 9 added later by explicit editorial direction
   31: { amber: 5, cardamom: 5 },
   32: { suede: 5, amber: 5 },
   33: { cashmeran: 6, patchouli: 5, apple: 4 },
@@ -154,6 +154,12 @@ function getPerfumeNoteIds(perfume) {
   ];
 }
 
+// Fragrances added after the vertical pass that have since received editorial
+// scores by explicit direction (not part of any seed batch above).
+const LATER_EDITORIALLY_SCORED_BY_ID = {
+  217: { patchouli: 9 }, // Patchouli Ink
+};
+
 describe("Composer Phase 2J note-prominence seed batch (final vertical-pass batch)", () => {
   const perfumesById = new Map(perfumes.map((perfume) => [perfume.id, perfume]));
 
@@ -166,6 +172,9 @@ describe("Composer Phase 2J note-prominence seed batch (final vertical-pass batc
       ...Object.keys(PHASE_2G_BATCH),
       ...Object.keys(PHASE_2H_BATCH),
       ...Object.keys(PHASE_2I_BATCH),
+      // Patchouli Ink (217) was added after the vertical pass and later given
+      // its one editorial score by explicit direction -- see below.
+      ...Object.keys(LATER_EDITORIALLY_SCORED_BY_ID),
     ]
       .map(Number)
       .sort((a, b) => a - b);
@@ -326,7 +335,8 @@ describe("Composer Phase 2J note-prominence seed batch (final vertical-pass batc
 
     expect(perfumes).toHaveLength(90);
     expect(originallyReviewedPerfumes).toHaveLength(86);
-    expect(Object.keys(NOTE_PROMINENCE_BY_ID)).toHaveLength(86);
+    // 86 originally-reviewed fragrances + Patchouli Ink (217), later scored.
+    expect(Object.keys(NOTE_PROMINENCE_BY_ID)).toHaveLength(87);
 
     for (const perfume of originallyReviewedPerfumes) {
       expect(NOTE_PROMINENCE_BY_ID, `${perfume.name} (id ${perfume.id}) should have a prominence entry`).toHaveProperty(
@@ -346,7 +356,12 @@ describe("Composer Phase 2J note-prominence seed batch (final vertical-pass batc
 
     for (const perfume of perfumes) {
       if (postVerticalPassAdditionIds.has(perfume.id)) {
-        expect(perfume.noteProminence, `${perfume.name} should remain unscored pending review`).toEqual({});
+        // 217 alone has since received its one explicit editorial score; the
+        // rest stay empty pending review.
+        expect(
+          perfume.noteProminence,
+          `${perfume.name} should hold only its explicitly-directed scores (none pending review)`
+        ).toEqual(LATER_EDITORIALLY_SCORED_BY_ID[perfume.id] || {});
         continue;
       }
       expect(Object.keys(perfume.noteProminence).length, `${perfume.name} should have at least one score`).toBeGreaterThan(0);
