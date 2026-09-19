@@ -219,4 +219,5 @@ export const aurelianTaxonomyLabels = {
   "taxonomy.leatherwood": "Madera de Cuero",
   "taxonomy.rum": "Ron",
   "taxonomy.amaretto": "Amaretto",
+  "taxonomy.absinthe": "Absenta",
 };

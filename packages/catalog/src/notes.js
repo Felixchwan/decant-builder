@@ -630,4 +630,11 @@ pistachio: { name: "Pistachio", noteImageAssetKey: "notes/pistachio.jpg" },
 // (https://commons.wikimedia.org/wiki/File:Liat_Portal_for_Foodie_Disorder_-_Mixed_nuts_assortment.jpg),
 // cropped square to match this dictionary's note-thumbnail framing.
 nuttyNotes: { name: "Nutty Notes", noteImageAssetKey: "notes/nuttyNotes.jpg" },
+
+// Absinthe (the alcoholic beverage) is its own real Fragrantica note,
+// distinct from the botanical wormwood key above -- wormwood is the herb
+// (Artemisia absinthium) that flavors absinthe, not the drink itself, so
+// the two are kept as separate identities rather than one standing in for
+// the other. Added for 212 VIP Black, whose source lists Absinthe.
+absinthe: { name: "Absinthe", family: "sweet", noteImageAssetKey: "notes/absinthe.jpg" },
 };

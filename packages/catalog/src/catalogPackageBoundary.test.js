@@ -58,7 +58,7 @@ describe("@discovery-box/catalog package boundary", () => {
 
   it("retains the approved mapping sizes and intentional aliases", () => {
     expect(catalog.fragrances).toHaveLength(90);
-    expect(Object.keys(catalog.notes)).toHaveLength(179);
+    expect(Object.keys(catalog.notes)).toHaveLength(180);
     expect(Object.keys(catalog.brandAssets)).toHaveLength(48);
     expect(
       Object.values(catalog.metadataAssets).reduce(

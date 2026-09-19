@@ -241,7 +241,9 @@ describe("Composer Phase 3W horizontal calibration -- six independent aromatic s
   it("leaves canonical note data completely unchanged in this phase -- no pyramid was edited for any in-scope member", () => {
     expect(perfumesById.get(106)).toMatchObject({
       name: "212 VIP Black",
-      topNotes: ["wormwood", "anise", "fennel"],
+      // Later canonical correction (outside this phase): its source note is
+      // Absinthe, now its own key, not the botanical wormwood key.
+      topNotes: ["absinthe", "anise", "fennel"],
     });
     expect(perfumesById.get(202)).toMatchObject({
       name: "Sauvage EDP",
