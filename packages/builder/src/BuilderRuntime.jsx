@@ -614,6 +614,17 @@ const isComposerProposalStale = isComposerBoxProposalStale(
     }
   }
 
+  // Same scoped-navigation contract as the Note Explorer above, for the
+  // Composer proposal: the ids are the proposal rows visible at the moment of
+  // the click, in the order shown.
+  function openComposerProposalPerfumeDetails(perfumeId, orderedPerfumeIds) {
+    const perfume = perfumes.find((item) => item.id === perfumeId);
+
+    if (perfume) {
+      openPerfumeDetails(perfume, "composer_proposal", orderedPerfumeIds);
+    }
+  }
+
   function handleComposerSettingChange(field, value) {
     const nextValue =
       field === "budget" && value !== "" && Number(value) < 0 ? "0" : value;
@@ -1044,6 +1055,7 @@ const confirmAddPerfume = () => {
       composerOptions={filterOptions}
       minimumComposerBudget={minimumComposerBudget}
       composerProposal={composerProposal}
+      onOpenComposerProposalPerfumeDetails={openComposerProposalPerfumeDetails}
       isComposerGenerating={isComposerGenerating}
       composerStatusMessage={composerStatusMessage}
       isComposerProposalStale={isComposerProposalStale}

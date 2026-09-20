@@ -131,6 +131,7 @@ export const enUS = {
   "composer.applyProposal": "Apply Proposal",
   "composer.previousAlternative": "Previous alternative for Slot {slot}",
   "composer.nextAlternative": "Next alternative for Slot {slot}",
+  "composer.viewFragranceDetails": "View details for {name}",
   "composer.status.completed": "Discovery Box Proposal",
   "composer.status.partial": "Partial Discovery Box",
   "composer.status.already_complete": "Box Already Complete",

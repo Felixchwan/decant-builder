@@ -42,6 +42,7 @@ import {
   getComposerProposalItemReasonLabels,
   getComposerTradeoffLabel,
 } from "../builder/presentation/composerAlternativeTradeoffLabels.js";
+import { buildVisibleProposalItems } from "../builder/internal/composition/buildVisibleProposalItems.js";
 import {
   buildSeasonProfileViewModel,
   SEASON_AXIS_ORDER,
@@ -146,6 +147,7 @@ const BuilderPanel = forwardRef(function BuilderPanel({
   composerOptions,
   minimumComposerBudget,
   composerProposal,
+  onOpenComposerProposalPerfumeDetails,
   isComposerGenerating = false,
   composerStatusMessage = "",
   isComposerProposalStale,
@@ -1202,6 +1204,8 @@ const BuilderPanel = forwardRef(function BuilderPanel({
           onMoveAlternative={onMoveComposerProposalAlternative}
           onCancel={onCancelComposerProposal}
           onAddPerfume={onAddPerfume}
+          onOpenPerfumeDetails={onOpenComposerProposalPerfumeDetails}
+          isDetailOpen={isPerfumeDetailsOpen}
           selectedPerfumeIds={selectedPerfumeIds}
           isBoxFull={totalSlots >= maxSelectableSlots}
           onBack={() => {
@@ -1618,6 +1622,8 @@ function ComposerProposalModal({
   onMoveAlternative,
   onCancel,
   onAddPerfume,
+  onOpenPerfumeDetails,
+  isDetailOpen = false,
   selectedPerfumeIds,
   isBoxFull,
   onBack,
@@ -1626,14 +1632,16 @@ function ComposerProposalModal({
   const { t } = translator;
   useEffect(() => {
     function handleKeyDown(event) {
-      if (event.key === "Escape") {
+      // Details opened from a row sit on top of this modal; Escape then
+      // closes only them (their own handler), never this modal underneath.
+      if (event.key === "Escape" && !isDetailOpen) {
         onCancel();
       }
     }
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [onCancel]);
+  }, [onCancel, isDetailOpen]);
 
   const statusLabel = getLocalizedComposerProposalStatusLabel(proposal.status, translator);
   const isProposalAvailable = Boolean(proposal.proposalAvailable);
@@ -1670,6 +1678,18 @@ function ComposerProposalModal({
       newlyAdded: proposal.addedPerfumes.some((item) => item.id === perfume.id),
       reasons: [],
     }));
+
+  // Details opened from a row navigate strictly within the rows visible right
+  // now: the ids of proposalItems -- the selected alternative of each slot, in
+  // display order -- snapshotted at the moment of the click. Nothing here
+  // touches the proposal itself, so its selected alternatives survive the
+  // details opening and closing.
+  const handleOpenDetails = (perfume) => {
+    onOpenPerfumeDetails?.(
+      perfume.id,
+      proposalItems.map((item) => item.perfume.id)
+    );
+  };
 
   return renderOwnedPortal(
     <div className="modal-overlay final-summary-overlay" onClick={onCancel}>
@@ -1761,7 +1781,7 @@ function ComposerProposalModal({
                   return (
                     <div
                       key={item.slotId || perfume.id}
-                      className={`composer-proposal-item ${
+                      className={`composer-proposal-item has-thumbnail ${
                         hasAlternatives ? "has-alternatives" : "no-alternatives"
                       }`}
                     >
@@ -1776,9 +1796,18 @@ function ComposerProposalModal({
                         </button>
                       )}
 
+                      <ComposerProposalThumbnail
+                        perfume={perfume}
+                        label={t("composer.viewFragranceDetails", { name: perfume.name })}
+                        onOpen={() => handleOpenDetails(perfume)}
+                      />
+
                       <div className="composer-proposal-item-body">
-                        <strong>{perfume.name}</strong>
-                        <span>{perfume.brand} - {perfume.points} pt</span>
+                        <ComposerProposalDetailTrigger
+                          perfume={perfume}
+                          label={t("composer.viewFragranceDetails", { name: perfume.name })}
+                          onOpen={() => handleOpenDetails(perfume)}
+                        />
                         {reasonLabels.length > 0 && (
                           <div className="composer-proposal-item-reasons">
                             {reasonLabels.map((label) => (
@@ -1884,35 +1913,45 @@ function ComposerProposalModal({
   );
 }
 
-function buildVisibleProposalItems(proposal) {
-  if (!Array.isArray(proposal?.slotAlternatives) || proposal.slotAlternatives.length === 0) {
-    return null;
-  }
+// The two ways into a proposal row's fragrance details: the bottle thumbnail
+// and the name/brand block. Both are native buttons, so Enter/Space work and
+// focus is visible; neither wraps the row's alternative arrows or its Add
+// button, which stay independent siblings.
+export function ComposerProposalThumbnail({ perfume, label, onOpen }) {
+  return (
+    <button
+      type="button"
+      className="composer-proposal-item-thumb"
+      aria-label={label}
+      aria-haspopup="dialog"
+      onClick={onOpen}
+    >
+      <img
+        src={perfume.image || perfume.imageFallback}
+        alt=""
+        aria-hidden="true"
+        onError={(event) => {
+          event.currentTarget.onerror = null;
+          event.currentTarget.src = perfume.imageFallback;
+        }}
+      />
+    </button>
+  );
+}
 
-  return proposal.slotAlternatives
-    .map((slot) => {
-      const selectedIndex = Number.isInteger(slot.selectedAlternativeIndex)
-        ? slot.selectedAlternativeIndex
-        : 0;
-      const selectedAlternative = slot.alternatives?.[selectedIndex];
-
-      if (!selectedAlternative?.perfume) {
-        return null;
-      }
-
-      return {
-        slotId: slot.slotId,
-        slotIndex: slot.slotIndex,
-        id: selectedAlternative.id,
-        perfume: selectedAlternative.perfume,
-        preserved: Boolean(slot.preserved),
-        newlyAdded: !slot.preserved,
-        reasons: (selectedAlternative.reasons || []).slice(0, 3),
-        alternatives: slot.alternatives || [],
-        selectedAlternativeIndex: selectedIndex,
-      };
-    })
-    .filter(Boolean);
+export function ComposerProposalDetailTrigger({ perfume, label, onOpen }) {
+  return (
+    <button
+      type="button"
+      className="composer-proposal-detail-trigger"
+      aria-label={label}
+      aria-haspopup="dialog"
+      onClick={onOpen}
+    >
+      <strong>{perfume.name}</strong>
+      <span>{perfume.brand} - {perfume.points} pt</span>
+    </button>
+  );
 }
 
 // Composer Phase 2A: Note Explorer. Containment-based browse-by-note mode,

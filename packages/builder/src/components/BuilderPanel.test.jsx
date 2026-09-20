@@ -18,7 +18,18 @@ import { fragrances as perfumes, notes } from "@discovery-box/catalog";
 import { createTranslator } from "../i18n/createTranslator.js";
 import { esMX } from "../i18n/locales/es-MX.js";
 import { buildScentDna } from "../utils/buildScentDna.js";
-import BuilderPanel, { ComposerGenerateButton, ScentLibraryContent } from "./BuilderPanel.jsx";
+import BuilderPanel, {
+  ComposerGenerateButton,
+  ComposerProposalDetailTrigger,
+  ComposerProposalThumbnail,
+  ScentLibraryContent,
+} from "./BuilderPanel.jsx";
+import {
+  getAdjacentPerfume,
+  getDetailNavigation,
+  resolveDetailNavigationPerfumes,
+} from "../builder/internal/catalog/detailNavigation.js";
+import { buildVisibleProposalItems } from "../builder/internal/composition/buildVisibleProposalItems.js";
 
 const originalWindow = globalThis.window;
 const appCss = readFileSync(new URL("../../styles.css", import.meta.url), "utf8");
@@ -322,7 +333,7 @@ describe("BuilderPanel Composer setup launcher", () => {
   });
 
   it("keeps Composer proposal item structure separate from Full Analysis metadata chips", () => {
-    expect(builderPanelSource).toContain("composer-proposal-item ${");
+    expect(builderPanelSource).toContain("composer-proposal-item has-thumbnail ${");
     expect(builderPanelSource).toContain('hasAlternatives ? "has-alternatives" : "no-alternatives"');
     expect(builderPanelSource).toContain('className="composer-proposal-item-reasons"');
     expect(builderPanelSource).toContain('className="composer-proposal-alt-button"');
@@ -1242,11 +1253,11 @@ describe("Docked summary collapse toggle: chevron points toward its own action",
 // buildComposerBoxProposal + selectionState functions this wiring calls.
 describe("Composer proposal: individual suggestion Add action", () => {
   const modalStart = normalizedPanelSource.indexOf("function ComposerProposalModal(");
-  const modalEnd = normalizedPanelSource.indexOf("function buildVisibleProposalItems(");
+  const modalEnd = normalizedPanelSource.indexOf("export function ComposerProposalThumbnail(");
   const modalSource = normalizedPanelSource.slice(modalStart, modalEnd);
 
   it("accepts onAddPerfume, selectedPerfumeIds, and isBoxFull as plain props, not new BuilderRuntime-level state", () => {
-    const signatureSource = normalizedPanelSource.slice(modalStart, modalStart + 300);
+    const signatureSource = normalizedPanelSource.slice(modalStart, modalStart + 400);
     expect(signatureSource).toContain("onAddPerfume,");
     expect(signatureSource).toContain("selectedPerfumeIds,");
     expect(signatureSource).toContain("isBoxFull,");
@@ -1254,7 +1265,7 @@ describe("Composer proposal: individual suggestion Add action", () => {
 
   it("is called with BuilderPanel's own existing onAddPerfume prop and its existing selectedPerfumeIds memo -- the same values RecommendationCard's isAdded already reads -- not a newly invented prop", () => {
     const callStart = normalizedPanelSource.indexOf("<ComposerProposalModal");
-    const callSource = normalizedPanelSource.slice(callStart, callStart + 500);
+    const callSource = normalizedPanelSource.slice(callStart, callStart + 700);
     expect(callSource).toContain("onAddPerfume={onAddPerfume}");
     expect(callSource).toContain("selectedPerfumeIds={selectedPerfumeIds}");
     expect(callSource).toContain("isBoxFull={totalSlots >= maxSelectableSlots}");
@@ -2174,5 +2185,223 @@ describe("Note Explorer result -> fragrance details wiring", () => {
     const handlerStart = explorerSource.indexOf("const handleOpenDetails");
     const handler = explorerSource.slice(handlerStart, handlerStart + 200);
     expect(handler).not.toMatch(/setSelectedNoteIds|setSortOrder|setSearch|onClose/);
+  });
+});
+
+// Composer proposal rows -> fragrance details. The thumbnail and name/brand
+// triggers are plain presentational components, so their markup is rendered for
+// real; ComposerProposalModal itself mounts through createPortal (no server
+// render), so its click wiring is pinned as source contracts and the visible
+// set is exercised through the real buildVisibleProposalItems.
+describe("Composer proposal rows: thumbnail and name/brand details triggers", () => {
+  const translator = createTranslator("es-MX");
+  // The host resolves `image` from each perfume's imageAssetKey before the
+  // builder ever receives the catalog, so the fixture carries one.
+  const perfume = { ...perfumes[0], image: "/catalog-assets/test-bottle.png" };
+  const label = translator.t("composer.viewFragranceDetails", { name: perfume.name });
+
+  it("renders the perfume's already-resolved bottle image as a decorative thumbnail inside a native button", () => {
+    const markup = renderToStaticMarkup(<ComposerProposalThumbnail perfume={perfume} label={label} onOpen={() => {}} />);
+
+    expect(perfume.image).toBeTruthy();
+    // (React 19 may hoist an image preload <link> ahead of the button.)
+    expect(markup).toContain('<button type="button" class="composer-proposal-item-thumb"');
+    expect(markup).toContain(`src="${perfume.image}"`);
+    expect(markup).toContain('alt=""');
+    expect(markup).toContain('aria-hidden="true"');
+  });
+
+  it("falls back to the perfume's own imageFallback when it has no image", () => {
+    const markup = renderToStaticMarkup(
+      <ComposerProposalThumbnail
+        perfume={{ ...perfume, image: "", imageFallback: "/fallback-bottle.png" }}
+        label={label}
+        onOpen={() => {}}
+      />
+    );
+
+    expect(markup).toContain('src="/fallback-bottle.png"');
+  });
+
+  it("labels the thumbnail for opening details, announces the dialog, and is keyboard reachable (no tabindex override)", () => {
+    const markup = renderToStaticMarkup(<ComposerProposalThumbnail perfume={perfume} label={label} onOpen={() => {}} />);
+
+    expect(label).toBe(`Ver detalles de ${perfume.name}`);
+    expect(markup).toContain(`aria-label="${label.replace(/&/g, "&amp;").replace(/'/g, "&#x27;")}"`);
+    expect(markup).toContain('aria-haspopup="dialog"');
+    expect(markup).not.toContain("tabindex");
+  });
+
+  it("renders the name and brand + points block as a native, labelled details button", () => {
+    const markup = renderToStaticMarkup(
+      <ComposerProposalDetailTrigger perfume={perfume} label={label} onOpen={() => {}} />
+    );
+
+    expect(markup).toMatch(/^<button type="button" class="composer-proposal-detail-trigger"/);
+    expect(markup).toContain("<strong>");
+    expect(markup).toContain(`${perfume.points} pt`);
+    expect(markup).toContain('aria-haspopup="dialog"');
+    expect(markup).toContain("aria-label=");
+    expect(markup).not.toContain("composer-proposal-add-button");
+  });
+
+  it("has a localized label in both shipped locales", () => {
+    expect(createTranslator("en-US").t("composer.viewFragranceDetails", { name: "X" })).toBe("View details for X");
+    expect(translator.t("composer.viewFragranceDetails", { name: "X" })).toBe("Ver detalles de X");
+  });
+});
+
+describe("Composer proposal rows: contextual details navigation over the visible proposal", () => {
+  const [first, second, third, fourth, fifth] = perfumes;
+  const slot = (slotId, slotIndex, selectedAlternativeIndex, ...alternativePerfumes) => ({
+    slotId,
+    slotIndex,
+    preserved: false,
+    selectedAlternativeIndex,
+    alternatives: alternativePerfumes.map((alternative) => ({ id: alternative.id, perfume: alternative, reasons: [] })),
+  });
+  // slot 1 has an alternative (`fourth`) that is NOT currently visible.
+  const proposalA = {
+    slotAlternatives: [slot("s0", 0, 0, first), slot("s1", 1, 0, second, fourth), slot("s2", 2, 0, third)],
+  };
+  const visibleIds = (proposal) => buildVisibleProposalItems(proposal).map((item) => item.perfume.id);
+
+  it("the visible set is each slot's selected alternative, in display order", () => {
+    expect(visibleIds(proposalA)).toEqual([first.id, second.id, third.id]);
+  });
+
+  it("navigation is limited to the visible proposal fragrances, not the full catalog, and keeps their order", () => {
+    const scoped = resolveDetailNavigationPerfumes({ scopedPerfumeIds: visibleIds(proposalA), catalog: perfumes });
+
+    expect(scoped.map((item) => item.id)).toEqual([first.id, second.id, third.id]);
+    expect(scoped.length).toBeLessThan(perfumes.length);
+    expect(scoped.map((item) => item.id)).not.toContain(fourth.id);
+
+    let current = scoped[0];
+    const walked = [];
+    for (let step = 0; step < 6; step += 1) {
+      current = getAdjacentPerfume(current, scoped, 1);
+      walked.push(current.id);
+    }
+    expect(walked).toEqual([second.id, third.id, first.id, second.id, third.id, first.id]);
+  });
+
+  it("uses the currently selected alternative: after arrowing a slot, the next open snapshots the new visible fragrance", () => {
+    const moved = {
+      slotAlternatives: proposalA.slotAlternatives.map((item) =>
+        item.slotId === "s1" ? { ...item, selectedAlternativeIndex: 1 } : item
+      ),
+    };
+
+    expect(visibleIds(moved)).toEqual([first.id, fourth.id, third.id]);
+    expect(visibleIds(proposalA)).toEqual([first.id, second.id, third.id]);
+  });
+
+  it("an already-taken snapshot is unaffected by later changes to the proposal object", () => {
+    const snapshot = visibleIds(proposalA);
+    const before = resolveDetailNavigationPerfumes({ scopedPerfumeIds: snapshot, catalog: perfumes }).map((p) => p.id);
+
+    visibleIds({ slotAlternatives: [slot("s0", 0, 0, fifth)] });
+
+    expect(resolveDetailNavigationPerfumes({ scopedPerfumeIds: snapshot, catalog: perfumes }).map((p) => p.id)).toEqual(
+      before
+    );
+  });
+
+  it("regenerating rebuilds the navigation set from the new visible proposal", () => {
+    const proposalB = { slotAlternatives: [slot("n0", 0, 0, fifth), slot("n1", 1, 0, fourth)] };
+    const scopedB = resolveDetailNavigationPerfumes({ scopedPerfumeIds: visibleIds(proposalB), catalog: perfumes });
+
+    expect(scopedB.map((item) => item.id)).toEqual([fifth.id, fourth.id]);
+    expect(scopedB.map((item) => item.id)).not.toContain(first.id);
+    expect(getAdjacentPerfume(scopedB[1], scopedB, 1).id).toBe(fifth.id);
+  });
+
+  it("a one-fragrance proposal offers no navigation, and an empty one is safe", () => {
+    const single = resolveDetailNavigationPerfumes({
+      scopedPerfumeIds: visibleIds({ slotAlternatives: [slot("s0", 0, 0, first)] }),
+      catalog: perfumes,
+    });
+    expect(getDetailNavigation(single[0], single).canNavigate).toBe(false);
+    expect(buildVisibleProposalItems({ slotAlternatives: [] })).toBeNull();
+    expect(getDetailNavigation(first, []).canNavigate).toBe(false);
+  });
+});
+
+describe("Composer proposal rows: details wiring", () => {
+  const modalStart = normalizedPanelSource.indexOf("function ComposerProposalModal(");
+  const modalEnd = normalizedPanelSource.indexOf("export function ComposerProposalThumbnail(");
+  const modalSource = normalizedPanelSource.slice(modalStart, modalEnd);
+  const rowStart = modalSource.indexOf("<div\n                      key={item.slotId || perfume.id}");
+  const rowSource = modalSource.slice(rowStart);
+
+  it("opens details through the runtime-provided callback with the ids of proposalItems, snapshotted at click time, never recomputing an order", () => {
+    const handlerStart = modalSource.indexOf("const handleOpenDetails");
+    const handler = modalSource.slice(handlerStart, handlerStart + 200);
+
+    expect(handler).toContain("onOpenPerfumeDetails?.(");
+    expect(handler).toContain("proposalItems.map((item) => item.perfume.id)");
+    expect(handler).not.toMatch(/\.sort\(|setComposerProposal|onMoveAlternative|onCancel|onApply/);
+  });
+
+  it("wires the thumbnail and the name/brand block, both to handleOpenDetails with the row's perfume", () => {
+    expect(rowSource).toContain("<ComposerProposalThumbnail");
+    expect(rowSource).toContain("<ComposerProposalDetailTrigger");
+    expect(rowSource.match(/onOpen=\{\(\) => handleOpenDetails\(perfume\)\}/g)).toHaveLength(2);
+    expect(rowSource).toContain('t("composer.viewFragranceDetails", { name: perfume.name })');
+  });
+
+  it("does not make the whole row clickable, so arrows and Add stay independent", () => {
+    const rowOpenTag = rowSource.slice(0, rowSource.indexOf(">"));
+    expect(rowOpenTag).not.toContain("onClick");
+    expect(rowSource).not.toContain("onKeyDown");
+  });
+
+  it("keeps Add to box adding only: it calls onAddPerfume and never the details handler", () => {
+    const addStart = rowSource.indexOf('className="composer-proposal-add-button"');
+    const addButton = rowSource.slice(addStart, addStart + 200);
+
+    expect(addButton).toContain("onClick={() => onAddPerfume(perfume)}");
+    expect(addButton).not.toContain("handleOpenDetails");
+  });
+
+  it("keeps the alternative arrows exactly as before: they only move the alternative", () => {
+    expect(rowSource).toContain("onClick={() => onMoveAlternative?.(item.slotId, -1)}");
+    expect(rowSource).toContain("onClick={() => onMoveAlternative?.(item.slotId, 1)}");
+    expect(rowSource.match(/handleOpenDetails/g)).toHaveLength(2);
+  });
+
+  it("orders the row: thumbnail, name/brand, reasons, position/tradeoff, then the state badge and Add button", () => {
+    const order = [
+      "<ComposerProposalThumbnail",
+      "<ComposerProposalDetailTrigger",
+      'className="composer-proposal-item-reasons"',
+      'className="composer-proposal-item-actions"',
+      'className="composer-proposal-item-state"',
+      'className="composer-proposal-add-button"',
+    ].map((marker) => rowSource.indexOf(marker));
+
+    expect(order.every((index) => index > -1)).toBe(true);
+    expect([...order].sort((a, b) => a - b)).toEqual(order);
+  });
+
+  it("suppresses the proposal modal's own Escape while details are open, so Escape closes only the details on top", () => {
+    expect(modalSource).toContain('event.key === "Escape" && !isDetailOpen');
+    expect(modalSource).toContain("}, [onCancel, isDetailOpen]);");
+  });
+
+  it("is given the runtime's proposal-scoped opener and the details-open flag by BuilderPanel", () => {
+    const callStart = normalizedPanelSource.indexOf("<ComposerProposalModal");
+    const callSource = normalizedPanelSource.slice(callStart, callStart + 900);
+
+    expect(callSource).toContain("onOpenPerfumeDetails={onOpenComposerProposalPerfumeDetails}");
+    expect(callSource).toContain("isDetailOpen={isPerfumeDetailsOpen}");
+  });
+
+  it("styles both triggers with a visible focus ring and keeps the thumbnail small", () => {
+    expect(appCss).toMatch(
+      /:where\(\.builder-scope\) \.composer-proposal-item-thumb:focus-visible,\s*:where\(\.builder-scope\) \.composer-proposal-detail-trigger:focus-visible \{[^}]*outline:\s*2px solid/s
+    );
+    expect(appCss).toMatch(/:where\(\.builder-scope\) \.composer-proposal-item-thumb \{[^}]*width:\s*52px;[^}]*height:\s*52px;/s);
   });
 });

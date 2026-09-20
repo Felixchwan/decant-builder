@@ -262,3 +262,35 @@ describe("Composer proposal generation lifecycle wiring", () => {
     expect(runtimeSource.match(/composerGenerationRunnerRef\.current\.cancel\(\)|runner\.cancel\(\)/g).length).toBeGreaterThanOrEqual(2);
   });
 });
+
+describe("Composer proposal -> fragrance details wiring", () => {
+  const start = runtimeSource.indexOf("function openComposerProposalPerfumeDetails(");
+  const end = runtimeSource.indexOf("function handleComposerSettingChange(");
+  const openerSource = runtimeSource.slice(start, end);
+
+  it("opens details through the same openPerfumeDetails scoped-ids path as the Note Explorer, tagged composer_proposal", () => {
+    expect(openerSource).toContain("perfumes.find((item) => item.id === perfumeId)");
+    expect(openerSource).toContain('openPerfumeDetails(perfume, "composer_proposal", orderedPerfumeIds);');
+    expect(runtimeSource).toContain(
+      "onOpenComposerProposalPerfumeDetails={openComposerProposalPerfumeDetails}"
+    );
+  });
+
+  it("only touches details state: the proposal, its selected alternatives and the form are never written when opening", () => {
+    expect(openerSource).not.toMatch(/setComposerProposal|setComposerSettings|setIsComposerGenerating|clearBox/);
+    const openStart = runtimeSource.indexOf("function openPerfumeDetails(");
+    const openSource = runtimeSource.slice(openStart, openStart + 900);
+    expect(openSource).not.toMatch(/setComposerProposal|setComposerSettings/);
+  });
+
+  it("closing details clears only details state, returning to the proposal untouched", () => {
+    const closeStart = runtimeSource.indexOf("const closePerfumeDetails = useCallback(");
+    const closeSource = runtimeSource.slice(closeStart, closeStart + 200);
+    expect(closeSource).not.toMatch(/setComposerProposal|setComposerSettings/);
+  });
+
+  it("regeneration replaces the proposal but the next open always takes a fresh snapshot (openPerfumeDetails overwrites the scope every time)", () => {
+    expect(runtimeSource).toContain("setDetailScopedPerfumeIds(Array.isArray(scopedPerfumeIds) ? [...scopedPerfumeIds] : null);");
+    expect(runtimeSource).toContain("onSuccess: (nextProposal) => {\n        setComposerProposal(nextProposal);");
+  });
+});

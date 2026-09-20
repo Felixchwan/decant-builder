@@ -5675,6 +5675,60 @@
   min-width: 0;
 }
 
+:where(.builder-scope) .composer-proposal-item-thumb {
+  flex: 0 0 auto;
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 52px;
+  padding: 4px;
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  border-radius: 10px;
+  background: rgba(15, 23, 42, 0.58);
+  cursor: pointer;
+  transition: border-color 160ms ease, background-color 160ms ease;
+}
+
+:where(.builder-scope) .composer-proposal-item-thumb img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+:where(.builder-scope) .composer-proposal-item-thumb:hover,
+:where(.builder-scope) .composer-proposal-item-thumb:focus-visible {
+  border-color: color-mix(in srgb, var(--builder-color-accent, #4ade80) 50%, transparent);
+  background: color-mix(in srgb, var(--builder-color-accent, #4ade80) 8%, rgba(15, 23, 42, 0.58));
+}
+
+:where(.builder-scope) .composer-proposal-item-thumb:focus-visible,
+:where(.builder-scope) .composer-proposal-detail-trigger:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--builder-color-accent, #4ade80) 70%, transparent);
+  outline-offset: 3px;
+}
+
+:where(.builder-scope) .composer-proposal-detail-trigger {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+:where(.builder-scope) .composer-proposal-detail-trigger:hover strong {
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, var(--builder-color-accent, #4ade80) 55%, transparent);
+  text-underline-offset: 3px;
+}
+
 :where(.builder-scope) .composer-proposal-item strong,
 :where(.builder-scope) .composer-proposal-item span {
   display: block;
@@ -9112,6 +9166,27 @@
 
   :where(.builder-scope) .composer-proposal-item.no-alternatives .composer-proposal-item-actions {
     grid-column: 1;
+  }
+
+  :where(.builder-scope) .composer-proposal-item.has-thumbnail.has-alternatives {
+    grid-template-columns: 30px 44px minmax(0, 1fr) 30px;
+  }
+
+  :where(.builder-scope) .composer-proposal-item.has-thumbnail.no-alternatives {
+    grid-template-columns: 44px minmax(0, 1fr);
+  }
+
+  :where(.builder-scope) .composer-proposal-item.has-thumbnail .composer-proposal-item-thumb {
+    width: 44px;
+    height: 44px;
+  }
+
+  :where(.builder-scope) .composer-proposal-item.has-thumbnail.has-alternatives .composer-proposal-item-actions {
+    grid-column: 2 / 4;
+  }
+
+  :where(.builder-scope) .composer-proposal-item.has-thumbnail.no-alternatives .composer-proposal-item-actions {
+    grid-column: 1 / 3;
   }
 
   :where(.builder-scope) .final-summary-modal .modal-header {

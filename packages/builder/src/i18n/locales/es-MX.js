@@ -131,6 +131,7 @@ export const esMX = {
   "composer.applyProposal": "Aplicar propuesta",
   "composer.previousAlternative": "Alternativa anterior para espacio {slot}",
   "composer.nextAlternative": "Siguiente alternativa para espacio {slot}",
+  "composer.viewFragranceDetails": "Ver detalles de {name}",
   "composer.status.completed": "Propuesta de Discovery Box",
   "composer.status.partial": "Discovery Box parcial",
   "composer.status.already_complete": "Caja ya completa",
