@@ -140,6 +140,8 @@ const BuilderPanel = forwardRef(function BuilderPanel({
   scentDna,
   isBoxReady,
   onAddPerfume,
+  onOpenPerfumeDetails,
+  isPerfumeDetailsOpen = false,
   composerSettings,
   composerOptions,
   minimumComposerBudget,
@@ -183,6 +185,7 @@ const BuilderPanel = forwardRef(function BuilderPanel({
     const [isNotesModalOpen, setIsNotesModalOpen] = useState(false);
     const [isFinalSummaryOpen, setIsFinalSummaryOpen] = useState(false);
     const [isComposerSetupOpen, setIsComposerSetupOpen] = useState(false);
+    const wasComposerGeneratingRef = useRef(isComposerGenerating);
     const [isNoteExplorerOpen, setIsNoteExplorerOpen] = useState(false);
     const [isCollectionSnapshotOpen, setIsCollectionSnapshotOpen] = useState(false);
     const [selectedDnaAccord, setSelectedDnaAccord] = useState(null);
@@ -515,6 +518,20 @@ const BuilderPanel = forwardRef(function BuilderPanel({
       });
       setIsComposerSetupOpen(true);
     };
+
+    // The setup modal now stays open (showing its loading state) for the whole
+    // generation. When a generation that was running ends WITH a proposal, hand
+    // off to the existing proposal flow exactly as before; when it ends
+    // without one (a failure), stay open so the preserved form and the error
+    // are still in front of the user.
+    useEffect(() => {
+      const wasGenerating = wasComposerGeneratingRef.current;
+      wasComposerGeneratingRef.current = isComposerGenerating;
+
+      if (wasGenerating && !isComposerGenerating && composerProposal) {
+        setIsComposerSetupOpen(false);
+      }
+    }, [isComposerGenerating, composerProposal]);
 
     const handleOpenNoteExplorer = () => {
       setIsNoteExplorerOpen(true);
@@ -1200,16 +1217,14 @@ const BuilderPanel = forwardRef(function BuilderPanel({
           options={composerOptions}
           minimumComposerBudget={minimumComposerBudget}
           isGenerating={isComposerGenerating}
+          statusMessage={composerStatusMessage}
           portalRoot={portalRoot}
           assetResolver={assetResolver}
           onSettingChange={onComposerSettingChange}
           onPreferenceToggle={onComposerPreferenceToggle}
           onPreferenceClear={onComposerPreferenceClear}
           onCancel={() => setIsComposerSetupOpen(false)}
-          onGenerate={() => {
-            onComposeMyBox();
-            setIsComposerSetupOpen(false);
-          }}
+          onGenerate={onComposeMyBox}
         />
       )}
       {isNoteExplorerOpen && portalRoot && (
@@ -1220,6 +1235,8 @@ const BuilderPanel = forwardRef(function BuilderPanel({
           selectedPerfumeIds={selectedPerfumeIds}
           isBoxFull={totalSlots >= maxSelectableSlots}
           onAddPerfume={onAddPerfume}
+          onOpenPerfumeDetails={onOpenPerfumeDetails}
+          isDetailOpen={isPerfumeDetailsOpen}
           portalRoot={portalRoot}
           onClose={() => setIsNoteExplorerOpen(false)}
         />
@@ -1293,6 +1310,7 @@ function ComposerSetupModal({
   options,
   minimumComposerBudget,
   isGenerating,
+  statusMessage = "",
   portalRoot,
   assetResolver,
   onSettingChange,
@@ -1316,24 +1334,35 @@ function ComposerSetupModal({
     config: { ...builderConfig, translator },
   });
 
+  // While a proposal is being generated the modal cannot be dismissed (Close,
+  // Cancel, the backdrop and Escape are all inert): the work in flight belongs
+  // to the values currently in the form, and abandoning the modal mid-run
+  // would leave a proposal appearing for a screen the user already left.
+  const requestClose = () => {
+    if (!isGenerating) {
+      onCancel();
+    }
+  };
+
   useEffect(() => {
     function handleKeyDown(event) {
-      if (event.key === "Escape") {
+      if (event.key === "Escape" && !isGenerating) {
         onCancel();
       }
     }
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [onCancel]);
+  }, [onCancel, isGenerating]);
 
   return renderOwnedPortal(
-    <div className="modal-overlay final-summary-overlay" onClick={onCancel}>
+    <div className="modal-overlay final-summary-overlay" onClick={requestClose}>
       <div
         className="final-summary-modal composer-setup-modal"
         role="dialog"
         aria-modal="true"
         aria-labelledby="composer-setup-title"
+        aria-busy={isGenerating}
         onClick={(event) => event.stopPropagation()}
       >
         <div className="modal-header">
@@ -1342,10 +1371,10 @@ function ComposerSetupModal({
             <h3 id="composer-setup-title">{t("composer.setupTitle")}</h3>
           </div>
 
-          <button type="button" onClick={onCancel}>{t("general.close")}</button>
+          <button type="button" onClick={requestClose} disabled={isGenerating}>{t("general.close")}</button>
         </div>
 
-        <div className="composer-setup-body">
+        <div className="composer-setup-body" inert={isGenerating}>
           <p className="composer-setup-intro">
             {t("composer.setupIntro")}
           </p>
@@ -1452,17 +1481,52 @@ function ComposerSetupModal({
           </div>
         </div>
 
+        {isGenerating && (
+          <p className="composer-busy-status" role="status">
+            {t("composer.busy")}
+          </p>
+        )}
+        {statusMessage && !isGenerating && (
+          <p className="composer-busy-status composer-error-status" role="alert">
+            {statusMessage}
+          </p>
+        )}
+
         <div className="review-modal-footer composer-setup-footer">
-          <button type="button" className="secondary" onClick={onCancel}>
+          <button type="button" className="secondary" onClick={requestClose} disabled={isGenerating}>
             {t("general.cancel")}
           </button>
-          <button type="button" onClick={onGenerate} disabled={isBudgetBelowMinimum || isGenerating}>
-            {isGenerating ? t("composer.composing") : t("composer.generateProposal")}
-          </button>
+          <ComposerGenerateButton
+            translator={translator}
+            isGenerating={isGenerating}
+            isDisabled={isBudgetBelowMinimum}
+            onClick={onGenerate}
+          />
         </div>
       </div>
     </div>,
     portalRoot
+  );
+}
+
+// The Generate CTA's own states, kept as a small presentational component so
+// its markup contract (disabled + aria-busy while generating, a spinner that
+// is decorative-only, the loading copy) is directly renderable and testable.
+// Idle styling is untouched -- the loading treatment only adds the spinner.
+export function ComposerGenerateButton({ translator, isGenerating, isDisabled, onClick }) {
+  const { t } = translator;
+
+  return (
+    <button
+      type="button"
+      className={isGenerating ? "is-loading" : undefined}
+      onClick={onClick}
+      disabled={isDisabled || isGenerating}
+      aria-busy={isGenerating}
+    >
+      {isGenerating && <span className="builder-button-spinner" aria-hidden="true" />}
+      {isGenerating ? t("composer.generatingProposal") : t("composer.generateProposal")}
+    </button>
   );
 }
 
@@ -1872,6 +1936,8 @@ function NoteExplorerModal({
   selectedPerfumeIds,
   isBoxFull,
   onAddPerfume,
+  onOpenPerfumeDetails,
+  isDetailOpen = false,
   portalRoot,
   onClose,
 }) {
@@ -1884,16 +1950,20 @@ function NoteExplorerModal({
   const [selectedNoteIds, setSelectedNoteIds] = useState([]);
   const [sortOrder, setSortOrder] = useState("catalog");
 
+  // The fragrance-details modal opens on top of this one and closes on
+  // Escape itself; this modal must not ALSO close from that same keypress,
+  // or the whole exploration (selected notes, search, sort) would be lost
+  // just from dismissing a detail.
   useEffect(() => {
     function handleKeyDown(event) {
-      if (event.key === "Escape") {
+      if (event.key === "Escape" && !isDetailOpen) {
         onClose();
       }
     }
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [onClose]);
+  }, [onClose, isDetailOpen]);
 
   // resolveLabel reuses the exact same translator.label(...) call the
   // master-list button already makes to render each note's name -- one
@@ -1987,6 +2057,17 @@ function NoteExplorerModal({
     selectedNoteIds.length > 1
       ? t("noteExplorer.resultsHeadingMultiple", { notes: selectedNoteLabels.join(" + ") })
       : t("noteExplorer.resultsHeading", { note: selectedNoteLabels[0] || "" });
+
+  // Details opened from here navigate strictly within THIS result set: the
+  // ids of displayedMatches at the moment of the click -- the exact order the
+  // results pane is showing, including the active sort -- are handed to the
+  // existing details modal, which walks them and never re-derives an order.
+  const handleOpenDetails = (perfume) => {
+    onOpenPerfumeDetails?.(
+      perfume.id,
+      displayedMatches.map((match) => match.id)
+    );
+  };
 
   // One handler for every way a note's selection can change. Three cases,
   // checked in order:
@@ -2103,6 +2184,7 @@ function NoteExplorerModal({
                       isAlreadyAdded={selectedPerfumeIds.has(perfume.id)}
                       isBoxFull={isBoxFull}
                       onAddPerfume={onAddPerfume}
+                      onOpenDetails={handleOpenDetails}
                     />
                   ))}
                 </div>
@@ -2232,7 +2314,7 @@ function NoteExplorerRelatedChip({ facet, translator, onSelect }) {
   );
 }
 
-function NoteExplorerResultRow({ perfume, translator, isAlreadyAdded, isBoxFull, onAddPerfume }) {
+function NoteExplorerResultRow({ perfume, translator, isAlreadyAdded, isBoxFull, onAddPerfume, onOpenDetails }) {
   const { t } = translator;
   const addButtonLabel = isAlreadyAdded
     ? t("general.added")
@@ -2240,26 +2322,40 @@ function NoteExplorerResultRow({ perfume, translator, isAlreadyAdded, isBoxFull,
       ? t("general.boxFull")
       : t("general.addToBox");
 
+  // The whole row opens the details (one click handler on the row). Keyboard
+  // access comes from the native <button> holding the row's content: Enter and
+  // Space on it fire an ordinary click that bubbles to the row, so there is no
+  // separate key handling to keep in sync. The add button is a SIBLING of that
+  // trigger, and stops its own click from reaching the row, so adding a
+  // fragrance never also opens its details.
   return (
-    <div className="composer-proposal-item no-alternatives note-explorer-result-item">
+    <div
+      className="composer-proposal-item no-alternatives note-explorer-result-item"
+      onClick={() => onOpenDetails?.(perfume)}
+    >
       <div className="composer-proposal-item-body">
-        <strong>{perfume.name}</strong>
-        <span>
-          {perfume.brand} - {perfume.points} pt
-          {perfume.noteProminenceLevel ? (
-            <>
-              {" - "}
-              <span className="note-explorer-prominence-level">
-                {t(`noteProminenceLevel.${perfume.noteProminenceLevel}`)}
-              </span>
-            </>
-          ) : null}
-        </span>
+        <button type="button" className="note-explorer-result-detail-trigger" aria-haspopup="dialog">
+          <strong>{perfume.name}</strong>
+          <span>
+            {perfume.brand} - {perfume.points} pt
+            {perfume.noteProminenceLevel ? (
+              <>
+                {" - "}
+                <span className="note-explorer-prominence-level">
+                  {t(`noteProminenceLevel.${perfume.noteProminenceLevel}`)}
+                </span>
+              </>
+            ) : null}
+          </span>
+        </button>
       </div>
       <button
         type="button"
         className="composer-proposal-add-button"
-        onClick={() => onAddPerfume(perfume)}
+        onClick={(event) => {
+          event.stopPropagation();
+          onAddPerfume(perfume);
+        }}
         disabled={isAlreadyAdded || isBoxFull}
       >
         {addButtonLabel}

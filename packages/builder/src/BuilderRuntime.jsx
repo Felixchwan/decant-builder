@@ -6,6 +6,12 @@ import BuilderPanel from "./components/BuilderPanel";
 import MetadataPreview from "./components/MetadataPreview";
 import { buildScentDna } from "./utils/buildScentDna";
 import { buildCatalogView } from "./builder/internal/catalog/buildCatalogView.js";
+import {
+  getAdjacentPerfume,
+  getDetailNavigation,
+  resolveDetailNavigationPerfumes,
+} from "./builder/internal/catalog/detailNavigation.js";
+import { createGenerationRunner } from "./builder/internal/scheduling/generationRunner.js";
 import { buildCollectionSummary } from "./builder/internal/intelligence/buildCollectionSummary.js";
 import { deriveDefaultComposerBudget } from "./builder/internal/composer/deriveDefaultComposerBudget.js";
 import {
@@ -38,6 +44,7 @@ import {
   hasCustomBuilderTheme,
 } from "./builder/theme/builderTheme.js";
 import { useBuilderPortalRoot } from "./builder/internal/portal/useBuilderPortalRoot.js";
+import { renderOwnedPortal } from "./builder/internal/portal/renderOwnedPortal.jsx";
 import {
   addSelectedPerfume,
   applyInitialFragranceIntent,
@@ -239,10 +246,16 @@ function App({
       : null
   );
   const [detailPerfume, setDetailPerfume] = useState(null);
+  // Ordered fragrance ids the open details should navigate within, when the
+  // details were opened from a scoped collection (a Note Explorer result set).
+  // null = the default scope, the catalog's own visible list.
+  const [detailScopedPerfumeIds, setDetailScopedPerfumeIds] = useState(null);
   const intentRecommendationsRef = useRef(null);
   const fullCatalogRef = useRef(null);
-  const composerGenerationTimeoutRef = useRef(null);
-  const composerGenerationIdRef = useRef(0);
+  const composerGenerationRunnerRef = useRef(null);
+  if (composerGenerationRunnerRef.current === null) {
+    composerGenerationRunnerRef.current = createGenerationRunner();
+  }
   const hasTrackedAppLoadRef = useRef(false);
   const hasTrackedCuratorBonusUnlockedRef = useRef(false);
   const pendingPerfumeSourceRef = useRef(pendingPerfume ? "initial-intent" : "manual");
@@ -279,21 +292,23 @@ function App({
   const filterOptions = catalogView.filterOptions;
   const visiblePerfumes = catalogView.visiblePerfumes;
 
-  const detailPerfumeIndex = detailPerfume
-    ? visiblePerfumes.findIndex((perfume) => perfume.id === detailPerfume.id)
-    : -1;
-  const canNavigateDetails = visiblePerfumes.length > 1;
-  const previousDetailPerfume =
-    detailPerfumeIndex >= 0 && visiblePerfumes.length > 0
-      ? visiblePerfumes[
-          (detailPerfumeIndex - 1 + visiblePerfumes.length) %
-            visiblePerfumes.length
-        ]
-      : null;
-  const nextDetailPerfume =
-    detailPerfumeIndex >= 0 && visiblePerfumes.length > 0
-      ? visiblePerfumes[(detailPerfumeIndex + 1) % visiblePerfumes.length]
-      : null;
+  // The one collection previous/next walk: the scoped set the details were
+  // opened from (already in the exact order it was shown), else the catalog's
+  // visible list. The details modal never recomputes an order of its own.
+  const detailNavigationPerfumes = useMemo(
+    () =>
+      resolveDetailNavigationPerfumes({
+        scopedPerfumeIds: detailScopedPerfumeIds,
+        catalog: perfumes,
+        fallbackPerfumes: visiblePerfumes,
+      }),
+    [detailScopedPerfumeIds, perfumes, visiblePerfumes]
+  );
+  const {
+    canNavigate: canNavigateDetails,
+    previous: previousDetailPerfume,
+    next: nextDetailPerfume,
+  } = getDetailNavigation(detailPerfume, detailNavigationPerfumes);
 
 const scentDna = useMemo(() => {
   return buildScentDna(selectedPerfumes, boxSummary);
@@ -463,11 +478,9 @@ const isComposerProposalStale = isComposerBoxProposalStale(
   }, [restoreMessage]);
 
   useEffect(() => {
-    return () => {
-      if (composerGenerationTimeoutRef.current) {
-        window.clearTimeout(composerGenerationTimeoutRef.current);
-      }
-    };
+    const runner = composerGenerationRunnerRef.current;
+
+    return () => runner.cancel();
   }, []);
 
   useEffect(() => {
@@ -567,14 +580,38 @@ const isComposerProposalStale = isComposerBoxProposalStale(
     });
   }
 
-  function openPerfumeDetails(perfume, source) {
+  // scopedPerfumeIds, when given, is a snapshot (taken at the moment of the
+  // click) of the ordered ids the details should navigate within -- e.g. the
+  // Note Explorer's currently displayed results. Omitted, navigation is over
+  // the catalog's visible list exactly as before.
+  function openPerfumeDetails(perfume, source, scopedPerfumeIds = null) {
+    const navigationPerfumes = resolveDetailNavigationPerfumes({
+      scopedPerfumeIds,
+      catalog: perfumes,
+      fallbackPerfumes: visiblePerfumes,
+    });
+
+    setDetailScopedPerfumeIds(Array.isArray(scopedPerfumeIds) ? [...scopedPerfumeIds] : null);
     setDetailPerfume(perfume);
     analytics.track(ANALYTICS_EVENTS.FRAGRANCE_DETAILS_OPENED, {
       perfumeId: perfume.id,
-      visibleIndex: visiblePerfumes.findIndex((item) => item.id === perfume.id),
-      visibleCount: visiblePerfumes.length,
+      visibleIndex: navigationPerfumes.findIndex((item) => item.id === perfume.id),
+      visibleCount: navigationPerfumes.length,
       source,
     });
+  }
+
+  const closePerfumeDetails = useCallback(() => {
+    setDetailPerfume(null);
+    setDetailScopedPerfumeIds(null);
+  }, []);
+
+  function openNoteExplorerPerfumeDetails(perfumeId, orderedPerfumeIds) {
+    const perfume = perfumes.find((item) => item.id === perfumeId);
+
+    if (perfume) {
+      openPerfumeDetails(perfume, "note_explorer", orderedPerfumeIds);
+    }
   }
 
   function handleComposerSettingChange(field, value) {
@@ -642,31 +679,36 @@ const isComposerProposalStale = isComposerBoxProposalStale(
   }
 
   function handleComposeMyBox() {
-    if (
-      isComposerGenerating ||
-      isComposerBudgetBelowMinimum(composerBudget, minimumComposerBudget)
-    ) {
+    if (isComposerBudgetBelowMinimum(composerBudget, minimumComposerBudget)) {
       return;
     }
 
-    const generationId = composerGenerationIdRef.current + 1;
     const generationStartedAt = nowMs();
-    composerGenerationIdRef.current = generationId;
-    setComposerStatusMessage("");
-    setIsComposerGenerating(true);
-    analytics.track(ANALYTICS_EVENTS.COMPOSER_GENERATION_STARTED, {
-      requestedBudgetPoints: composerBudget,
-      requestedStyle: composerSettings.collectionStyle,
-      selectedSeasons: composerSettings.seasons,
-      selectedOccasions: composerSettings.occasions,
-      selectedVibes: composerSettings.vibes,
-      slotCountBefore: selectedPerfumes.length,
-      totalPointsBefore: totalPoints,
-      source: "composer",
-    });
-    composerGenerationTimeoutRef.current = window.setTimeout(() => {
-      try {
-        const nextProposal = buildComposerBoxProposal({
+
+    // buildComposerBoxProposal is synchronous, CPU-bound work. The runner
+    // marks the generation as started (onStart, synchronously, so the loading
+    // state is committed) BEFORE any of it runs, then defers the work until
+    // after that loading state has actually been painted (see
+    // scheduleAfterPaint) -- not a timer for appearance. It also refuses a
+    // second run while one is in flight, so a double-click can never start a
+    // duplicate generation, and drops the result of a cancelled run.
+    composerGenerationRunnerRef.current.run({
+      onStart: () => {
+        setComposerStatusMessage("");
+        setIsComposerGenerating(true);
+        analytics.track(ANALYTICS_EVENTS.COMPOSER_GENERATION_STARTED, {
+          requestedBudgetPoints: composerBudget,
+          requestedStyle: composerSettings.collectionStyle,
+          selectedSeasons: composerSettings.seasons,
+          selectedOccasions: composerSettings.occasions,
+          selectedVibes: composerSettings.vibes,
+          slotCountBefore: selectedPerfumes.length,
+          totalPointsBefore: totalPoints,
+          source: "composer",
+        });
+      },
+      work: () =>
+        buildComposerBoxProposal({
           selectedPerfumes,
           excludedPerfumeIds: [],
           strategy: composerSettings.strategy,
@@ -682,12 +724,8 @@ const isComposerProposalStale = isComposerBoxProposalStale(
           notes,
           config: builderConfig,
           minimumPoints: composerMinimumPoints,
-        });
-
-        if (composerGenerationIdRef.current !== generationId) {
-          return;
-        }
-
+        }),
+      onSuccess: (nextProposal) => {
         setComposerProposal(nextProposal);
         analytics.track(ANALYTICS_EVENTS.COMPOSER_PROPOSAL_GENERATED, {
           requestedBudgetPoints: composerBudget,
@@ -703,11 +741,8 @@ const isComposerProposalStale = isComposerBoxProposalStale(
           durationMs: Math.round(nowMs() - generationStartedAt),
           source: "composer",
         });
-      } catch (error) {
-        if (composerGenerationIdRef.current !== generationId) {
-          return;
-        }
-
+      },
+      onFailure: (error) => {
         if (isDevelopment) {
           console.error(error);
         }
@@ -719,13 +754,9 @@ const isComposerProposalStale = isComposerBoxProposalStale(
           durationMs: Math.round(nowMs() - generationStartedAt),
           source: "composer",
         });
-      } finally {
-        if (composerGenerationIdRef.current === generationId) {
-          setIsComposerGenerating(false);
-          composerGenerationTimeoutRef.current = null;
-        }
-      }
-    }, 0);
+      },
+      onSettled: () => setIsComposerGenerating(false),
+    });
   }
 
   function handleCancelComposerProposal() {
@@ -857,9 +888,9 @@ const confirmAddPerfume = () => {
 
   const navigateDetailPerfume = useCallback((direction) => {
     setDetailPerfume((currentPerfume) =>
-      getAdjacentVisiblePerfume(currentPerfume, visiblePerfumes, direction)
+      getAdjacentPerfume(currentPerfume, detailNavigationPerfumes, direction)
     );
-  }, [visiblePerfumes]);
+  }, [detailNavigationPerfumes]);
 
   useEffect(() => {
     if (!detailPerfume) {
@@ -868,7 +899,7 @@ const confirmAddPerfume = () => {
 
     function handleKeyDown(event) {
       if (event.key === "Escape") {
-        setDetailPerfume(null);
+        closePerfumeDetails();
         return;
       }
 
@@ -886,7 +917,7 @@ const confirmAddPerfume = () => {
     window.addEventListener("keydown", handleKeyDown);
 
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [detailPerfume, navigateDetailPerfume]);
+  }, [detailPerfume, navigateDetailPerfume, closePerfumeDetails]);
 
   useEffect(() => {
     if (!pendingPerfume) {
@@ -938,12 +969,7 @@ const confirmAddPerfume = () => {
       return;
     }
 
-    if (composerGenerationTimeoutRef.current) {
-      window.clearTimeout(composerGenerationTimeoutRef.current);
-      composerGenerationTimeoutRef.current = null;
-    }
-
-    composerGenerationIdRef.current += 1;
+    composerGenerationRunnerRef.current.cancel();
     setIsComposerGenerating(false);
     setComposerProposal(null);
     setComposerStatusMessage("");
@@ -1012,6 +1038,8 @@ const confirmAddPerfume = () => {
       scentDna={scentDna}
       isBoxReady={isBoxReady}
       onAddPerfume={addPerfume}
+      onOpenPerfumeDetails={openNoteExplorerPerfumeDetails}
+      isPerfumeDetailsOpen={Boolean(detailPerfume)}
       composerSettings={composerSettings}
       composerOptions={filterOptions}
       minimumComposerBudget={minimumComposerBudget}
@@ -1252,7 +1280,7 @@ const confirmAddPerfume = () => {
         previousPerfume={previousDetailPerfume}
         nextPerfume={nextDetailPerfume}
         canNavigate={canNavigateDetails}
-        onClose={() => setDetailPerfume(null)}
+        onClose={closePerfumeDetails}
       />
     )}
     {pendingPerfume && (
@@ -1587,7 +1615,12 @@ function PerfumeDetailsModal({
     onClose();
   }
 
-  return (
+  // Rendered into the same owned portal root as the builder's other modals
+  // (which carries the same theme class/variables), not inline in the app
+  // tree: opened from a portalled modal such as the Note Explorer, an inline
+  // overlay would paint BENEATH it at the same z-index, since the portal root
+  // sits after the app root in the document.
+  return renderOwnedPortal(
     <div className="modal-overlay" onClick={handleClose}>
       <div
         className={`perfume-details-modal ${
@@ -1764,7 +1797,8 @@ function PerfumeDetailsModal({
         </section>
 
       </div>
-    </div>
+    </div>,
+    portalRoot
   );
 }
 
@@ -1868,28 +1902,6 @@ function DetailNotePill({ note, noteId, translator, portalRoot }) {
       </span>
     </MetadataPreview>
   );
-}
-
-function getAdjacentVisiblePerfume(currentPerfume, visiblePerfumes, direction) {
-  if (!currentPerfume || visiblePerfumes.length === 0) {
-    return currentPerfume;
-  }
-
-  const currentIndex = visiblePerfumes.findIndex(
-    (perfume) => perfume.id === currentPerfume.id
-  );
-
-  if (currentIndex === -1) {
-    return direction > 0
-      ? visiblePerfumes[0]
-      : visiblePerfumes[visiblePerfumes.length - 1];
-  }
-
-  const nextIndex =
-    (currentIndex + direction + visiblePerfumes.length) %
-    visiblePerfumes.length;
-
-  return visiblePerfumes[nextIndex];
 }
 
 function formatLabel(value) {

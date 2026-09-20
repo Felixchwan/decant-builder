@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest";
 const builderCss = readFileSync(new URL("../../styles.css", import.meta.url), "utf8").replace(/\r\n/g, "\n");
 const originalRulesStart = builderCss.indexOf(":where(.builder-scope) .app {");
 const transformedOriginalRules = builderCss.slice(originalRulesStart);
-const BASELINE_SHA256 = "10885736eb3e8287c56761b58c2afcd809011ac33b75c4cc803760e2c0413657";
+const BASELINE_SHA256 = "432022301d7e8f63f2ce9f92f292023113a6d403cd948e48f20db82bdc28f0f8";
 const unitDefinitions = [...builderCss.matchAll(/(--builder-unit-(\d+)):\s*([\d.]+)px;/g)];
 const unitReferences = [...builderCss.matchAll(/var\((--builder-unit-(\d+))\)/g)];
 
@@ -69,8 +69,8 @@ describe("Builder stylesheet namespace", () => {
       .replace(/var\(--builder-unit-(\d+)\)/g, (_, digits) => `${remMagnitude(digits)}rem`);
     expect(createHash("sha256").update(recovered).digest("hex")).toBe(BASELINE_SHA256);
     expect((builderCss.match(/!important/g) || [])).toHaveLength(17);
-    expect((builderCss.match(/color-mix\(/g) || [])).toHaveLength(179);
-    expect((builderCss.match(/var\([^,()]+,/g) || [])).toHaveLength(253);
+    expect((builderCss.match(/color-mix\(/g) || [])).toHaveLength(182);
+    expect((builderCss.match(/var\([^,()]+,/g) || [])).toHaveLength(256);
   });
 
   it("defines a complete fixed-length token set for every former rem magnitude", () => {
@@ -99,7 +99,7 @@ describe("Builder stylesheet namespace", () => {
 
   it("binds every ordinary selector to the neutral scope exactly once", () => {
     const selectors = collectRuleSelectors(builderCss);
-    expect(selectors).toHaveLength(1270);
+    expect(selectors).toHaveLength(1278);
     selectors.forEach((selector) => {
       expect(selector.startsWith(":where(.builder-scope)")).toBe(true);
       expect(selector.match(/:where\(\.builder-scope\)/g)).toHaveLength(1);
@@ -116,7 +116,7 @@ describe("Builder stylesheet namespace", () => {
   });
 
   it("keeps keyframe steps unprefixed and all named keyframes unchanged", () => {
-    expect([...builderCss.matchAll(/@keyframes\s+([\w-]+)/g)].map((match) => match[1])).toHaveLength(14);
+    expect([...builderCss.matchAll(/@keyframes\s+([\w-]+)/g)].map((match) => match[1])).toHaveLength(15);
     expect(builderCss).not.toMatch(/:where\(\.builder-scope\)\s+(?:from|to|\d+(?:\.\d+)?%)(?:\s|,|\{)/);
   });
 });

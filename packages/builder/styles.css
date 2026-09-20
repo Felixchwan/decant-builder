@@ -6095,6 +6095,70 @@
   font-size: var(--builder-unit-078);
 }
 
+:where(.builder-scope) .note-explorer-result-item {
+  cursor: pointer;
+  transition:
+    border-color 160ms ease,
+    background-color 160ms ease;
+}
+
+:where(.builder-scope) .note-explorer-result-item:hover {
+  border-color: color-mix(in srgb, var(--builder-color-accent, #4ade80) 34%, transparent);
+  background: color-mix(in srgb, var(--builder-color-accent, #4ade80) 6%, rgba(15, 23, 42, 0.42));
+}
+
+:where(.builder-scope) .note-explorer-result-detail-trigger {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+:where(.builder-scope) .note-explorer-result-detail-trigger:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--builder-color-accent, #4ade80) 70%, transparent);
+  outline-offset: 4px;
+  border-radius: 6px;
+}
+
+:where(.builder-scope) .builder-button-spinner {
+  display: inline-block;
+  flex: 0 0 auto;
+  width: 14px;
+  height: 14px;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: builder-button-spin 720ms linear infinite;
+}
+
+:where(.builder-scope) .review-modal-footer button.is-loading {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+:where(.builder-scope) .composer-setup-body[inert] {
+  opacity: 0.55;
+}
+
+@keyframes builder-button-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :where(.builder-scope) .builder-button-spinner {
+    animation-duration: 2400ms;
+  }
+}
+
 :where(.builder-scope) .review-finalize-status {
   margin: 10px 0 0;
   color: var(--builder-color-accent, #86efac);

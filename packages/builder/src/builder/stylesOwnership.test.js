@@ -21,6 +21,7 @@ const expectedKeyframes = [
   "nextSlotPlusBreath",
   "perfume-details-hint-fade",
   "metadata-preview-in",
+  "builder-button-spin",
   "collectionDnaChipSheen",
   "dnaAccordIn",
   "recommendationLaneEmphasis",

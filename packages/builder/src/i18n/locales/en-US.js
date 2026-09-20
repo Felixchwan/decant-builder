@@ -106,6 +106,7 @@ export const enUS = {
   "composer.minimumBudget": "Minimum budget is ${amount}.",
   "composer.collectionStyle": "Collection Style",
   "composer.generateProposal": "Generate Proposal",
+  "composer.generatingProposal": "Generating proposal…",
   "composer.season": "Season",
   "composer.occasion": "Occasion",
   "composer.vibe": "Vibe",

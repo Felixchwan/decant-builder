@@ -160,7 +160,7 @@ describe("Composer proposal staleness: individual consumption vs. genuine invali
 
   it("keeps handleComposeMyBox generating new proposals from the raw, unfiltered selectedPerfumes -- proposal generation/scoring itself is untouched", () => {
     const composeStart = runtimeSource.indexOf("function handleComposeMyBox()");
-    const composeSource = runtimeSource.slice(composeStart, composeStart + 1000);
+    const composeSource = runtimeSource.slice(composeStart, composeStart + 4000);
     expect(composeSource).toContain("buildComposerBoxProposal({\n          selectedPerfumes,");
     expect(composeSource).not.toContain("selectedPerfumesForComposerStaleCheck");
   });
@@ -185,5 +185,80 @@ describe("PerfumeDetailsModal note pills -- localized through the shared taxonom
     const notesSectionIndex = runtimeSource.indexOf('<h4>{t("details.notes")}</h4>');
     const notesSectionSource = runtimeSource.slice(notesSectionIndex, notesSectionIndex + 1300);
     expect((notesSectionSource.match(/translator=\{translator\}/g) || [])).toHaveLength(4);
+  });
+});
+
+describe("Fragrance details: result-scoped navigation wiring", () => {
+  it("resolves navigation from the scoped id snapshot, falling back to the catalog's visible list", () => {
+    const memoStart = runtimeSource.indexOf("const detailNavigationPerfumes = useMemo(");
+    const memo = runtimeSource.slice(memoStart, memoStart + 400);
+    expect(memo).toContain("resolveDetailNavigationPerfumes(");
+    expect(memo).toContain("scopedPerfumeIds: detailScopedPerfumeIds");
+    expect(memo).toContain("fallbackPerfumes: visiblePerfumes");
+  });
+
+  it("navigates with the modal's existing helpers over that one collection, never recomputing an order", () => {
+    expect(runtimeSource).toContain("getAdjacentPerfume(currentPerfume, detailNavigationPerfumes, direction)");
+    expect(runtimeSource).toContain("getDetailNavigation(detailPerfume, detailNavigationPerfumes)");
+  });
+
+  it("stores a copy of the ordered ids at open time (a snapshot), and clears the scope with the details", () => {
+    expect(runtimeSource).toContain("setDetailScopedPerfumeIds(Array.isArray(scopedPerfumeIds) ? [...scopedPerfumeIds] : null);");
+    const closeStart = runtimeSource.indexOf("const closePerfumeDetails = useCallback(");
+    const close = runtimeSource.slice(closeStart, closeStart + 200);
+    expect(close).toContain("setDetailPerfume(null);");
+    expect(close).toContain("setDetailScopedPerfumeIds(null);");
+  });
+
+  it("opens Note Explorer details through the same openPerfumeDetails, tagged with its own analytics source", () => {
+    expect(runtimeSource).toContain('openPerfumeDetails(perfume, "note_explorer", orderedPerfumeIds);');
+    expect(runtimeSource).toContain("onOpenPerfumeDetails={openNoteExplorerPerfumeDetails}");
+  });
+
+  it("renders the details in the owned portal root so they stack above the Note Explorer modal", () => {
+    const modalStart = runtimeSource.indexOf("function PerfumeDetailsModal(");
+    expect(modalStart).toBeGreaterThan(-1);
+    expect(runtimeSource.slice(modalStart)).toContain("return renderOwnedPortal(");
+  });
+});
+
+describe("Composer proposal generation lifecycle wiring", () => {
+  const start = runtimeSource.indexOf("function handleComposeMyBox()");
+  const end = runtimeSource.indexOf("function handleCancelComposerProposal()");
+  const handlerSource = runtimeSource.slice(start, end);
+
+  it("runs the synchronous generation through the one generation runner, not directly in the click handler", () => {
+    expect(runtimeSource).toContain("composerGenerationRunnerRef.current = createGenerationRunner();");
+    expect(handlerSource).toContain("composerGenerationRunnerRef.current.run({");
+    const workIndex = handlerSource.indexOf("work: () =>");
+    expect(handlerSource.slice(workIndex)).toContain("buildComposerBoxProposal({");
+    expect(handlerSource.slice(0, workIndex)).not.toContain("buildComposerBoxProposal(");
+  });
+
+  it("enters the loading state in onStart (before the work) and leaves it only in onSettled", () => {
+    const onStart = handlerSource.indexOf("onStart:");
+    const work = handlerSource.indexOf("work:");
+    expect(onStart).toBeGreaterThan(-1);
+    expect(onStart).toBeLessThan(work);
+    expect(handlerSource.slice(onStart, work)).toContain("setIsComposerGenerating(true);");
+    expect(handlerSource.match(/setIsComposerGenerating\(/g)).toHaveLength(2);
+    expect(handlerSource).toContain("onSettled: () => setIsComposerGenerating(false),");
+  });
+
+  it("uses no fixed timer to make the loading state appear", () => {
+    expect(handlerSource).not.toMatch(/setTimeout|requestAnimationFrame/);
+  });
+
+  it("commits success and failure through the existing proposal state and recoverable-error path", () => {
+    expect(handlerSource).toContain("onSuccess: (nextProposal) => {\n        setComposerProposal(nextProposal);");
+    expect(handlerSource).toContain('setComposerStatusMessage(t("app.recoverableActionError"));');
+  });
+
+  it("does not touch the composer settings (preferences/budget/strategy) during a run", () => {
+    expect(handlerSource).not.toContain("setComposerSettings");
+  });
+
+  it("cancels any in-flight generation on unmount and on box clear", () => {
+    expect(runtimeSource.match(/composerGenerationRunnerRef\.current\.cancel\(\)|runner\.cancel\(\)/g).length).toBeGreaterThanOrEqual(2);
   });
 });

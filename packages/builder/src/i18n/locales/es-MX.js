@@ -106,6 +106,7 @@ export const esMX = {
   "composer.minimumBudget": "El presupuesto mínimo es ${amount}.",
   "composer.collectionStyle": "Estilo de colección",
   "composer.generateProposal": "Generar propuesta",
+  "composer.generatingProposal": "Generando propuesta…",
   "composer.season": "Temporada",
   "composer.occasion": "Ocasión",
   "composer.vibe": "Vibe",

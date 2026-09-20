@@ -18,7 +18,7 @@ import { fragrances as perfumes, notes } from "@discovery-box/catalog";
 import { createTranslator } from "../i18n/createTranslator.js";
 import { esMX } from "../i18n/locales/es-MX.js";
 import { buildScentDna } from "../utils/buildScentDna.js";
-import BuilderPanel, { ScentLibraryContent } from "./BuilderPanel.jsx";
+import BuilderPanel, { ComposerGenerateButton, ScentLibraryContent } from "./BuilderPanel.jsx";
 
 const originalWindow = globalThis.window;
 const appCss = readFileSync(new URL("../../styles.css", import.meta.url), "utf8");
@@ -1344,8 +1344,8 @@ describe("Composer Phase 2A: Note Explorer", () => {
 
   it("calls onAddPerfume with the matched perfume and disables only for already-added/box-full, matching the Composer Phase 1 Add-button contract exactly", () => {
     const rowStart = normalizedPanelSource.indexOf("function NoteExplorerResultRow(");
-    const rowSource = normalizedPanelSource.slice(rowStart, rowStart + 1200);
-    expect(rowSource).toContain("onClick={() => onAddPerfume(perfume)}");
+    const rowSource = normalizedPanelSource.slice(rowStart, rowStart + 2600);
+    expect(rowSource).toContain("onAddPerfume(perfume);");
     expect(rowSource).toContain("disabled={isAlreadyAdded || isBoxFull}");
     expect(rowSource).toContain('t("general.added")');
     expect(rowSource).toContain('t("general.boxFull")');
@@ -2033,5 +2033,146 @@ describe("PerfumeCard title/brand alignment", () => {
 
   it("centers the brand name alongside it, so the two lines read as one coherent centered block", () => {
     expect(appCss).toMatch(/:where\(\.builder-scope\) \.perfume-brand-name \{[^}]*text-align:\s*center;/s);
+  });
+});
+
+// ComposerGenerateButton is a plain presentational component, so its markup
+// contract is rendered for real. ComposerSetupModal / NoteExplorerModal mount
+// through createPortal (no server-render representation), so their wiring is
+// pinned as source contracts, the established pattern for those modals above.
+describe("Composer proposal loading state: Generate button", () => {
+  const translator = createTranslator("es-MX");
+  const render = (props) =>
+    renderToStaticMarkup(<ComposerGenerateButton translator={translator} onClick={() => {}} {...props} />);
+
+  it("idle: enabled, not busy, idle copy, no spinner", () => {
+    const markup = render({ isGenerating: false, isDisabled: false });
+    expect(markup).toContain("Generar propuesta");
+    expect(markup).toContain('aria-busy="false"');
+    expect(markup).not.toContain("disabled");
+    expect(markup).not.toContain("builder-button-spinner");
+    expect(markup).not.toContain("is-loading");
+  });
+
+  it("generating: disabled, aria-busy, loading copy and a decorative spinner", () => {
+    const markup = render({ isGenerating: true, isDisabled: false });
+    expect(markup).toContain("Generando propuesta…");
+    expect(markup).not.toContain("Generar propuesta<");
+    expect(markup).toContain('aria-busy="true"');
+    expect(markup).toContain("disabled");
+    expect(markup).toContain('class="is-loading"');
+    expect(markup).toMatch(/<span class="builder-button-spinner" aria-hidden="true"><\/span>/);
+  });
+
+  it("stays disabled for the below-minimum-budget case without claiming to be busy", () => {
+    const markup = render({ isGenerating: false, isDisabled: true });
+    expect(markup).toContain("disabled");
+    expect(markup).toContain('aria-busy="false"');
+    expect(markup).toContain("Generar propuesta");
+  });
+});
+
+describe("Composer proposal loading state: setup modal wiring", () => {
+  const modalStart = normalizedPanelSource.indexOf("function ComposerSetupModal(");
+  const modalEnd = normalizedPanelSource.indexOf("export function ComposerGenerateButton(");
+  const modalSource = normalizedPanelSource.slice(modalStart, modalEnd);
+  const panelStart = normalizedPanelSource.indexOf("<ComposerSetupModal");
+  const callSource = normalizedPanelSource.slice(panelStart, panelStart + 1200);
+
+  it("keeps the setup modal open while generating: onGenerate is passed straight through, not wrapped in a close", () => {
+    expect(callSource).toContain("onGenerate={onComposeMyBox}");
+    expect(callSource).not.toMatch(/onGenerate=\{\(\) => \{[^}]*setIsComposerSetupOpen\(false\)/s);
+  });
+
+  it("feeds the modal the real generation flag and status message from the runtime", () => {
+    expect(callSource).toContain("isGenerating={isComposerGenerating}");
+    expect(callSource).toContain("statusMessage={composerStatusMessage}");
+  });
+
+  it("closes the setup modal only when a generation that was running ends WITH a proposal, so a failure leaves the form and error in place", () => {
+    expect(normalizedPanelSource).toContain("if (wasGenerating && !isComposerGenerating && composerProposal) {");
+    expect(normalizedPanelSource).toContain("setIsComposerSetupOpen(false);");
+  });
+
+  it("marks the dialog busy and locks the form body with inert while generating, without unmounting it (preferences/budget stay put)", () => {
+    expect(modalSource).toContain("aria-busy={isGenerating}");
+    expect(modalSource).toContain('<div className="composer-setup-body" inert={isGenerating}>');
+  });
+
+  it("makes Close, Cancel, the backdrop and Escape inert during generation via one guard", () => {
+    expect(modalSource).toContain("if (!isGenerating) {\n      onCancel();");
+    expect(modalSource).toContain("onClick={requestClose}");
+    expect(modalSource).toContain('<button type="button" onClick={requestClose} disabled={isGenerating}>');
+    expect(modalSource).toContain('className="secondary" onClick={requestClose} disabled={isGenerating}');
+    expect(modalSource).toContain('event.key === "Escape" && !isGenerating');
+  });
+
+  it("announces progress with a status region and shows a failure as an alert only once generation has ended", () => {
+    expect(modalSource).toMatch(/\{isGenerating && \(\s*<p className="composer-busy-status" role="status">/);
+    expect(modalSource).toMatch(
+      /\{statusMessage && !isGenerating && \(\s*<p className="composer-busy-status composer-error-status" role="alert">/
+    );
+  });
+
+  it("renders the Generate CTA through ComposerGenerateButton with the real generating flag", () => {
+    expect(modalSource).toContain("<ComposerGenerateButton");
+    expect(modalSource).toContain("isGenerating={isGenerating}");
+    expect(modalSource).toContain("isDisabled={isBudgetBelowMinimum}");
+    expect(modalSource).toContain("onClick={onGenerate}");
+  });
+});
+
+describe("Note Explorer result -> fragrance details wiring", () => {
+  const modalStart = normalizedPanelSource.indexOf("function NoteExplorerModal(");
+  const modalEnd = normalizedPanelSource.indexOf("function DiscoveryBoxCoachmark(");
+  const explorerSource = normalizedPanelSource.slice(modalStart, modalEnd);
+  const rowStart = explorerSource.indexOf("function NoteExplorerResultRow(");
+  const rowSource = explorerSource.slice(rowStart);
+
+  it("reuses the existing details modal: BuilderPanel only forwards an open callback and the details-open flag", () => {
+    const callStart = normalizedPanelSource.indexOf("<NoteExplorerModal");
+    const callSource = normalizedPanelSource.slice(callStart, callStart + 900);
+    expect(callSource).toContain("onOpenPerfumeDetails={onOpenPerfumeDetails}");
+    expect(callSource).toContain("isDetailOpen={isPerfumeDetailsOpen}");
+    expect(normalizedPanelSource).not.toMatch(/function NoteExplorerDetail/);
+  });
+
+  it("hands over the ids of displayedMatches -- the exact order shown, including the active sort -- and never recomputes an order", () => {
+    expect(explorerSource).toContain("displayedMatches.map((match) => match.id)");
+    const handlerStart = explorerSource.indexOf("const handleOpenDetails");
+    const handler = explorerSource.slice(handlerStart, handlerStart + 200);
+    expect(handler).not.toContain("sortNoteExplorerMatchesByProminence");
+    expect(handler).not.toContain(".sort(");
+  });
+
+  it("renders each result via displayedMatches and passes the shared open handler", () => {
+    expect(explorerSource).toContain("{displayedMatches.map((perfume) => (");
+    expect(explorerSource).toContain("onOpenDetails={handleOpenDetails}");
+  });
+
+  it("opens details from a row-level click, with a native button for keyboard access (Enter/Space fire click)", () => {
+    expect(rowSource).toContain("onClick={() => onOpenDetails?.(perfume)}");
+    expect(rowSource).toContain(
+      '<button type="button" className="note-explorer-result-detail-trigger" aria-haspopup="dialog">'
+    );
+    expect(rowSource).not.toContain("onKeyDown");
+    expect(rowSource).not.toContain("tabIndex");
+  });
+
+  it("keeps Add to box independent: a sibling button that stops propagation before adding, with no DOM-target checks", () => {
+    expect(rowSource).toContain("event.stopPropagation();\n          onAddPerfume(perfume);");
+    expect(rowSource).not.toMatch(/event\.target|closest\(|contains\(/);
+    const triggerEnd = rowSource.indexOf("</button>");
+    expect(rowSource.slice(triggerEnd)).toContain('className="composer-proposal-add-button"');
+  });
+
+  it("suppresses the Explorer's own Escape while details are open, so Escape closes only the details on top", () => {
+    expect(explorerSource).toContain('event.key === "Escape" && !isDetailOpen');
+  });
+
+  it("keeps Explorer state in place under the details: opening details touches none of the Explorer's state", () => {
+    const handlerStart = explorerSource.indexOf("const handleOpenDetails");
+    const handler = explorerSource.slice(handlerStart, handlerStart + 200);
+    expect(handler).not.toMatch(/setSelectedNoteIds|setSortOrder|setSearch|onClose/);
   });
 });
