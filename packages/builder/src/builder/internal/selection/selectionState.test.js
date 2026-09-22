@@ -433,3 +433,59 @@ describe("selectionState", () => {
     expect(getSelectedPerfumeIds(overflowAttempt)).toEqual([2, 1, 4, 5]);
   });
 });
+
+// The rare-selection confirmation's confirmAddPerfume (BuilderRuntime.jsx)
+// is a thin, non-functional-update wrapper around exactly these two
+// functions: it reads `selectedPerfumes` and `pendingPerfume` from its
+// render closure, computes addSelectedPerfume(...) once, and commits it.
+// These tests model that call shape directly (not React state) to prove the
+// rare fragrance is added exactly once even under a same-closure repeat --
+// e.g. two confirm interactions/events resolving before either commit is
+// observed, both reading the same pre-add `selectedPerfumes`.
+describe("Rare-selection confirm flow: exactly-once add via addSelectedPerfume", () => {
+  it("adds the rare fragrance once for a single confirm", () => {
+    const squid = perfume(500, { name: "Squid", warningMessage: "Proceed with caution." });
+    const before = freezeSelection([perfume(1), perfume(2)]);
+
+    const after = addSelectedPerfume({ selectedPerfumes: before, perfume: squid, maxSelectableSlots: 14 });
+
+    expect(ids(after)).toEqual([1, 2, 500]);
+    expect(ids(after).filter((id) => id === 500)).toHaveLength(1);
+  });
+
+  it("two confirms computed from the SAME stale pre-add selection (a same-closure repeat) still yield only one instance of the fragrance", () => {
+    const squid = perfume(500, { name: "Squid", warningMessage: "Proceed with caution." });
+    const staleSelection = freezeSelection([perfume(1)]);
+
+    // Both "confirms" read the identical stale selectedPerfumes -- exactly
+    // what happens if confirmAddPerfume's closure is invoked twice before a
+    // re-render lets either commit land, since it is not a functional
+    // setState update.
+    const firstResult = addSelectedPerfume({ selectedPerfumes: staleSelection, perfume: squid, maxSelectableSlots: 14 });
+    const secondResult = addSelectedPerfume({ selectedPerfumes: staleSelection, perfume: squid, maxSelectableSlots: 14 });
+
+    expect(ids(firstResult)).toEqual([1, 500]);
+    expect(ids(secondResult)).toEqual([1, 500]);
+    // Whichever commit "wins" (React applies the last plain setState value,
+    // not an accumulation of both), the fragrance appears exactly once.
+    expect(ids(secondResult).filter((id) => id === 500)).toHaveLength(1);
+  });
+
+  it("a genuine second confirm, run against the already-updated selection (the real post-render case), refuses the duplicate outright", () => {
+    const squid = perfume(500, { name: "Squid", warningMessage: "Proceed with caution." });
+    const before = freezeSelection([perfume(1)]);
+
+    const afterFirstConfirm = addSelectedPerfume({ selectedPerfumes: before, perfume: squid, maxSelectableSlots: 14 });
+    const afterSecondConfirm = addSelectedPerfume({
+      selectedPerfumes: afterFirstConfirm,
+      perfume: squid,
+      maxSelectableSlots: 14,
+    });
+
+    expect(afterSecondConfirm).toBe(afterFirstConfirm);
+    expect(ids(afterSecondConfirm).filter((id) => id === 500)).toHaveLength(1);
+    expect(
+      canAddPerfume({ selectedPerfumes: afterFirstConfirm, perfume: squid, maxSelectableSlots: 14 })
+    ).toEqual({ allowed: false, reason: "duplicate" });
+  });
+});

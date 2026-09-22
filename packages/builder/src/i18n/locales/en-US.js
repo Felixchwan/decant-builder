@@ -616,6 +616,9 @@ export const enUS = {
   "details.noNotes": "No notes listed yet.",
   "details.noData": "No data yet",
 
+  "rareSelection.title": "Rare Selection",
+  "rareSelection.caution": "Proceed with caution.",
+
   "taxonomy.seasons": "seasons",
   "taxonomy.occasions": "occasions",
   "taxonomy.vibes": "vibes",
@@ -678,6 +681,17 @@ export const enUS = {
   "taxonomy.unique": "Unique",
   "taxonomy.versatile": "Versatile",
   "taxonomy.daily": "Daily",
+
+  // Explicit English entry for the per-fragrance rare-selection warning (see
+  // the matching es-MX comment): the locale-parity test below requires every
+  // es-MX key to have an en-US counterpart. Its value is exactly the
+  // catalog's own warningMessage for Squid (id 500) with its source
+  // indentation collapsed to a single line, so en-US behavior is unchanged
+  // -- this key is never actually consulted at runtime for en-US, since
+  // translator.label's own fallback chain already lands on the catalog's
+  // text when no locale override exists.
+  "taxonomy.500":
+    "Zoologist Squid explores marine darkness through notes of ink, incense, sea salt and ambergris. This fragrance is considered highly unconventional and may not appeal to every wearer.",
 
   "collectionIntelligence.reason.freshDaytimeContrast": "Adds fresh daytime contrast",
   "collectionIntelligence.reason.broadensDailyRotation": "Broadens daily rotation",

@@ -909,6 +909,16 @@ const confirmAddPerfume = () => {
     }
 
     function handleKeyDown(event) {
+      // The rare-selection confirmation stacks above these details (see the
+      // pendingPerfume portal below) -- while it is open, Escape and the
+      // arrow keys belong to IT alone. Without this guard, both this
+      // listener and the pendingPerfume one below fire on the same
+      // keypress, closing details too (a double-close) or silently
+      // navigating the details underneath a modal the user is looking at.
+      if (pendingPerfume) {
+        return;
+      }
+
       if (event.key === "Escape") {
         closePerfumeDetails();
         return;
@@ -928,7 +938,7 @@ const confirmAddPerfume = () => {
     window.addEventListener("keydown", handleKeyDown);
 
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [detailPerfume, navigateDetailPerfume, closePerfumeDetails]);
+  }, [detailPerfume, pendingPerfume, navigateDetailPerfume, closePerfumeDetails]);
 
   useEffect(() => {
     if (!pendingPerfume) {
@@ -937,7 +947,10 @@ const confirmAddPerfume = () => {
 
     function handleKeyDown(event) {
       if (event.key === "Escape") {
-        setPendingPerfume(null);
+        // Same path Cancel uses (not a bare setPendingPerfume(null)), so
+        // Escape and Cancel are one behavior, not two: both clear the
+        // pending-source ref, and neither touches detailPerfume.
+        cancelAddPerfume();
       }
     }
 
@@ -1295,37 +1308,53 @@ const confirmAddPerfume = () => {
         onClose={closePerfumeDetails}
       />
     )}
-    {pendingPerfume && (
-  <div className="modal-overlay" onClick={cancelAddPerfume}>
-    <div
-      className="warning-modal"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="rare-selection-title"
-      onClick={(event) => event.stopPropagation()}
-    >
-      <h2>Rare Selection</h2>
+    {pendingPerfume &&
+      renderOwnedPortal(
+        // Rendered through the same owned portal as PerfumeDetailsModal
+        // (below), and mounted after it in this return -- that ordering is
+        // what stacks this confirmation ABOVE the details modal within
+        // their shared portal root, the same mechanism that already stacks
+        // PerfumeDetailsModal above Note Explorer/Composer. No bespoke
+        // z-index is introduced.
+        <div className="modal-overlay" onClick={cancelAddPerfume}>
+          <div
+            className="warning-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="rare-selection-title"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <h2>{t("rareSelection.title")}</h2>
 
-      <h3 id="rare-selection-title">{pendingPerfume.name}</h3>
+            <h3 id="rare-selection-title">{pendingPerfume.name}</h3>
 
-      <p>{pendingPerfume.warningMessage}</p>
+            {/* Per-fragrance warning copy lives in the catalog (only Squid
+                carries one today, but the field is generic to any
+                fragrance). It is localized through the same taxonomy-label
+                override mechanism every other catalog-driven string already
+                uses -- keyed by the fragrance's own id, falling back to the
+                catalog's own (English) text when no locale override exists
+                -- rather than a second, fragrance-warning-specific content
+                system. */}
+            <p>{translator.label("fragranceWarning", pendingPerfume.id, pendingPerfume.warningMessage)}</p>
 
-      <p className="warning-footer">
-      ☠ Proceed with caution.
-      </p>
+            <p className="warning-footer">
+              <span aria-hidden="true">☠</span> {t("rareSelection.caution")}
+            </p>
 
-      <div className="modal-actions">
-        <button type="button" onClick={confirmAddPerfume}>
-          {t("general.addToBox")}
-        </button>
+            <div className="modal-actions">
+              <button type="button" onClick={confirmAddPerfume}>
+                {t("general.addToBox")}
+              </button>
 
-        <button type="button" onClick={cancelAddPerfume}>
-          {t("general.cancel")}
-        </button>
-      </div>
-    </div>
-  </div>
-)}
+              <button type="button" onClick={cancelAddPerfume}>
+                {t("general.cancel")}
+              </button>
+            </div>
+          </div>
+        </div>,
+        portalRoot
+      )}
     </div>
   );
 }

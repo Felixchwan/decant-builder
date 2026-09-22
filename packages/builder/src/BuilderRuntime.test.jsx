@@ -294,3 +294,101 @@ describe("Composer proposal -> fragrance details wiring", () => {
     expect(runtimeSource).toContain("onSuccess: (nextProposal) => {\n        setComposerProposal(nextProposal);");
   });
 });
+
+// Rare-selection confirmation (the warningMessage-gated modal, e.g. Squid):
+// opened from PerfumeDetailsModal's own onAddToBox, this modal must stack
+// ABOVE the fragrance details it was opened from, not close them on the same
+// Escape keypress, and never touch Note Explorer/Composer state -- App is
+// never rendered directly in this package's own tests (see the file's own
+// header comment), so these are source-contract checks, the established
+// pattern here for exactly this reason.
+describe("Rare-selection confirmation: stacking, Escape, and add flow", () => {
+  const addStart = runtimeSource.indexOf('const addPerfume = (perfume, source = "manual") => {');
+  const confirmStart = runtimeSource.indexOf("const confirmAddPerfume = () => {");
+  const cancelStart = runtimeSource.indexOf("const cancelAddPerfume = () => {");
+  const navStart = runtimeSource.indexOf("const navigateDetailPerfume = useCallback(");
+  const addSource = runtimeSource.slice(addStart, confirmStart);
+  const confirmSource = runtimeSource.slice(confirmStart, cancelStart);
+  const cancelSource = runtimeSource.slice(cancelStart, navStart);
+
+  const detailEffectStart = runtimeSource.indexOf("useEffect(() => {\n    if (!detailPerfume) {");
+  const pendingEffectStart = runtimeSource.indexOf("useEffect(() => {\n    if (!pendingPerfume) {");
+  const detailEffectSource = runtimeSource.slice(detailEffectStart, pendingEffectStart);
+  const pendingEffectEnd = runtimeSource.indexOf("}, [pendingPerfume]);") + "}, [pendingPerfume]);".length;
+  const pendingEffectSource = runtimeSource.slice(pendingEffectStart, pendingEffectEnd);
+
+  const detailModalStart = runtimeSource.indexOf("{detailPerfume && (");
+  const pendingModalStart = runtimeSource.indexOf("{pendingPerfume &&");
+  const pendingModalEndMarker = "portalRoot\n      )}";
+  const pendingModalEnd =
+    runtimeSource.indexOf(pendingModalEndMarker, pendingModalStart) + pendingModalEndMarker.length;
+  const pendingModalSource = runtimeSource.slice(pendingModalStart, pendingModalEnd);
+
+  it("is opened from perfume details through the shared addPerfume path, gated on the fragrance's own warningMessage", () => {
+    expect(runtimeSource).toContain("onAddToBox={addPerfume}");
+    expect(addSource).toContain("if (perfume.warningMessage) {");
+    expect(addSource).toContain("setPendingPerfume(perfume);");
+    // Gated on the catalog's own per-fragrance flag, not a hardcoded name --
+    // any fragrance with a warningMessage gets this flow, not just Squid.
+    expect(addSource).not.toMatch(/["']Squid["']/);
+  });
+
+  it("renders in the top modal/portal layer: portalled after (never before) PerfumeDetailsModal in the same return", () => {
+    expect(detailModalStart).toBeGreaterThan(-1);
+    expect(pendingModalStart).toBeGreaterThan(detailModalStart);
+    expect(pendingModalSource).toContain("renderOwnedPortal(");
+    expect(pendingModalSource).toContain("portalRoot");
+    // No bespoke inline z-index escape hatch -- stacking comes from portal
+    // mount order alone, the same mechanism already used for every other
+    // modal (checked as an inline style, not the surrounding prose comment).
+    expect(pendingModalSource).not.toMatch(/style=\{\{[^}]*[zZ]-?[iI]ndex/);
+  });
+
+  it("keeps the fragrance-details modal mounted underneath: opening/closing the confirmation never touches detailPerfume", () => {
+    expect(addSource).not.toMatch(/setDetailPerfume|closePerfumeDetails/);
+    expect(confirmSource).not.toMatch(/setDetailPerfume|closePerfumeDetails/);
+    expect(cancelSource).not.toMatch(/setDetailPerfume|closePerfumeDetails/);
+  });
+
+  it("Escape closes the rare-selection confirmation first, guarding the details handler so one keypress cannot double-close", () => {
+    expect(detailEffectSource).toContain("if (pendingPerfume) {\n        return;\n      }");
+    expect(detailEffectSource).toContain("[detailPerfume, pendingPerfume, navigateDetailPerfume, closePerfumeDetails]");
+    expect(pendingEffectSource).toContain('if (event.key === "Escape") {');
+    expect(pendingEffectSource).toContain("cancelAddPerfume();");
+    expect(pendingEffectSource).not.toContain("closePerfumeDetails");
+  });
+
+  it("backdrop click, Cancel, and Escape all route through the same cancelAddPerfume -- one close path, not several", () => {
+    // Two call sites: the backdrop overlay and the Cancel button. The inner
+    // dialog stops propagation, so clicking inside it never reaches the
+    // backdrop's own cancelAddPerfume handler.
+    expect(pendingModalSource.match(/onClick=\{cancelAddPerfume\}/g)).toHaveLength(2);
+    expect(pendingModalSource).toContain('<div className="modal-overlay" onClick={cancelAddPerfume}>');
+    expect(pendingModalSource).toContain("onClick={(event) => event.stopPropagation()}");
+  });
+
+  it("Cancel (and Escape) clear only the pending-selection state, leaving selectedPerfumes/composer/note-explorer state untouched", () => {
+    expect(cancelSource).toContain("setPendingPerfume(null);");
+    expect(cancelSource).toContain('pendingPerfumeSourceRef.current = "manual";');
+    expect(cancelSource).not.toMatch(
+      /setSelectedPerfumes|setComposerProposal|setComposerSettings|setIsComposerGenerating|setIsNoteExplorerOpen|setSelectedNoteIds|setIsComposerSetupOpen/
+    );
+  });
+
+  it("confirming adds the fragrance exactly once, through the same dedup-safe addSelectedPerfume path as every other add, then closes", () => {
+    expect(confirmSource).toContain("if (!pendingPerfume) return;");
+    expect(confirmSource).toContain("addSelectedPerfume({");
+    expect(confirmSource).toContain("setSelectedPerfumes(nextSelectedPerfumes);");
+    expect(confirmSource).toContain("setPendingPerfume(null);");
+    // Exactly one ANALYTICS_EVENTS.PERFUME_ADDED track call in this function
+    // -- confirming does not fire the add-tracking event twice.
+    expect(confirmSource.match(/ANALYTICS_EVENTS\.PERFUME_ADDED/g)).toHaveLength(1);
+  });
+
+  it("does not reset Note Explorer or Composer state: the whole confirm/cancel/pending flow never references either", () => {
+    const wholeFlow = addSource + confirmSource + cancelSource + pendingEffectSource;
+    expect(wholeFlow).not.toMatch(
+      /setComposerProposal|setComposerSettings|setIsComposerGenerating|setIsNoteExplorerOpen|setSelectedNoteIds|setIsComposerSetupOpen|setSortOrder|setSearchText/
+    );
+  });
+});

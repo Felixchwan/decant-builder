@@ -278,3 +278,45 @@ describe("Curator-panel season-coverage chart locale keys", () => {
     expect(esTranslator.t("review.seasonCoverageAria", { season: "Invierno" })).toBe("Cobertura de Invierno");
   });
 });
+
+// Rare-selection confirmation (the warningMessage-gated modal in
+// BuilderRuntime.jsx, e.g. Squid): the title and caution line are ordinary
+// t() keys; the per-fragrance warning body is looked up via
+// translator.label("fragranceWarning", perfume.id, perfume.warningMessage)
+// -- the same taxonomy-override mechanism every other catalog-driven string
+// already uses, keyed by the fragrance's own catalog id (500 for Squid)
+// rather than a second content system.
+describe("Rare-selection confirmation locale keys", () => {
+  it("gives the modal's generic title and caution line real Spanish copy in es-MX, and keeps the original English in en-US", () => {
+    expectLocalizedKey("rareSelection.title", "Rare Selection");
+    expectLocalizedKey("rareSelection.caution", "Proceed with caution.");
+    expect(esMX["rareSelection.title"]).toBe("Selección especial");
+    expect(esMX["rareSelection.caution"]).toBe("Procede con precaución.");
+  });
+
+  it("resolves Squid's warning body to natural Spanish through translator.label, keyed by its catalog id", () => {
+    expect(esTranslator.label("fragranceWarning", 500, "fallback text")).toBe(
+      "Zoologist Squid explora una oscuridad marina con notas de tinta, incienso, sal marina y ámbar gris. Es una fragancia muy poco convencional y puede no ser del gusto de todos."
+    );
+  });
+
+  it("still resolves Squid's warning body to English in en-US", () => {
+    expect(enTranslator.label("fragranceWarning", 500, "fallback text")).toBe(
+      "Zoologist Squid explores marine darkness through notes of ink, incense, sea salt and ambergris. This fragrance is considered highly unconventional and may not appeal to every wearer."
+    );
+  });
+
+  it("falls back to the catalog's own warningMessage for a fragrance with no locale override, in either locale", () => {
+    const rawCatalogText = "Some future rare fragrance's own English warning text.";
+    expect(esTranslator.label("fragranceWarning", 999999, rawCatalogText)).toBe(rawCatalogText);
+    expect(enTranslator.label("fragranceWarning", 999999, rawCatalogText)).toBe(rawCatalogText);
+  });
+
+  it("keeps the taxonomy.500 override out of the generic taxonomy vocabulary tests above (a per-fragrance id, not a reusable label)", () => {
+    // Sanity check that this key exists only where intended and both
+    // locale files still stay in parity (enforced separately by
+    // createTranslator.test.js's key-parity test).
+    expect(Object.prototype.hasOwnProperty.call(esMX, "taxonomy.500")).toBe(true);
+    expect(Object.prototype.hasOwnProperty.call(enUS, "taxonomy.500")).toBe(true);
+  });
+});

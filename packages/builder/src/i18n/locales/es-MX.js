@@ -618,6 +618,9 @@ export const esMX = {
   "details.noNotes": "Aún no hay notas listadas.",
   "details.noData": "Aún no hay datos",
 
+  "rareSelection.title": "Selección especial",
+  "rareSelection.caution": "Procede con precaución.",
+
   "taxonomy.seasons": "temporadas",
   "taxonomy.occasions": "ocasiones",
   "taxonomy.vibes": "vibes",
@@ -680,6 +683,16 @@ export const esMX = {
   "taxonomy.unique": "Único",
   "taxonomy.versatile": "Versátil",
   "taxonomy.daily": "Diario",
+
+  // Per-fragrance rare-selection warning copy, looked up by the fragrance's
+  // own catalog id (translator.label("fragranceWarning", perfume.id, ...)) --
+  // the same taxonomy-override mechanism as every entry above, keyed here by
+  // id instead of a vocabulary term because the value being overridden is
+  // one fragrance's own catalog text, not a reusable label. Only Squid (id
+  // 500) carries a warningMessage today; any other fragrance that gains one
+  // gets the same fallback-to-English treatment until it has an entry here.
+  "taxonomy.500":
+    "Zoologist Squid explora una oscuridad marina con notas de tinta, incienso, sal marina y ámbar gris. Es una fragancia muy poco convencional y puede no ser del gusto de todos.",
 
   "collectionIntelligence.reason.freshDaytimeContrast": "Agrega contraste diurno fresco",
   "collectionIntelligence.reason.broadensDailyRotation": "Amplía la rotación diaria",
