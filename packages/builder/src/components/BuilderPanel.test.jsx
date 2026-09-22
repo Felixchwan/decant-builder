@@ -2031,12 +2031,11 @@ describe("BuilderPanel box slot remove button -- touch-target size guard", () =>
 // left-aligned -- `.perfume-card-details-trigger` (the whole card is a
 // <button>) explicitly resets `text-align: left`, and nothing downstream
 // re-centered it -- visually mismatched against the centered bottle image
-// above. Fixed on both the title and the brand name directly below it
-// (leaving only the title centered would have looked like a new
-// inconsistency against a left-aligned brand name); the brand-row's own
-// flex layout (name-left, logo pinned right via margin-left:auto) is
-// untouched, since text-align only affects the name's own text, never a
-// flex item's position.
+// above. Fixed on both the title and the brand name directly below it, so
+// the two lines read as one coherent centered block. The brand logo no
+// longer shares this line at all -- it now overlays the image/media area
+// above (see "PerfumeCard brand logo placement" below) -- so centering the
+// brand name here has no logo to compete with for horizontal space.
 describe("PerfumeCard title/brand alignment", () => {
   it("centers the title to match the centered bottle image above it", () => {
     expect(appCss).toMatch(/:where\(\.builder-scope\) \.perfume-info h3 \{[^}]*text-align:\s*center;/s);
@@ -2044,6 +2043,64 @@ describe("PerfumeCard title/brand alignment", () => {
 
   it("centers the brand name alongside it, so the two lines read as one coherent centered block", () => {
     expect(appCss).toMatch(/:where\(\.builder-scope\) \.perfume-brand-name \{[^}]*text-align:\s*center;/s);
+  });
+});
+
+// PerfumeCard brand logo placement: moved out of the brand-name text row and
+// into the perfume image/media area, as a small secondary overlay pinned to
+// its bottom-right corner -- subordinate to the bottle, never overlapping it
+// (the bottle sits centered via `.perfume-card-image`'s `place-items:
+// center`, absolutely-positioned siblings are outside that flow), and never
+// overlapping the info icon (top-right of the card, not the image). Reuses
+// the pre-existing `.perfume-card-brand-badge` neutral-backing chip (small
+// blurred glass pill) rather than introducing a new, heavier badge.
+describe("PerfumeCard brand logo placement", () => {
+  it("anchors the badge to the media area's own bottom-right corner, inset consistently from its edges", () => {
+    const ruleMatch = appCss.match(/:where\(\.builder-scope\) \.perfume-card-brand-badge \{([^}]*)\}/s);
+    expect(ruleMatch).not.toBeNull();
+    expect(ruleMatch[1]).toMatch(/position:\s*absolute;/);
+    expect(ruleMatch[1]).toMatch(/bottom:\s*9px;/);
+    expect(ruleMatch[1]).toMatch(/right:\s*9px;/);
+    expect(ruleMatch[1]).not.toMatch(/\btop:\s*9px;/);
+    expect(ruleMatch[1]).not.toMatch(/\bleft:\s*9px;/);
+  });
+
+  it("keeps the logo small, subordinate, and non-interactive, preserving its aspect ratio", () => {
+    const badgeRule = appCss.match(/:where\(\.builder-scope\) \.perfume-card-brand-badge \{([^}]*)\}/s)[1];
+    const imgRule = appCss.match(/:where\(\.builder-scope\) \.perfume-card-brand-badge img \{([^}]*)\}/s)[1];
+    expect(badgeRule).toMatch(/pointer-events:\s*none;/);
+    expect(imgRule).toMatch(/object-fit:\s*contain;/);
+    expect(imgRule).toMatch(/opacity:\s*0\.74;/);
+  });
+
+  it("uses the smallest existing neutral backing (a small blurred glass chip), not a new heavier badge", () => {
+    const badgeRule = appCss.match(/:where\(\.builder-scope\) \.perfume-card-brand-badge \{([^}]*)\}/s)[1];
+    expect(badgeRule).toMatch(/backdrop-filter:\s*blur\(6px\);/);
+    expect(badgeRule).toMatch(/background:\s*rgba\(2, 6, 23, 0\.24\);/);
+  });
+
+  it("stays positioned relative to the media area itself, which establishes the positioning context", () => {
+    const imageAreaRule = appCss.match(/:where\(\.builder-scope\) \.perfume-card-image \{([^}]*)\}/s)[1];
+    expect(imageAreaRule).toMatch(/position:\s*relative;/);
+  });
+
+  it("is not present anywhere in the (now removed) brand-name text row", () => {
+    expect(appCss).not.toMatch(/:where\(\.builder-scope\) \.perfume-brand-row/);
+    expect(appCss).not.toMatch(/:where\(\.builder-scope\) \.perfume-card-brand-logo\b/);
+  });
+
+  it("stays visible and inset on mobile rather than being hidden", () => {
+    // Anchored on the mobile-only `.perfume-card-image { height: 88px; ... }`
+    // override (the base rule uses 112px), so this reads the actual mobile
+    // media block regardless of which @media block index precedes it.
+    const mobileSectionStart = appCss.indexOf("height: 88px;");
+    expect(mobileSectionStart).toBeGreaterThan(-1);
+    const mobileSection = appCss.slice(mobileSectionStart);
+    const mobileBadgeMatch = mobileSection.match(/:where\(\.builder-scope\) \.perfume-card-brand-badge \{([^}]*)\}/s);
+    expect(mobileBadgeMatch).not.toBeNull();
+    expect(mobileBadgeMatch[1]).not.toMatch(/display:\s*none;/);
+    expect(mobileBadgeMatch[1]).toMatch(/bottom:\s*6px;/);
+    expect(mobileBadgeMatch[1]).toMatch(/right:\s*6px;/);
   });
 });
 

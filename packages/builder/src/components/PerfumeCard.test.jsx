@@ -34,18 +34,21 @@ function renderPerfumeCard(perfumeOverrides = {}, propOverrides = {}) {
 }
 
 describe("PerfumeCard", () => {
-  it("renders the brand logo inside the brand row and uses a compact points action row", () => {
+  it("renders the brand logo as a badge inside the image area (not the brand-name row) and uses a compact points action row", () => {
     const markup = renderPerfumeCard();
-    const brandRowStart = markup.indexOf('class="perfume-brand-row"');
-    const logoStart = markup.indexOf('class="perfume-card-brand-logo"');
+    const imageStart = markup.indexOf('class="perfume-card-image"');
+    const badgeStart = markup.indexOf('class="perfume-card-brand-badge"');
+    const brandNameStart = markup.indexOf('class="perfume-brand-name"');
     const actionsStart = markup.indexOf('class="perfume-card-compact-actions"');
     const pointsStart = markup.indexOf('class="perfume-card-points"');
 
-    expect(brandRowStart).toBeGreaterThan(-1);
-    expect(logoStart).toBeGreaterThan(brandRowStart);
-    expect(logoStart).toBeLessThan(actionsStart);
+    expect(imageStart).toBeGreaterThan(-1);
+    expect(badgeStart).toBeGreaterThan(imageStart);
+    expect(badgeStart).toBeLessThan(brandNameStart);
     expect(pointsStart).toBeGreaterThan(actionsStart);
     expect(markup).toContain('class="perfume-brand-name"');
+    expect(markup).not.toContain('class="perfume-brand-row"');
+    expect(markup).not.toContain("perfume-card-brand-logo");
     expect(markup).toContain('src="/images/brands/givenchy.png"');
     expect(markup).toContain("◆");
     expect(markup).toContain("1 pt");
@@ -68,7 +71,7 @@ describe("PerfumeCard", () => {
     const markup = renderPerfumeCard({ brand: "Unknown Atelier" });
 
     expect(markup).toContain("Unknown Atelier");
-    expect(markup).not.toContain("perfume-card-brand-logo");
+    expect(markup).not.toContain("perfume-card-brand-badge");
     expect(markup).toContain("◆");
     expect(markup).toContain("1 pt");
     expect(markup).not.toContain("Bronze");

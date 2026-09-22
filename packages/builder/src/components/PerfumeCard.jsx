@@ -34,6 +34,18 @@ function PerfumeCard({
               event.currentTarget.src = imageFallback;
             }}
           />
+          {brandAsset && (
+            <span className="perfume-card-brand-badge" aria-hidden="true">
+              <img
+                src={brandAsset}
+                alt=""
+                loading="lazy"
+                onError={(event) => {
+                  event.currentTarget.closest(".perfume-card-brand-badge")?.remove();
+                }}
+              />
+            </span>
+          )}
         </div>
 
         <div className="perfume-info">
@@ -50,21 +62,7 @@ function PerfumeCard({
                   {perfume.subtitle}
                 </p>
               )}
-              <div className="perfume-brand-row">
-                <p className="perfume-brand-name">{perfume.brand}</p>
-                {brandAsset && (
-                  <span className="perfume-card-brand-logo" aria-hidden="true">
-                    <img
-                      src={brandAsset}
-                      alt=""
-                      loading="lazy"
-                      onError={(event) => {
-                        event.currentTarget.closest(".perfume-card-brand-logo")?.remove();
-                      }}
-                    />
-                  </span>
-                )}
-              </div>
+              <p className="perfume-brand-name">{perfume.brand}</p>
 
               {reason && <p className="perfume-card-reason">{reason}</p>}
             </div>

@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest";
 const builderCss = readFileSync(new URL("../../styles.css", import.meta.url), "utf8").replace(/\r\n/g, "\n");
 const originalRulesStart = builderCss.indexOf(":where(.builder-scope) .app {");
 const transformedOriginalRules = builderCss.slice(originalRulesStart);
-const BASELINE_SHA256 = "280b0747cd1b21a28d425a57c7a795f8b0e4ebfb31d07f884d090361251ca8a1";
+const BASELINE_SHA256 = "59bc2d7bb9c4ce08cd8bcde416282df92eaf2a787e4d0af2711c8af8df2df233";
 const unitDefinitions = [...builderCss.matchAll(/(--builder-unit-(\d+)):\s*([\d.]+)px;/g)];
 const unitReferences = [...builderCss.matchAll(/var\((--builder-unit-(\d+))\)/g)];
 
@@ -99,7 +99,7 @@ describe("Builder stylesheet namespace", () => {
 
   it("binds every ordinary selector to the neutral scope exactly once", () => {
     const selectors = collectRuleSelectors(builderCss);
-    expect(selectors).toHaveLength(1291);
+    expect(selectors).toHaveLength(1283);
     selectors.forEach((selector) => {
       expect(selector.startsWith(":where(.builder-scope)")).toBe(true);
       expect(selector.match(/:where\(\.builder-scope\)/g)).toHaveLength(1);

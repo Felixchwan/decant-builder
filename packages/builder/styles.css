@@ -917,8 +917,8 @@
 
 :where(.builder-scope) .perfume-card-brand-badge {
   position: absolute;
-  top: 9px;
-  left: 9px;
+  bottom: 9px;
+  right: 9px;
   z-index: 1;
   display: inline-flex;
   align-items: center;
@@ -933,7 +933,7 @@
   box-shadow: 0 8px 18px rgba(0, 0, 0, 0.12);
   pointer-events: none;
   transform: translateY(0) scale(1);
-  transform-origin: top left;
+  transform-origin: bottom right;
   transition:
     background 180ms ease,
     border-color 180ms ease,
@@ -948,7 +948,13 @@
   height: auto;
   max-height: 18px;
   object-fit: contain;
-  filter: grayscale(1) saturate(0) brightness(1.45) contrast(0.94);
+  /* No brightness boost here: some brand assets are a pale/low-contrast
+     wordmark on an opaque near-white background (not a transparent white
+     mark), and brightening those further washes the mark out against its
+     own background -- the neutral chip behind the logo already carries the
+     against-the-bottle contrast, so this filter only needs to keep every
+     logo desaturated/subordinate, never to relight it. */
+  filter: grayscale(1) saturate(0) contrast(0.94);
   opacity: 0.74;
   transition: filter 180ms ease, opacity 180ms ease;
 }
@@ -958,17 +964,7 @@
   transition: filter 180ms ease, opacity 180ms ease;
 }
 
-:where(.builder-scope) .perfume-brand-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  width: 100%;
-  min-width: 0;
-}
-
 :where(.builder-scope) .perfume-brand-name {
-  flex: 1 1 auto;
-  min-width: 0;
   text-align: center;
 }
 
@@ -981,39 +977,6 @@
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
-}
-
-:where(.builder-scope) .perfume-card-brand-logo {
-  display: inline-flex;
-  flex: 0 1 auto;
-  align-items: center;
-  justify-content: flex-end;
-  min-width: 0;
-  height: 24px;
-  max-width: 96px;
-  margin-left: auto;
-  opacity: 0.72;
-  pointer-events: none;
-}
-
-:where(.builder-scope) .perfume-card-brand-logo img {
-  display: block;
-  width: auto;
-  max-width: 96px;
-  max-height: 22px;
-  object-fit: contain;
-  filter: grayscale(1) saturate(0) brightness(0.96) contrast(0.9);
-  transition: filter 180ms ease, opacity 180ms ease;
-}
-
-:where(.builder-scope) .perfume-card:hover .perfume-card-brand-logo,
-:where(.builder-scope) .perfume-card:focus-within .perfume-card-brand-logo {
-  opacity: 0.9;
-}
-
-:where(.builder-scope) .perfume-card:hover .perfume-card-brand-logo img,
-:where(.builder-scope) .perfume-card:focus-within .perfume-card-brand-logo img {
-  filter: grayscale(0) saturate(1) brightness(0.98) contrast(0.96);
 }
 
 :where(.builder-scope) .perfume-card:hover .perfume-card-brand-badge,
@@ -3632,7 +3595,16 @@
   }
 
   :where(.builder-scope) .perfume-card-brand-badge {
-    display: none;
+    bottom: 6px;
+    right: 6px;
+    max-width: 40px;
+    height: 20px;
+    padding: 2px 5px;
+  }
+
+  :where(.builder-scope) .perfume-card-brand-badge img {
+    max-width: 34px;
+    max-height: 14px;
   }
 
   :where(.builder-scope) .perfume-info-heading {
@@ -3645,26 +3617,6 @@
   :where(.builder-scope) .perfume-info-copy {
     flex: 1 1 190px;
     min-width: 0;
-  }
-
-  :where(.builder-scope) .perfume-card-brand-logo {
-    display: inline-flex;
-    flex: 0 1 72px;
-    justify-content: flex-end;
-    align-items: center;
-    max-width: 72px;
-    margin: 1px 0 0 auto;
-    opacity: 0.78;
-    pointer-events: none;
-  }
-
-  :where(.builder-scope) .perfume-card-brand-logo img {
-    display: block;
-    width: auto;
-    max-width: 72px;
-    height: auto;
-    max-height: 30px;
-    object-fit: contain;
   }
 
   :where(.builder-scope) .perfume-card-image .perfume-card-bottle-image {
