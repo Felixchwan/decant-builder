@@ -554,8 +554,8 @@
 :where(.builder-scope) .catalog-info-button {
   display: inline-grid;
   place-items: center;
-  width: 22px;
-  height: 22px;
+  width: 24px;
+  height: 24px;
   padding: 0;
   border: 1px solid rgba(250, 204, 21, 0.20);
   border-radius: 999px;
@@ -863,8 +863,8 @@
   z-index: 1;
   display: inline-grid;
   place-items: center;
-  width: 22px;
-  height: 22px;
+  width: 24px;
+  height: 24px;
   margin: 0;
   padding: 0;
   border: 1px solid rgba(226, 232, 240, 0.22);
@@ -1326,8 +1326,8 @@
 :where(.builder-scope) .share-info-button {
   display: inline-grid;
   place-items: center;
-  width: 22px;
-  height: 22px;
+  width: 24px;
+  height: 24px;
   padding: 0;
   border: 1px solid rgba(250, 204, 21, 0.20);
   border-radius: 999px;
@@ -3998,18 +3998,6 @@
   cursor: pointer;
 }
 
-:where(.builder-scope) .modal-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.75);
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  z-index: 1000;
-}
-
 :where(.builder-scope) .modal-content {
   width: min(700px, 90vw);
   max-height: 80vh;
@@ -4369,8 +4357,12 @@
   place-items: center;
   width: 34px;
   height: 34px;
-  padding: 0 !important;
-  border-radius: 999px !important;
+  padding: 0;
+  border: 1px solid rgba(148, 163, 184, 0.24);
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.72);
+  color: #ecfdf5;
+  font-weight: 800;
   line-height: 1;
 }
 
@@ -4386,7 +4378,7 @@
   color: #94a3b8;
 }
 
-:where(.builder-scope) .perfume-details-modal .modal-header button,
+:where(.builder-scope) .perfume-details-modal .modal-header button:not(.perfume-details-close),
 :where(.builder-scope) .perfume-details-meta-add {
   border: 1px solid rgba(148, 163, 184, 0.24);
   border-radius: 10px;
@@ -4763,6 +4755,10 @@
 
 :where(.builder-scope) .metadata-preview-card {
   position: fixed;
+  /* Deliberately far above the modal system's own z-index:1000 baseline
+     (see .modal-overlay): this hover/focus preview can be triggered from
+     inside any modal (Note Explorer, Composer, etc.), and must float above
+     whichever one is open, not just above ordinary page content. */
   z-index: 10000;
   display: grid;
   justify-items: center;
@@ -7692,6 +7688,13 @@
   position: fixed;
   top: 0;
   left: 0;
+  /* Maximum 32-bit z-index, intentionally: this off-screen stage exists only
+     transiently while html-to-image captures the Collection Card PNG, and
+     pointer-events:none below means it can never intercept input -- but if
+     anything in the page were ever painted on top of it during that capture,
+     the export would silently corrupt. Guaranteeing "always topmost,
+     unconditionally" is worth more here than fitting the ordinary layering
+     scale. */
   z-index: 2147483647;
   display: flex;
   align-items: center;
