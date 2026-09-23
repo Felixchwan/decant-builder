@@ -1348,6 +1348,16 @@ function ComposerSetupModal({
     }
   };
 
+  // Shared, reference-counted body scroll lock (see bodyScrollLock.js), held
+  // for this modal's whole mounted lifetime. Kept in its own effect with an
+  // empty dependency array -- deliberately separate from the keydown effect
+  // below, whose deps (isGenerating) change during normal use -- so
+  // generating a proposal never releases-and-reacquires the lock mid-run.
+  useEffect(() => {
+    const releaseBodyScrollLock = acquireBodyScrollLock(document);
+    return () => releaseBodyScrollLock();
+  }, []);
+
   useEffect(() => {
     function handleKeyDown(event) {
       if (event.key === "Escape" && !isGenerating) {
@@ -1630,6 +1640,19 @@ function ComposerProposalModal({
 }) {
   const translator = createTranslator(builderConfig.locale, builderConfig.taxonomyLabels);
   const { t } = translator;
+
+  // Shared, reference-counted body scroll lock (see bodyScrollLock.js), held
+  // for this modal's whole mounted lifetime. Kept in its own effect with an
+  // empty dependency array -- deliberately separate from the keydown effect
+  // below, whose deps (isDetailOpen) change whenever a fragrance-details
+  // modal opens/closes on top of this one -- so that never releases and
+  // reacquires this modal's own claim; details holds its own claim
+  // independently for as long as it stays mounted.
+  useEffect(() => {
+    const releaseBodyScrollLock = acquireBodyScrollLock(document);
+    return () => releaseBodyScrollLock();
+  }, []);
+
   useEffect(() => {
     function handleKeyDown(event) {
       // Details opened from a row sit on top of this modal; Escape then
@@ -1988,6 +2011,18 @@ function NoteExplorerModal({
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedNoteIds, setSelectedNoteIds] = useState([]);
   const [sortOrder, setSortOrder] = useState("catalog");
+
+  // Shared, reference-counted body scroll lock (see bodyScrollLock.js), held
+  // for this modal's whole mounted lifetime. Kept in its own effect with an
+  // empty dependency array -- deliberately separate from the keydown effect
+  // below, whose deps (isDetailOpen) change whenever a fragrance-details
+  // modal opens/closes on top of this one -- so that never releases and
+  // reacquires this modal's own claim; details holds its own claim
+  // independently for as long as it stays mounted.
+  useEffect(() => {
+    const releaseBodyScrollLock = acquireBodyScrollLock(document);
+    return () => releaseBodyScrollLock();
+  }, []);
 
   // The fragrance-details modal opens on top of this one and closes on
   // Escape itself; this modal must not ALSO close from that same keypress,
@@ -2809,6 +2844,13 @@ function CollectionDnaPanel({
 
   useEffect(() => {
     closeButtonRef.current?.focus();
+
+    // Shared, reference-counted body scroll lock (see bodyScrollLock.js),
+    // held for this modal's whole mounted lifetime -- switching between
+    // accords (below) keeps this panel mounted, so the lock is acquired
+    // once here and released only when the panel itself unmounts.
+    const releaseBodyScrollLock = acquireBodyScrollLock(document);
+    return () => releaseBodyScrollLock();
   }, []);
 
   useEffect(() => {

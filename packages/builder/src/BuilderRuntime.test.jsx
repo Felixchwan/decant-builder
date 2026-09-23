@@ -392,3 +392,71 @@ describe("Rare-selection confirmation: stacking, Escape, and add flow", () => {
     );
   });
 });
+
+// Phase 2A of the CSS audit remediation: a shared, reference-counted body
+// scroll lock (packages/builder/src/builder/internal/portal/bodyScrollLock.js)
+// so the page behind an open modal cannot scroll, correctly handling nested
+// modal stacks (Note Explorer -> Details -> Rare Selection, Composer ->
+// Details -> Rare Selection) without any one layer's close unlocking the
+// page while another remains open. The primitive itself (reference
+// counting, exact-value restoration, idempotent release, SSR-safety) is
+// covered directly in builderTheme.test.jsx's "coordinated body scroll
+// locking" suite; these are source-contract checks proving BuilderRuntime's
+// two modal paths (the rare-selection confirmation and PerfumeDetailsModal)
+// actually call it, on the same open/close lifecycle as their existing
+// Escape handling -- App is never rendered directly in this package's own
+// tests (see this file's own header comment), so source contracts are the
+// established pattern here.
+describe("Shared modal scroll-lock: BuilderRuntime wiring", () => {
+  const importLine = 'import { acquireBodyScrollLock } from "./builder/internal/portal/bodyScrollLock.js";';
+
+  const pendingEffectStart = runtimeSource.indexOf("useEffect(() => {\n    if (!pendingPerfume) {");
+  const pendingEffectEnd =
+    runtimeSource.indexOf("}, [pendingPerfume]);") + "}, [pendingPerfume]);".length;
+  const pendingEffectSource = runtimeSource.slice(pendingEffectStart, pendingEffectEnd);
+
+  const detailsModalStart = runtimeSource.indexOf("function PerfumeDetailsModal(");
+  const detailsModalEnd = runtimeSource.indexOf("function DetailTagGroup(");
+  const detailsModalSource = runtimeSource.slice(detailsModalStart, detailsModalEnd);
+  const detailsLockEffectStart = detailsModalSource.indexOf("useEffect(() => {");
+  const detailsLockEffectEnd =
+    detailsModalSource.indexOf("}, []);", detailsLockEffectStart) + "}, []);".length;
+  const detailsLockEffectSource = detailsModalSource.slice(detailsLockEffectStart, detailsLockEffectEnd);
+
+  it("imports the shared bodyScrollLock primitive rather than setting document.body.style.overflow directly", () => {
+    expect(runtimeSource).toContain(importLine);
+    expect(runtimeSource).not.toMatch(/document\.body\.style\.overflow\s*=/);
+  });
+
+  it("the rare-selection confirmation acquires the lock only while pendingPerfume is truthy, and releases it in the same cleanup as its Escape listener", () => {
+    expect(pendingEffectSource).toContain("if (!pendingPerfume) {\n      return undefined;\n    }");
+    expect(pendingEffectSource).toContain("const releaseBodyScrollLock = acquireBodyScrollLock(document);");
+    // The acquire must come AFTER the early-return guard (only while open),
+    // not before it (which would acquire even while closed).
+    expect(pendingEffectSource.indexOf("return undefined;")).toBeLessThan(
+      pendingEffectSource.indexOf("acquireBodyScrollLock(document)")
+    );
+    expect(pendingEffectSource).toMatch(/return \(\) => \{\s*releaseBodyScrollLock\(\);/);
+  });
+
+  it("PerfumeDetailsModal acquires the lock for its whole mounted lifetime (an empty-deps effect), releasing it on unmount", () => {
+    expect(detailsLockEffectSource).toContain("const releaseBodyScrollLock = acquireBodyScrollLock(document);");
+    expect(detailsLockEffectSource).toMatch(/\}, \[\]\);\s*$/);
+    expect(detailsLockEffectSource).toMatch(/return \(\) => \{\s*releaseBodyScrollLock\(\);/);
+  });
+
+  it("PerfumeDetailsModal still releases its own existing swipe/add-feedback timeouts on unmount -- the lock was added to that effect, not instead of it", () => {
+    expect(detailsLockEffectSource).toContain("swipeFeedbackTimeoutRef.current");
+    expect(detailsLockEffectSource).toContain("addFeedbackTimeoutRef.current");
+  });
+
+  it("does not introduce any inline z-index -- layering is unchanged by this phase", () => {
+    expect(runtimeSource).not.toMatch(/z-index:\s*\d+/);
+  });
+
+  it("the rare-selection modal keeps its existing aria-labelledby, role, and copy untouched by the lock addition", () => {
+    expect(runtimeSource).toContain('aria-labelledby="rare-selection-title"');
+    expect(runtimeSource).toContain('role="dialog"');
+    expect(runtimeSource).toContain('{t("rareSelection.title")}');
+  });
+});

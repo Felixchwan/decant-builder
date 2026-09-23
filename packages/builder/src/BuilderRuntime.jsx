@@ -45,6 +45,7 @@ import {
 } from "./builder/theme/builderTheme.js";
 import { useBuilderPortalRoot } from "./builder/internal/portal/useBuilderPortalRoot.js";
 import { renderOwnedPortal } from "./builder/internal/portal/renderOwnedPortal.jsx";
+import { acquireBodyScrollLock } from "./builder/internal/portal/bodyScrollLock.js";
 import {
   addSelectedPerfume,
   applyInitialFragranceIntent,
@@ -945,6 +946,15 @@ const confirmAddPerfume = () => {
       return undefined;
     }
 
+    // Shared, reference-counted body scroll lock (see bodyScrollLock.js) --
+    // this modal has no component boundary of its own (it's inline JSX in
+    // App, not a separately mounted component), so App itself owns its
+    // claim, acquired/released on the exact same open/close transition as
+    // its keydown listener below. Whatever other modal(s) this stacks on
+    // top of (details, Note Explorer, ...) hold their own claims
+    // independently, so the page only unlocks once every claim is released.
+    const releaseBodyScrollLock = acquireBodyScrollLock(document);
+
     function handleKeyDown(event) {
       if (event.key === "Escape") {
         // Same path Cancel uses (not a bare setPendingPerfume(null)), so
@@ -956,7 +966,10 @@ const confirmAddPerfume = () => {
 
     window.addEventListener("keydown", handleKeyDown);
 
-    return () => window.removeEventListener("keydown", handleKeyDown);
+    return () => {
+      releaseBodyScrollLock();
+      window.removeEventListener("keydown", handleKeyDown);
+    };
   }, [pendingPerfume]);
 
   function removePerfume(indexToRemove) {
@@ -1538,7 +1551,16 @@ function PerfumeDetailsModal({
   const perfumeImageFallback = perfume.imageFallback;
 
   useEffect(() => {
+    // Shared, reference-counted body scroll lock (see bodyScrollLock.js),
+    // held for this modal's whole mounted lifetime. If a rare-selection
+    // confirmation (or anything else) opens on top of this and holds its
+    // own claim, releasing this one on unmount still leaves the page
+    // locked until every claim is released.
+    const releaseBodyScrollLock = acquireBodyScrollLock(document);
+
     return () => {
+      releaseBodyScrollLock();
+
       if (swipeFeedbackTimeoutRef.current) {
         window.clearTimeout(swipeFeedbackTimeoutRef.current);
       }

@@ -2462,3 +2462,85 @@ describe("Composer proposal rows: details wiring", () => {
     expect(appCss).toMatch(/:where\(\.builder-scope\) \.composer-proposal-item-thumb \{[^}]*width:\s*52px;[^}]*height:\s*52px;/s);
   });
 });
+
+// Phase 2A of the CSS audit remediation: a shared, reference-counted body
+// scroll lock (packages/builder/src/builder/internal/portal/bodyScrollLock.js,
+// already used by ScentLibraryModal/DiscoveryBoxReviewModal below) now also
+// covers ComposerSetupModal, ComposerProposalModal, NoteExplorerModal, and
+// CollectionDnaPanel -- source-contract checks, the established pattern for
+// these createPortal-only modals (see the describe blocks above for each).
+describe("Shared modal scroll-lock: BuilderPanel wiring", () => {
+  const sliceFn = (startMarker, endMarker) => {
+    const start = normalizedPanelSource.indexOf(startMarker);
+    const end = normalizedPanelSource.indexOf(endMarker, start);
+    return normalizedPanelSource.slice(start, end);
+  };
+
+  const composerSetupModalSource = sliceFn(
+    "function ComposerSetupModal(",
+    "export function ComposerGenerateButton("
+  );
+  const composerProposalModalSource = sliceFn(
+    "function ComposerProposalModal(",
+    "function NoteExplorerModal("
+  );
+  const noteExplorerModalSource = sliceFn("function NoteExplorerModal(", "function NoteExplorerNoteButton(");
+  const collectionDnaPanelSource = sliceFn("function CollectionDnaPanel(", "function DnaPerfumeRow(");
+
+  it("imports the shared bodyScrollLock primitive (already true today, reused rather than duplicated)", () => {
+    expect(normalizedPanelSource).toContain(
+      'import { acquireBodyScrollLock } from "../builder/internal/portal/bodyScrollLock.js";'
+    );
+  });
+
+  it.each([
+    ["ComposerSetupModal", () => composerSetupModalSource],
+    ["ComposerProposalModal", () => composerProposalModalSource],
+    ["NoteExplorerModal", () => noteExplorerModalSource],
+    ["CollectionDnaPanel", () => collectionDnaPanelSource],
+  ])("%s acquires the lock in its own dedicated empty-deps effect and releases it on unmount", (_name, getSource) => {
+    const source = getSource();
+    const lockEffectStart = source.indexOf("const releaseBodyScrollLock = acquireBodyScrollLock(document);");
+    expect(lockEffectStart).toBeGreaterThan(-1);
+    // Bounded by the nearest enclosing `}, []);` after the acquire call --
+    // proves this specific acquire sits in an EMPTY-deps effect, not one
+    // that re-runs on every render or on an interaction-driven dependency.
+    const enclosingEffectEnd = source.indexOf("}, []);", lockEffectStart);
+    expect(enclosingEffectEnd).toBeGreaterThan(-1);
+    const enclosingEffect = source.slice(Math.max(0, lockEffectStart - 40), enclosingEffectEnd + "}, []);".length);
+    expect(enclosingEffect).toMatch(/return \(\) => releaseBodyScrollLock\(\);|return \(\) => \{\s*releaseBodyScrollLock\(\);/);
+  });
+
+  it("ComposerSetupModal and ComposerProposalModal keep the lock in a SEPARATE effect from their own interaction-driven keydown effect (isGenerating / isDetailOpen), so neither churns the lock", () => {
+    expect(composerSetupModalSource).toMatch(
+      /const releaseBodyScrollLock = acquireBodyScrollLock\(document\);\s*return \(\) => releaseBodyScrollLock\(\);\s*\}, \[\]\);/
+    );
+    expect(composerSetupModalSource).toContain("}, [onCancel, isGenerating]);");
+    expect(composerProposalModalSource).toMatch(
+      /const releaseBodyScrollLock = acquireBodyScrollLock\(document\);\s*return \(\) => releaseBodyScrollLock\(\);\s*\}, \[\]\);/
+    );
+    expect(composerProposalModalSource).toContain("}, [onCancel, isDetailOpen]);");
+  });
+
+  it("NoteExplorerModal keeps the lock in a separate effect from its own isDetailOpen-gated keydown effect", () => {
+    expect(noteExplorerModalSource).toMatch(
+      /const releaseBodyScrollLock = acquireBodyScrollLock\(document\);\s*return \(\) => releaseBodyScrollLock\(\);\s*\}, \[\]\);/
+    );
+    expect(noteExplorerModalSource).toContain("}, [onClose, isDetailOpen]);");
+  });
+
+  it("CollectionDnaPanel keeps its existing close-button focus-on-mount behavior alongside the new lock, in the same effect", () => {
+    expect(collectionDnaPanelSource).toContain("closeButtonRef.current?.focus();");
+    expect(collectionDnaPanelSource).toMatch(
+      /closeButtonRef\.current\?\.focus\(\);[\s\S]*?const releaseBodyScrollLock = acquireBodyScrollLock\(document\);[\s\S]*?\}, \[\]\);/
+    );
+  });
+
+  it("does not change any of the four modals' visual styling, roles, or z-index while adding the lock", () => {
+    expect(normalizedPanelSource).not.toMatch(/z-index:\s*\d+/);
+    expect(composerSetupModalSource).toContain('role="dialog"');
+    expect(composerProposalModalSource).toContain('role="dialog"');
+    expect(noteExplorerModalSource).toContain('aria-modal="true"');
+    expect(collectionDnaPanelSource).toContain('role="dialog"');
+  });
+});

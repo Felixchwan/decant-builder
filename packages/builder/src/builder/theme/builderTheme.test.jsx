@@ -163,6 +163,40 @@ function createLockDocument(initialOverflow = "") {
   return { body: { style: { overflow: initialOverflow } } };
 }
 
+// A documentLike with the extra shape measureScrollbarWidth actually reads
+// (defaultView.innerWidth, documentElement.clientWidth) -- createLockDocument
+// above deliberately omits these, which is what proves the primitive
+// degrades to "no compensation" rather than throwing when they're absent.
+function createLockDocumentWithScrollbar({
+  innerWidth,
+  clientWidth,
+  initialOverflow = "",
+  initialPaddingRight = "",
+}) {
+  return {
+    defaultView: { innerWidth },
+    documentElement: { clientWidth },
+    body: { style: { overflow: initialOverflow, paddingRight: initialPaddingRight } },
+  };
+}
+
+// The full real shape: documentElement carries both the layout measurement
+// (clientWidth, used above) AND its own style object -- the element that is
+// actually document.scrollingElement in standards mode, confirmed live
+// against the real page (see the dedicated describe block below).
+function createFullLockDocument({
+  innerWidth = 1440,
+  htmlClientWidth = 1440,
+  initialHtmlOverflow = "",
+  initialBodyOverflow = "",
+} = {}) {
+  return {
+    defaultView: { innerWidth },
+    documentElement: { clientWidth: htmlClientWidth, style: { overflow: initialHtmlOverflow } },
+    body: { style: { overflow: initialBodyOverflow, paddingRight: "" } },
+  };
+}
+
 describe("Builder theme contract", () => {
   it("resolves Discovery-compatible defaults to the current production literals", () => {
     expect(discoveryDecantsConfig.theme.colors).toEqual({
@@ -448,6 +482,217 @@ describe("coordinated body scroll locking", () => {
   it("degrades safely without a writable body", () => {
     expect(() => acquireBodyScrollLock(undefined)()).not.toThrow();
     expect(() => acquireBodyScrollLock({})()).not.toThrow();
+  });
+
+  it("has no module-level document access -- acquireBodyScrollLock only ever touches the documentLike it is explicitly given", () => {
+    // SSR-safety proof: importing this module and calling it with no real
+    // `document` in scope (as already exercised above with undefined/{})
+    // never throws, because the module never references a global `document`
+    // -- every access goes through the parameter. This double-checks that a
+    // caller providing an SSR-safe placeholder (e.g. a server render with no
+    // window) is exactly as safe as omitting the argument entirely.
+    const ssrPlaceholder = { body: null };
+    expect(() => acquireBodyScrollLock(ssrPlaceholder)()).not.toThrow();
+  });
+
+  it("is idempotent across a full mount/unmount/mount/unmount cycle, not just repeated release calls", () => {
+    const documentLike = createLockDocument("auto");
+
+    const releaseFirstMount = acquireBodyScrollLock(documentLike);
+    expect(documentLike.body.style.overflow).toBe("hidden");
+    releaseFirstMount();
+    expect(documentLike.body.style.overflow).toBe("auto");
+
+    // A second, later mount must re-save whatever the value is AT THAT
+    // POINT (still "auto", since nothing else touched it in between) and
+    // restore it again on its own release -- not reuse stale state left
+    // over from the first cycle.
+    const releaseSecondMount = acquireBodyScrollLock(documentLike);
+    expect(documentLike.body.style.overflow).toBe("hidden");
+    releaseSecondMount();
+    expect(documentLike.body.style.overflow).toBe("auto");
+
+    // Calling the already-fired release from the FIRST cycle again, after a
+    // second, independent cycle has already completed, must not disturb
+    // the (already-correct) restored state -- proves releases are scoped to
+    // their own acquire, not to "whatever is currently locked".
+    releaseFirstMount();
+    expect(documentLike.body.style.overflow).toBe("auto");
+  });
+
+  it("a release captured before an unexpected unmount still safely drops exactly one claim, never going negative", () => {
+    // Models a component that unmounts (e.g. via a parent re-render that
+    // stops rendering it) without ever explicitly calling any "close"
+    // handler -- React still runs its effect cleanup, invoking exactly the
+    // release function that was returned at acquire time. This is that same
+    // call pattern, decoupled from React: the release closure is the only
+    // thing "unmount" ever needs to invoke.
+    const documentLike = createLockDocument("visible");
+    const outerRelease = acquireBodyScrollLock(documentLike); // e.g. Note Explorer
+    const innerRelease = acquireBodyScrollLock(documentLike); // e.g. details, unmounted unexpectedly
+    expect(documentLike.body.style.overflow).toBe("hidden");
+
+    innerRelease(); // the "unexpected unmount" -- releases exactly one claim
+    expect(documentLike.body.style.overflow).toBe("hidden"); // outer still holds its own
+
+    innerRelease(); // an accidental double-invoke of the same cleanup must not go negative
+    expect(documentLike.body.style.overflow).toBe("hidden");
+
+    outerRelease();
+    expect(documentLike.body.style.overflow).toBe("visible");
+  });
+
+  // Models the exact nested modal stacks BuilderRuntime/BuilderPanel can
+  // produce (Note Explorer -> Perfume Details -> Rare Selection, and
+  // Composer -> Perfume Details -> Rare Selection): each "open" is an
+  // acquireBodyScrollLock(documentLike) call, each "close" is invoking that
+  // specific layer's own release. The real components each hold their own
+  // claim for their own mounted lifetime (see BuilderRuntime.jsx and
+  // BuilderPanel.jsx) -- this reproduces that ownership shape directly
+  // against the shared document, without needing to render the real,
+  // portal-heavy component tree (which this package's own tests already
+  // avoid rendering directly; see BuilderRuntime.test.jsx's header comment).
+  it("stays locked through a 3-layer stack (Note Explorer -> Details -> Rare Selection) until every layer has closed, in any close order", () => {
+    const documentLike = createLockDocument("");
+
+    const releaseNoteExplorer = acquireBodyScrollLock(documentLike);
+    expect(documentLike.body.style.overflow).toBe("hidden");
+
+    const releaseDetails = acquireBodyScrollLock(documentLike);
+    expect(documentLike.body.style.overflow).toBe("hidden");
+
+    const releaseRareSelection = acquireBodyScrollLock(documentLike);
+    expect(documentLike.body.style.overflow).toBe("hidden");
+
+    // Close Rare Selection (Cancel, Escape, or a successful confirm all
+    // resolve to the same unmount) -- Details and Note Explorer remain open.
+    releaseRareSelection();
+    expect(documentLike.body.style.overflow).toBe("hidden");
+
+    // Close Details -- Note Explorer alone remains open underneath.
+    releaseDetails();
+    expect(documentLike.body.style.overflow).toBe("hidden");
+
+    // Close Note Explorer, the final owner -- only now does the page unlock,
+    // restored to its exact original (pre-lock) value.
+    releaseNoteExplorer();
+    expect(documentLike.body.style.overflow).toBe("");
+  });
+
+  it("stays locked through a 3-layer stack (Composer -> Details -> Rare Selection) regardless of close order", () => {
+    const documentLike = createLockDocument("");
+
+    const releaseComposer = acquireBodyScrollLock(documentLike);
+    const releaseDetails = acquireBodyScrollLock(documentLike);
+    const releaseRareSelection = acquireBodyScrollLock(documentLike);
+    expect(documentLike.body.style.overflow).toBe("hidden");
+
+    // Close order need not be innermost-first: closing the middle layer
+    // (details) while the top layer (rare selection) is somehow still
+    // mounted must still leave the page locked, since two claims remain.
+    releaseDetails();
+    expect(documentLike.body.style.overflow).toBe("hidden");
+
+    releaseRareSelection();
+    expect(documentLike.body.style.overflow).toBe("hidden");
+
+    releaseComposer();
+    expect(documentLike.body.style.overflow).toBe("");
+  });
+
+  describe("scrollbar-width compensation", () => {
+    it("compensates with the actual measured scrollbar width, not a hardcoded pixel value, when one is present", () => {
+      // innerWidth (1440) - clientWidth (1425) = a real 15px scrollbar, the
+      // same shape confirmed live against the real page in this session's
+      // browser verification -- never a guessed/hardcoded constant.
+      const documentLike = createLockDocumentWithScrollbar({ innerWidth: 1440, clientWidth: 1425 });
+      const release = acquireBodyScrollLock(documentLike);
+      expect(documentLike.body.style.paddingRight).toBe("15px");
+      release();
+      expect(documentLike.body.style.paddingRight).toBe("");
+    });
+
+    it("restores the exact prior paddingRight value, adding to it rather than overwriting it", () => {
+      const documentLike = createLockDocumentWithScrollbar({
+        innerWidth: 1440,
+        clientWidth: 1425,
+        initialPaddingRight: "8px",
+      });
+      const release = acquireBodyScrollLock(documentLike);
+      expect(documentLike.body.style.paddingRight).toBe("23px");
+      release();
+      expect(documentLike.body.style.paddingRight).toBe("8px");
+    });
+
+    it("applies no compensation at all when there is no scrollbar to compensate for (an overlay scrollbar, or a page that doesn't overflow)", () => {
+      const documentLike = createLockDocumentWithScrollbar({ innerWidth: 1440, clientWidth: 1440 });
+      const release = acquireBodyScrollLock(documentLike);
+      expect(documentLike.body.style.overflow).toBe("hidden");
+      expect(documentLike.body.style.paddingRight).toBe("");
+      release();
+      expect(documentLike.body.style.paddingRight).toBe("");
+    });
+
+    it("never stacks compensation under nested locks -- only the first acquire measures and applies it", () => {
+      const documentLike = createLockDocumentWithScrollbar({ innerWidth: 1440, clientWidth: 1425 });
+      const releaseOuter = acquireBodyScrollLock(documentLike);
+      expect(documentLike.body.style.paddingRight).toBe("15px");
+
+      const releaseInner = acquireBodyScrollLock(documentLike);
+      // Still exactly 15px -- a second, nested acquire while already locked
+      // must not re-measure or add a second helping on top of the first.
+      expect(documentLike.body.style.paddingRight).toBe("15px");
+
+      releaseInner();
+      expect(documentLike.body.style.paddingRight).toBe("15px"); // outer still holds its own claim
+
+      releaseOuter();
+      expect(documentLike.body.style.paddingRight).toBe("");
+    });
+
+    it("degrades to no compensation (never throws) when defaultView/documentElement are absent, as with every other documentLike in this file's own tests", () => {
+      const documentLike = createLockDocument("visible");
+      const release = acquireBodyScrollLock(documentLike);
+      expect(documentLike.body.style.overflow).toBe("hidden");
+      expect(documentLike.body.style.paddingRight).toBeUndefined();
+      release();
+      expect(documentLike.body.style.overflow).toBe("visible");
+    });
+  });
+
+  describe("locks the actual scrolling element (documentElement), not just body", () => {
+    // Regression coverage for a real defect found live in this session:
+    // document.scrollingElement is <html> (document.documentElement) in
+    // standards mode, not <body> -- with only body.style.overflow set to
+    // "hidden", window.scrollBy still moved the real page. <html> is what
+    // must be locked for the page to actually stop scrolling.
+    it("sets overflow:hidden on documentElement (not only body) while locked, and restores its exact prior value", () => {
+      const documentLike = createFullLockDocument({ initialHtmlOverflow: "auto" });
+      const release = acquireBodyScrollLock(documentLike);
+      expect(documentLike.documentElement.style.overflow).toBe("hidden");
+      expect(documentLike.body.style.overflow).toBe("hidden");
+      release();
+      expect(documentLike.documentElement.style.overflow).toBe("auto");
+      expect(documentLike.body.style.overflow).toBe("");
+    });
+
+    it("keeps documentElement locked while any nested owner still holds a claim, releasing it only once every claim is gone", () => {
+      const documentLike = createFullLockDocument({ initialHtmlOverflow: "" });
+      const releaseOuter = acquireBodyScrollLock(documentLike);
+      const releaseInner = acquireBodyScrollLock(documentLike);
+      expect(documentLike.documentElement.style.overflow).toBe("hidden");
+
+      releaseInner();
+      expect(documentLike.documentElement.style.overflow).toBe("hidden");
+
+      releaseOuter();
+      expect(documentLike.documentElement.style.overflow).toBe("");
+    });
+
+    it("does not throw if documentElement has no style object (an unusually shaped documentLike)", () => {
+      const documentLike = { documentElement: {}, body: { style: { overflow: "" } } };
+      expect(() => acquireBodyScrollLock(documentLike)()).not.toThrow();
+    });
   });
 });
 
