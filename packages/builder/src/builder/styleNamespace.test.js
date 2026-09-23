@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest";
 const builderCss = readFileSync(new URL("../../styles.css", import.meta.url), "utf8").replace(/\r\n/g, "\n");
 const originalRulesStart = builderCss.indexOf(":where(.builder-scope) .app {");
 const transformedOriginalRules = builderCss.slice(originalRulesStart);
-const BASELINE_SHA256 = "5d2fca36fb7d1be0f89906aa3166c46c6d98fbdd0c95b50608aad7083cd3983e";
+const BASELINE_SHA256 = "25c042c8babee4dcd17d2b994a4362a405e5d4304aa4fc409609693de558bbb4";
 const unitDefinitions = [...builderCss.matchAll(/(--builder-unit-(\d+)):\s*([\d.]+)px;/g)];
 const unitReferences = [...builderCss.matchAll(/var\((--builder-unit-(\d+))\)/g)];
 
@@ -69,20 +69,20 @@ describe("Builder stylesheet namespace", () => {
       .replace(/var\(--builder-unit-(\d+)\)/g, (_, digits) => `${remMagnitude(digits)}rem`);
     expect(createHash("sha256").update(recovered).digest("hex")).toBe(BASELINE_SHA256);
     expect((builderCss.match(/!important/g) || [])).toHaveLength(15);
-    expect((builderCss.match(/color-mix\(/g) || [])).toHaveLength(186);
-    expect((builderCss.match(/var\([^,()]+,/g) || [])).toHaveLength(260);
+    expect((builderCss.match(/color-mix\(/g) || [])).toHaveLength(181);
+    expect((builderCss.match(/var\([^,()]+,/g) || [])).toHaveLength(246);
   });
 
   it("defines a complete fixed-length token set for every former rem magnitude", () => {
     expect(builderCss).not.toMatch(/\brem\b/);
-    expect(unitReferences).toHaveLength(253);
-    expect(unitDefinitions).toHaveLength(98);
+    expect(unitReferences).toHaveLength(231);
+    expect(unitDefinitions).toHaveLength(96);
 
     const referencedNames = new Set(unitReferences.map((match) => match[1]));
-    const desktopDefinitions = new Map(unitDefinitions.slice(0, 49).map((match) => [match[1], Number(match[3])]));
-    const responsiveDefinitions = new Map(unitDefinitions.slice(49).map((match) => [match[1], Number(match[3])]));
+    const desktopDefinitions = new Map(unitDefinitions.slice(0, 48).map((match) => [match[1], Number(match[3])]));
+    const responsiveDefinitions = new Map(unitDefinitions.slice(48).map((match) => [match[1], Number(match[3])]));
 
-    expect(referencedNames.size).toBe(49);
+    expect(referencedNames.size).toBe(48);
     expect([...desktopDefinitions.keys()]).toEqual([...responsiveDefinitions.keys()]);
     expect(new Set(desktopDefinitions.keys())).toEqual(referencedNames);
 
@@ -99,7 +99,7 @@ describe("Builder stylesheet namespace", () => {
 
   it("binds every ordinary selector to the neutral scope exactly once", () => {
     const selectors = collectRuleSelectors(builderCss);
-    expect(selectors).toHaveLength(1282);
+    expect(selectors).toHaveLength(1188);
     selectors.forEach((selector) => {
       expect(selector.startsWith(":where(.builder-scope)")).toBe(true);
       expect(selector.match(/:where\(\.builder-scope\)/g)).toHaveLength(1);
