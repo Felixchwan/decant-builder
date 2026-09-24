@@ -96,6 +96,8 @@ export function buildCollectionCardViewModel({
       isCuratorBonusUnlocked: Boolean(curatorBonus?.isUnlocked),
       maxSlots,
       maxSelectableSlots,
+      themeAccent: config.theme?.colors?.accent,
+      themeAccentStrong: config.theme?.colors?.accentStrong,
     },
   };
 }

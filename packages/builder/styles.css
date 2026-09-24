@@ -468,17 +468,17 @@
   flex: 0 0 auto;
   width: 26px;
   height: 26px;
-  border: 1px solid rgba(250, 204, 21, 0.28);
+  border: 1px solid color-mix(in srgb, var(--builder-color-accent, #4ade80) 28%, transparent);
   border-radius: 999px;
   background: rgba(15, 23, 42, 0.72);
-  color: #fde68a;
+  color: var(--builder-color-accent, #4ade80);
   font-size: var(--builder-unit-078);
   line-height: 1;
 }
 
 :where(.builder-scope) .summary-collapse-toggle:hover {
-  border-color: rgba(250, 204, 21, 0.44);
-  background: rgba(250, 204, 21, 0.1);
+  border-color: color-mix(in srgb, var(--builder-color-accent, #4ade80) 44%, transparent);
+  background: color-mix(in srgb, var(--builder-color-accent, #4ade80) 10%, transparent);
 }
 
 :where(.builder-scope) .summary-collapse-toggle--strip {
@@ -553,10 +553,10 @@
   width: 24px;
   height: 24px;
   padding: 0;
-  border: 1px solid rgba(250, 204, 21, 0.20);
+  border: 1px solid color-mix(in srgb, var(--builder-color-accent, #4ade80) 20%, transparent);
   border-radius: 999px;
-  background: rgba(250, 204, 21, 0.07);
-  color: rgba(254, 243, 199, 0.74);
+  background: color-mix(in srgb, var(--builder-color-accent, #4ade80) 7%, transparent);
+  color: color-mix(in srgb, var(--builder-color-accent, #4ade80) 74%, transparent);
   font-size: var(--builder-unit-072);
   font-weight: 900;
   line-height: 1;
@@ -564,9 +564,9 @@
 
 :where(.builder-scope) .catalog-info-button:hover,
 :where(.builder-scope) .catalog-info-button:focus-visible {
-  border-color: rgba(250, 204, 21, 0.42);
-  background: rgba(250, 204, 21, 0.14);
-  color: #fef3c7;
+  border-color: color-mix(in srgb, var(--builder-color-accent, #4ade80) 42%, transparent);
+  background: color-mix(in srgb, var(--builder-color-accent, #4ade80) 14%, transparent);
+  color: var(--builder-color-accent, #4ade80);
   outline: none;
 }
 
@@ -578,9 +578,9 @@
   padding: 14px;
   border-radius: 16px;
   background:
-    radial-gradient(circle at 18% 0, rgba(250, 204, 21, 0.12), transparent 34%),
+    radial-gradient(circle at 18% 0, color-mix(in srgb, var(--builder-color-accent, #4ade80) 12%, transparent), transparent 34%),
     rgba(2, 6, 23, 0.86);
-  border: 1px solid rgba(250, 204, 21, 0.24);
+  border: 1px solid color-mix(in srgb, var(--builder-color-accent, #4ade80) 24%, transparent);
   box-shadow:
     0 18px 42px rgba(0, 0, 0, 0.24),
     0 0 0 1px rgba(255, 255, 255, 0.02) inset;
@@ -594,8 +594,8 @@
   height: 14px;
   transform: rotate(45deg);
   background: rgba(2, 6, 23, 0.92);
-  border-left: 1px solid rgba(250, 204, 21, 0.24);
-  border-top: 1px solid rgba(250, 204, 21, 0.24);
+  border-left: 1px solid color-mix(in srgb, var(--builder-color-accent, #4ade80) 24%, transparent);
+  border-top: 1px solid color-mix(in srgb, var(--builder-color-accent, #4ade80) 24%, transparent);
 }
 
 :where(.builder-scope) .discovery-coachmark-mobile {
@@ -611,7 +611,7 @@
 :where(.builder-scope) .discovery-coachmark-eyebrow {
   display: block;
   margin-bottom: 8px;
-  color: #fde68a;
+  color: var(--builder-color-accent, #4ade80);
   font-size: var(--builder-unit-076);
   font-weight: 900;
   letter-spacing: 0.08em;
@@ -692,9 +692,9 @@
 
 :where(.builder-scope) .onboarding-mobile-close:hover,
 :where(.builder-scope) .onboarding-mobile-close:focus-visible {
-  background: rgba(250, 204, 21, 0.12);
-  color: #fde68a;
-  box-shadow: inset 0 0 0 1px rgba(250, 204, 21, 0.24);
+  background: color-mix(in srgb, var(--builder-color-accent, #4ade80) 12%, transparent);
+  color: var(--builder-color-accent, #4ade80);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--builder-color-accent, #4ade80) 24%, transparent);
   opacity: 1;
 }
 
@@ -976,11 +976,11 @@
 
 :where(.builder-scope) .perfume-card:hover .perfume-card-brand-badge,
 :where(.builder-scope) .perfume-card:focus-within .perfume-card-brand-badge {
-  border-color: rgba(250, 204, 21, 0.28);
+  border-color: color-mix(in srgb, var(--builder-color-accent, #4ade80) 28%, transparent);
   background: rgba(15, 23, 42, 0.44);
   box-shadow:
     0 9px 20px rgba(0, 0, 0, 0.18),
-    0 0 16px rgba(250, 204, 21, 0.10);
+    0 0 16px color-mix(in srgb, var(--builder-color-accent, #4ade80) 10%, transparent);
   transform: translateY(-1px) scale(1.03);
 }
 
@@ -1025,12 +1025,12 @@
 
 :where(.builder-scope) .perfume-card:hover .perfume-card-info-icon,
 :where(.builder-scope) .perfume-card .perfume-card-info-icon:focus-visible {
-  border-color: rgba(250, 204, 21, 0.38);
+  border-color: color-mix(in srgb, var(--builder-color-accent, #4ade80) 38%, transparent);
   background: rgba(2, 6, 23, 0.62);
-  color: rgba(254, 243, 199, 0.9);
+  color: color-mix(in srgb, var(--builder-color-accent, #4ade80) 90%, transparent);
   box-shadow:
     0 8px 18px rgba(0, 0, 0, 0.2),
-    0 0 14px rgba(250, 204, 21, 0.12);
+    0 0 14px color-mix(in srgb, var(--builder-color-accent, #4ade80) 12%, transparent);
 }
 
 :where(.builder-scope) .perfume-card-details-trigger {
@@ -1213,7 +1213,7 @@
   border: 1px solid rgba(148, 163, 184, 0.16);
   border-radius: 20px;
   background:
-    radial-gradient(circle at 70% 0, rgba(250, 204, 21, 0.08), transparent 46%),
+    radial-gradient(circle at 70% 0, color-mix(in srgb, var(--builder-color-accent, #4ade80) 8%, transparent), transparent 46%),
     rgba(15, 23, 42, 0.72);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
   text-align: center;
@@ -1324,10 +1324,10 @@
   width: 24px;
   height: 24px;
   padding: 0;
-  border: 1px solid rgba(250, 204, 21, 0.20);
+  border: 1px solid color-mix(in srgb, var(--builder-color-accent, #4ade80) 20%, transparent);
   border-radius: 999px;
-  background: rgba(250, 204, 21, 0.07);
-  color: rgba(254, 243, 199, 0.74);
+  background: color-mix(in srgb, var(--builder-color-accent, #4ade80) 7%, transparent);
+  color: color-mix(in srgb, var(--builder-color-accent, #4ade80) 74%, transparent);
   font-size: var(--builder-unit-072);
   font-weight: 900;
   line-height: 1;
@@ -1335,9 +1335,9 @@
 
 :where(.builder-scope) .share-info-button:hover,
 :where(.builder-scope) .share-info-button:focus-visible {
-  border-color: rgba(250, 204, 21, 0.42);
-  background: rgba(250, 204, 21, 0.14);
-  color: #fef3c7;
+  border-color: color-mix(in srgb, var(--builder-color-accent, #4ade80) 42%, transparent);
+  background: color-mix(in srgb, var(--builder-color-accent, #4ade80) 14%, transparent);
+  color: var(--builder-color-accent, #4ade80);
   outline: none;
 }
 
@@ -1348,7 +1348,7 @@
   z-index: 12;
   width: min(230px, 72vw);
   padding: 8px 10px;
-  border: 1px solid rgba(250, 204, 21, 0.22);
+  border: 1px solid color-mix(in srgb, var(--builder-color-accent, #4ade80) 22%, transparent);
   border-radius: 10px;
   background: rgba(2, 6, 23, 0.96);
   color: #cbd5e1;
@@ -1386,17 +1386,17 @@
   flex: 0 1 auto;
   min-height: 32px;
   padding: 6px 10px;
-  border: 1px solid rgba(250, 204, 21, 0.22);
+  border: 1px solid color-mix(in srgb, var(--builder-color-accent, #4ade80) 22%, transparent);
   border-radius: 12px;
-  background: rgba(250, 204, 21, 0.08);
-  color: #fef3c7;
+  background: color-mix(in srgb, var(--builder-color-accent, #4ade80) 8%, transparent);
+  color: var(--builder-color-accent, #4ade80);
   font-size: var(--builder-unit-068);
   font-weight: 900;
 }
 
 :where(.builder-scope) .share-box-buttons button:first-child {
-  border-color: rgba(250, 204, 21, 0.32);
-  background: rgba(250, 204, 21, 0.12);
+  border-color: color-mix(in srgb, var(--builder-color-accent, #4ade80) 32%, transparent);
+  background: color-mix(in srgb, var(--builder-color-accent, #4ade80) 12%, transparent);
 }
 
 :where(.builder-scope) .share-box-buttons button:not(:first-child) {
@@ -1406,8 +1406,8 @@
 }
 
 :where(.builder-scope) .share-box-buttons button:hover:not(:disabled) {
-  border-color: rgba(250, 204, 21, 0.42);
-  background: rgba(250, 204, 21, 0.14);
+  border-color: color-mix(in srgb, var(--builder-color-accent, #4ade80) 42%, transparent);
+  background: color-mix(in srgb, var(--builder-color-accent, #4ade80) 14%, transparent);
 }
 
 :where(.builder-scope) .share-box-buttons button:not(:first-child):hover:not(:disabled) {
@@ -1489,13 +1489,13 @@
 
 :where(.builder-scope) .discovery-bonus-panel.unlocked {
   gap: 9px;
-  border-color: rgba(250, 204, 21, 0.36);
+  border-color: color-mix(in srgb, var(--builder-color-accent, #4ade80) 36%, transparent);
   background:
-    radial-gradient(circle at 16% 0, rgba(250, 204, 21, 0.16), transparent 38%),
+    radial-gradient(circle at 16% 0, color-mix(in srgb, var(--builder-color-accent, #4ade80) 16%, transparent), transparent 38%),
     linear-gradient(180deg, rgba(30, 41, 20, 0.82), rgba(10, 22, 14, 0.82));
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.05),
-    0 18px 42px rgba(250, 204, 21, 0.08);
+    0 18px 42px color-mix(in srgb, var(--builder-color-accent, #4ade80) 8%, transparent);
 }
 
 :where(.builder-scope) .discovery-progress-header {
@@ -1532,9 +1532,9 @@
 }
 
 :where(.builder-scope) .discovery-bonus-panel.unlocked .discovery-bonus-state {
-  border-color: rgba(250, 204, 21, 0.42);
-  background: rgba(250, 204, 21, 0.13);
-  color: #fde68a !important;
+  border-color: color-mix(in srgb, var(--builder-color-accent, #4ade80) 42%, transparent);
+  background: color-mix(in srgb, var(--builder-color-accent, #4ade80) 13%, transparent);
+  color: var(--builder-color-accent, #4ade80) !important;
 }
 
 :where(.builder-scope) .discovery-bonus-panel.unlocked .discovery-progress-copy {
@@ -1557,7 +1557,7 @@
 }
 
 :where(.builder-scope) .discovery-bonus-panel.unlocked .discovery-progress-bar div {
-  background: linear-gradient(90deg, var(--builder-color-accent-strong, #22c55e), #facc15);
+  background: linear-gradient(90deg, var(--builder-color-accent-strong, #22c55e), var(--builder-color-accent, #4ade80));
 }
 
 :where(.builder-scope) .discovery-progress-copy {
@@ -1571,14 +1571,14 @@
   gap: 7px;
   padding: 11px;
   border-radius: 14px;
-  border: 1px solid rgba(250, 204, 21, 0.16);
+  border: 1px solid color-mix(in srgb, var(--builder-color-accent, #4ade80) 16%, transparent);
   background:
-    radial-gradient(circle at 12% 0, rgba(250, 204, 21, 0.08), transparent 42%),
+    radial-gradient(circle at 12% 0, color-mix(in srgb, var(--builder-color-accent, #4ade80) 8%, transparent), transparent 42%),
     rgba(2, 6, 23, 0.28);
 }
 
 :where(.builder-scope) .curator-preference-control label {
-  color: #fef3c7;
+  color: var(--builder-color-accent, #4ade80);
   font-size: var(--builder-unit-068);
   font-weight: 900;
   letter-spacing: 0.08em;
@@ -1587,7 +1587,7 @@
 
 :where(.builder-scope) .curator-preference-control select {
   width: 100%;
-  border: 1px solid rgba(250, 204, 21, 0.26);
+  border: 1px solid color-mix(in srgb, var(--builder-color-accent, #4ade80) 26%, transparent);
   border-radius: 10px;
   padding: 9px 10px;
   background: rgba(8, 17, 13, 0.88);
@@ -1640,9 +1640,9 @@
 }
 
 :where(.builder-scope) .curator-bonus-section.unlocked .curator-bonus-status {
-  border-color: rgba(250, 204, 21, 0.42);
-  background: rgba(250, 204, 21, 0.13);
-  color: #fde68a !important;
+  border-color: color-mix(in srgb, var(--builder-color-accent, #4ade80) 42%, transparent);
+  background: color-mix(in srgb, var(--builder-color-accent, #4ade80) 13%, transparent);
+  color: var(--builder-color-accent, #4ade80) !important;
 }
 
 :where(.builder-scope) .curator-unlock-confirmation {
@@ -1653,11 +1653,11 @@
   min-height: 34px;
   padding: 8px 12px;
   border-radius: 999px;
-  border: 1px solid rgba(250, 204, 21, 0.32);
+  border: 1px solid color-mix(in srgb, var(--builder-color-accent, #4ade80) 32%, transparent);
   background:
-    linear-gradient(90deg, rgba(250, 204, 21, 0.10), color-mix(in srgb, var(--builder-color-accent, #4ade80) 8%, transparent)),
+    linear-gradient(90deg, color-mix(in srgb, var(--builder-color-accent, #4ade80) 10%, transparent), color-mix(in srgb, var(--builder-color-accent, #4ade80) 8%, transparent)),
     rgba(15, 23, 42, 0.52);
-  color: #fde68a;
+  color: var(--builder-color-accent, #4ade80);
   font-size: var(--builder-unit-078);
   font-weight: 900;
   letter-spacing: 0.06em;
@@ -1710,7 +1710,7 @@
   height: 28px;
   border-radius: 999px;
   background: rgba(59, 39, 17, 0.86);
-  border: 1px solid rgba(250, 204, 21, 0.22);
+  border: 1px solid color-mix(in srgb, var(--builder-color-accent, #4ade80) 22%, transparent);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.08),
     0 8px 22px rgba(0, 0, 0, 0.24);
@@ -1867,9 +1867,9 @@
   padding-top: 10px;
   gap: 8px;
   border-style: solid;
-  border-color: rgba(250, 204, 21, 0.32);
+  border-color: color-mix(in srgb, var(--builder-color-accent, #4ade80) 32%, transparent);
   background:
-    radial-gradient(circle at 0 0, rgba(250, 204, 21, 0.14), transparent 42%),
+    radial-gradient(circle at 0 0, color-mix(in srgb, var(--builder-color-accent, #4ade80) 14%, transparent), transparent 42%),
     rgba(2, 6, 23, 0.45);
 }
 
@@ -1884,8 +1884,8 @@
 }
 
 :where(.builder-scope) .discovery-bonus-panel.unlocked .curator-bonus-icon {
-  background: rgba(250, 204, 21, 0.14);
-  box-shadow: 0 0 24px rgba(250, 204, 21, 0.14);
+  background: color-mix(in srgb, var(--builder-color-accent, #4ade80) 14%, transparent);
+  box-shadow: 0 0 24px color-mix(in srgb, var(--builder-color-accent, #4ade80) 14%, transparent);
 }
 
 :where(.builder-scope) .curator-bonus-card strong {
@@ -1917,15 +1917,15 @@
 
 :where(.builder-scope) .curator-pick-slot.active {
   opacity: 1;
-  border-color: rgba(250, 204, 21, 0.38);
+  border-color: color-mix(in srgb, var(--builder-color-accent, #4ade80) 38%, transparent);
   background:
-    radial-gradient(circle at 15% 0, rgba(250, 204, 21, 0.18), transparent 46%),
-    linear-gradient(135deg, rgba(250, 204, 21, 0.10), color-mix(in srgb, var(--builder-color-accent-strong, #22c55e) 8%, transparent)),
+    radial-gradient(circle at 15% 0, color-mix(in srgb, var(--builder-color-accent, #4ade80) 18%, transparent), transparent 46%),
+    linear-gradient(135deg, color-mix(in srgb, var(--builder-color-accent, #4ade80) 10%, transparent), color-mix(in srgb, var(--builder-color-accent-strong, #22c55e) 8%, transparent)),
     rgba(15, 23, 42, 0.58);
 }
 
 :where(.builder-scope) .curator-pick-slot strong {
-  color: #fef3c7;
+  color: var(--builder-color-accent, #4ade80);
 }
 
 :where(.builder-scope) .curator-pick-slot p {
@@ -1948,20 +1948,20 @@
     filter: brightness(1);
     box-shadow:
       inset 0 1px 0 rgba(255, 255, 255, 0.05),
-      0 18px 42px rgba(250, 204, 21, 0.08);
+      0 18px 42px color-mix(in srgb, var(--builder-color-accent, #4ade80) 8%, transparent);
   }
   35% {
     filter: brightness(1.09);
     box-shadow:
       inset 0 1px 0 rgba(255, 255, 255, 0.08),
-      0 0 0 1px rgba(250, 204, 21, 0.18),
-      0 22px 58px rgba(250, 204, 21, 0.18);
+      0 0 0 1px color-mix(in srgb, var(--builder-color-accent, #4ade80) 18%, transparent),
+      0 22px 58px color-mix(in srgb, var(--builder-color-accent, #4ade80) 18%, transparent);
   }
   100% {
     filter: brightness(1);
     box-shadow:
       inset 0 1px 0 rgba(255, 255, 255, 0.05),
-      0 18px 42px rgba(250, 204, 21, 0.08);
+      0 18px 42px color-mix(in srgb, var(--builder-color-accent, #4ade80) 8%, transparent);
   }
 }
 
@@ -2022,7 +2022,7 @@
   border-radius: 16px;
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.035), transparent 16%),
-    radial-gradient(ellipse at 50% 50%, rgba(250, 204, 21, 0.045), transparent 46%),
+    radial-gradient(ellipse at 50% 50%, color-mix(in srgb, var(--builder-color-accent, #4ade80) 4.5%, transparent), transparent 46%),
     linear-gradient(180deg, rgba(12, 12, 10, 0.99), rgba(0, 0, 0, 0.94));
   box-shadow:
     0 18px 40px rgba(0, 0, 0, 0.30),
@@ -2378,11 +2378,11 @@
 }
 
 :where(.builder-scope) .box-vial.drag-target .vial-body {
-  border-color: rgba(250, 204, 21, 0.72);
+  border-color: color-mix(in srgb, var(--builder-color-accent, #4ade80) 72%, transparent);
   box-shadow:
     inset 0 0 8px rgba(255, 255, 255, 0.07),
-    0 0 0 1px rgba(250, 204, 21, 0.20),
-    0 0 18px rgba(250, 204, 21, 0.16);
+    0 0 0 1px color-mix(in srgb, var(--builder-color-accent, #4ade80) 20%, transparent),
+    0 0 18px color-mix(in srgb, var(--builder-color-accent, #4ade80) 16%, transparent);
 }
 
 :where(.builder-scope) .slot-action-popover {
@@ -2394,7 +2394,7 @@
   gap: 6px;
   min-width: 150px;
   padding: 9px;
-  border: 1px solid rgba(250, 204, 21, 0.22);
+  border: 1px solid color-mix(in srgb, var(--builder-color-accent, #4ade80) 22%, transparent);
   border-radius: 12px;
   background: rgba(2, 6, 23, 0.96);
   box-shadow: 0 14px 34px rgba(0, 0, 0, 0.38);
@@ -2551,36 +2551,36 @@
 }
 
 :where(.builder-scope) .box-vial.bonus-reserved {
-  --bonus-color: rgba(250, 204, 21, 0.58);
+  --bonus-color: color-mix(in srgb, var(--builder-color-accent, #4ade80) 58%, transparent);
   filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.4));
 }
 
 :where(.builder-scope) .box-vial.bonus-reserved .vial-cap {
   background:
-    linear-gradient(90deg, rgba(250, 204, 21, 0.12), transparent 22%),
-    radial-gradient(ellipse at 42% 50%, rgba(250, 204, 21, 0.10), transparent 58%),
+    linear-gradient(90deg, color-mix(in srgb, var(--builder-color-accent, #4ade80) 12%, transparent), transparent 22%),
+    radial-gradient(ellipse at 42% 50%, color-mix(in srgb, var(--builder-color-accent, #4ade80) 10%, transparent), transparent 58%),
     linear-gradient(180deg, #211d10, #050505);
-  border-color: rgba(250, 204, 21, 0.18);
+  border-color: color-mix(in srgb, var(--builder-color-accent, #4ade80) 18%, transparent);
 }
 
 :where(.builder-scope) .box-vial.bonus-reserved .vial-body {
   overflow: hidden;
   border-color: color-mix(in srgb, var(--bonus-color) 72%, rgba(148, 163, 184, 0.2));
   background:
-    linear-gradient(90deg, rgba(250, 204, 21, 0.16), rgba(255, 255, 255, 0.045) 12%, transparent 18%),
+    linear-gradient(90deg, color-mix(in srgb, var(--builder-color-accent, #4ade80) 16%, transparent), rgba(255, 255, 255, 0.045) 12%, transparent 18%),
     linear-gradient(180deg, rgba(24, 22, 14, 0.96), rgba(5, 8, 7, 0.96));
   box-shadow:
-    inset 0 0 9px rgba(250, 204, 21, 0.08),
+    inset 0 0 9px color-mix(in srgb, var(--builder-color-accent, #4ade80) 8%, transparent),
     0 5px 7px rgba(0, 0, 0, 0.26),
-    0 0 10px rgba(250, 204, 21, 0.06);
+    0 0 10px color-mix(in srgb, var(--builder-color-accent, #4ade80) 6%, transparent);
 }
 
 :where(.builder-scope) .box-vial.bonus-locked {
   opacity: 0.86;
-  --bonus-color: rgba(250, 204, 21, 0.68);
+  --bonus-color: color-mix(in srgb, var(--builder-color-accent, #4ade80) 68%, transparent);
   filter:
     drop-shadow(0 3px 7px rgba(0, 0, 0, 0.42))
-    drop-shadow(0 0 7px rgba(250, 204, 21, 0.10));
+    drop-shadow(0 0 7px color-mix(in srgb, var(--builder-color-accent, #4ade80) 10%, transparent));
 }
 
 :where(.builder-scope) .box-vial.bonus-locked .vial-body {
@@ -2591,17 +2591,17 @@
     linear-gradient(180deg, transparent 0 46%, rgba(92, 64, 18, 0.32) 46% 54%, transparent 54%),
     repeating-linear-gradient(
       -24deg,
-      rgba(250, 204, 21, 0.045) 0 3px,
+      color-mix(in srgb, var(--builder-color-accent, #4ade80) 4.5%, transparent) 0 3px,
       transparent 3px 13px
     ),
-    radial-gradient(circle at 54% 48%, rgba(250, 204, 21, 0.14), transparent 24%),
+    radial-gradient(circle at 54% 48%, color-mix(in srgb, var(--builder-color-accent, #4ade80) 14%, transparent), transparent 24%),
     linear-gradient(180deg, rgba(35, 29, 17, 0.98), rgba(6, 8, 7, 0.97));
   box-shadow:
-    inset 0 0 10px rgba(250, 204, 21, 0.11),
-    inset 0 1px 0 rgba(250, 204, 21, 0.10),
+    inset 0 0 10px color-mix(in srgb, var(--builder-color-accent, #4ade80) 11%, transparent),
+    inset 0 1px 0 color-mix(in srgb, var(--builder-color-accent, #4ade80) 10%, transparent),
     inset 0 -6px 10px rgba(0, 0, 0, 0.24),
     0 5px 8px rgba(0, 0, 0, 0.28),
-    0 0 12px rgba(250, 204, 21, 0.08);
+    0 0 12px color-mix(in srgb, var(--builder-color-accent, #4ade80) 8%, transparent);
 }
 
 :where(.builder-scope) .box-vial.bonus-locked .vial-body::before {
@@ -2611,12 +2611,12 @@
   top: 50%;
   width: 22px;
   height: 17px;
-  border: 1px solid rgba(250, 204, 21, 0.16);
+  border: 1px solid color-mix(in srgb, var(--builder-color-accent, #4ade80) 16%, transparent);
   border-radius: 3px;
   background:
     radial-gradient(circle at 50% 50%, rgba(120, 53, 15, 0.42), transparent 30%),
-    linear-gradient(90deg, transparent 0 44%, rgba(250, 204, 21, 0.10) 44% 56%, transparent 56%),
-    linear-gradient(180deg, transparent 0 45%, rgba(250, 204, 21, 0.08) 45% 56%, transparent 56%);
+    linear-gradient(90deg, transparent 0 44%, color-mix(in srgb, var(--builder-color-accent, #4ade80) 10%, transparent) 44% 56%, transparent 56%),
+    linear-gradient(180deg, transparent 0 45%, color-mix(in srgb, var(--builder-color-accent, #4ade80) 8%, transparent) 45% 56%, transparent 56%);
   opacity: 0.72;
   transform: translate(-50%, -50%);
 }
@@ -2640,13 +2640,13 @@
 }
 
 :where(.builder-scope) .box-vial.bonus-unlocked {
-  --bonus-color: rgba(250, 204, 21, 0.86);
+  --bonus-color: color-mix(in srgb, var(--builder-color-accent, #4ade80) 86%, transparent);
 }
 
 :where(.builder-scope) .box-vial.bonus-unlocked .vial-body {
   position: relative;
   overflow: hidden;
-  border-color: rgba(250, 204, 21, 0.72);
+  border-color: color-mix(in srgb, var(--builder-color-accent, #4ade80) 72%, transparent);
   background:
     linear-gradient(90deg, transparent 0 48%, rgba(95, 13, 24, 0.86) 48% 52%, transparent 52%),
     repeating-linear-gradient(
@@ -2661,7 +2661,7 @@
     inset 0 -1px 0 rgba(120, 53, 15, 0.7),
     inset 0 -7px 12px rgba(120, 53, 15, 0.32),
     0 5px 8px rgba(0, 0, 0, 0.30),
-    0 0 14px rgba(250, 204, 21, 0.18);
+    0 0 14px color-mix(in srgb, var(--builder-color-accent, #4ade80) 18%, transparent);
 }
 
 :where(.builder-scope) .box-vial.bonus-unlocked .vial-body::before {
@@ -2827,8 +2827,8 @@
     margin-left: 6px;
     padding: 0 7px;
     border-radius: 999px;
-    background: rgba(250, 204, 21, 0.14);
-    color: #fde68a;
+    background: color-mix(in srgb, var(--builder-color-accent, #4ade80) 14%, transparent);
+    color: var(--builder-color-accent, #4ade80);
     font-size: var(--builder-unit-076);
   }
 
@@ -3081,8 +3081,8 @@
 
   :where(.builder-scope) .builder-panel-collapse-rail:hover,
   :where(.builder-scope) .builder-panel-collapse-rail:focus-visible {
-    border-color: rgba(250, 204, 21, 0.32);
-    color: #fde68a;
+    border-color: color-mix(in srgb, var(--builder-color-accent, #4ade80) 32%, transparent);
+    color: var(--builder-color-accent, #4ade80);
   }
 
   :where(.builder-scope) .layout--panel-collapsed .builder-panel-collapse-rail {
@@ -3779,8 +3779,8 @@
 }
 
 :where(.builder-scope) .box-status.not-ready {
-  border-color: rgba(250, 204, 21, 0.25);
-  background: rgba(250, 204, 21, 0.07);
+  border-color: color-mix(in srgb, var(--builder-color-accent, #4ade80) 25%, transparent);
+  background: color-mix(in srgb, var(--builder-color-accent, #4ade80) 7%, transparent);
 }
 
 :where(.builder-scope) .review-box-button {
@@ -3796,7 +3796,7 @@
 
 :where(.builder-scope) .review-action p {
   margin: -6px 0 14px;
-  color: #fcd34d;
+  color: var(--builder-color-accent, #4ade80);
   font-size: var(--builder-unit-080);
   line-height: 1.35;
   text-align: center;
@@ -3810,9 +3810,9 @@
 }
 
 :where(.builder-scope) .review-box-button.is-unlocked {
-  border-color: rgba(250, 204, 21, 0.48);
+  border-color: color-mix(in srgb, var(--builder-color-accent, #4ade80) 48%, transparent);
   background:
-    linear-gradient(180deg, rgba(253, 230, 138, 0.96), color-mix(in srgb, var(--builder-color-accent, #4ade80) 92%, transparent));
+    linear-gradient(180deg, color-mix(in srgb, var(--builder-color-accent, #4ade80) 96%, transparent), color-mix(in srgb, var(--builder-color-accent, #4ade80) 92%, transparent));
   box-shadow: 0 14px 34px color-mix(in srgb, var(--builder-color-accent, #4ade80) 16%, transparent);
 }
 
@@ -4020,10 +4020,10 @@
   gap: 12px;
   margin-top: 9px;
   padding: 14px;
-  border: 1px solid rgba(250, 204, 21, 0.16);
+  border: 1px solid color-mix(in srgb, var(--builder-color-accent, #4ade80) 16%, transparent);
   border-radius: 18px;
   background:
-    radial-gradient(circle at 8% 0, rgba(250, 204, 21, 0.08), transparent 36%),
+    radial-gradient(circle at 8% 0, color-mix(in srgb, var(--builder-color-accent, #4ade80) 8%, transparent), transparent 36%),
     radial-gradient(circle at 92% 14%, color-mix(in srgb, var(--builder-color-accent, #4ade80) 8%, transparent), transparent 32%),
     rgba(2, 6, 23, 0.40);
 }
@@ -4369,12 +4369,12 @@
   width: 32px;
   height: 32px;
   padding: 0;
-  border: 1px solid rgba(250, 204, 21, 0.24);
+  border: 1px solid color-mix(in srgb, var(--builder-color-accent, #4ade80) 24%, transparent);
   border-radius: 999px;
   background:
-    linear-gradient(180deg, rgba(250, 204, 21, 0.11), rgba(15, 23, 42, 0.48)),
+    linear-gradient(180deg, color-mix(in srgb, var(--builder-color-accent, #4ade80) 11%, transparent), rgba(15, 23, 42, 0.48)),
     rgba(2, 6, 23, 0.74);
-  color: #fde68a;
+  color: var(--builder-color-accent, #4ade80);
   font-size: var(--builder-unit-095);
   font-weight: 900;
   line-height: 1;
@@ -4399,14 +4399,14 @@
 }
 
 :where(.builder-scope) .perfume-image-nav:not(:disabled):hover {
-  border-color: rgba(250, 204, 21, 0.48);
+  border-color: color-mix(in srgb, var(--builder-color-accent, #4ade80) 48%, transparent);
   background:
-    linear-gradient(180deg, rgba(250, 204, 21, 0.16), rgba(15, 23, 42, 0.56)),
+    linear-gradient(180deg, color-mix(in srgb, var(--builder-color-accent, #4ade80) 16%, transparent), rgba(15, 23, 42, 0.56)),
     rgba(2, 6, 23, 0.82);
-  color: #fef3c7;
+  color: var(--builder-color-accent, #4ade80);
   box-shadow:
     0 12px 28px rgba(0, 0, 0, 0.32),
-    0 0 18px rgba(250, 204, 21, 0.16),
+    0 0 18px color-mix(in srgb, var(--builder-color-accent, #4ade80) 16%, transparent),
     inset 0 1px 0 rgba(255, 255, 255, 0.12);
   transform: translateY(-50%) scale(1.04);
 }
@@ -4716,7 +4716,7 @@
 :where(.builder-scope) .final-summary-overlay {
   padding: 22px;
   background:
-    radial-gradient(circle at 50% 10%, rgba(250, 204, 21, 0.08), transparent 34%),
+    radial-gradient(circle at 50% 10%, color-mix(in srgb, var(--builder-color-accent, #4ade80) 8%, transparent), transparent 34%),
     rgba(0, 0, 0, 0.78);
 }
 
@@ -4728,7 +4728,7 @@
   border-radius: 20px;
   background:
     radial-gradient(circle at 15% 0, color-mix(in srgb, var(--builder-color-accent, #4ade80) 11%, transparent), transparent 34%),
-    radial-gradient(circle at 85% 8%, rgba(250, 204, 21, 0.08), transparent 30%),
+    radial-gradient(circle at 85% 8%, color-mix(in srgb, var(--builder-color-accent, #4ade80) 8%, transparent), transparent 30%),
     #08110d;
   border: 1px solid rgba(255, 255, 255, 0.12);
   box-shadow: 0 28px 90px rgba(0, 0, 0, 0.58);
@@ -4805,7 +4805,7 @@
   border: 1px solid color-mix(in srgb, var(--builder-color-accent, #4ade80) 18%, transparent);
   border-radius: 16px;
   background:
-    radial-gradient(circle at 12% 0, rgba(250, 204, 21, 0.1), transparent 38%),
+    radial-gradient(circle at 12% 0, color-mix(in srgb, var(--builder-color-accent, #4ade80) 10%, transparent), transparent 38%),
     radial-gradient(circle at 88% 8%, color-mix(in srgb, var(--builder-color-accent, #4ade80) 8%, transparent), transparent 32%),
     rgba(15, 23, 42, 0.46);
 }
@@ -4956,7 +4956,7 @@
 
 :where(.builder-scope) .review-list-bullet li::before {
   content: "•";
-  color: #facc15;
+  color: var(--builder-color-accent, #4ade80);
 }
 
 :where(.builder-scope) .review-list-check li::before {
@@ -4969,10 +4969,10 @@
 
 :where(.builder-scope) .review-curator-note-section {
   padding: 16px;
-  border: 1px solid rgba(250, 204, 21, 0.15);
+  border: 1px solid color-mix(in srgb, var(--builder-color-accent, #4ade80) 15%, transparent);
   border-radius: 16px;
   background:
-    radial-gradient(circle at 12% 0, rgba(250, 204, 21, 0.07), transparent 42%),
+    radial-gradient(circle at 12% 0, color-mix(in srgb, var(--builder-color-accent, #4ade80) 7%, transparent), transparent 42%),
     rgba(15, 23, 42, 0.38);
 }
 
@@ -5065,7 +5065,7 @@
   border: 1px solid color-mix(in srgb, var(--builder-color-accent, #86efac) 14%, transparent);
   border-radius: 16px;
   background:
-    radial-gradient(circle at 12% 0, rgba(250, 204, 21, 0.06), transparent 42%),
+    radial-gradient(circle at 12% 0, color-mix(in srgb, var(--builder-color-accent, #4ade80) 6%, transparent), transparent 42%),
     rgba(15, 23, 42, 0.36);
 }
 
@@ -5407,11 +5407,11 @@
 
 :where(.builder-scope) .composer-proposal-alert {
   margin: 10px 0 0;
-  border: 1px solid rgba(250, 204, 21, 0.2);
+  border: 1px solid color-mix(in srgb, var(--builder-color-accent, #4ade80) 20%, transparent);
   border-radius: 12px;
   padding: 10px 12px;
-  background: rgba(250, 204, 21, 0.08);
-  color: #fde68a;
+  background: color-mix(in srgb, var(--builder-color-accent, #4ade80) 8%, transparent);
+  color: var(--builder-color-accent, #4ade80);
   font-size: var(--builder-unit-086);
   font-weight: 800;
 }
@@ -6053,7 +6053,7 @@
 
 :where(.builder-scope) .final-summary-section.review-curator-note-section {
   padding: 16px;
-  border: 1px solid rgba(250, 204, 21, 0.15);
+  border: 1px solid color-mix(in srgb, var(--builder-color-accent, #4ade80) 15%, transparent);
 }
 
 :where(.builder-scope) .final-summary-tags {
@@ -6210,7 +6210,7 @@
   margin-top: 2px;
   margin-bottom: 2px;
 
-  color: #d4c46a;
+  color: var(--builder-color-accent, #4ade80);
 
   font-size: var(--builder-unit-072);
   font-weight: 800;
@@ -6242,7 +6242,7 @@
   padding: 13px;
   border-radius: 16px;
   background:
-    radial-gradient(circle at 88% 0, rgba(250, 204, 21, 0.08), transparent 34%),
+    radial-gradient(circle at 88% 0, color-mix(in srgb, var(--builder-color-accent, #4ade80) 8%, transparent), transparent 34%),
     rgba(2, 6, 23, 0.28);
   border: 1px solid rgba(148, 163, 184, 0.12);
 }
@@ -6256,7 +6256,7 @@
 
 :where(.builder-scope) .box-intelligence-header h3 {
   margin: 0;
-  color: rgba(250, 204, 21, 0.74);
+  color: color-mix(in srgb, var(--builder-color-accent, #4ade80) 74%, transparent);
   font-size: var(--builder-unit-076);
   font-weight: 900;
   letter-spacing: 0.08em;
@@ -6322,11 +6322,11 @@
 
 :where(.builder-scope) .collection-snapshot-header button {
   flex: 0 0 auto;
-  border: 1px solid rgba(250, 204, 21, 0.24);
+  border: 1px solid color-mix(in srgb, var(--builder-color-accent, #4ade80) 24%, transparent);
   border-radius: 999px;
   padding: 7px 10px;
   background: rgba(15, 23, 42, 0.62);
-  color: #fde68a;
+  color: var(--builder-color-accent, #4ade80);
   font-size: var(--builder-unit-072);
   font-weight: 900;
 }
@@ -6404,7 +6404,7 @@
   text-align: left;
   touch-action: manipulation;
   user-select: none;
-  -webkit-tap-highlight-color: rgba(250, 204, 21, 0.12);
+  -webkit-tap-highlight-color: color-mix(in srgb, var(--builder-color-accent, #4ade80) 12%, transparent);
   -webkit-user-select: none;
   transition:
     border-color 160ms ease,
@@ -6424,7 +6424,7 @@
     112deg,
     transparent 37%,
     rgba(255, 255, 255, 0.03) 43%,
-    rgba(253, 230, 138, 0.18) 50%,
+    color-mix(in srgb, var(--builder-color-accent, #4ade80) 18%, transparent) 50%,
     rgba(255, 255, 255, 0.035) 57%,
     transparent 64%
   );
@@ -6465,7 +6465,7 @@
 
 :where(.builder-scope) .collection-dna-chip .collection-dna-chevron {
   display: none;
-  color: rgba(253, 230, 138, 0.58);
+  color: color-mix(in srgb, var(--builder-color-accent, #4ade80) 58%, transparent);
   font-size: 0.78em;
   font-weight: 900;
   line-height: 1;
@@ -6473,11 +6473,11 @@
 
 :where(.builder-scope) .collection-dna-chip:hover,
 :where(.builder-scope) .collection-dna-chip:focus-visible {
-  border-color: rgba(250, 204, 21, 0.36);
-  background: rgba(250, 204, 21, 0.11);
+  border-color: color-mix(in srgb, var(--builder-color-accent, #4ade80) 36%, transparent);
+  background: color-mix(in srgb, var(--builder-color-accent, #4ade80) 11%, transparent);
   box-shadow:
     0 8px 18px rgba(0, 0, 0, 0.16),
-    0 0 18px rgba(250, 204, 21, 0.07);
+    0 0 18px color-mix(in srgb, var(--builder-color-accent, #4ade80) 7%, transparent);
   color: #f8fafc;
   outline: none;
 }
@@ -6488,28 +6488,28 @@
 }
 
 :where(.builder-scope) .collection-dna-chip:focus-visible {
-  outline: 2px solid rgba(250, 204, 21, 0.56);
+  outline: 2px solid color-mix(in srgb, var(--builder-color-accent, #4ade80) 56%, transparent);
   outline-offset: 3px;
 }
 
 :where(.builder-scope) .collection-dna-chip:active {
-  border-color: rgba(250, 204, 21, 0.42);
-  background: rgba(250, 204, 21, 0.16);
+  border-color: color-mix(in srgb, var(--builder-color-accent, #4ade80) 42%, transparent);
+  background: color-mix(in srgb, var(--builder-color-accent, #4ade80) 16%, transparent);
   transform: translateY(0);
 }
 
 :where(.builder-scope) .collection-dna-chip.is-active {
-  border-color: rgba(250, 204, 21, 0.46);
-  background: rgba(250, 204, 21, 0.15);
+  border-color: color-mix(in srgb, var(--builder-color-accent, #4ade80) 46%, transparent);
+  background: color-mix(in srgb, var(--builder-color-accent, #4ade80) 15%, transparent);
   box-shadow:
-    inset 0 0 0 1px rgba(253, 230, 138, 0.08),
-    0 0 18px rgba(250, 204, 21, 0.09);
+    inset 0 0 0 1px color-mix(in srgb, var(--builder-color-accent, #4ade80) 8%, transparent),
+    0 0 18px color-mix(in srgb, var(--builder-color-accent, #4ade80) 9%, transparent);
   color: #f8fafc;
   outline: none;
 }
 
 :where(.builder-scope) .collection-dna-chip.is-active .collection-dna-chevron {
-  color: rgba(253, 230, 138, 0.82);
+  color: color-mix(in srgb, var(--builder-color-accent, #4ade80) 82%, transparent);
 }
 
 :where(.builder-scope) .collection-profile-chips span {
@@ -6576,21 +6576,21 @@
   }
 
   :where(.builder-scope) .collection-dna-chip:active {
-    border-color: rgba(250, 204, 21, 0.42);
-    background: rgba(250, 204, 21, 0.16);
+    border-color: color-mix(in srgb, var(--builder-color-accent, #4ade80) 42%, transparent);
+    background: color-mix(in srgb, var(--builder-color-accent, #4ade80) 16%, transparent);
     box-shadow:
-      inset 0 0 0 1px rgba(253, 230, 138, 0.06),
-      0 0 12px rgba(250, 204, 21, 0.06);
+      inset 0 0 0 1px color-mix(in srgb, var(--builder-color-accent, #4ade80) 6%, transparent),
+      0 0 12px color-mix(in srgb, var(--builder-color-accent, #4ade80) 6%, transparent);
     transform: none;
   }
 
   :where(.builder-scope) .collection-dna-chip.is-active,
   :where(.builder-scope) .collection-dna-chip.is-active:hover {
-    border-color: rgba(250, 204, 21, 0.46);
-    background: rgba(250, 204, 21, 0.15);
+    border-color: color-mix(in srgb, var(--builder-color-accent, #4ade80) 46%, transparent);
+    background: color-mix(in srgb, var(--builder-color-accent, #4ade80) 15%, transparent);
     box-shadow:
-      inset 0 0 0 1px rgba(253, 230, 138, 0.08),
-      0 0 18px rgba(250, 204, 21, 0.09);
+      inset 0 0 0 1px color-mix(in srgb, var(--builder-color-accent, #4ade80) 8%, transparent),
+      0 0 18px color-mix(in srgb, var(--builder-color-accent, #4ade80) 9%, transparent);
     color: #f8fafc;
   }
 
@@ -6605,7 +6605,7 @@
 :where(.builder-scope) .dna-modal-overlay {
   padding: 20px;
   background:
-    radial-gradient(circle at 50% 8%, rgba(250, 204, 21, 0.08), transparent 34%),
+    radial-gradient(circle at 50% 8%, color-mix(in srgb, var(--builder-color-accent, #4ade80) 8%, transparent), transparent 34%),
     rgba(0, 0, 0, 0.76);
 }
 
@@ -6620,7 +6620,7 @@
   border-radius: 20px;
   background:
     radial-gradient(circle at 12% 0, color-mix(in srgb, var(--builder-color-accent, #4ade80) 10%, transparent), transparent 34%),
-    radial-gradient(circle at 90% 8%, rgba(250, 204, 21, 0.08), transparent 32%),
+    radial-gradient(circle at 90% 8%, color-mix(in srgb, var(--builder-color-accent, #4ade80) 8%, transparent), transparent 32%),
     #08110d;
   box-shadow: 0 28px 90px rgba(0, 0, 0, 0.58);
 }
@@ -6700,8 +6700,8 @@
 :where(.builder-scope) .dna-accord-switcher button:hover,
 :where(.builder-scope) .dna-accord-switcher button:focus-visible,
 :where(.builder-scope) .dna-accord-switcher button.is-active {
-  border-color: rgba(250, 204, 21, 0.30);
-  background: rgba(250, 204, 21, 0.10);
+  border-color: color-mix(in srgb, var(--builder-color-accent, #4ade80) 30%, transparent);
+  background: color-mix(in srgb, var(--builder-color-accent, #4ade80) 10%, transparent);
   color: #f8fafc;
   outline: none;
 }
@@ -6745,9 +6745,9 @@
 :where(.builder-scope) .dna-modal-close:focus-visible,
 :where(.builder-scope) .dna-perfume-row button:hover:not(:disabled),
 :where(.builder-scope) .dna-perfume-row button:focus-visible:not(:disabled) {
-  border-color: rgba(250, 204, 21, 0.34);
-  background: rgba(250, 204, 21, 0.12);
-  color: #fef3c7;
+  border-color: color-mix(in srgb, var(--builder-color-accent, #4ade80) 34%, transparent);
+  background: color-mix(in srgb, var(--builder-color-accent, #4ade80) 12%, transparent);
+  color: var(--builder-color-accent, #4ade80);
   outline: none;
 }
 
@@ -6755,10 +6755,10 @@
   display: grid;
   gap: 10px;
   padding: 13px;
-  border: 1px solid rgba(250, 204, 21, 0.14);
+  border: 1px solid color-mix(in srgb, var(--builder-color-accent, #4ade80) 14%, transparent);
   border-radius: 16px;
   background:
-    radial-gradient(circle at 12% 0, rgba(250, 204, 21, 0.08), transparent 42%),
+    radial-gradient(circle at 12% 0, color-mix(in srgb, var(--builder-color-accent, #4ade80) 8%, transparent), transparent 42%),
     rgba(15, 23, 42, 0.34);
 }
 
@@ -6776,7 +6776,7 @@
 }
 
 :where(.builder-scope) .dna-strength-heading span {
-  color: rgba(250, 204, 21, 0.74);
+  color: color-mix(in srgb, var(--builder-color-accent, #4ade80) 74%, transparent);
   font-size: var(--builder-unit-072);
   font-weight: 900;
   letter-spacing: 0.10em;
@@ -6801,7 +6801,7 @@
 }
 
 :where(.builder-scope) .dna-strength-meter i.is-filled {
-  background: rgba(250, 204, 21, 0.62);
+  background: color-mix(in srgb, var(--builder-color-accent, #4ade80) 62%, transparent);
 }
 
 :where(.builder-scope) .dna-strength-card p {
@@ -6842,8 +6842,8 @@
 
 :where(.builder-scope) .dna-contributor-trigger:hover,
 :where(.builder-scope) .dna-contributor-trigger:focus-visible {
-  border-color: rgba(250, 204, 21, 0.30);
-  background: rgba(250, 204, 21, 0.10);
+  border-color: color-mix(in srgb, var(--builder-color-accent, #4ade80) 30%, transparent);
+  background: color-mix(in srgb, var(--builder-color-accent, #4ade80) 10%, transparent);
   outline: none;
 }
 
@@ -6936,8 +6936,8 @@
 :where(.builder-scope) .dna-row-image-button:focus-visible img,
 :where(.builder-scope) .dna-row-name-button:hover,
 :where(.builder-scope) .dna-row-name-button:focus-visible {
-  border-color: rgba(250, 204, 21, 0.30);
-  color: #fef3c7 !important;
+  border-color: color-mix(in srgb, var(--builder-color-accent, #4ade80) 30%, transparent);
+  color: var(--builder-color-accent, #4ade80) !important;
   outline: none;
 }
 
@@ -6957,7 +6957,7 @@
 :where(.builder-scope) .dna-recommendation-reason {
   grid-column: 2 / 3;
   margin: -3px 0 0 !important;
-  color: #fef3c7 !important;
+  color: var(--builder-color-accent, #4ade80) !important;
   font-size: var(--builder-unit-074) !important;
   font-weight: 850;
 }
@@ -6976,10 +6976,10 @@
   display: grid;
   gap: 9px;
   padding: 12px;
-  border: 1px solid rgba(250, 204, 21, 0.14);
+  border: 1px solid color-mix(in srgb, var(--builder-color-accent, #4ade80) 14%, transparent);
   border-radius: 14px;
   background:
-    radial-gradient(circle at 10% 0, rgba(250, 204, 21, 0.08), transparent 38%),
+    radial-gradient(circle at 10% 0, color-mix(in srgb, var(--builder-color-accent, #4ade80) 8%, transparent), transparent 38%),
     rgba(2, 6, 23, 0.44);
 }
 
@@ -7026,9 +7026,9 @@
 }
 
 :where(.builder-scope) .dna-quick-detail-tags span.is-active {
-  border-color: rgba(250, 204, 21, 0.30);
-  background: rgba(250, 204, 21, 0.10);
-  color: #fef3c7;
+  border-color: color-mix(in srgb, var(--builder-color-accent, #4ade80) 30%, transparent);
+  background: color-mix(in srgb, var(--builder-color-accent, #4ade80) 10%, transparent);
+  color: var(--builder-color-accent, #4ade80);
 }
 
 @media (max-width: 520px) {
@@ -7148,7 +7148,7 @@
 }
 
 :where(.builder-scope) .collection-balance-row strong {
-  color: #fde68a;
+  color: var(--builder-color-accent, #4ade80);
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
   font-size: var(--builder-unit-072);
   font-weight: 900;
@@ -7156,10 +7156,10 @@
 }
 
 :where(.builder-scope) .collection-card {
-  --collection-card-ambient: rgba(207, 171, 92, 0.13);
-  --collection-card-ambient-soft: rgba(250, 204, 21, 0.055);
-  --collection-card-title-glow: rgba(250, 204, 21, 0.15);
-  --collection-card-mood-accent: rgba(207, 193, 161, 0.82);
+  --collection-card-ambient: color-mix(in srgb, var(--builder-color-accent, #4ade80) 13%, transparent);
+  --collection-card-ambient-soft: color-mix(in srgb, var(--builder-color-accent, #4ade80) 5.5%, transparent);
+  --collection-card-title-glow: color-mix(in srgb, var(--builder-color-accent, #4ade80) 15%, transparent);
+  --collection-card-mood-accent: color-mix(in srgb, var(--builder-color-accent, #4ade80) 82%, transparent);
   --collection-card-ambient-x: 55%;
   --collection-card-ambient-y: 3%;
   position: relative;
@@ -7168,7 +7168,7 @@
   margin: 0 auto;
   padding: clamp(18px, 3vw, 30px) clamp(28px, 5vw, 48px) clamp(28px, 5vw, 48px);
   overflow: hidden;
-  border: 1px solid rgba(250, 204, 21, 0.20);
+  border: 1px solid color-mix(in srgb, var(--builder-color-accent, #4ade80) 20%, transparent);
   border-radius: 30px;
   background:
     radial-gradient(ellipse at var(--collection-card-ambient-x) var(--collection-card-ambient-y), var(--collection-card-ambient), transparent 28%),
@@ -7203,7 +7203,7 @@
   overflow: hidden;
   box-sizing: border-box;
   background:
-    radial-gradient(ellipse at 50% 16%, rgba(250, 204, 21, 0.08), transparent 34%),
+    radial-gradient(ellipse at 50% 16%, color-mix(in srgb, var(--builder-color-accent, #4ade80) 8%, transparent), transparent 34%),
     linear-gradient(180deg, #07100c 0%, #020605 54%, #050403 100%);
   opacity: 1;
   visibility: visible;
@@ -7268,7 +7268,7 @@
 :where(.builder-scope) .collection-card-curator span,
 :where(.builder-scope) .collection-card footer {
   display: block;
-  color: rgba(250, 204, 21, 0.68);
+  color: color-mix(in srgb, var(--builder-color-accent, #4ade80) 68%, transparent);
   font-size: var(--builder-unit-068);
   font-weight: 900;
   letter-spacing: 0.16em;
@@ -7312,7 +7312,7 @@
 }
 
 :where(.builder-scope) .collection-card-mood > span {
-  color: rgba(250, 204, 21, 0.68);
+  color: color-mix(in srgb, var(--builder-color-accent, #4ade80) 68%, transparent);
   font-size: var(--builder-unit-058);
   font-weight: 900;
   letter-spacing: 0.18em;
@@ -7359,7 +7359,7 @@
   border-radius: 22px;
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent 18%),
-    radial-gradient(ellipse at 50% 50%, rgba(250, 204, 21, 0.055), transparent 46%),
+    radial-gradient(ellipse at 50% 50%, color-mix(in srgb, var(--builder-color-accent, #4ade80) 5.5%, transparent), transparent 46%),
     linear-gradient(180deg, rgba(13, 13, 11, 0.99), rgba(0, 0, 0, 0.95));
   box-shadow:
     0 24px 52px rgba(0, 0, 0, 0.38),
@@ -7531,18 +7531,18 @@
 }
 
 :where(.builder-scope) .collection-card-vial-bonus .collection-card-vial-body {
-  border-color: rgba(250, 204, 21, 0.28);
+  border-color: color-mix(in srgb, var(--builder-color-accent, #4ade80) 28%, transparent);
 }
 
 :where(.builder-scope) .collection-card-bonus-mark {
   width: 14px;
   height: 14px;
-  border: 1px solid rgba(250, 204, 21, 0.38);
+  border: 1px solid color-mix(in srgb, var(--builder-color-accent, #4ade80) 38%, transparent);
   border-radius: 4px;
   background:
-    linear-gradient(90deg, transparent 46%, rgba(250, 204, 21, 0.36) 46% 54%, transparent 54%),
-    linear-gradient(180deg, transparent 46%, rgba(250, 204, 21, 0.32) 46% 54%, transparent 54%),
-    rgba(250, 204, 21, 0.08);
+    linear-gradient(90deg, transparent 46%, color-mix(in srgb, var(--builder-color-accent, #4ade80) 36%, transparent) 46% 54%, transparent 54%),
+    linear-gradient(180deg, transparent 46%, color-mix(in srgb, var(--builder-color-accent, #4ade80) 32%, transparent) 46% 54%, transparent 54%),
+    color-mix(in srgb, var(--builder-color-accent, #4ade80) 8%, transparent);
 }
 
 :where(.builder-scope) .collection-card-vial-bonus.is-locked {
@@ -7614,7 +7614,7 @@
 }
 
 :where(.builder-scope) .collection-card-dna-row span {
-  color: #fef3c7;
+  color: var(--builder-color-accent, #4ade80);
 }
 
 :where(.builder-scope) .collection-card-section p,
@@ -7631,7 +7631,7 @@
   margin-right: auto;
   margin-left: auto;
   padding: 14px 16px;
-  border: 1px solid rgba(250, 204, 21, 0.16);
+  border: 1px solid color-mix(in srgb, var(--builder-color-accent, #4ade80) 16%, transparent);
   border-radius: 18px;
   background: rgba(2, 6, 23, 0.30);
 }
@@ -7941,7 +7941,7 @@
   display: block;
   height: 100%;
   border-radius: inherit;
-  background: linear-gradient(90deg, color-mix(in srgb, var(--builder-color-accent, #4ade80) 72%, transparent), rgba(250, 204, 21, 0.70));
+  background: linear-gradient(90deg, color-mix(in srgb, var(--builder-color-accent, #4ade80) 72%, transparent), color-mix(in srgb, var(--builder-color-accent-strong, #22c55e) 70%, transparent));
   box-shadow: 0 0 14px color-mix(in srgb, var(--builder-color-accent, #4ade80) 12%, transparent);
 }
 
@@ -7992,7 +7992,7 @@
   border: 1px solid rgba(148, 163, 184, 0.12);
   border-radius: 16px;
   background:
-    radial-gradient(circle at 84% 20%, rgba(250, 204, 21, 0.08), transparent 42%),
+    radial-gradient(circle at 84% 20%, color-mix(in srgb, var(--builder-color-accent, #4ade80) 8%, transparent), transparent 42%),
     rgba(15, 23, 42, 0.26);
 }
 
@@ -8042,7 +8042,7 @@
 }
 
 :where(.builder-scope) .season-profile-grid-ring-outer {
-  stroke: rgba(250, 204, 21, 0.18);
+  stroke: color-mix(in srgb, var(--builder-color-accent, #4ade80) 18%, transparent);
 }
 
 :where(.builder-scope) .season-profile-axis {
@@ -8052,7 +8052,7 @@
 
 :where(.builder-scope) .season-profile-shape {
   fill: color-mix(in srgb, var(--builder-color-accent, #4ade80) 20%, transparent);
-  stroke: rgba(250, 204, 21, 0.76);
+  stroke: color-mix(in srgb, var(--builder-color-accent, #4ade80) 76%, transparent);
   stroke-linejoin: round;
   stroke-width: 1.4;
   filter: drop-shadow(0 0 8px color-mix(in srgb, var(--builder-color-accent, #4ade80) 10%, transparent));
@@ -8064,7 +8064,7 @@
 }
 
 :where(.builder-scope) .season-profile-point {
-  fill: #fde68a;
+  fill: var(--builder-color-accent, #4ade80);
   stroke: rgba(2, 6, 23, 0.62);
   stroke-width: 0.6;
 }
@@ -8248,21 +8248,21 @@
   justify-content: center;
   width: 28px;
   height: 28px;
-  border: 1px solid rgba(250, 204, 21, 0.24);
+  border: 1px solid color-mix(in srgb, var(--builder-color-accent, #4ade80) 24%, transparent);
   border-radius: 999px;
   background:
-    linear-gradient(180deg, rgba(250, 204, 21, 0.10), rgba(15, 23, 42, 0.42)),
+    linear-gradient(180deg, color-mix(in srgb, var(--builder-color-accent, #4ade80) 10%, transparent), rgba(15, 23, 42, 0.42)),
     rgba(2, 6, 23, 0.58);
-  color: #fde68a;
+  color: var(--builder-color-accent, #4ade80);
   font-size: var(--builder-unit-082);
   font-weight: 900;
   line-height: 1;
 }
 
 :where(.builder-scope) .recommendation-carousel-controls button:not(:disabled):hover {
-  border-color: rgba(250, 204, 21, 0.42);
+  border-color: color-mix(in srgb, var(--builder-color-accent, #4ade80) 42%, transparent);
   background:
-    linear-gradient(180deg, rgba(250, 204, 21, 0.16), rgba(15, 23, 42, 0.46)),
+    linear-gradient(180deg, color-mix(in srgb, var(--builder-color-accent, #4ade80) 16%, transparent), rgba(15, 23, 42, 0.46)),
     rgba(2, 6, 23, 0.66);
   transform: translateY(-1px);
 }
