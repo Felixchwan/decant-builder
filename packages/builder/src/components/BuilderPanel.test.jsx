@@ -1556,6 +1556,91 @@ describe("Note Explorer: root note + inline related-note exploration (left pane)
   });
 });
 
+// Mobile Note Explorer layout (styles.css, @media max-width: 520px).
+//
+// Root cause of the reported bug: two separate issues in the mobile
+// override, both invisible on this Chromium harness (no real on-screen
+// keyboard, and vh/dvh never diverge without one) but real on mobile
+// devices:
+//
+// 1. `.note-explorer-modal`'s mobile max-height used a static `vh`, not
+//    `dvh`. The desktop rule already used `calc(100dvh - 48px)` for exactly
+//    this reason. A mobile browser's on-screen keyboard shrinks the real
+//    visible (visual) viewport without shrinking `vh` (anchored to the
+//    layout viewport), so a `vh`-sized modal, vertically centered in a
+//    `position: fixed` overlay that never itself scrolls, can end up taller
+//    than what's actually visible once the keyboard opens -- pushing the
+//    header/search off the top of the visible area with no way to scroll
+//    back to them.
+// 2. `.note-explorer-body`'s mobile override kept `display: grid` while
+//    collapsing to one column, turning the notes grid and results pane into
+//    two rows of a grid whose rows default to auto-sizing against each
+//    other. The notes grid's huge intrinsic height (dozens of note pills)
+//    claims the entire auto-sizing budget; the results pane, which still
+//    carried the desktop `min-height: 0` (a signal to the track-sizing
+//    algorithm that it may be compressed to zero), was clamped to exactly
+//    that -- hiding every matched perfume regardless of how many there were.
+//    Confirmed live: `.note-explorer-results` computed to `height: 0px`
+//    with real matched content inside it. Switching `.note-explorer-body`
+//    to normal block flow removes the row-track competition entirely, so
+//    each section sizes to its own content and the two stack vertically
+//    under one shared `.note-explorer-body` scroll region.
+describe("Note Explorer: mobile search/results layout (styles.css, @media max-width: 520px)", () => {
+  it("sizes the mobile modal with dvh, not a static vh, so an on-screen keyboard shrinking the visual viewport can't leave the modal taller than what's actually visible", () => {
+    const dvhIndex = appCss.indexOf("max-height: 92dvh;");
+    expect(dvhIndex, "expected a 92dvh max-height declaration").toBeGreaterThan(-1);
+    const precedingContext = appCss.slice(Math.max(0, dvhIndex - 500), dvhIndex);
+    expect(precedingContext).toMatch(/:where\(\.builder-scope\) \.note-explorer-modal \{/);
+    // Only one occurrence -- not left duplicated alongside a stale vh version.
+    expect(appCss.indexOf("max-height: 92dvh;", dvhIndex + 1)).toBe(-1);
+  });
+
+  it("stacks the notes grid and results pane in normal block flow, not CSS Grid rows, so the results pane can't be zero-height'd by grid auto-row track sizing", () => {
+    const ruleMatch = appCss.match(/:where\(\.builder-scope\) \.note-explorer-body \{([^}]*)\}/g);
+    const mobileRule = ruleMatch.find((rule) => rule.includes("display: block;"));
+    expect(mobileRule, "expected a mobile .note-explorer-body override using display: block").toBeTruthy();
+    expect(mobileRule).toMatch(/overflow-y:\s*auto;/);
+  });
+
+  it("defers both the notes grid and results pane to the shared .note-explorer-body scroll region instead of scrolling independently", () => {
+    const selectorMatch = appCss.match(
+      /:where\(\.builder-scope\) \.note-explorer-notes-grid,\s*:where\(\.builder-scope\) \.note-explorer-results \{/
+    );
+    expect(selectorMatch, "expected the combined mobile notes-grid/results selector").toBeTruthy();
+    const ruleStart = selectorMatch.index;
+    const ruleEnd = appCss.indexOf("}", ruleStart);
+    const ruleBody = appCss.slice(ruleStart, ruleEnd);
+    expect(ruleBody).toMatch(/overflow-y:\s*visible;/);
+  });
+});
+
+// Note Explorer desktop layout must stay untouched by the mobile fix above:
+// two independently-scrolling CSS Grid columns, with the modal itself never
+// scrolling (overflow: hidden), so the header/search never move.
+describe("Note Explorer: desktop layout is unaffected by the mobile fix (styles.css)", () => {
+  it("keeps the base .note-explorer-modal as a non-scrolling CSS Grid with dvh-based max-height", () => {
+    const ruleMatch = appCss.match(/:where\(\.builder-scope\) \.note-explorer-modal \{([^}]*)\}/);
+    expect(ruleMatch, "expected a base .note-explorer-modal rule").toBeTruthy();
+    expect(ruleMatch[1]).toMatch(/display:\s*grid;/);
+    expect(ruleMatch[1]).toMatch(/overflow:\s*hidden;/);
+    expect(ruleMatch[1]).toMatch(/max-height:\s*min\(760px, calc\(100dvh - 48px\)\);/);
+  });
+
+  it("keeps the base .note-explorer-body as a two-column CSS Grid", () => {
+    const ruleMatch = appCss.match(/:where\(\.builder-scope\) \.note-explorer-body \{([^}]*)\}/);
+    expect(ruleMatch, "expected a base .note-explorer-body rule").toBeTruthy();
+    expect(ruleMatch[1]).toMatch(/display:\s*grid;/);
+    expect(ruleMatch[1]).toMatch(/grid-template-columns:\s*minmax\(0, 1\.1fr\) minmax\(0, 1fr\);/);
+  });
+
+  it("keeps the base .note-explorer-notes-grid and .note-explorer-results scrolling independently of each other", () => {
+    const notesGridRule = appCss.match(/:where\(\.builder-scope\) \.note-explorer-notes-grid \{([^}]*)\}/);
+    const resultsRule = appCss.match(/:where\(\.builder-scope\) \.note-explorer-results \{([^}]*)\}/);
+    expect(notesGridRule[1]).toMatch(/overflow-y:\s*auto;/);
+    expect(resultsRule[1]).toMatch(/overflow-y:\s*auto;/);
+  });
+});
+
 // Note Explorer localized search + locale-aware alphabetical sort. Root
 // cause of the reported bug: buildNoteExplorerNoteOptions previously
 // derived option.name (and sorted/searched by it) purely from the

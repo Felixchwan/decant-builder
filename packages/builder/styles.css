@@ -8526,15 +8526,37 @@
 
   :where(.builder-scope) .note-explorer-modal {
     grid-template-rows: auto auto auto minmax(0, 1fr);
-    max-height: 92vh;
+    /* dvh (not vh) so a mobile browser's on-screen keyboard -- which shrinks
+       the real visible viewport without shrinking the static vh unit --
+       can't leave this max-height taller than what's actually visible,
+       pushing the header/search off-screen with no way to scroll back to
+       them (the overlay itself never scrolls). */
+    max-height: 92dvh;
   }
 
   :where(.builder-scope) .note-explorer-body {
-    grid-template-columns: minmax(0, 1fr);
+    /* Desktop lays the notes grid and results pane out as two independently
+       scrolling CSS Grid columns sized by the shared row track on
+       `.note-explorer-modal`. Stacking them into one mobile column keeps
+       `display: grid` technically valid but turns them into two rows of a
+       grid whose rows default to auto-sizing against each other: the notes
+       grid's huge intrinsic content height (dozens of note pills) consumes
+       the entire auto-sizing budget, and the results pane -- which still
+       carries the desktop `min-height: 0` that tells the track-sizing
+       algorithm it may be compressed to zero -- gets clamped to exactly
+       that, hiding every matched perfume regardless of how much content it
+       has. Normal block flow removes the row-track competition entirely:
+       each section sizes to its own content and stacks vertically, with
+       this element's own overflow-y: auto providing the single shared
+       scroll region. */
+    display: block;
     overflow-y: auto;
   }
 
-  :where(.builder-scope) .note-explorer-notes-grid {
+  :where(.builder-scope) .note-explorer-notes-grid,
+  :where(.builder-scope) .note-explorer-results {
+    /* Neither section scrolls on its own anymore -- the whole stack scrolls
+       together via .note-explorer-body above. */
     overflow-y: visible;
   }
 
