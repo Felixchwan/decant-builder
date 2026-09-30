@@ -861,10 +861,10 @@ describe("Note Explorer 'Most prominent' sort reflects the Phase 3D calibrated o
 
   it("mandarinOrange: only Scandal Pour Homme is scored, then unscored members trail in catalog order", () => {
     const matches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "mandarinOrange" });
-    expect(matches.map((match) => match.id).sort((a, b) => a - b)).toEqual([1, 6, 7, 11, 14, 21, 27, 29, 101]);
+    expect(matches.map((match) => match.id).sort((a, b) => a - b)).toEqual([1, 6, 7, 11, 14, 21, 27, 29, 101, 121]);
 
     const sorted = sortNoteExplorerMatchesByProminence(matches, "mandarinOrange");
-    expect(sorted.map((match) => match.id)).toEqual([11, 1, 6, 7, 14, 21, 27, 29, 101]);
+    expect(sorted.map((match) => match.id)).toEqual([11, 1, 6, 7, 14, 21, 27, 29, 101, 121]);
   });
 
   it("bitterOrange: Orange X Santal > (L'Homme Idéal EDT = Concentré d'Orange Verte, catalog order), then Eros EDP (unscored, last)", () => {
@@ -943,10 +943,10 @@ describe("Note Explorer 'Most prominent' sort reflects the Phase 3D calibrated o
 
   it("whiteMusk: Touch for Men = Allure Homme Sport Superleggera > Acqua di Gio EDT, then Cedrat Boise (unscored, last)", () => {
     const matches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "whiteMusk" });
-    expect(matches.map((match) => match.id).sort((a, b) => a - b)).toEqual([1, 27, 115, 302]);
+    expect(matches.map((match) => match.id).sort((a, b) => a - b)).toEqual([1, 27, 115, 218, 302]);
 
     const sorted = sortNoteExplorerMatchesByProminence(matches, "whiteMusk");
-    expect(sorted.map((match) => match.id)).toEqual([27, 302, 1, 115]);
+    expect(sorted.map((match) => match.id)).toEqual([27, 302, 1, 115, 218]);
   });
 
   it("never cross-matches distinct citrus/musk variants -- searching one canonical key never returns a fragrance whose only relevant note is a different variant", () => {
@@ -1516,10 +1516,10 @@ describe("Note Explorer 'Most prominent' sort reflects the Phase 3L calibrated o
 describe("Note Explorer 'Most prominent' sort reflects the Phase 3M calibrated order, per distinct canonical key", () => {
   it("ginger (9 members): The Scent EDT leads, down through a tie, then 6 unscored members trail in catalog order", () => {
     const matches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "ginger" });
-    expect(matches.map((match) => match.id).sort((a, b) => a - b)).toEqual([7, 13, 28, 32, 112, 117, 210, 213, 214]);
+    expect(matches.map((match) => match.id).sort((a, b) => a - b)).toEqual([7, 13, 28, 32, 112, 117, 121, 210, 213, 214]);
 
     const sorted = sortNoteExplorerMatchesByProminence(matches, "ginger");
-    expect(sorted.map((match) => match.id)).toEqual([7, 117, 213, 13, 32, 28, 112, 214, 210]);
+    expect(sorted.map((match) => match.id)).toEqual([7, 117, 213, 13, 32, 28, 112, 121, 214, 210]);
 
     // 117 and 213 tie at score 6 -- the sort preserves ascending
     // catalog-array order rather than forcing an artificial rank
@@ -1783,10 +1783,10 @@ describe("Note Explorer 'Most prominent' sort reflects the Phase 3Q calibrated o
 describe("Note Explorer 'Most prominent' sort reflects the Phase 3R calibrated order, per distinct canonical key", () => {
   it("pineapple (6 members): Vibrant Leather Bogoss leads at 9, then Club de Nuit Intense Man and Hacivat tie at 8, then 2 unscored members trail in catalog order", () => {
     const matches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "pineapple" });
-    expect(matches.map((match) => match.id).sort((a, b) => a - b)).toEqual([4, 19, 28, 30, 112, 406]);
+    expect(matches.map((match) => match.id).sort((a, b) => a - b)).toEqual([4, 19, 28, 30, 112, 121, 406]);
 
     const sorted = sortNoteExplorerMatchesByProminence(matches, "pineapple");
-    expect(sorted.map((match) => match.id)).toEqual([30, 19, 406, 112, 4, 28]);
+    expect(sorted.map((match) => match.id)).toEqual([30, 19, 406, 112, 4, 28, 121]);
     expect(sorted[0].name).toBe("Vibrant Leather Bogoss");
 
     // 19 and 406 tie at score 8 -- the sort preserves ascending

@@ -308,6 +308,7 @@ export const esMX = {
   "recommendation.accord.marine": "Aporta frescura marina",
   "recommendation.accord.aquatic": "Aporta frescura acuática",
   "recommendation.accord.caramel": "Agrega dulzura de caramelo",
+  "recommendation.accord.cinnamon": "Agrega especia cálida de canela",
   "recommendation.accord.clean": "Agrega frescura limpia",
   "recommendation.accord.coconut": "Agrega calidez tropical cremosa",
   "recommendation.accord.earthy": "Agrega profundidad terrosa",

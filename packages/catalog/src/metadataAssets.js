@@ -69,6 +69,7 @@ export const metadataAssets = {
     aromatic: "metadata/accords/aromatic.svg",
     balsamic: "metadata/accords/balsamic.svg",
     caramel: "metadata/accords/caramel.svg",
+    cinnamon: "metadata/accords/cinnamon.svg",
     citrus: "metadata/accords/citrus.svg",
     clean: "metadata/accords/clean.svg",
     coconut: "metadata/accords/coconut.svg",

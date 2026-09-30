@@ -308,6 +308,7 @@ export const enUS = {
   "recommendation.accord.marine": "Brings marine freshness",
   "recommendation.accord.aquatic": "Brings aquatic freshness",
   "recommendation.accord.caramel": "Adds caramel sweetness",
+  "recommendation.accord.cinnamon": "Adds warm cinnamon spice",
   "recommendation.accord.clean": "Adds clean freshness",
   "recommendation.accord.coconut": "Adds creamy tropical warmth",
   "recommendation.accord.earthy": "Adds earthy depth",

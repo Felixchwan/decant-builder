@@ -637,4 +637,43 @@ nuttyNotes: { name: "Nutty Notes", noteImageAssetKey: "notes/nuttyNotes.jpg" },
 // the two are kept as separate identities rather than one standing in for
 // the other. Added for 212 VIP Black, whose source lists Absinthe.
 absinthe: { name: "Absinthe", family: "sweet", noteImageAssetKey: "notes/absinthe.jpg" },
+
+// Gingerbread is its own real Fragrantica gourmand note (the baked-spice
+// cookie accord), not a form of the existing raw "ginger" key above -- same
+// distinct-identity reasoning as rum/amaretto elsewhere in this file. No
+// dedicated photo exists for it; reuses cinnamon.jpg as the closest existing
+// visual match (gingerbread's dominant warm-spice character), the same
+// closest-match convention already used by amaretto/almond and
+// leatherwood/leather. Added for Valentino Uomo Born In Roma Yellow Dream.
+gingerbread: { name: "Gingerbread", family: "sweet", noteImageAssetKey: "notes/cinnamon.jpg" },
+
+// Vanilla Absolute is an extraction-form-qualified variant of the existing
+// generic "vanilla" above -- same established pattern as the cedar/
+// sandalwood/vetiver origin-qualified variants elsewhere in this file (a
+// distinct canonical identity, not collapsed into the base note), reusing
+// vanilla.jpg as the closest existing visual match rather than a new photo.
+// Added for Valentino Uomo Born In Roma Yellow Dream.
+vanillaAbsolute: { name: "Vanilla Absolute", family: "sweet", noteImageAssetKey: "notes/vanilla.jpg" },
+
+// Cedar Essence is an extraction-form-qualified variant of the existing
+// generic "cedar" above -- same reuse pattern as texasCedar/virginiaCedar
+// (distinct identity, reuses cedar.jpg rather than a new photo). Added for
+// Valentino Uomo Born In Roma Yellow Dream.
+cedarEssence: { name: "Cedar Essence", family: "woody", noteImageAssetKey: "notes/cedar.jpg" },
+
+// Calabrian Bergamot is a geographic-origin-qualified variant of the
+// existing generic "bergamot" above -- same established pattern as
+// sicilianMandarin/italianMandarin/australianSandalwood/haitianVetiver
+// (distinct identity, reuses bergamot.jpg rather than a new photo). Added
+// for Dior Homme Cologne 2022.
+calabrianBergamot: { name: "Calabrian Bergamot", family: "citrus", noteImageAssetKey: "notes/bergamot.jpg" },
+
+// Grapefruit Blossom is the flower, not the fruit -- a genuinely distinct
+// floral identity from the existing "grapefruit" above, same established
+// pattern as orangeBlossom/oliveBlossom/gingerFlower (each kept separate
+// from its parent fruit/plant). No dedicated blossom photo exists for it;
+// reuses grapefruit.jpg as the closest existing visual match, the same
+// closest-match convention already used by orris/iris. Added for Dior
+// Homme Cologne 2022.
+grapefruitBlossom: { name: "Grapefruit Blossom", family: "floral", noteImageAssetKey: "notes/grapefruit.jpg" },
 };

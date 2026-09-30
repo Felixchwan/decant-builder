@@ -115,8 +115,8 @@ describe("Composer Phase 3Z canonical-data sanity audit", () => {
 describe("Composer Phase 3Z horizontal calibration -- cypress", () => {
   const perfumesById = new Map(perfumes.map((perfume) => [perfume.id, perfume]));
 
-  it("has exactly 90 catalog fragrances to search for exhaustive family membership", () => {
-    expect(perfumes).toHaveLength(90);
+  it("has exactly 92 catalog fragrances to search for exhaustive family membership", () => {
+    expect(perfumes).toHaveLength(92);
   });
 
   it("cypress membership is exhaustive against the live catalog", () => {

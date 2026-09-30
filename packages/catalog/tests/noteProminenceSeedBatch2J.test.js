@@ -329,11 +329,14 @@ describe("Composer Phase 2J note-prominence seed batch (final vertical-pass batc
     // (120), Ralph's Club Elixir (215), Spicebomb Night Vision EDP (216),
     // and Patchouli Ink (217) were added afterward and were never part of
     // this review effort; they are asserted unscored below, not counted
-    // here.
-    const postVerticalPassAdditionIds = new Set([120, 215, 216, 217]);
+    // here. Valentino Uomo Born In Roma Yellow Dream (121) and Dior Homme
+    // Cologne 2022 (218) were added later still, from merchant note
+    // pyramids only, with no approved editorial prominence data -- same
+    // deliberate exception, also asserted unscored below.
+    const postVerticalPassAdditionIds = new Set([120, 121, 215, 216, 217, 218]);
     const originallyReviewedPerfumes = perfumes.filter((perfume) => !postVerticalPassAdditionIds.has(perfume.id));
 
-    expect(perfumes).toHaveLength(90);
+    expect(perfumes).toHaveLength(92);
     expect(originallyReviewedPerfumes).toHaveLength(86);
     // 86 originally-reviewed fragrances + Patchouli Ink (217), later scored.
     expect(Object.keys(NOTE_PROMINENCE_BY_ID)).toHaveLength(87);
@@ -347,12 +350,13 @@ describe("Composer Phase 2J note-prominence seed batch (final vertical-pass batc
 
   it("leaves no originally-reviewed fragrance with the never-reviewed default-empty prominence object -- every fragrance the vertical pass covered has at least one editorial score", () => {
     // Ralph's Club (120), Ralph's Club Elixir (215), Spicebomb Night
-    // Vision EDP (216), and Patchouli Ink (217) are the deliberate
-    // exceptions: each added from a merchant note pyramid only, with no
-    // perceptual-prominence review evidence yet. An empty noteProminence
-    // object is the valid, honest state for them -- never replaced with an
-    // invented score to force this test green.
-    const postVerticalPassAdditionIds = new Set([120, 215, 216, 217]);
+    // Vision EDP (216), Patchouli Ink (217), Valentino Uomo Born In Roma
+    // Yellow Dream (121), and Dior Homme Cologne 2022 (218) are the
+    // deliberate exceptions: each added from a merchant note pyramid only,
+    // with no perceptual-prominence review evidence yet. An empty
+    // noteProminence object is the valid, honest state for them -- never
+    // replaced with an invented score to force this test green.
+    const postVerticalPassAdditionIds = new Set([120, 121, 215, 216, 217, 218]);
 
     for (const perfume of perfumes) {
       if (postVerticalPassAdditionIds.has(perfume.id)) {

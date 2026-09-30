@@ -1330,6 +1330,64 @@ baseNotes: ["caramel", "musk"],
 },
 
 {
+  id: 121,
+  name: "Valentino Uomo Born In Roma Yellow Dream",
+  shortName: "Yellow Dream",
+  brand: "Valentino",
+  points: 1.5,
+  imageAssetKey: "perfumes/silver/valentino-uomo-born-in-roma-yellow-dream.avif",
+
+  accords: [
+    "sweet",
+    "fruity",
+    "warm spicy",
+    "vanilla",
+    "citrus",
+    "cinnamon",
+    "fresh",
+    "fresh spicy",
+    "tropical",
+    "woody",
+  ],
+
+  topNotes: [
+    "pineapple",
+    "mandarinOrange",
+  ],
+
+  middleNotes: [
+    "spices",
+    "gingerbread",
+    "ginger",
+  ],
+
+  baseNotes: [
+    "vanillaAbsolute",
+    "cedarEssence",
+  ],
+
+  generalNotes: [],
+
+  seasons: [
+    "spring",
+    "summer",
+  ],
+
+  occasions: [
+    "daily",
+    "casual",
+    "date",
+  ],
+
+  vibes: [
+    "fresh",
+    "energetic",
+    "playful",
+    "sweet",
+  ],
+},
+
+{
   id: 201,
   name: "Dior Homme Sport",
   shortName: "Homme Sport",
@@ -2265,6 +2323,56 @@ baseNotes: ["caramel", "musk"],
     "elegant",
     "sophisticated",
     "calm",
+  ],
+},
+
+{
+  id: 218,
+  name: "Dior Homme Cologne 2022",
+  shortName: "Homme Cologne 2022",
+  brand: "Dior",
+  points: 2,
+  imageAssetKey: "perfumes/gold/dior-homme-cologne-2022.avif",
+
+  accords: [
+    "citrus",
+    "musky",
+    "fresh spicy",
+    "white floral",
+    "powdery",
+    "aromatic",
+  ],
+
+  topNotes: [
+    "calabrianBergamot",
+  ],
+
+  middleNotes: [
+    "grapefruitBlossom",
+  ],
+
+  baseNotes: [
+    "whiteMusk",
+  ],
+
+  generalNotes: [],
+
+  seasons: [
+    "spring",
+    "summer",
+  ],
+
+  occasions: [
+    "daily",
+    "office",
+    "casual",
+  ],
+
+  vibes: [
+    "fresh",
+    "clean",
+    "calm",
+    "versatile",
   ],
 },
 

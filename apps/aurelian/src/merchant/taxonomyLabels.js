@@ -220,4 +220,9 @@ export const aurelianTaxonomyLabels = {
   "taxonomy.rum": "Ron",
   "taxonomy.amaretto": "Amaretto",
   "taxonomy.absinthe": "Absenta",
+  "taxonomy.gingerbread": "Pan de Jengibre",
+  "taxonomy.vanillaAbsolute": "Absoluto de Vainilla",
+  "taxonomy.cedarEssence": "Esencia de Cedro",
+  "taxonomy.calabrianBergamot": "Bergamota Calabresa",
+  "taxonomy.grapefruitBlossom": "Flor de Toronja",
 };

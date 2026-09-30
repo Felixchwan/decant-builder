@@ -57,15 +57,15 @@ describe("@discovery-box/catalog package boundary", () => {
   });
 
   it("retains the approved mapping sizes and intentional aliases", () => {
-    expect(catalog.fragrances).toHaveLength(90);
-    expect(Object.keys(catalog.notes)).toHaveLength(180);
+    expect(catalog.fragrances).toHaveLength(92);
+    expect(Object.keys(catalog.notes)).toHaveLength(185);
     expect(Object.keys(catalog.brandAssets)).toHaveLength(48);
     expect(
       Object.values(catalog.metadataAssets).reduce(
         (count, values) => count + Object.keys(values).length,
         0
       )
-    ).toBe(96);
+    ).toBe(97);
     expect(catalog.brandAssets.YSL).toBe(catalog.brandAssets["Yves Saint Laurent"]);
     expect(catalog.metadataAssets.occasions.daily).toBe(
       catalog.metadataAssets.occasions.day

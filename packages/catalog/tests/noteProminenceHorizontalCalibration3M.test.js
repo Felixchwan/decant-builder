@@ -59,6 +59,7 @@ const GINGER_FAMILY = {
   32: undefined,
   112: undefined,
   117: 6,
+  121: undefined, // Valentino Uomo Born In Roma Yellow Dream -- merchant pyramid only, no approved score
   210: undefined,
   213: 6,
   214: undefined,
@@ -162,8 +163,8 @@ describe("Composer Phase 3M canonical-data sanity audit", () => {
 describe("Composer Phase 3M horizontal calibration -- ginger, nutmeg, and clove canonical-key families", () => {
   const perfumesById = new Map(perfumes.map((perfume) => [perfume.id, perfume]));
 
-  it("has exactly 90 catalog fragrances to search for exhaustive family membership", () => {
-    expect(perfumes).toHaveLength(90);
+  it("has exactly 92 catalog fragrances to search for exhaustive family membership", () => {
+    expect(perfumes).toHaveLength(92);
   });
 
   for (const [noteId, family] of Object.entries(ALL_FAMILIES)) {

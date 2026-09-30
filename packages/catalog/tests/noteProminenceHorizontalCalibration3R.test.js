@@ -52,6 +52,7 @@ const PINEAPPLE_FAMILY = {
   28: undefined,
   30: 9, // Vibrant Leather Bogoss -- later explicit editorial direction (pineapple is very prominent)
   112: 6,
+  121: undefined, // Valentino Uomo Born In Roma Yellow Dream -- merchant pyramid only, no approved score
   406: 8,
 };
 
@@ -160,8 +161,8 @@ describe("Composer Phase 3R canonical-data sanity audit", () => {
 describe("Composer Phase 3R horizontal calibration -- pineapple, seaNotes, and juniper", () => {
   const perfumesById = new Map(perfumes.map((perfume) => [perfume.id, perfume]));
 
-  it("has exactly 90 catalog fragrances to search for exhaustive family membership", () => {
-    expect(perfumes).toHaveLength(90);
+  it("has exactly 92 catalog fragrances to search for exhaustive family membership", () => {
+    expect(perfumes).toHaveLength(92);
   });
 
   for (const [noteId, family] of Object.entries(ALL_FAMILIES)) {

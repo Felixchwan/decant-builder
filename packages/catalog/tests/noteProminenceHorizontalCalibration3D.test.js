@@ -153,6 +153,7 @@ const MANDARIN_ORANGE_FAMILY = {
   27: undefined,
   29: undefined,
   101: undefined,
+  121: undefined, // Valentino Uomo Born In Roma Yellow Dream -- merchant pyramid only, no approved score
 };
 
 const BITTER_ORANGE_FAMILY = {
@@ -252,6 +253,7 @@ const WHITE_MUSK_FAMILY = {
   1: 4,
   27: 6,
   115: undefined,
+  218: undefined, // Dior Homme Cologne 2022 -- merchant pyramid only, no approved score
   302: 6,
 };
 
@@ -370,8 +372,8 @@ describe("Composer Phase 3D canonical-data sanity audit", () => {
 describe("Composer Phase 3D horizontal calibration -- citrus/orange and musk canonical-key families", () => {
   const perfumesById = new Map(perfumes.map((perfume) => [perfume.id, perfume]));
 
-  it("has exactly 90 catalog fragrances to search for exhaustive family membership", () => {
-    expect(perfumes).toHaveLength(90);
+  it("has exactly 92 catalog fragrances to search for exhaustive family membership", () => {
+    expect(perfumes).toHaveLength(92);
   });
 
   for (const [noteId, family] of Object.entries(ALL_FAMILIES)) {

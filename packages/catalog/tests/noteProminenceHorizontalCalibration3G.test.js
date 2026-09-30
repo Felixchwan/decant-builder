@@ -162,8 +162,8 @@ describe("Composer Phase 3G canonical-data sanity audit", () => {
 describe("Composer Phase 3G horizontal calibration -- iris and leather canonical-key families", () => {
   const perfumesById = new Map(perfumes.map((perfume) => [perfume.id, perfume]));
 
-  it("has exactly 90 catalog fragrances to search for exhaustive family membership", () => {
-    expect(perfumes).toHaveLength(90);
+  it("has exactly 92 catalog fragrances to search for exhaustive family membership", () => {
+    expect(perfumes).toHaveLength(92);
   });
 
   for (const [noteId, family] of Object.entries(ALL_FAMILIES)) {
