@@ -640,12 +640,12 @@ absinthe: { name: "Absinthe", family: "sweet", noteImageAssetKey: "notes/absinth
 
 // Gingerbread is its own real Fragrantica gourmand note (the baked-spice
 // cookie accord), not a form of the existing raw "ginger" key above -- same
-// distinct-identity reasoning as rum/amaretto elsewhere in this file. No
-// dedicated photo exists for it; reuses cinnamon.jpg as the closest existing
-// visual match (gingerbread's dominant warm-spice character), the same
-// closest-match convention already used by amaretto/almond and
-// leatherwood/leather. Added for Valentino Uomo Born In Roma Yellow Dream.
-gingerbread: { name: "Gingerbread", family: "sweet", noteImageAssetKey: "notes/cinnamon.jpg" },
+// distinct-identity reasoning as rum/amaretto elsewhere in this file. Added
+// for Valentino Uomo Born In Roma Yellow Dream. Originally reused
+// cinnamon.jpg as a closest-match placeholder; now has its own dedicated
+// photo (Fragrantica ingredient thumbnail), matching this dictionary's
+// existing 120x120 note-thumbnail convention.
+gingerbread: { name: "Gingerbread", family: "sweet", noteImageAssetKey: "notes/gingerbread.jpg" },
 
 // Vanilla Absolute is an extraction-form-qualified variant of the existing
 // generic "vanilla" above -- same established pattern as the cedar/
