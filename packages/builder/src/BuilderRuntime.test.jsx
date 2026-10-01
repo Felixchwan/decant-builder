@@ -205,18 +205,50 @@ describe("PerfumeDetailsModal note pyramid -- generic, capability-based easter-e
     expect(groupSource).toContain("noteEasterEggs={noteEasterEggs}");
   });
 
-  it("renders the note image through the shared, capability-based NoteEasterEggImage instead of a bare <img>, passing this pill's own noteId", () => {
+  it("keeps the pill's own thumbnail a plain, swap-free <img> -- the easter egg never touches the small note image", () => {
     const pillIndex = runtimeSource.indexOf("function DetailNotePill(");
     const pillEnd = runtimeSource.indexOf("function formatLabel(");
     const pillSource = runtimeSource.slice(pillIndex, pillEnd);
-    expect(pillSource).toContain("<NoteEasterEggImage");
-    expect(pillSource).toContain("noteId={noteId}");
-    expect(pillSource).toContain("noteEasterEggs={noteEasterEggs}");
-    expect(pillSource).not.toMatch(/<img\s/);
+    expect(pillSource).toMatch(/<img\s/);
+    expect(pillSource).not.toContain("NoteEasterEggImage");
+    expect(pillSource).not.toContain("note-easter-egg-frame");
   });
 
-  it("imports NoteEasterEggImage as a plain shared component, not a host-specific one", () => {
-    expect(runtimeSource).toContain('import NoteEasterEggImage from "./components/NoteEasterEggImage.jsx";');
+  it("derives the easter-egg state via the shared useNoteEasterEgg hook, keyed by this pill's own noteId", () => {
+    const pillIndex = runtimeSource.indexOf("function DetailNotePill(");
+    const pillEnd = runtimeSource.indexOf("function formatLabel(");
+    const pillSource = runtimeSource.slice(pillIndex, pillEnd);
+    expect(pillSource).toContain("useNoteEasterEgg(noteId, noteEasterEggs)");
+  });
+
+  it("imports useNoteEasterEgg as a plain shared capability, not a host-specific one", () => {
+    expect(runtimeSource).toContain(
+      'import { useNoteEasterEgg } from "./builder/internal/notes/useNoteEasterEgg.js";'
+    );
+  });
+
+  it("passes the easter-egg state into MetadataPreview as an alternate presentation, not into the pill's own thumbnail", () => {
+    const pillIndex = runtimeSource.indexOf("function DetailNotePill(");
+    const pillEnd = runtimeSource.indexOf("function formatLabel(");
+    const pillSource = runtimeSource.slice(pillIndex, pillEnd);
+    const previewIndex = pillSource.indexOf("<MetadataPreview");
+    const pillSpanIndex = pillSource.indexOf('<span\n        className="detail-note-pill has-note-image"');
+    expect(previewIndex).toBeGreaterThan(-1);
+    expect(pillSpanIndex).toBeGreaterThan(previewIndex);
+
+    const previewPropsSource = pillSource.slice(previewIndex, pillSpanIndex);
+    expect(previewPropsSource).toContain("activeImage={easterEgg.image}");
+    expect(previewPropsSource).toContain("activeCaption={easterEgg.caption}");
+    expect(previewPropsSource).toContain("isActive={easterEgg.isActive}");
+    expect(previewPropsSource).toContain("showOnTap={easterEgg.isEnabled}");
+  });
+
+  it("triggers the easter egg from the same pill the preview already wraps, via hover and click -- no separate hit target", () => {
+    const pillIndex = runtimeSource.indexOf("function DetailNotePill(");
+    const pillEnd = runtimeSource.indexOf("function formatLabel(");
+    const pillSource = runtimeSource.slice(pillIndex, pillEnd);
+    expect(pillSource).toContain("onMouseEnter={easterEgg.trigger}");
+    expect(pillSource).toContain("onClick={easterEgg.trigger}");
   });
 });
 

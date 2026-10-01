@@ -3,7 +3,8 @@ import { flushSync } from "react-dom";
 import { createRoot } from "react-dom/client";
 import { toBlob } from "html-to-image";
 import { getCollectionIdentityProfile } from "../utils/collectionIdentityEngine";
-import NoteEasterEggImage from "./NoteEasterEggImage.jsx";
+import MetadataPreview from "./MetadataPreview.jsx";
+import { useNoteEasterEgg } from "../builder/internal/notes/useNoteEasterEgg.js";
 import {
   buildCollectionCardSeasonRows,
   buildCollectionCardViewModel,
@@ -2214,6 +2215,7 @@ function NoteExplorerModal({
                     isSelected={selectedNoteIds.includes(option.noteId)}
                     onSelect={() => handleSelectNote(option.noteId)}
                     noteEasterEggs={builderConfig.noteEasterEggs}
+                    portalRoot={portalRoot}
                   />
                   {option.noteId === rootSelectedNoteId && (
                     <NoteExplorerInlineExploration
@@ -2275,7 +2277,7 @@ function NoteExplorerModal({
   );
 }
 
-function NoteExplorerNoteButton({ option, translator, isSelected, onSelect, noteEasterEggs }) {
+function NoteExplorerNoteButton({ option, translator, isSelected, onSelect, noteEasterEggs, portalRoot }) {
   const t = translator?.t || ((key) => key);
   const displayName = translator?.label?.("notes", option.noteId, option.name) || option.name;
   const countLabel = t(
@@ -2302,6 +2304,7 @@ function NoteExplorerNoteButton({ option, translator, isSelected, onSelect, note
           entry={{ noteId: option.noteId, name: displayName, image: option.image }}
           size="small"
           noteEasterEggs={noteEasterEggs}
+          portalRoot={portalRoot}
         />
         <span className="scent-library-note-name">{displayName}</span>
         <span className="scent-library-note-count" aria-hidden="true">×{option.perfumeCount}</span>
@@ -3401,6 +3404,7 @@ function ScentLibraryModal({ entries, translator, portalRoot, onClose, noteEaste
           onSelectNote={handleSelectNote}
           onCloseDetail={() => setSelectedNoteId(null)}
           noteEasterEggs={noteEasterEggs}
+          portalRoot={portalRoot}
         />
       </div>
     </div>,
@@ -3416,6 +3420,7 @@ export function ScentLibraryContent({
   onSelectNote,
   onCloseDetail,
   noteEasterEggs,
+  portalRoot,
 }) {
   const t = translator?.t || ((key) => key);
   const safeEntries = Array.isArray(entries) ? entries : [];
@@ -3449,6 +3454,7 @@ export function ScentLibraryContent({
                 detailId={detailId}
                 onSelect={() => onSelectNote(entry.noteId)}
                 noteEasterEggs={noteEasterEggs}
+                portalRoot={portalRoot}
               >
                 {isSelected && selectedEntry && (
                   <ScentLibraryDetail
@@ -3457,6 +3463,7 @@ export function ScentLibraryContent({
                     translator={translator}
                     onClose={onCloseDetail}
                     noteEasterEggs={noteEasterEggs}
+                    portalRoot={portalRoot}
                   />
                 )}
               </ScentLibraryNoteItem>
@@ -3476,6 +3483,7 @@ function ScentLibraryNoteItem({
   onSelect,
   children,
   noteEasterEggs,
+  portalRoot,
 }) {
   const t = translator?.t || ((key) => key);
   const countLabel = t(
@@ -3503,7 +3511,7 @@ function ScentLibraryNoteItem({
           ),
         })}
       >
-        <ScentLibraryNoteImage entry={entry} size="small" noteEasterEggs={noteEasterEggs} />
+        <ScentLibraryNoteImage entry={entry} size="small" noteEasterEggs={noteEasterEggs} portalRoot={portalRoot} />
         <span className="scent-library-note-name">{entry.name}</span>
         <span className="scent-library-note-count" aria-hidden="true">
           ×{entry.perfumeCount}
@@ -3516,7 +3524,7 @@ function ScentLibraryNoteItem({
   );
 }
 
-function ScentLibraryDetail({ id, entry, translator, onClose, noteEasterEggs }) {
+function ScentLibraryDetail({ id, entry, translator, onClose, noteEasterEggs, portalRoot }) {
   const t = translator?.t || ((key) => key);
 
   return (
@@ -3526,7 +3534,7 @@ function ScentLibraryDetail({ id, entry, translator, onClose, noteEasterEggs }) 
       aria-label={t("scentLibrary.fragrancesWith", { note: entry.name })}
     >
       <div className="scent-library-detail-header">
-        <ScentLibraryNoteImage entry={entry} size="large" noteEasterEggs={noteEasterEggs} />
+        <ScentLibraryNoteImage entry={entry} size="large" noteEasterEggs={noteEasterEggs} portalRoot={portalRoot} />
         <div>
           <span>{t("scentLibrary.fragrancesWith", { note: entry.name })}</span>
           <strong>{entry.name}</strong>
@@ -3568,7 +3576,11 @@ function ScentLibraryDetail({ id, entry, translator, onClose, noteEasterEggs }) 
   );
 }
 
-function ScentLibraryNoteImage({ entry, size, noteEasterEggs }) {
+function ScentLibraryNoteImage({ entry, size, noteEasterEggs, portalRoot }) {
+  // The easter egg transforms the large MetadataPreview only -- this small
+  // thumbnail always stays the canonical asset, swap-free, for every note.
+  const easterEgg = useNoteEasterEgg(entry.noteId, noteEasterEggs);
+
   if (!entry.image) {
     return (
       <span
@@ -3580,21 +3592,46 @@ function ScentLibraryNoteImage({ entry, size, noteEasterEggs }) {
     );
   }
 
+  function handleImageError(event) {
+    const fallback = document.createElement("span");
+    fallback.className = `scent-library-note-fallback scent-library-note-fallback-${size}`;
+    fallback.setAttribute("aria-hidden", "true");
+    fallback.textContent = entry.name.charAt(0);
+    event.currentTarget.replaceWith(fallback);
+  }
+
+  if (!easterEgg.isEnabled) {
+    return (
+      <img
+        className={`scent-library-note-image scent-library-note-image-${size}`}
+        src={entry.image}
+        alt=""
+        loading="lazy"
+        onError={handleImageError}
+      />
+    );
+  }
+
   return (
-    <NoteEasterEggImage
-      noteId={entry.noteId}
-      noteEasterEggs={noteEasterEggs}
-      src={entry.image}
-      alt=""
-      imageClassName={`scent-library-note-image scent-library-note-image-${size}`}
-      onError={(event) => {
-        const fallback = document.createElement("span");
-        fallback.className = `scent-library-note-fallback scent-library-note-fallback-${size}`;
-        fallback.setAttribute("aria-hidden", "true");
-        fallback.textContent = entry.name.charAt(0);
-        event.currentTarget.replaceWith(fallback);
-      }}
-    />
+    <MetadataPreview
+      title={entry.name}
+      image={entry.image}
+      portalRoot={portalRoot}
+      activeImage={easterEgg.image}
+      activeCaption={easterEgg.caption}
+      isActive={easterEgg.isActive}
+      showOnTap
+    >
+      <img
+        className={`scent-library-note-image scent-library-note-image-${size}`}
+        src={entry.image}
+        alt=""
+        loading="lazy"
+        onMouseEnter={easterEgg.trigger}
+        onClick={easterEgg.trigger}
+        onError={handleImageError}
+      />
+    </MetadataPreview>
   );
 }
 

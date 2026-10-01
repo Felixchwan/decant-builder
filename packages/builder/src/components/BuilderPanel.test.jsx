@@ -623,7 +623,16 @@ describe("BuilderPanel Composer setup launcher", () => {
     expect(markup).not.toContain("scentLibrary.");
   });
 
-  it("renders the Gingerbread note easter egg in Note Explorer when Aurelian's config is supplied", () => {
+  // MetadataPreview's own floating card only ever renders once hover/tap
+  // has actually happened (isVisible starts false), so a one-shot static
+  // render can never show the easter-egg image/caption themselves -- that
+  // interactive crossfade is proven in a real browser instead (see this
+  // round's validation notes). What a static render CAN prove is that the
+  // small thumbnail itself never changes, and that only the one configured
+  // note gets wrapped for the MetadataPreview trigger at all (surfaced here
+  // as the `tabindex="0"` cloneElement adds, since event-handler props
+  // themselves don't serialize to HTML).
+  it("keeps the Gingerbread thumbnail a plain canonical image in Note Explorer, wrapped for MetadataPreview only because Aurelian configured it", () => {
     const entries = [
       { noteId: "gingerbread", name: "Gingerbread", image: "/notes/gingerbread.jpg", perfumeCount: 1, perfumes: [] },
       { noteId: "vanilla", name: "Vanilla", image: "/notes/vanilla.jpg", perfumeCount: 1, perfumes: [] },
@@ -641,15 +650,16 @@ describe("BuilderPanel Composer setup launcher", () => {
       />
     );
 
-    expect(markup).toContain("note-easter-egg-frame");
-    expect(markup).toContain("/media/gingerbread-easter-egg.jpg");
-    expect(markup).toContain("No mis botones de gomita");
-    // Every other note in the same grid stays a plain image -- only the
-    // one configured note id gets the extra markup.
-    expect(markup.match(/note-easter-egg-frame/g)).toHaveLength(1);
+    expect(markup).toContain('src="/notes/gingerbread.jpg"');
+    expect(markup).not.toContain("gingerbread-easter-egg");
+    expect(markup).not.toContain("No mis botones de gomita");
+    // Only Gingerbread's image is wrapped for the MetadataPreview trigger
+    // (tabIndex=0); Vanilla's stays a completely inert, untouched <img>.
+    expect(markup).toMatch(/<img class="scent-library-note-image scent-library-note-image-small" src="\/notes\/gingerbread\.jpg" alt="" loading="lazy" tabindex="0"/);
+    expect(markup).toMatch(/<img class="scent-library-note-image scent-library-note-image-small" src="\/notes\/vanilla\.jpg" alt="" loading="lazy"\/>/);
   });
 
-  it("renders Gingerbread as a completely ordinary note in Note Explorer for Discovery Decants", () => {
+  it("renders Gingerbread as a completely ordinary, untouched note in Note Explorer for Discovery Decants", () => {
     const entries = [
       { noteId: "gingerbread", name: "Gingerbread", image: "/notes/gingerbread.jpg", perfumeCount: 1, perfumes: [] },
     ];
@@ -666,9 +676,34 @@ describe("BuilderPanel Composer setup launcher", () => {
       />
     );
 
-    expect(markup).not.toContain("note-easter-egg-frame");
-    expect(markup).not.toContain("No mis botones de gomita");
     expect(markup).not.toContain("gingerbread-easter-egg");
+    expect(markup).not.toContain("No mis botones de gomita");
+    expect(markup).toMatch(/<img class="scent-library-note-image scent-library-note-image-small" src="\/notes\/gingerbread\.jpg" alt="" loading="lazy"\/>/);
+  });
+
+  it("wires ScentLibraryNoteImage's easter-egg state into MetadataPreview as an alternate presentation, never into the thumbnail itself", () => {
+    const fnIndex = normalizedPanelSource.indexOf("function ScentLibraryNoteImage(");
+    const fnEnd = normalizedPanelSource.indexOf("function buildHiddenCuratorPicks(");
+    const fnSource = normalizedPanelSource.slice(fnIndex, fnEnd);
+
+    expect(fnSource).toContain("useNoteEasterEgg(entry.noteId, noteEasterEggs)");
+    expect(fnSource).toContain("if (!easterEgg.isEnabled) {");
+    expect(fnSource).toContain("<MetadataPreview");
+    expect(fnSource).toContain("activeImage={easterEgg.image}");
+    expect(fnSource).toContain("activeCaption={easterEgg.caption}");
+    expect(fnSource).toContain("isActive={easterEgg.isActive}");
+    expect(fnSource).toContain("showOnTap");
+    expect(fnSource).toContain("onMouseEnter={easterEgg.trigger}");
+    expect(fnSource).toContain("onClick={easterEgg.trigger}");
+
+    // The plain (non-enabled) early-return branch's own <img> carries none
+    // of the easter-egg wiring -- only the one nested inside the
+    // MetadataPreview branch does, so every other note's thumbnail stays
+    // byte-for-byte untouched.
+    const earlyReturnIndex = fnSource.indexOf("if (!easterEgg.isEnabled) {");
+    const previewIndex = fnSource.indexOf("<MetadataPreview");
+    const earlyReturnSource = fnSource.slice(earlyReturnIndex, previewIndex);
+    expect(earlyReturnSource).not.toContain("easterEgg.trigger");
   });
 
   it("does not render dead Composer onboarding actions when Composer is disabled", () => {
@@ -1417,16 +1452,19 @@ describe("Composer Phase 2A: Note Explorer", () => {
     expect(buttonSource).toContain('translator?.label?.("notes", option.noteId, option.name)');
   });
 
-  it("threads builderConfig.noteEasterEggs from NoteExplorerModal into NoteExplorerNoteButton, and the button's entry carries the real canonical noteId (not just name/image)", () => {
+  it("threads builderConfig.noteEasterEggs and portalRoot from NoteExplorerModal into NoteExplorerNoteButton, and the button's entry carries the real canonical noteId (not just name/image)", () => {
     const callIndex = normalizedPanelSource.indexOf("<NoteExplorerNoteButton");
-    const callSource = normalizedPanelSource.slice(callIndex, callIndex + 350);
+    const callSource = normalizedPanelSource.slice(callIndex, callIndex + 400);
     expect(callSource).toContain("noteEasterEggs={builderConfig.noteEasterEggs}");
+    expect(callSource).toContain("portalRoot={portalRoot}");
 
     const buttonStart = normalizedPanelSource.indexOf("function NoteExplorerNoteButton(");
-    const buttonSource = normalizedPanelSource.slice(buttonStart, buttonStart + 1100);
+    const buttonSource = normalizedPanelSource.slice(buttonStart, buttonStart + 1300);
     expect(buttonSource).toContain("noteEasterEggs");
+    expect(buttonSource).toContain("portalRoot");
     expect(buttonSource).toContain("entry={{ noteId: option.noteId, name: displayName, image: option.image }}");
     expect(buttonSource).toContain("noteEasterEggs={noteEasterEggs}");
+    expect(buttonSource).toContain("portalRoot={portalRoot}");
   });
 
   it("shows a localized empty state when no notes match the search text, without ever falling through to a blank or raw-id view", () => {

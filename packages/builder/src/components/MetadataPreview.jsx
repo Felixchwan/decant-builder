@@ -14,6 +14,20 @@ export default function MetadataPreview({
   description,
   children,
   portalRoot,
+  // Optional, capability-based temporary alternate presentation (see
+  // useNoteEasterEgg.js): while `isActive` is true, the preview crossfades
+  // from `image` to `activeImage` and shows `activeCaption`, then fades
+  // back on its own once the host's configured duration elapses. Absent
+  // these props (every caller/note without a configured entry), the
+  // preview behaves exactly as it always has.
+  activeImage,
+  activeCaption,
+  isActive = false,
+  // When true, a quick touch tap also opens the preview immediately (not
+  // only the existing long-press). Scoped to notes with an active easter
+  // egg capability -- every other trigger keeps the long-press-only touch
+  // behavior unchanged.
+  showOnTap = false,
 }) {
   const previewId = useId();
   const triggerRef = useRef(null);
@@ -103,7 +117,20 @@ export default function MetadataPreview({
       return;
     }
 
-    hidePreview();
+    // A quick tap releases before the long-press timer ever fires -- for a
+    // showOnTap-enabled preview (a note with an active easter egg), that is
+    // itself the trigger to open immediately, same as a real long press
+    // would have. A release AFTER the long press already fired finds no
+    // pending timer here, so it still just closes the preview as before.
+    const wasQuickTap = longPressTimeoutRef.current !== null;
+    clearLongPressTimer();
+
+    if (wasQuickTap && showOnTap) {
+      showPreview();
+      return;
+    }
+
+    setIsVisible(false);
   }
 
   function handleFocus() {
@@ -195,9 +222,25 @@ export default function MetadataPreview({
             }}
             role="tooltip"
           >
-            {image && <img src={image} alt="" loading="lazy" />}
+            {image && (
+              <span className="metadata-preview-image-frame">
+                <img src={image} alt="" loading="lazy" />
+                {activeImage && (
+                  <img
+                    className={`metadata-preview-active-image${isActive ? " is-active" : ""}`}
+                    src={activeImage}
+                    alt=""
+                    aria-hidden="true"
+                    loading="lazy"
+                  />
+                )}
+              </span>
+            )}
             <strong>{title}</strong>
             {description && <p>{description}</p>}
+            {isActive && activeCaption && (
+              <p className="metadata-preview-caption">{activeCaption}</p>
+            )}
           </div>,
           portalRoot
         )}

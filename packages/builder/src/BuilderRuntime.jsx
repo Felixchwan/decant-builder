@@ -4,7 +4,7 @@ import PerfumeCard from "./components/PerfumeCard";
 import FilterBar from "./components/FilterBar";
 import BuilderPanel from "./components/BuilderPanel";
 import MetadataPreview from "./components/MetadataPreview";
-import NoteEasterEggImage from "./components/NoteEasterEggImage.jsx";
+import { useNoteEasterEgg } from "./builder/internal/notes/useNoteEasterEgg.js";
 import { buildScentDna } from "./utils/buildScentDna";
 import { buildCatalogView } from "./builder/internal/catalog/buildCatalogView.js";
 import {
@@ -1951,19 +1951,33 @@ function DetailNotePill({ note, noteId, translator, portalRoot, noteEasterEggs }
   const noteFallback = note?.name || formatLabel(noteId);
   const noteName = translator?.label?.("notes", noteId, noteFallback) || noteFallback;
   const noteImage = note?.noteImage;
+  // The easter egg transforms the large MetadataPreview only -- the pill's
+  // own thumbnail below always stays the canonical asset, swap-free.
+  const easterEgg = useNoteEasterEgg(noteId, noteEasterEggs);
 
   if (!noteImage) {
     return <span>{noteName}</span>;
   }
 
   return (
-    <MetadataPreview title={noteName} image={noteImage} portalRoot={portalRoot}>
-      <span className="detail-note-pill has-note-image">
-        <NoteEasterEggImage
-          noteId={noteId}
-          noteEasterEggs={noteEasterEggs}
+    <MetadataPreview
+      title={noteName}
+      image={noteImage}
+      portalRoot={portalRoot}
+      activeImage={easterEgg.image}
+      activeCaption={easterEgg.caption}
+      isActive={easterEgg.isActive}
+      showOnTap={easterEgg.isEnabled}
+    >
+      <span
+        className="detail-note-pill has-note-image"
+        onMouseEnter={easterEgg.trigger}
+        onClick={easterEgg.trigger}
+      >
+        <img
           src={noteImage}
           alt=""
+          loading="lazy"
           onError={(event) => {
             event.currentTarget.remove();
           }}
