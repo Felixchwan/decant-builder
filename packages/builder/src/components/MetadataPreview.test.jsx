@@ -34,13 +34,53 @@ describe("MetadataPreview -- new easter-egg capability is additive and opt-in", 
     expect(metadataPreviewSource).toContain("showOnTap = false,");
   });
 
-  it("releasing a quick tap (before the long-press timer fires) only opens early when showOnTap is true -- every other trigger keeps today's touch behavior", () => {
+  it("delegates the quick-tap-vs-long-press-release decision to the pure, independently-tested resolveTouchGestureEnd", () => {
     const handlerIndex = metadataPreviewSource.indexOf("function handlePointerEnd(");
     const handlerEnd = metadataPreviewSource.indexOf("function handleFocus(");
     const handlerSource = metadataPreviewSource.slice(handlerIndex, handlerEnd);
-    expect(handlerSource).toContain("const wasQuickTap = longPressTimeoutRef.current !== null;");
-    expect(handlerSource).toContain("if (wasQuickTap && showOnTap) {");
+    expect(handlerSource).toContain("resolveTouchGestureEnd({");
+    expect(handlerSource).toContain("alreadySettled: touchGestureSettledRef.current,");
+    expect(handlerSource).toContain("hadPendingLongPress: longPressTimeoutRef.current !== null,");
+    expect(handlerSource).toContain("showOnTap,");
+    expect(handlerSource).toContain('if (action === "show") {');
     expect(handlerSource).toContain("showPreview();");
+    expect(handlerSource).toContain('if (action === "hide") {');
+    expect(handlerSource).toContain("setIsVisible(false);");
+  });
+
+  it("imports resolveTouchGestureEnd as a plain, independently-tested module rather than inlining the decision", () => {
+    expect(metadataPreviewSource).toContain(
+      'import { resolveTouchGestureEnd } from "./metadataPreviewTouchGesture.js";'
+    );
+  });
+
+  // This is the exact mobile bug this round fixes: a touch's pointerup is
+  // immediately followed by a synthesized pointerleave (a lifted touch has
+  // nothing left to "hover"), both of which previously routed through the
+  // same handler and re-decided the outcome a second time with the
+  // long-press timer already cleared -- closing the preview the same tap
+  // had just opened. See metadataPreviewTouchGesture.test.js for the
+  // decision-level regression test; this proves the component actually
+  // wires a per-gesture settled guard around that call, reset on the next
+  // pointerdown, so a trailing pointerleave can only ever be a no-op.
+  it("resets the settled guard on every new pointerdown, so a fresh tap is never treated as already-decided", () => {
+    const downIndex = metadataPreviewSource.indexOf("function handlePointerDown(");
+    const downEnd = metadataPreviewSource.indexOf("function handlePointerEnter(");
+    const downSource = metadataPreviewSource.slice(downIndex, downEnd);
+    expect(downSource).toContain("touchGestureSettledRef.current = false;");
+  });
+
+  it("nulls the long-press timer ref the moment it actually fires, not only when explicitly cleared -- otherwise releasing after a genuine long press on a showOnTap note would misread as a fresh quick tap and re-open instead of closing", () => {
+    const downIndex = metadataPreviewSource.indexOf("function handlePointerDown(");
+    const downEnd = metadataPreviewSource.indexOf("function handlePointerEnter(");
+    const downSource = metadataPreviewSource.slice(downIndex, downEnd);
+    const timeoutBodyIndex = downSource.indexOf("window.setTimeout(() => {");
+    const timeoutBodyEnd = downSource.indexOf("}, LONG_PRESS_MS);");
+    const timeoutBody = downSource.slice(timeoutBodyIndex, timeoutBodyEnd);
+    expect(timeoutBody).toContain("longPressTimeoutRef.current = null;");
+    expect(timeoutBody.indexOf("longPressTimeoutRef.current = null;")).toBeLessThan(
+      timeoutBody.indexOf("showPreview();")
+    );
   });
 
   it("crossfades to activeImage only while isActive, stacked over the canonical image rather than replacing it", () => {

@@ -1,5 +1,6 @@
 import { cloneElement, useCallback, useEffect, useId, useRef, useState } from "react";
 import { renderOwnedPortal } from "../builder/internal/portal/renderOwnedPortal.jsx";
+import { resolveTouchGestureEnd } from "./metadataPreviewTouchGesture.js";
 
 const LONG_PRESS_MS = 450;
 const VIEWPORT_GUTTER = 12;
@@ -33,6 +34,7 @@ export default function MetadataPreview({
   const triggerRef = useRef(null);
   const previewRef = useRef(null);
   const longPressTimeoutRef = useRef(null);
+  const touchGestureSettledRef = useRef(false);
   const lastPointerTypeRef = useRef(null);
   const [isVisible, setIsVisible] = useState(false);
   const [position, setPosition] = useState(null);
@@ -97,8 +99,15 @@ export default function MetadataPreview({
       return;
     }
 
+    touchGestureSettledRef.current = false;
     clearLongPressTimer();
     longPressTimeoutRef.current = window.setTimeout(() => {
+      // Cleared here (not just by clearLongPressTimer) so a release *after*
+      // the long press already revealed the preview is correctly read as
+      // "not a quick tap" below -- otherwise this stale, already-fired
+      // timeout id would make a showOnTap note's long-press release look
+      // like a fresh quick tap and re-show instead of closing.
+      longPressTimeoutRef.current = null;
       showPreview();
     }, LONG_PRESS_MS);
   }
@@ -117,20 +126,27 @@ export default function MetadataPreview({
       return;
     }
 
-    // A quick tap releases before the long-press timer ever fires -- for a
-    // showOnTap-enabled preview (a note with an active easter egg), that is
-    // itself the trigger to open immediately, same as a real long press
-    // would have. A release AFTER the long press already fired finds no
-    // pending timer here, so it still just closes the preview as before.
-    const wasQuickTap = longPressTimeoutRef.current !== null;
+    // onPointerUp, onPointerCancel, and onPointerLeave all route here, but
+    // a touch's pointerup is immediately followed by a synthesized
+    // pointerleave (a lifted touch has nothing left to "hover") -- see
+    // resolveTouchGestureEnd for why only the first of these three to fire
+    // for a given touch may act.
+    const { settled, action } = resolveTouchGestureEnd({
+      alreadySettled: touchGestureSettledRef.current,
+      hadPendingLongPress: longPressTimeoutRef.current !== null,
+      showOnTap,
+    });
+    touchGestureSettledRef.current = settled;
     clearLongPressTimer();
 
-    if (wasQuickTap && showOnTap) {
+    if (action === "show") {
       showPreview();
       return;
     }
 
-    setIsVisible(false);
+    if (action === "hide") {
+      setIsVisible(false);
+    }
   }
 
   function handleFocus() {

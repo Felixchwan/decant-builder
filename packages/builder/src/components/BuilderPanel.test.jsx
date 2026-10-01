@@ -706,6 +706,13 @@ describe("BuilderPanel Composer setup launcher", () => {
     expect(earlyReturnSource).not.toContain("easterEgg.trigger");
   });
 
+  it("never calls stopPropagation or preventDefault in ScentLibraryNoteImage, so the ancestor button's onSelect keeps firing from the same tap/click", () => {
+    const fnIndex = normalizedPanelSource.indexOf("function ScentLibraryNoteImage(");
+    const fnEnd = normalizedPanelSource.indexOf("function buildHiddenCuratorPicks(");
+    const fnSource = normalizedPanelSource.slice(fnIndex, fnEnd);
+    expect(fnSource).not.toMatch(/stopPropagation|preventDefault/);
+  });
+
   it("does not render dead Composer onboarding actions when Composer is disabled", () => {
     simulateFirstVisit();
 

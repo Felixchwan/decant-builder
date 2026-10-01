@@ -250,6 +250,13 @@ describe("PerfumeDetailsModal note pyramid -- generic, capability-based easter-e
     expect(pillSource).toContain("onMouseEnter={easterEgg.trigger}");
     expect(pillSource).toContain("onClick={easterEgg.trigger}");
   });
+
+  it("never calls stopPropagation or preventDefault, so MetadataPreview's own hover/focus/long-press handling keeps firing from the same event", () => {
+    const pillIndex = runtimeSource.indexOf("function DetailNotePill(");
+    const pillEnd = runtimeSource.indexOf("function formatLabel(");
+    const pillSource = runtimeSource.slice(pillIndex, pillEnd);
+    expect(pillSource).not.toMatch(/stopPropagation|preventDefault/);
+  });
 });
 
 describe("Fragrance details: result-scoped navigation wiring", () => {
