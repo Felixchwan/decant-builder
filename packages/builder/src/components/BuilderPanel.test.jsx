@@ -623,6 +623,54 @@ describe("BuilderPanel Composer setup launcher", () => {
     expect(markup).not.toContain("scentLibrary.");
   });
 
+  it("renders the Gingerbread note easter egg in Note Explorer when Aurelian's config is supplied", () => {
+    const entries = [
+      { noteId: "gingerbread", name: "Gingerbread", image: "/notes/gingerbread.jpg", perfumeCount: 1, perfumes: [] },
+      { noteId: "vanilla", name: "Vanilla", image: "/notes/vanilla.jpg", perfumeCount: 1, perfumes: [] },
+    ];
+
+    const markup = renderToStaticMarkup(
+      <ScentLibraryContent
+        entries={entries}
+        translator={createTranslator("en-US")}
+        selectedNoteId={null}
+        onClose={() => {}}
+        onSelectNote={() => {}}
+        onCloseDetail={() => {}}
+        noteEasterEggs={aurelianConfig.noteEasterEggs}
+      />
+    );
+
+    expect(markup).toContain("note-easter-egg-frame");
+    expect(markup).toContain("/media/gingerbread-easter-egg.jpg");
+    expect(markup).toContain("No mis botones de gomita");
+    // Every other note in the same grid stays a plain image -- only the
+    // one configured note id gets the extra markup.
+    expect(markup.match(/note-easter-egg-frame/g)).toHaveLength(1);
+  });
+
+  it("renders Gingerbread as a completely ordinary note in Note Explorer for Discovery Decants", () => {
+    const entries = [
+      { noteId: "gingerbread", name: "Gingerbread", image: "/notes/gingerbread.jpg", perfumeCount: 1, perfumes: [] },
+    ];
+
+    const markup = renderToStaticMarkup(
+      <ScentLibraryContent
+        entries={entries}
+        translator={createTranslator("en-US")}
+        selectedNoteId={null}
+        onClose={() => {}}
+        onSelectNote={() => {}}
+        onCloseDetail={() => {}}
+        noteEasterEggs={discoveryDecantsConfig.noteEasterEggs}
+      />
+    );
+
+    expect(markup).not.toContain("note-easter-egg-frame");
+    expect(markup).not.toContain("No mis botones de gomita");
+    expect(markup).not.toContain("gingerbread-easter-egg");
+  });
+
   it("does not render dead Composer onboarding actions when Composer is disabled", () => {
     simulateFirstVisit();
 
@@ -1367,6 +1415,18 @@ describe("Composer Phase 2A: Note Explorer", () => {
     const buttonStart = normalizedPanelSource.indexOf("function NoteExplorerNoteButton(");
     const buttonSource = normalizedPanelSource.slice(buttonStart, buttonStart + 500);
     expect(buttonSource).toContain('translator?.label?.("notes", option.noteId, option.name)');
+  });
+
+  it("threads builderConfig.noteEasterEggs from NoteExplorerModal into NoteExplorerNoteButton, and the button's entry carries the real canonical noteId (not just name/image)", () => {
+    const callIndex = normalizedPanelSource.indexOf("<NoteExplorerNoteButton");
+    const callSource = normalizedPanelSource.slice(callIndex, callIndex + 350);
+    expect(callSource).toContain("noteEasterEggs={builderConfig.noteEasterEggs}");
+
+    const buttonStart = normalizedPanelSource.indexOf("function NoteExplorerNoteButton(");
+    const buttonSource = normalizedPanelSource.slice(buttonStart, buttonStart + 1100);
+    expect(buttonSource).toContain("noteEasterEggs");
+    expect(buttonSource).toContain("entry={{ noteId: option.noteId, name: displayName, image: option.image }}");
+    expect(buttonSource).toContain("noteEasterEggs={noteEasterEggs}");
   });
 
   it("shows a localized empty state when no notes match the search text, without ever falling through to a blank or raw-id view", () => {

@@ -188,6 +188,38 @@ describe("PerfumeDetailsModal note pills -- localized through the shared taxonom
   });
 });
 
+describe("PerfumeDetailsModal note pyramid -- generic, capability-based easter-egg wiring", () => {
+  it("threads builderConfig.noteEasterEggs into every DetailNoteGroup call site (general notes and all three pyramid tiers)", () => {
+    const notesSectionIndex = runtimeSource.indexOf('<h4>{t("details.notes")}</h4>');
+    const notesSectionSource = runtimeSource.slice(notesSectionIndex, notesSectionIndex + 1600);
+    expect(
+      (notesSectionSource.match(/noteEasterEggs=\{builderConfig\.noteEasterEggs\}/g) || [])
+    ).toHaveLength(4);
+  });
+
+  it("forwards noteEasterEggs from DetailNoteGroup into each DetailNotePill", () => {
+    const groupIndex = runtimeSource.indexOf("function DetailNoteGroup(");
+    const groupEnd = runtimeSource.indexOf("function DetailNotePill(");
+    const groupSource = runtimeSource.slice(groupIndex, groupEnd);
+    expect(groupSource).toContain("noteEasterEggs");
+    expect(groupSource).toContain("noteEasterEggs={noteEasterEggs}");
+  });
+
+  it("renders the note image through the shared, capability-based NoteEasterEggImage instead of a bare <img>, passing this pill's own noteId", () => {
+    const pillIndex = runtimeSource.indexOf("function DetailNotePill(");
+    const pillEnd = runtimeSource.indexOf("function formatLabel(");
+    const pillSource = runtimeSource.slice(pillIndex, pillEnd);
+    expect(pillSource).toContain("<NoteEasterEggImage");
+    expect(pillSource).toContain("noteId={noteId}");
+    expect(pillSource).toContain("noteEasterEggs={noteEasterEggs}");
+    expect(pillSource).not.toMatch(/<img\s/);
+  });
+
+  it("imports NoteEasterEggImage as a plain shared component, not a host-specific one", () => {
+    expect(runtimeSource).toContain('import NoteEasterEggImage from "./components/NoteEasterEggImage.jsx";');
+  });
+});
+
 describe("Fragrance details: result-scoped navigation wiring", () => {
   it("resolves navigation from the scoped id snapshot, falling back to the catalog's visible list", () => {
     const memoStart = runtimeSource.indexOf("const detailNavigationPerfumes = useMemo(");

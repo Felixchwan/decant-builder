@@ -4594,6 +4594,56 @@
     inset 0 1px 0 rgba(255, 255, 255, 0.08);
 }
 
+:where(.builder-scope) .note-easter-egg-frame {
+  position: relative;
+  display: inline-flex;
+  flex: 0 0 auto;
+}
+
+:where(.builder-scope) .note-easter-egg-frame .note-easter-egg-alt-image {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 180ms ease;
+  pointer-events: none;
+}
+
+:where(.builder-scope) .note-easter-egg-frame .note-easter-egg-alt-image.is-active {
+  opacity: 1;
+}
+
+:where(.builder-scope) .note-easter-egg-caption {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: 6px;
+  padding: 3px 8px;
+  max-width: 128px;
+  border-radius: 10px;
+  border: 1px solid color-mix(in srgb, var(--builder-color-accent, #86efac) 24%, transparent);
+  background: color-mix(in srgb, var(--builder-color-surface-elevated, #0f172a) 92%, transparent);
+  color: var(--builder-color-text, #f8fafc);
+  font-size: var(--builder-unit-072);
+  font-weight: 700;
+  line-height: 1.2;
+  white-space: normal;
+  opacity: 0;
+  transition: opacity 180ms ease;
+  pointer-events: none;
+  z-index: 1;
+}
+
+:where(.builder-scope) .note-easter-egg-caption.is-active {
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :where(.builder-scope) .note-easter-egg-frame .note-easter-egg-alt-image,
+  :where(.builder-scope) .note-easter-egg-caption {
+    transition: none;
+  }
+}
+
 :where(.builder-scope) .metadata-preview-card {
   position: fixed;
   /* Deliberately far above the modal system's own z-index:1000 baseline

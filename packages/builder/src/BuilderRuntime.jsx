@@ -4,6 +4,7 @@ import PerfumeCard from "./components/PerfumeCard";
 import FilterBar from "./components/FilterBar";
 import BuilderPanel from "./components/BuilderPanel";
 import MetadataPreview from "./components/MetadataPreview";
+import NoteEasterEggImage from "./components/NoteEasterEggImage.jsx";
 import { buildScentDna } from "./utils/buildScentDna";
 import { buildCatalogView } from "./builder/internal/catalog/buildCatalogView.js";
 import {
@@ -1829,6 +1830,7 @@ function PerfumeDetailsModal({
               notes={notes}
               translator={translator}
               portalRoot={portalRoot}
+              noteEasterEggs={builderConfig.noteEasterEggs}
             />
           ) : hasPyramidNotes ? (
             <>
@@ -1838,6 +1840,7 @@ function PerfumeDetailsModal({
                 notes={notes}
                 translator={translator}
                 portalRoot={portalRoot}
+                noteEasterEggs={builderConfig.noteEasterEggs}
               />
               <DetailNoteGroup
                 title={t("details.middleNotes")}
@@ -1845,6 +1848,7 @@ function PerfumeDetailsModal({
                 notes={notes}
                 translator={translator}
                 portalRoot={portalRoot}
+                noteEasterEggs={builderConfig.noteEasterEggs}
               />
               <DetailNoteGroup
                 title={t("details.baseNotes")}
@@ -1852,6 +1856,7 @@ function PerfumeDetailsModal({
                 notes={notes}
                 translator={translator}
                 portalRoot={portalRoot}
+                noteEasterEggs={builderConfig.noteEasterEggs}
               />
             </>
           ) : (
@@ -1909,7 +1914,7 @@ function DetailMetadataChip({ assetResolver, translator, value, assetType }) {
   );
 }
 
-function DetailNoteGroup({ title, noteIds, notes, translator, portalRoot }) {
+function DetailNoteGroup({ title, noteIds, notes, translator, portalRoot, noteEasterEggs }) {
   if (noteIds.length === 0) {
     return null;
   }
@@ -1926,6 +1931,7 @@ function DetailNoteGroup({ title, noteIds, notes, translator, portalRoot }) {
             noteId={noteId}
             translator={translator}
             portalRoot={portalRoot}
+            noteEasterEggs={noteEasterEggs}
           />
         ))}
       </div>
@@ -1933,7 +1939,7 @@ function DetailNoteGroup({ title, noteIds, notes, translator, portalRoot }) {
   );
 }
 
-function DetailNotePill({ note, noteId, translator, portalRoot }) {
+function DetailNotePill({ note, noteId, translator, portalRoot, noteEasterEggs }) {
   // Note display names resolve through the same shared taxonomy label lookup
   // already used for accords/seasons/occasions/vibes (see
   // DetailMetadataChip), keyed by the note's canonical id -- this package
@@ -1953,10 +1959,11 @@ function DetailNotePill({ note, noteId, translator, portalRoot }) {
   return (
     <MetadataPreview title={noteName} image={noteImage} portalRoot={portalRoot}>
       <span className="detail-note-pill has-note-image">
-        <img
+        <NoteEasterEggImage
+          noteId={noteId}
+          noteEasterEggs={noteEasterEggs}
           src={noteImage}
           alt=""
-          loading="lazy"
           onError={(event) => {
             event.currentTarget.remove();
           }}

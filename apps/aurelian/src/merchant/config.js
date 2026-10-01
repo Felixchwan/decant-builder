@@ -10,6 +10,17 @@ const localized = buildLocalizedConfigOverrides(locale);
 export const aurelianConfig = createBuilderConfig({
   ...localized,
   taxonomyLabels: aurelianTaxonomyLabels,
+  // Aurelian-only playful flourish: hovering/tapping the Gingerbread note
+  // thumbnail briefly swaps in this meme image with a caption, then fades
+  // back. The image is an Aurelian-owned presentation asset (not the
+  // canonical catalog note asset) so it ships only with this host; no other
+  // host configures `noteEasterEggs`, so none renders this behavior.
+  noteEasterEggs: {
+    gingerbread: {
+      image: "/media/gingerbread-easter-egg.jpg",
+      caption: "No mis botones de gomita",
+    },
+  },
   software: { name: "Decant Builder" },
   brand: {
     businessName: "Aurelian",

@@ -9,6 +9,15 @@ export const defaultBuilderConfig = {
   // it, and absent an entry, display falls back to the value/name already
   // used today.
   taxonomyLabels: {},
+  // Optional, host-opt-in map of canonical note id -> temporary alternate
+  // presentation ({ image, caption?, durationMs? }), triggered by hover
+  // (desktop) or tap (mobile) on that note's thumbnail across note-
+  // rendering surfaces (Perfume Details note pyramid, Note Explorer). Empty
+  // by default: no host is required to supply it, and a note with no entry
+  // here always renders its ordinary canonical asset with no alternate
+  // behavior. This package carries no per-note content of its own --
+  // entries, including any copy, are entirely host-authored.
+  noteEasterEggs: {},
   software: {
     name: "Decant Builder",
   },
