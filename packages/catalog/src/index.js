@@ -6,3 +6,4 @@ export { createMerchantCatalog } from "./createMerchantCatalog.js";
 export { createCatalogAssetResolver } from "./createCatalogAssetResolver.js";
 export { perfumePlaceholderAssetKey } from "./perfumePlaceholderAssetKey.js";
 export { getNoteProminenceLevel } from "./noteProminenceLevel.js";
+export { getExplicitSeasonWeight } from "./explicitSeasonWeight.js";

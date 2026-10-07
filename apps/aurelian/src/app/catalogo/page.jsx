@@ -1,8 +1,16 @@
-import { CatalogExplorer } from "../../components/CatalogExplorer.jsx";
+import { use } from "react";
+import { CatalogPageView } from "../../components/CatalogPageView.jsx";
 import { aurelianCatalog } from "../../merchant/catalog.js";
+import { buildFullCatalogHref, CATALOG_SEASON_PARAM, parseCatalogSeason } from "../../lib/catalogSeason.js";
 
 export const metadata = { title: "Catálogo de fragancias", description: `Explora ${aurelianCatalog.length} fragancias seleccionables para componer una Discovery Box Aurelian.`, alternates: { canonical: "/catalogo" } };
 
-export default function CatalogPage() {
-  return <section className="page-shell page-intro catalog-page"><p className="eyebrow">{aurelianCatalog.length} fragancias para explorar</p><h1>Encuentra los aromas que quieres conocer.</h1><p className="lede">Busca por fragancia o casa. El catálogo no está ordenado por popularidad ni por lo más vendido. Los puntos equilibran tu Discovery Box y no representan el precio de una botella.</p><CatalogExplorer /></section>;
+// Next hands the page `searchParams` as a promise. Reading the season on the
+// server means the very first HTML is already the seasonal subset -- no flash
+// of the full catalog -- at the cost of this route rendering per request. With
+// no searchParams (how the unit tests render it) this is the full catalog.
+export default function CatalogPage({ searchParams } = {}) {
+  const params = searchParams ? use(searchParams) : {};
+  const season = parseCatalogSeason(params?.[CATALOG_SEASON_PARAM]);
+  return <CatalogPageView fullHref={buildFullCatalogHref(params)} season={season} />;
 }

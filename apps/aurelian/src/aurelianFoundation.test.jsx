@@ -155,8 +155,10 @@ describe("Aurelian application foundation", () => {
     const markup = renderToStaticMarkup(<HomePage />);
     const stylesheet = readFileSync(join(APP_ROOT, "src", "app", "globals.css"), "utf8");
     expect(markup.match(/Selección de (?:primavera|verano|otoño|invierno)/g)).toHaveLength(4);
-    expect(markup.match(/aria-label="Ver [^"]+ en el catálogo"/g)).toHaveLength(4);
-    expect(markup.match(/href="\/catalogo\?fragrance=\d+"/g)).toHaveLength(4);
+    expect(markup.match(/aria-label="Ver selección de (?:primavera|verano|otoño|invierno) en el catálogo: [^"]+"/g)).toHaveLength(4);
+    // Each slot enters the seasonal catalog by its semantic role, never by fragrance.
+    expect([...markup.matchAll(/href="\/catalogo\?season=([a-z]+)"/g)].map((match) => match[1])).toEqual(["spring", "summer", "fall", "winter"]);
+    expect(markup).not.toMatch(/href="\/catalogo\?fragrance=/);
     expect(markup.match(/width="240"/g)).toHaveLength(4);
     expect(markup.match(/height="240"/g)).toHaveLength(4);
     expect(stylesheet).toMatch(/\.seasonal-card__image\s*\{[^}]*aspect-ratio:1\/1/);

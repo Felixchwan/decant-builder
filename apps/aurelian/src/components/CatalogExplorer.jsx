@@ -5,6 +5,7 @@ import Link from "next/link";
 import { createCatalogAssetResolver } from "@discovery-box/catalog";
 import { aurelianCatalog } from "../merchant/catalog.js";
 import { filterCatalog } from "../lib/filterCatalog.js";
+import { filterCatalogBySeason, getCatalogSeasonLabel } from "../lib/catalogSeason.js";
 import { resolveCatalogFragranceIntent } from "../lib/resolveCatalogFragranceIntent.js";
 import { loadPerceptualLearningState } from "../perceptualLearning/perceptualLearningPersistence.js";
 import { buildLearnerRecord } from "../perceptualLearning/learnerRecord.js";
@@ -70,7 +71,9 @@ export function CatalogLearningEvidenceLink({ fragranceId, fragranceName, learne
   );
 }
 
-export function CatalogExplorer() {
+// `season` is the validated public season key from /catalogo?season=..., or
+// null/undefined for the full catalog (the default, unchanged behavior).
+export function CatalogExplorer({ season = null }) {
   const [query, setQuery] = useState("");
   const [points, setPoints] = useState("all");
   const [requestedFragrance, setRequestedFragrance] = useState(null);
@@ -85,8 +88,10 @@ export function CatalogExplorer() {
   const [learnerRecord, setLearnerRecord] = useState(null);
   const requestedCardRef = useRef(null);
   const visible = useMemo(() => {
-    return filterCatalog(aurelianCatalog, query, points);
-  }, [points, query]);
+    return filterCatalog(aurelianCatalog, query, points, season);
+  }, [points, query, season]);
+  const seasonTotal = useMemo(() => filterCatalogBySeason(aurelianCatalog, season).length, [season]);
+  const seasonLabel = season ? getCatalogSeasonLabel(season) : null;
 
   useEffect(() => {
     const frame = window.requestAnimationFrame(() => {
@@ -124,7 +129,9 @@ export function CatalogExplorer() {
           </select>
         </label>
       </div>
-      <div className="catalog-status"><p className="catalog-count" aria-live="polite">{visible.length} de {aurelianCatalog.length} fragancias</p><p>Los puntos ayudan a equilibrar tu Discovery Box; no representan el precio de una botella.</p></div>
+      <div className="catalog-status"><p className="catalog-count" aria-live="polite">{seasonLabel
+          ? `${visible.length === seasonTotal ? seasonTotal : `${visible.length} de ${seasonTotal}`} ${seasonTotal === 1 ? "fragancia" : "fragancias"} de ${seasonLabel.lower}`
+          : `${visible.length} de ${aurelianCatalog.length} fragancias`}</p><p>Los puntos ayudan a equilibrar tu Discovery Box; no representan el precio de una botella.</p></div>
       {visible.length ? (
         <div className="catalog-explorer-grid">
           {visible.map((item) => {

@@ -1,0 +1,120 @@
+/* Aurelian Catalog Phase 1: the seasonal chapter of the standalone /catalogo.
+
+   HOST-OWNED and /catalogo-only: every selector is keyed on `.catalog-atmosphere`
+   (components/CatalogPageView.jsx), the wrapper of the standalone catalog page.
+   It cannot reach the Builder (its own catalog), the landing, the shared Builder
+   package or Discovery Decants.
+
+   Season identity: the wrapper carries `data-season` = one of the four public
+   season keys (spring, summer, fall, winter), set only when /catalogo?season=
+   holds a valid one. Full catalog = no attribute = none of this applies.
+
+   The artwork is the SAME four Aurelian-owned WebPs the landing's seasonal cards
+   use (no copies, nothing in a shared package). Each url() appears only under its
+   own season selector, so a page loads only the art of the season it is showing.
+   The slot key is "fall"; the file says "autumn".
+
+   Treatment: one page-level atmosphere, never per card. A single pseudo-element
+   is held at the top of the viewport with `position: sticky` (so it stays while
+   the long grid scrolls, with no background-attachment: fixed, no filter, no
+   blur, no motion). Its background is the artwork under a dark veil: heavy
+   behind the content column (the 1180px page shell), lighter only outside it. Product cards,
+   controls and text keep their own surfaces. The season is always stated in
+   text (eyebrow + context line); the artwork is decorative only. */
+
+.catalog-atmosphere {
+  position: relative;
+  isolation: isolate;
+}
+
+.catalog-atmosphere[data-season="spring"] {
+  --catalog-season-art: url("/media/landing/seasons/catalog-spring-editorial.webp");
+}
+
+.catalog-atmosphere[data-season="summer"] {
+  --catalog-season-art: url("/media/landing/seasons/catalog-summer-editorial.webp");
+}
+
+.catalog-atmosphere[data-season="fall"] {
+  --catalog-season-art: url("/media/landing/seasons/catalog-autumn-editorial.webp");
+}
+
+.catalog-atmosphere[data-season="winter"] {
+  --catalog-season-art: url("/media/landing/seasons/catalog-winter-editorial.webp");
+}
+
+.catalog-atmosphere[data-season] {
+  --catalog-atmosphere-height: 100vh;
+  --catalog-veil-core: 0.86;
+  --catalog-veil-edge: 0.6;
+}
+
+@supports (height: 100svh) {
+  .catalog-atmosphere[data-season] {
+    --catalog-atmosphere-height: 100svh;
+  }
+}
+
+.catalog-atmosphere[data-season]::before {
+  content: "";
+  position: sticky;
+  top: 0;
+  z-index: -1;
+  display: block;
+  height: var(--catalog-atmosphere-height);
+  margin-bottom: calc(var(--catalog-atmosphere-height) * -1);
+  pointer-events: none;
+  background:
+    linear-gradient(
+      90deg,
+      rgba(8, 7, 7, var(--catalog-veil-edge)) 0,
+      rgba(8, 7, 7, var(--catalog-veil-edge)) calc(50% - 630px),
+      rgba(8, 7, 7, var(--catalog-veil-core)) calc(50% - 570px),
+      rgba(8, 7, 7, var(--catalog-veil-core)) calc(50% + 570px),
+      rgba(8, 7, 7, var(--catalog-veil-edge)) calc(50% + 630px),
+      rgba(8, 7, 7, var(--catalog-veil-edge)) 100%
+    ),
+    var(--catalog-season-art) center 38% / cover no-repeat;
+}
+
+/* The page states its season in text; this is the control that leaves it. */
+.catalog-season-context {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem 1.5rem;
+  margin-top: 2rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+}
+
+.catalog-season-context p {
+  max-width: 38rem;
+  margin: 0;
+  color: var(--secondary);
+}
+
+.catalog-season-context .button {
+  min-height: 2.75rem;
+  background: transparent;
+  color: var(--gold);
+}
+
+.catalog-season-context .button:hover {
+  background: rgba(200, 166, 101, 0.12);
+}
+
+/* The count / points-note row sits straight on the atmosphere (not on a card
+   surface), so in seasonal mode it uses the secondary tone instead of muted. */
+.catalog-atmosphere[data-season] .catalog-status {
+  color: var(--secondary);
+}
+
+/* Small screens: the content fills the width, so readability wins. */
+@media (max-width: 640px) {
+  .catalog-atmosphere[data-season] {
+    --catalog-veil-core: 0.88;
+    --catalog-veil-edge: 0.88;
+  }
+}

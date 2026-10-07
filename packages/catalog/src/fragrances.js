@@ -3303,7 +3303,10 @@ baseNotes: ["caramel", "musk"],
 
 ];
 
-const SEASON_WEIGHTS_BY_ID = {
+// Exported from this source file only (NOT re-exported through index.js), like
+// NOTE_PROMINENCE_BY_ID below, so explicitSeasonWeight.js can read the raw
+// editorial table rather than the merged `seasonWeights` on each fragrance.
+export const SEASON_WEIGHTS_BY_ID = {
   1: { spring: 8, summer: 10, fall: 3, winter: 1 },
   2: { spring: 7, summer: 10, fall: 2, winter: 0 },
   3: { spring: 8, summer: 9, fall: 3, winter: 1 },

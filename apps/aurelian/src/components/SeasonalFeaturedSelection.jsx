@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { createCatalogAssetResolver } from "@discovery-box/catalog";
 import { aurelianCatalog } from "../merchant/catalog.js";
+import { CATALOG_SEASON_PARAM } from "../lib/catalogSeason.js";
 import { createSeasonalRotationState, SEASONAL_SLOTS, shouldRotateSeasonalSelection } from "../lib/seasonalSelection.js";
 import { applySeasonalTransitionEvent, buildSeasonalCycleSchedule, createSeasonalTransitionState } from "../lib/seasonalTransition.js";
 
@@ -74,7 +75,7 @@ export function SeasonalFeaturedSelection() {
         const interactive = phase === "visible";
         return (
           <article className={`seasonal-card seasonal-card--${phase}`} data-fragrance-id={item.id} data-season={season.key} data-transition-phase={phase} key={season.key}>
-            <Link aria-disabled={interactive ? undefined : true} aria-label={`Ver ${item.name} en el catálogo`} className="seasonal-card__link" href={`/catalogo?fragrance=${encodeURIComponent(item.id)}`} tabIndex={interactive ? undefined : -1}>
+            <Link aria-disabled={interactive ? undefined : true} aria-label={`Ver selección de ${season.label.toLowerCase()} en el catálogo: ${item.name}`} className="seasonal-card__link" href={`/catalogo?${CATALOG_SEASON_PARAM}=${season.key}`} tabIndex={interactive ? undefined : -1}>
               <div className="seasonal-card__image"><img alt={`Frasco de ${item.name}`} height="240" src={resolveAsset(item.imageAssetKey)} width="240" /></div>
               <p className="seasonal-card__season">Selección de {season.label.toLowerCase()}</p>
               <p className="eyebrow">{item.brand}</p>
