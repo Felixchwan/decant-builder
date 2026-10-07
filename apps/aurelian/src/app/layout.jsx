@@ -2,6 +2,7 @@ import "@discovery-box/builder/styles.css";
 import "./globals.css";
 import "./builder-zoning.css";
 import "./builder-intro.css";
+import "./builder-geometry.css";
 import { SiteHeader } from "../components/SiteHeader.jsx";
 import { SiteFooter } from "../components/SiteFooter.jsx";
 

@@ -197,15 +197,28 @@ h1 { max-width:15ch; margin-bottom:1.4rem; font-size:clamp(2.8rem,7vw,6.4rem); }
      column gap = 406px reserved on the right, so the right margin is that
      same 708px anchor plus 406px -- ending this header's content box
      where the catalog column ends when the panel is expanded (the default
-     state), not where the whole .app box ends. Matches the panel's
-     *expanded* width specifically; collapsing the panel afterward widens
-     the catalog underneath without also re-widening this header -- fixing
-     that is out of this fix's scope (see the round's own acceptance
-     criteria, all stated against the expanded-panel case). */
+     state), not where the whole .app box ends. This base rule matches the
+     panel's *expanded* width; the collapsed case follows immediately below. */
   #builder-entry-header {
     width:auto;
     margin-left:max(12px, calc(50% - 708px));
     margin-right:max(418px, calc(50% - 302px));
+  }
+  /* Panel collapsed: the Builder already widens the catalog (the 2200px cap
+     above and .layout's own collapsed grid), so the intro follows it instead
+     of staying at the expanded width. The collapsed state is exposed by the
+     Builder as .layout--panel-collapsed (the same hook the 2200px rule above
+     already keys on), reachable from this sibling via the shared
+     .builder-page ancestor -- no extra state, nothing in the shared package.
+     Measured live (gridTemplateColumns "949px 20px", gap 16px): the catalog
+     track ends 12px (.app padding) + 20px (rail) + 16px (gap) = 48px short of
+     the .app box edge; .app is min(2200px, 100%), so its left edge anchor is
+     50% - 1100px, plus the same 12px padding = 50% - 1088px, and the right
+     anchor is 50% - 1100px + 48px = 50% - 1052px. Expanded again, this rule
+     stops matching and the base rule above is back in charge. */
+  .builder-page:has(.layout--panel-collapsed) #builder-entry-header {
+    margin-left:max(12px, calc(50% - 1088px));
+    margin-right:max(48px, calc(50% - 1052px));
   }
 }
 /* Scoped to .catalog-page specifically (the standalone /catalogo page's own

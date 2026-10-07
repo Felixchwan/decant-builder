@@ -1,0 +1,159 @@
+/* Aurelian visual evolution -- shape language and header typography.
+
+   HOST-OWNED, presentation-only, scoped to the Build Your Box route (the Builder
+   page, the docked summary slot in the header, and the header while the Builder
+   route is active). The shared package's selectors are zero-specificity
+   (:where(.builder-scope)), so these win without !important.
+
+   Why this file exists: the shared Builder ships a soft, app-like geometry
+   (28px shells, 22px cards, pill buttons). Aurelian's identity is tailored and
+   architectural, so the same surfaces are re-cut here with a calmer scale. It
+   changes radius, type and hairlines ONLY: no size, spacing, layout or hit-area
+   changes (hence no border/padding/height declarations -- an outline that must
+   not change a control's size is drawn with an inset shadow).
+
+   Radius scale (outer -> inner, each inner step is never rounder than its host):
+     shells            14px   catalog shell, tooling panel, docked summary, intro plate
+     panels            10px   Collection Card, Composer, Curator Bonus, My Box strip, tray
+     perfume cards      9px   image inside the card 5px
+     controls          10px   search, filters, intent toggles, mobile tab bar (12px)
+     buttons            8px   every text button / CTA (tabs inside the bar: 7px)
+     nested panels      8px   Curator inner cards, recommendation cards
+   Intentionally still round: icon buttons ("i", close, carousel, expand), progress
+   tracks, count/status pills, chips and tags, tooltips and the vial artwork --
+   their semantics (a dot, a chip, a gauge) read through the round form. */
+
+/* ---- Shells ---------------------------------------------------------------- */
+.builder-page .catalog-section,
+.builder-page .builder-panel {
+  border-radius: 14px;
+}
+
+/* The sticky summary card sits flush over the panel's top corners (shared
+   negative margins), and docks into the header slot with the same corners, so it
+   must follow the shell radius or the two edges stop meeting. */
+.builder-page .builder-panel-sticky-summary-card,
+#aurelian-builder-summary-slot .builder-panel-sticky-summary-card {
+  border-radius: 14px 14px 0 0;
+}
+
+/* ---- Panels ---------------------------------------------------------------- */
+.builder-page .compose-box-panel,
+.builder-page .curator-bonus-section,
+.builder-page .collection-snapshot,
+.builder-page .box-summary-card,
+#aurelian-builder-summary-slot .box-summary-card,
+.builder-page .box-slot-tray,
+#aurelian-builder-summary-slot .box-slot-tray,
+.builder-page .season-profile-panel,
+.builder-page .box-intelligence,
+.builder-page .recommendation-lane,
+.builder-page .next-improvement-section {
+  border-radius: 10px;
+}
+
+.builder-page .curator-bonus-card,
+.builder-page .curator-style-locked,
+.builder-page .curator-pick-slot,
+.builder-page .recommendation-card,
+.builder-page .box-intelligence-item,
+.builder-page .recommendation-intelligence {
+  border-radius: 8px;
+}
+
+.builder-page .recommendation-image {
+  border-radius: 6px;
+}
+
+/* ---- Perfume cards --------------------------------------------------------- */
+.builder-page .perfume-card {
+  border-radius: 9px;
+}
+
+.builder-page .perfume-card-image {
+  border-radius: 5px;
+}
+
+/* ---- Controls -------------------------------------------------------------- */
+.builder-page .catalog-section input[type="search"],
+.builder-page .catalog-section .filters select,
+.builder-page .intent-recommendations__nav button {
+  border-radius: 10px;
+}
+
+/* ---- Buttons / CTAs -------------------------------------------------------- */
+.builder-page .perfume-card-compact-actions button,
+.builder-page .recommendation-actions button,
+.builder-page .compose-box-header-actions button,
+.builder-page .share-box-buttons button,
+.builder-page .collection-snapshot-header button,
+.builder-page .details-button,
+.builder-page .review-box-button,
+#aurelian-builder-summary-slot .review-box-button,
+#aurelian-builder-summary-slot .builder-clear-button,
+.builder-page .builder-clear-button {
+  border-radius: 8px;
+}
+
+/* The floating "Revisar mi caja" bar groups a button, like the tab bar does. */
+.builder-page .review-action {
+  border-radius: 12px;
+}
+
+/* ---- Mobile tab bar (same 980px switch the shared package uses) ----------- */
+@media (max-width: 980px) {
+  .builder-page .mobile-builder-tabs {
+    border-radius: 12px;
+  }
+
+  .builder-page .mobile-builder-tabs button {
+    border-radius: 7px;
+  }
+}
+
+/* ---- Header: quieter, editorial type on the Builder route ----------------- *
+   Navigation: smaller, tracked, uppercase -- the same quiet voice as the intro
+   eyebrow. Colors are the existing ones; the existing gold hairline (hover)
+   also appears on keyboard focus, next to the global focus outline. */
+.site-header:has(.site-header__inner--builder) .desktop-nav a {
+  font-size: 0.72rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.site-header:has(.site-header__inner--builder) .desktop-nav a:focus-visible::after {
+  opacity: 1;
+  transform: scaleX(1);
+}
+
+.site-header:has(.site-header__inner--builder) .mobile-menu summary {
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+/* "Mi caja": the house serif, regular weight (same size, so nothing moves). */
+.builder-page .builder-box-header-title h2,
+#aurelian-builder-summary-slot .builder-box-header-title h2 {
+  font-family: Georgia, "Times New Roman", serif;
+  font-weight: 400;
+  letter-spacing: 0.01em;
+}
+
+/* "Vaciar caja": secondary and restrained -- a dark surface and a hairline
+   outline (inset shadow, so the hit area stays exactly as it was). */
+.builder-page .builder-clear-button,
+#aurelian-builder-summary-slot .builder-clear-button {
+  background: rgba(8, 7, 7, 0.55);
+  box-shadow: inset 0 0 0 1px rgba(231, 221, 207, 0.14);
+  color: #c8bead;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+
+/* "Revisar" stays the primary header action (its brass fill is untouched when
+   unlocked); only the type is tightened to match. */
+.builder-page .review-box-button--compact,
+#aurelian-builder-summary-slot .review-box-button--compact {
+  font-weight: 800;
+  letter-spacing: 0.05em;
+}

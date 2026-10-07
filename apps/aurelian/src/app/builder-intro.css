@@ -27,6 +27,20 @@
   /* No-op on wide layouts; on narrow ones it fades the art out before the
      body copy (see the media query below). */
   --intro-art-fade: linear-gradient(180deg, transparent, transparent);
+  /* Readability mask over the artwork (near-black behind the copy on the left,
+     opening onto the art on the right). Wide-plate hooks (see the
+     collapsed-panel rule below) default to the original composition exactly:
+     this mask spans the whole plate and the underlay is invisible. */
+  --intro-mask: linear-gradient(
+    90deg,
+    rgba(8, 7, 7, 0.97) 0%,
+    rgba(8, 7, 7, 0.95) 40%,
+    rgba(8, 7, 7, 0.7) 58%,
+    rgba(8, 7, 7, 0.28) 78%,
+    rgba(8, 7, 7, 0.08) 100%
+  );
+  --intro-art-edge: linear-gradient(transparent, transparent);
+  --intro-art-underlay: linear-gradient(transparent, transparent);
 
   isolation: isolate;
   padding-block: clamp(3rem, 4.4vw, 3.5rem) clamp(2.6rem, 3.6vw, 3rem);
@@ -45,24 +59,19 @@
   z-index: -1;
   pointer-events: none;
   border: 1px solid rgba(169, 130, 79, 0.2);
-  border-radius: 24px;
+  border-radius: 14px;
   background:
-    linear-gradient(
-      90deg,
-      rgba(8, 7, 7, 0.97) 0%,
-      rgba(8, 7, 7, 0.95) 40%,
-      rgba(8, 7, 7, 0.7) 58%,
-      rgba(8, 7, 7, 0.28) 78%,
-      rgba(8, 7, 7, 0.08) 100%
-    ),
+    var(--intro-mask),
+    var(--intro-art-edge),
     radial-gradient(ellipse 70% 120% at 0 0, rgba(74, 15, 31, 0.06), transparent 70%),
     linear-gradient(180deg, transparent 62%, rgba(8, 7, 7, 0.45)),
     var(--intro-art-fade),
     var(--aurelian-intro-art, none),
+    var(--intro-art-underlay),
     linear-gradient(180deg, rgba(20, 16, 16, 0.78), rgba(9, 8, 8, 0.86));
   background-repeat: no-repeat;
-  background-size: auto, auto, auto, auto, var(--intro-art-size), auto;
-  background-position: 0 0, 0 0, 0 0, 0 0, var(--intro-art-position), 0 0;
+  background-size: auto, auto, auto, auto, auto, var(--intro-art-size), auto, auto;
+  background-position: 0 0, 0 0, 0 0, 0 0, 0 0, var(--intro-art-position), 0 0, 0 0;
   box-shadow:
     0 22px 60px rgba(0, 0, 0, 0.4),
     inset 0 1px 0 rgba(231, 221, 207, 0.05);
@@ -75,6 +84,58 @@
   .builder-page #builder-entry-header h1,
   .builder-page #builder-entry-header .lede {
     max-width: 62%;
+  }
+
+  /* Tooling panel collapsed: globals.css widens the plate to the wider catalog
+     (the Builder's own .layout--panel-collapsed hook). The extra width goes to
+     the artwork, not the copy:
+       - the copy column keeps an editorial measure (62% of the plate, never
+         more than 36rem -- the same width the expanded plate reaches at its
+         widest);
+       - the art keeps its approved scale (plate height, so it is never
+         stretched or distorted) and is anchored clear of the header's docked
+         "Mi caja" card. With the panel collapsed that card (360px, anchored to
+         the content edge) hangs over the right of the wider plate, covering
+         360px - the 36px rail and gap = 324px of it; the clearance below adds a
+         small margin, so the bust and still life sit in the open space between
+         the copy and the dock instead of underneath it. The whole image shows
+         rather than the right-hand crop of the narrow plate;
+       - readability is anchored to the COPY, not to the art: a left-based
+         mask stays near-black across the copy column and opens onto the art
+         beyond it, so on narrower layouts (where the free space is smaller)
+         the art simply stays hidden behind the mask rather than competing
+         with the text;
+       - a separate right-edge fade dissolves the art into the plate where it
+         meets the dock clearance, so the image never ends in a hard edge;
+       - a near-black underlay carries the same tone across any plate area the
+         art does not reach. The two masks are independent layers on purpose:
+         neither can reorder the other's stops at any plate width. */
+  .builder-page:has(.layout--panel-collapsed) #builder-entry-header {
+    --intro-dock-clearance: 340px;
+    --intro-copy-end: 640px;
+    --intro-art-size: auto 100%;
+    --intro-art-position: right var(--intro-dock-clearance) top;
+    --intro-mask: linear-gradient(
+      90deg,
+      rgba(8, 7, 7, 0.97) 0,
+      rgba(8, 7, 7, 0.95) var(--intro-copy-end),
+      rgba(8, 7, 7, 0.5) calc(var(--intro-copy-end) + 80px),
+      rgba(8, 7, 7, 0.12) calc(var(--intro-copy-end) + 220px),
+      rgba(8, 7, 7, 0.08) 100%
+    );
+    --intro-art-edge: linear-gradient(
+      90deg,
+      transparent calc(100% - var(--intro-dock-clearance) - 90px),
+      rgba(8, 7, 7, 0.97) calc(100% - var(--intro-dock-clearance)),
+      rgba(8, 7, 7, 0.97) 100%
+    );
+    --intro-art-underlay: linear-gradient(rgba(8, 7, 7, 0.97), rgba(8, 7, 7, 0.97));
+  }
+
+  .builder-page:has(.layout--panel-collapsed) #builder-entry-header .eyebrow,
+  .builder-page:has(.layout--panel-collapsed) #builder-entry-header h1,
+  .builder-page:has(.layout--panel-collapsed) #builder-entry-header .lede {
+    max-width: min(62%, 36rem);
   }
 }
 
