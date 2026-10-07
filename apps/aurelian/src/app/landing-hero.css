@@ -1,0 +1,298 @@
+/* Aurelian visual evolution -- Landing Phase 1: hero + header continuity.
+
+   HOST-OWNED and route-safe. Imported only by apps/aurelian's own layout, and
+   every rule is keyed on something that exists only on the landing page:
+     .aurelian-hero-stage / .aurelian-hero     (the hero, app/page.jsx)
+     body:has(.aurelian-hero), :root:has(.aurelian-hero)   (the shared site
+       header while the landing is the current route -- the header markup is
+       the same component on every route, so it is styled by route, never
+       duplicated)
+   Nothing here can reach the Builder (its header is keyed on
+   .site-header__inner--builder), the shared Builder package, the catalog or
+   Discovery Decants.
+
+   Hero strategy: the Builder is the atelier; the landing is the establishing
+   shot. The hero is a full-width stage carrying a wide, cinematic atelier scene
+   (sculpture, velvet, brass, marble, botanicals, perfume objects). Its
+   composition is a triptych: the bust and urn on the left, the arch, flowers,
+   bowl and bottle on the right, and a clean, dark middle -- which is where the
+   copy is deliberately set, so no text ever sits on high-detail artwork.
+   The art lives on its own layer (the stage's ::before) whose box is locked to
+   the image's own aspect ratio and capped at 1500px, so it is never distorted
+   and the copy position and masks -- all expressed as percentages of that same
+   box -- stay glued to the picture at every width. The art is clearly visible
+   (a campaign plate, not a background) but never louder than the headline: a
+   mask over the copy column keeps the text on near-black.
+   On narrow screens the wide scene cannot share the row with the copy, so it is
+   cropped to a band at the top (bust, urn and velvet kept, the right-hand still
+   life cropped away) that dissolves into black before the text begins.
+   The stage has no viewport-height sizing: its height is its content plus
+   generous padding, so the next section stays in view.
+
+   Artwork: apps/aurelian/public/media/landing/landing-atelier-hero.webp (1672x941,
+   a dedicated encode of the wide atelier scene -- distinct from the Builder's
+   intro plate and background), referenced only here. If it fails to load the
+   stage keeps its dark base and a faint oxblood undertone, and every word stays
+   readable. */
+
+/* ---- Hero stage ------------------------------------------------------------ *
+   `container-type: inline-size` makes the stage a size container, so its
+   children can size themselves from the stage's own width (cqw) -- the one way
+   to keep the copy column glued to the artwork without guessing viewport math.
+   `overflow: hidden` crops the art box where it runs past the stage (the bottom
+   of the picture, and a phone's right-hand side) without any page overflow. */
+.aurelian-hero-stage {
+  --aurelian-hero-art: url("/media/landing/landing-atelier-hero.webp");
+  /* The art box: the stage's width up to 1500px, in the image's own ratio. */
+  --hero-art-w: min(100cqw, 1500px);
+  /* The dark middle of the picture, as fractions of that box: the copy column
+     starts at 35% and is 37% wide (it ends at 72%, before the arch). */
+  --hero-copy-start: 0.35;
+  --hero-copy-w: 0.37;
+
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  container-type: inline-size;
+  /* The base black, with an oxblood undertone that is the whole look if the
+     art is missing. */
+  background:
+    radial-gradient(ellipse 60% 90% at 50% 40%, rgba(74, 15, 31, 0.2), transparent 70%),
+    #090a09;
+}
+
+/* The art layer. Top to bottom: a soft settle under the header; the copy mask
+   (near-black behind the copy column, easing out either side); a fade into black
+   at the art's own left/right edges (visible only when the stage is wider than
+   the 1500px cap); a light unifying veil; the artwork. */
+.aurelian-hero-stage::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  top: 0;
+  left: 50%;
+  width: var(--hero-art-w);
+  aspect-ratio: 1672 / 941;
+  transform: translateX(-50%);
+  pointer-events: none;
+  background:
+    linear-gradient(180deg, rgba(9, 10, 9, 0.5), transparent 16%),
+    linear-gradient(
+      90deg,
+      transparent 27%,
+      rgba(8, 7, 7, 0.3) 35%,
+      rgba(8, 7, 7, 0.3) 72%,
+      transparent 80%
+    ),
+    linear-gradient(90deg, #090a09 0, transparent 10%, transparent 90%, #090a09 100%),
+    linear-gradient(rgba(8, 7, 7, 0.06), rgba(8, 7, 7, 0.06)),
+    var(--aurelian-hero-art, none);
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+}
+
+/* Where the stage meets the next section: the picture fades into black over its
+   last stretch (the art is cropped there), and a hairline marks the seam. The
+   old bottom border spanned only the 1180px shell and ended in a hard corner. */
+.aurelian-hero-stage::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 30%;
+  pointer-events: none;
+  background:
+    linear-gradient(90deg, transparent, rgba(169, 130, 79, 0.32) 50%, transparent) bottom / 100% 1px no-repeat,
+    linear-gradient(180deg, transparent, #090a09);
+}
+
+.aurelian-hero-stage .aurelian-hero {
+  grid-template-columns: minmax(0, 1fr);
+  border-bottom-color: transparent;
+}
+
+/* The copy column sits in the picture's dark middle: its left edge is the art
+   box's left edge (centered, so 0 until the stage passes 1500px) plus 35% of the
+   box, expressed relative to the page shell's own (centered, 1180px max, 16px
+   minimum) left edge. */
+.aurelian-hero-stage .aurelian-hero__copy {
+  max-width: calc(var(--hero-copy-w) * var(--hero-art-w));
+  margin-left: calc(
+    max(0px, 50cqw - 750px) + var(--hero-copy-start) * var(--hero-art-w) - max(16px, 50cqw - 590px)
+  );
+  padding-block: clamp(4rem, 8vw, 7rem) clamp(4rem, 8vw, 6.5rem);
+}
+
+/* ---- Hero typography ------------------------------------------------------- */
+.aurelian-hero-stage .eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  margin-bottom: 1.4rem;
+  letter-spacing: 0.3em;
+}
+
+.aurelian-hero-stage .eyebrow::before {
+  content: "";
+  flex: none;
+  width: 2.2rem;
+  height: 1px;
+  background: rgba(200, 166, 101, 0.7);
+}
+
+.aurelian-hero-stage h1 {
+  text-wrap: balance;
+}
+
+.aurelian-hero-stage .lede {
+  max-width: 34rem;
+  color: rgba(200, 190, 173, 0.92);
+  font-size: clamp(1rem, 1.3vw, 1.12rem);
+  line-height: 1.75;
+}
+
+/* ---- Hero actions: one brass primary, one restrained secondary ------------- */
+.aurelian-hero-stage .button-row {
+  flex-wrap: wrap;
+  gap: 0.75rem 1rem;
+  margin-top: 2.25rem;
+}
+
+.aurelian-hero-stage .button {
+  border-radius: 8px;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+.aurelian-hero-stage .button--outline {
+  border-color: rgba(231, 221, 207, 0.3);
+  background: rgba(8, 7, 7, 0.5);
+  color: #e7ddcf;
+}
+
+.aurelian-hero-stage .button--outline:hover {
+  border-color: rgba(200, 166, 101, 0.6);
+  background: rgba(200, 166, 101, 0.1);
+}
+
+/* Mid-width desktops give the copy column less room, so the eyebrow is tracked a
+   little tighter and drops its rule rather than wrapping around it. */
+@media (min-width: 901px) and (max-width: 1180px) {
+  .aurelian-hero-stage .eyebrow {
+    gap: 0;
+    letter-spacing: 0.2em;
+  }
+
+  .aurelian-hero-stage .eyebrow::before {
+    display: none;
+  }
+}
+
+/* ---- Narrow screens: readability first ------------------------------------- *
+   The wide scene becomes a band across the top: 460px wide at the least (so a
+   phone shows the bust, urn and velvet at a legible size rather than the whole
+   scene shrunk), anchored left, with the right-hand still life cropped away by
+   the stage. It dissolves into black over its lower 55%, and the copy starts
+   inside that fade -- on near-black -- so readability always wins. */
+@media (max-width: 900px) {
+  .aurelian-hero-stage {
+    --hero-art-w: max(100cqw, 460px);
+  }
+
+  .aurelian-hero-stage::before {
+    left: 0;
+    transform: none;
+    background:
+      linear-gradient(180deg, rgba(9, 10, 9, 0.5), transparent 16%),
+      linear-gradient(180deg, transparent 28%, #090a09 82%),
+      linear-gradient(rgba(8, 7, 7, 0.06), rgba(8, 7, 7, 0.06)),
+      var(--aurelian-hero-art, none);
+    background-repeat: no-repeat;
+    background-size: 100% 100%;
+  }
+
+  .aurelian-hero-stage .aurelian-hero__copy {
+    max-width: 36rem;
+    margin-left: 0;
+    padding-block: calc(var(--hero-art-w) * 0.563 * 0.62) 2.5rem;
+  }
+}
+
+/* On phones the eyebrow wraps to two lines, so the decorative rule is dropped
+   rather than left floating between them. */
+@media (max-width: 560px) {
+  .aurelian-hero-stage .eyebrow {
+    gap: 0;
+    letter-spacing: 0.22em;
+  }
+
+  .aurelian-hero-stage .eyebrow::before {
+    display: none;
+  }
+}
+
+/* ---- Header continuity (landing route only) -------------------------------- *
+   The Builder's approved header language, route-safe: tracked uppercase
+   navigation, a 69px bar, a zone hairline, tailored geometry. The landing keeps
+   what suits a public page: the header CTA stays, but as a quiet brass outline so
+   the hero's brass action is the strongest one in the first viewport. */
+@media (min-width: 981px) {
+  :root:has(.aurelian-hero) {
+    --site-header-height: 4.25rem;
+  }
+}
+
+body:has(.aurelian-hero) .site-header::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 1px;
+  pointer-events: none;
+  background: linear-gradient(
+    90deg,
+    rgba(138, 52, 74, 0.55),
+    rgba(169, 130, 79, 0.28) 50%,
+    rgba(63, 122, 104, 0.4)
+  );
+}
+
+body:has(.aurelian-hero) .desktop-nav a {
+  font-size: 0.72rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+body:has(.aurelian-hero) .desktop-nav a:focus-visible::after {
+  opacity: 1;
+  transform: scaleX(1);
+}
+
+body:has(.aurelian-hero) .desktop-cta {
+  border-color: rgba(200, 166, 101, 0.5);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--gold);
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+body:has(.aurelian-hero) .desktop-cta:hover {
+  background: rgba(200, 166, 101, 0.12);
+}
+
+body:has(.aurelian-hero) .mobile-menu summary {
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+body:has(.aurelian-hero) .mobile-menu nav {
+  border-radius: 10px;
+}
+
+body:has(.aurelian-hero) .mobile-menu nav .button {
+  border-radius: 8px;
+}

@@ -1,0 +1,120 @@
+/* Aurelian visual evolution -- Landing: the editorial video vignette.
+
+   HOST-OWNED and landing-only: every selector is keyed on a class that exists
+   only in the homepage (app/page.jsx + components/LandingVideo.jsx). Nothing
+   here can reach the hero, the Builder, the catalog, the shared Builder package
+   or Discovery Decants.
+
+   The video lives inside the "Nuestro sesgo declarado" section, as the right-hand
+   counterweight to its large editorial text: the copy keeps roughly two thirds of
+   the row and stays the dominant message; the portrait video (source 540x960) is
+   the movement beside it. Folding it into a section that already existed -- instead
+   of giving it a section of its own -- is what keeps the page short; the section
+   keeps the default section padding, with no extra luxury spacing added.
+
+   Treatment: a quiet frame, 10px, edged with a hairline of aged brass, a dark
+   (never bright) shadow and a soft dark vignette so the sunlit footage sits
+   inside the black page instead of glaring out of it. No card shell, no fill.
+   On desktop the frame is cropped to 3:4 (the footage is centered, so only its
+   top and bottom are trimmed) so it never outgrows the text block beside it.
+   Below 900px the copy stacks above the video, which is cropped to 4:5 rather
+   than a screen-tall portrait. */
+
+.landing-bias {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) clamp(16rem, 32vw, 24rem);
+  align-items: center;
+  column-gap: clamp(2.5rem, 5vw, 5rem);
+}
+
+.landing-video {
+  width: 100%;
+  margin: 0;
+}
+
+.landing-video__frame {
+  position: relative;
+  overflow: hidden;
+  aspect-ratio: 3 / 4;
+  border: 1px solid rgba(169, 130, 79, 0.38);
+  border-radius: 10px;
+  background: #0b0a09;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
+}
+
+/* The vignette sits over the picture and under the control. */
+.landing-video__frame::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: linear-gradient(
+    180deg,
+    rgba(8, 7, 7, 0.3),
+    transparent 24%,
+    transparent 66%,
+    rgba(8, 7, 7, 0.55)
+  );
+}
+
+.landing-video__media {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 50% 50%;
+}
+
+/* One quiet play/pause control: a 44px target, dark glass, a brass glyph. The
+   focus ring is drawn inside the frame (which clips overflow). */
+.landing-video__toggle {
+  position: absolute;
+  bottom: 0.75rem;
+  left: 0.75rem;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  padding: 0;
+  border: 1px solid rgba(231, 221, 207, 0.28);
+  border-radius: 8px;
+  background: rgba(8, 7, 7, 0.62);
+  color: var(--gold);
+  font-size: 0.78rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.landing-video__toggle:hover {
+  border-color: rgba(200, 166, 101, 0.6);
+  background: rgba(8, 7, 7, 0.78);
+}
+
+.landing-video__toggle:focus-visible {
+  outline-offset: -4px;
+}
+
+.landing-video figcaption {
+  margin-top: 0.75rem;
+  color: var(--muted);
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+}
+
+@media (max-width: 720px) {
+  .landing-bias {
+    grid-template-columns: minmax(0, 1fr);
+    row-gap: 2rem;
+  }
+
+  .landing-video {
+    width: min(100%, 22rem);
+  }
+
+  .landing-video__frame {
+    aspect-ratio: 4 / 5;
+  }
+}

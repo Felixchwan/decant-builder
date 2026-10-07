@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { createCatalogAssetResolver } from "@discovery-box/catalog";
 import { aurelianCatalog } from "../merchant/catalog.js";
+import { LANDING_VIDEO_SRC } from "../lib/landingMedia.js";
 
 const resolveAsset = createCatalogAssetResolver({ basePath: "/catalog-assets" });
 // Looked up by id (Legend EDT, Graphite, Polo Deep Blue Parfum) rather than
@@ -14,7 +15,7 @@ const featured = FEATURED_IDS.map((id) => aurelianCatalog.find((fragrance) => fr
 export const HERO_MEDIA_SEQUENCE = [
   {
     poster: featured[1],
-    src: "/media/torino-21.mp4",
+    src: LANDING_VIDEO_SRC,
   },
 ];
 

@@ -4,6 +4,8 @@ import "./builder-zoning.css";
 import "./builder-intro.css";
 import "./builder-geometry.css";
 import "./builder-header.css";
+import "./landing-hero.css";
+import "./landing-video.css";
 import { SiteHeader } from "../components/SiteHeader.jsx";
 import { SiteFooter } from "../components/SiteFooter.jsx";
 
