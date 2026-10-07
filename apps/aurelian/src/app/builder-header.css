@@ -1,0 +1,52 @@
+/* Aurelian visual evolution -- Builder header: collapsed summary strip.
+
+   HOST-OWNED, presentation-only, desktop-only (the same (min-width: 981px)
+   switch the Builder itself uses to dock its summary into the header slot).
+
+   "Collapsed" here is the docked summary card's OWN collapsed state -- the
+   shared runtime renders it as `.builder-panel-sticky-summary-card.is-docked
+   .is-collapsed` when the user folds the dock with its chevron. It is not the
+   right-hand panel's collapse (`.layout--panel-collapsed`); the two are
+   independent and the strip looks the same either way, so this keys on the
+   card's own class and needs no extra state.
+
+   What it fixes, and why each piece is needed:
+     - A stray hairline: the shared base rule gives every sticky summary card
+       `border-bottom: 1px solid var(--builder-color-border)`. On the expanded
+       dock that is the card's real bottom edge (it hangs below the header);
+       on the collapsed strip the card is only 60px tall inside a 77px header,
+       so the same border floated above the header's own edge as a 360px-wide
+       line that read like an empty slot. Its color goes transparent (not its
+       width, so the box does not change size by a pixel).
+     - A split control group: the shared strip pins the expand chevron to the
+       far left and the two actions to the far right (space-between). They are
+       one cluster, so they now sit together at the right with the same 8px gap
+       the two actions already share.
+     - Vertical centering: the strip is given the header's own inner height so
+       its flex row centers the three controls on the same axis as the logo and
+       navigation, instead of sitting ~8px high.
+     - Header height: 4.75rem -> 4.25rem on the Builder route only (4.25rem is
+       the value this stylesheet already uses on phones), giving a 69px header
+       including its 1px edge. Everything that depends on it -- the nav, the
+       sticky panel offsets, the dock's overflow math -- derives from this one
+       variable, so it stays in sync by itself.
+   Click targets, semantics and the card's background (which must keep matching
+   the header's) are untouched. */
+
+@media (min-width: 981px) {
+  :root:has(.site-header__inner--builder) {
+    --site-header-height: 4.25rem;
+  }
+
+  #aurelian-builder-summary-slot .builder-panel-sticky-summary-card.is-collapsed {
+    height: var(--site-header-height);
+    max-height: none;
+    padding: 0 10px;
+    border-bottom-color: transparent;
+  }
+
+  #aurelian-builder-summary-slot .builder-panel-docked-collapsed {
+    justify-content: flex-end;
+    gap: 8px;
+  }
+}

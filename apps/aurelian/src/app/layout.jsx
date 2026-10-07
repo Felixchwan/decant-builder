@@ -3,6 +3,7 @@ import "./globals.css";
 import "./builder-zoning.css";
 import "./builder-intro.css";
 import "./builder-geometry.css";
+import "./builder-header.css";
 import { SiteHeader } from "../components/SiteHeader.jsx";
 import { SiteFooter } from "../components/SiteFooter.jsx";
 
