@@ -1,0 +1,182 @@
+/* Aurelian visual evolution -- second pass: the "Elige 6-14 fragancias" intro.
+
+   HOST-OWNED and presentation-only. This styles the Aurelian-owned intro block
+   (components/BuilderIntroHeader.jsx, id="builder-entry-header"), which exists
+   only on /build-your-box and has no relationship to packages/builder. Markup,
+   classes, the dismiss behavior and the pre-hydration visibility script are all
+   unchanged.
+
+   It deliberately sets NO width, margin or sizing of the header itself: the
+   desktop width/margin match against the Builder's catalog column and the
+   docked summary slot live in globals.css and stay authoritative. Only inner
+   padding and decoration are added here; the right panel's offset is measured
+   from the header's real height (see BuilderIntroHeader's ResizeObserver), so
+   the extra padding is absorbed automatically.
+
+   The frame is drawn by a pseudo-element, so the header's own box (and the
+   gap below it, which is part of its padding) keeps behaving as before.
+   Burgundy is a faint undertone here too; brass is the only crisp accent. */
+
+.builder-page #builder-entry-header {
+  /* Aurelian-owned artwork for the plate (apps/aurelian/public/media/
+     atmosphere). Only referenced here; if it fails to load the layer paints
+     nothing and the dark plate underneath is the whole presentation. */
+  --aurelian-intro-art: url("/media/atmosphere/discovery-intro-renaissance.webp");
+  --intro-art-size: auto 100%;
+  --intro-art-position: right center;
+  /* No-op on wide layouts; on narrow ones it fades the art out before the
+     body copy (see the media query below). */
+  --intro-art-fade: linear-gradient(180deg, transparent, transparent);
+
+  isolation: isolate;
+  padding-block: clamp(3rem, 4.4vw, 3.5rem) clamp(2.6rem, 3.6vw, 3rem);
+  padding-inline: clamp(1.4rem, 3.2vw, 2.6rem);
+}
+
+/* The frame: a dark plate with a hairline brass rim. Layers, top to bottom:
+   readability mask (near-black behind the copy on the left, opening onto the
+   artwork on the right), a faint oxblood undertone, a soft floor shadow, the
+   art-fade (narrow layouts only), the artwork (right-anchored so the dark
+   negative space stays behind the text), then the plain dark plate. */
+.builder-page #builder-entry-header::before {
+  content: "";
+  position: absolute;
+  inset: 0.75rem 0 1rem;
+  z-index: -1;
+  pointer-events: none;
+  border: 1px solid rgba(169, 130, 79, 0.2);
+  border-radius: 24px;
+  background:
+    linear-gradient(
+      90deg,
+      rgba(8, 7, 7, 0.97) 0%,
+      rgba(8, 7, 7, 0.95) 40%,
+      rgba(8, 7, 7, 0.7) 58%,
+      rgba(8, 7, 7, 0.28) 78%,
+      rgba(8, 7, 7, 0.08) 100%
+    ),
+    radial-gradient(ellipse 70% 120% at 0 0, rgba(74, 15, 31, 0.06), transparent 70%),
+    linear-gradient(180deg, transparent 62%, rgba(8, 7, 7, 0.45)),
+    var(--intro-art-fade),
+    var(--aurelian-intro-art, none),
+    linear-gradient(180deg, rgba(20, 16, 16, 0.78), rgba(9, 8, 8, 0.86));
+  background-repeat: no-repeat;
+  background-size: auto, auto, auto, auto, var(--intro-art-size), auto;
+  background-position: 0 0, 0 0, 0 0, 0 0, var(--intro-art-position), 0 0;
+  box-shadow:
+    0 22px 60px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(231, 221, 207, 0.05);
+}
+
+/* Wide layouts: the copy keeps to the left ~60% of the plate (the art's own
+   dark negative space) and the artwork owns the right. */
+@media (min-width: 981px) {
+  .builder-page #builder-entry-header .eyebrow,
+  .builder-page #builder-entry-header h1,
+  .builder-page #builder-entry-header .lede {
+    max-width: 62%;
+  }
+}
+
+/* Narrow layouts: readability first. The artwork is cropped to a band along
+   the top right (behind the short eyebrow + headline) and fades to the plain
+   dark plate before the body copy starts; only part of the statue, velvet and
+   brass is shown, on purpose. */
+@media (max-width: 980px) {
+  .builder-page #builder-entry-header {
+    --intro-art-size: auto 58%;
+    --intro-art-position: right top;
+    --intro-art-fade: linear-gradient(180deg, transparent 24%, rgba(8, 7, 7, 0.97) 56%);
+  }
+}
+
+/* A short brass filament along the top edge of the plate. */
+.builder-page #builder-entry-header::after {
+  content: "";
+  position: absolute;
+  top: 0.75rem;
+  right: clamp(1.4rem, 3.2vw, 2.6rem);
+  left: clamp(1.4rem, 3.2vw, 2.6rem);
+  height: 1px;
+  pointer-events: none;
+  background: linear-gradient(90deg, transparent, rgba(200, 166, 101, 0.5), transparent);
+}
+
+.builder-page #builder-entry-header .eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  margin-bottom: 1.1rem;
+  font-size: 0.68rem;
+  letter-spacing: 0.34em;
+}
+
+.builder-page #builder-entry-header .eyebrow::before {
+  content: "";
+  width: 2.2rem;
+  height: 1px;
+  background: rgba(200, 166, 101, 0.7);
+}
+
+.builder-page #builder-entry-header h1 {
+  margin-bottom: 1.2rem;
+  color: #e7ddcf;
+  font-size: clamp(2.3rem, 4.6vw, 3.7rem);
+  letter-spacing: -0.025em;
+}
+
+.builder-page #builder-entry-header .lede {
+  margin-bottom: 1.6rem;
+  color: rgba(200, 190, 173, 0.86);
+  font-size: clamp(0.95rem, 1.1vw, 1.02rem);
+  line-height: 1.75;
+}
+
+.builder-page #builder-entry-header .text-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding-bottom: 0.35rem;
+  border-bottom-color: rgba(200, 166, 101, 0.35);
+  font-size: 0.74rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  transition: border-color 0.2s ease, color 0.2s ease;
+}
+
+.builder-page #builder-entry-header .text-link::after {
+  content: "\2192";
+  letter-spacing: 0;
+  transition: transform 0.2s ease;
+}
+
+.builder-page #builder-entry-header .text-link:hover,
+.builder-page #builder-entry-header .text-link:focus-visible {
+  border-bottom-color: rgba(200, 166, 101, 0.8);
+}
+
+.builder-page #builder-entry-header .text-link:hover::after,
+.builder-page #builder-entry-header .text-link:focus-visible::after {
+  transform: translateX(3px);
+}
+
+/* Dismiss: a quiet round control inside the plate instead of a bare square.
+   The global :focus-visible gold outline still applies. */
+.builder-page #builder-entry-header .builder-intro-dismiss {
+  top: 1.75rem;
+  right: 1rem;
+  width: 2.4rem;
+  height: 2.4rem;
+  border-color: rgba(231, 221, 207, 0.22);
+  border-radius: 999px;
+  /* Darker fill than before: it now sits over artwork, not a flat plate. */
+  background: rgba(8, 7, 7, 0.55);
+  color: #c8bead;
+}
+
+.builder-page #builder-entry-header .builder-intro-dismiss:hover,
+.builder-page #builder-entry-header .builder-intro-dismiss:focus-visible {
+  border-color: rgba(200, 166, 101, 0.6);
+  background: rgba(200, 166, 101, 0.08);
+  color: #c8a665;
+}

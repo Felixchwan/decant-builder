@@ -1,0 +1,458 @@
+/* Aurelian visual evolution -- Phase 1: atmospheric zoning.
+
+   HOST-OWNED. This file is imported only by apps/aurelian's own layout, so
+   Discovery Decants (and any future merchant) never loads it, and nothing in
+   the shared Builder package knows these colors exist. Every rule is scoped
+   under .builder-page; the shared package's own selectors are zero-specificity
+   (:where(.builder-scope)), so plain host selectors win without !important.
+
+   Aurelian's Builder theme TOKENS (merchant/config.js) are deliberately NOT
+   changed here: they are pinned by tests and also feed the Collection Card
+   lighting. This pass only re-tints SURFACES, BORDERS and GLOWS by role.
+
+   Role map (black / near-black stays dominant everywhere):
+     catalog / discovery (left)   -> burgundy tint
+     builder / tooling   (right)  -> deep-green tint
+     primary actions              -> the existing brass/gold token, untouched
+     secondary actions            -> dark surface + brass border
+     background                   -> atmospheric layer (art slot, see below)
+
+   Burgundy and deep green are NEVER used as foreground text (1.3:1 / 1.6:1
+   on black). Aged brass and ivory are the only tinted foregrounds:
+   brass #A9824F >= 4.9:1 and ivory #E7DDCF >= 12.8:1 on every zone surface. */
+
+.builder-page {
+  --aur-charcoal: #2a2a2a;
+  --aur-burgundy: #4a0f1f;
+  --aur-green: #173c32;
+  --aur-brass: #a9824f;
+  --aur-ivory: #e7ddcf;
+
+  /* Lifted, low-alpha derivatives used only for hairlines/rims, so a zone
+     edge is perceivable without ever becoming a saturated red or green. */
+  --aur-burgundy-line: rgba(138, 52, 74, 0.14);
+  --aur-green-line: rgba(63, 122, 104, 0.2);
+  --aur-brass-line: rgba(169, 130, 79, 0.5);
+
+  /* Aurelian-owned artwork (apps/aurelian/public/media/atmosphere). The
+     shared Builder never sees this path. If the file fails to load the layer
+     simply paints nothing and the zoning below stands on its own. */
+  --aurelian-atmosphere-art: url("/media/atmosphere/builder-renaissance-background.webp");
+
+  /* Art geometry/strength, tuned per breakpoint in the media query at the end
+     of this file. The art is anchored to the top of the page at its natural
+     aspect ratio (1672x941 = 56.3vw tall) and fades into the base black, so no
+     fixed attachment and no oversized `cover` raster on a very tall page. */
+  --aur-art-size: 100% auto;
+  --aur-art-position: 50% 0;
+  --aur-art-box: 100% 56.3vw;
+  --aur-art-veil: 0.78;
+
+  position: relative;
+  isolation: isolate;
+}
+
+/* ---- Atmospheric background ------------------------------------------------
+   Art (Aurelian-owned):
+     apps/aurelian/public/media/atmosphere/builder-renaissance-background.webp
+   referenced only through --aurelian-atmosphere-art above.
+   Stacking (top to bottom): edge vignette, brass haze, burgundy and green
+   washes, the near-black veil, a darkened centre, a fade into the base black,
+   then the art itself. The veil is what keeps the artwork secondary (roughly
+   10-18% presence in the open gutters) and keeps every control legible; the
+   centre darkening keeps the content column the darkest part of the page. */
+.builder-page::before {
+  content: "";
+  /* Absolute, not fixed: it must stay inside the Builder section so it can
+     never paint over the sibling footer on short views (the first-visit
+     intent screen). Washes/veil scroll with the page (cheap, no repaint
+     cost); only a future art layer is viewport-fixed. No CSS filter: on a
+     page this tall it would force a very large composited layer. */
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  /* Second pass: the zone washes are an undertone, not a fill. A faint brass
+     haze under the header and darkened side edges give the page an editorial,
+     candle-lit depth without adding any asset. */
+  background:
+    linear-gradient(90deg, rgba(0, 0, 0, 0.4), transparent 16%, transparent 84%, rgba(0, 0, 0, 0.4)),
+    radial-gradient(ellipse 1100px 460px at 50% 0, rgba(169, 130, 79, 0.05), transparent 70%),
+    radial-gradient(ellipse 900px 620px at 14% 0, rgba(74, 15, 31, 0.09), transparent 70%),
+    radial-gradient(ellipse 760px 680px at 92% 18%, rgba(23, 60, 50, 0.13), transparent 72%),
+    linear-gradient(rgba(9, 10, 9, var(--aur-art-veil)), rgba(9, 10, 9, 0.93)),
+    radial-gradient(ellipse 44% 78% at 50% 36%, rgba(9, 10, 9, 0.55), transparent),
+    linear-gradient(180deg, transparent 28%, #090a09 97%),
+    var(--aurelian-atmosphere-art, none);
+  background-repeat: no-repeat;
+  background-size: auto, auto, auto, auto, auto, var(--aur-art-box), var(--aur-art-box), var(--aur-art-size);
+  background-position: 0 0, 0 0, 0 0, 0 0, 0 0, 50% 0, 50% 0, var(--aur-art-position);
+  background-attachment: scroll;
+}
+
+/* The shared root paints its own opaque background; let the atmosphere show
+   through instead (descendant selector on purpose: the width-cap rule
+   `.builder-page > .builder-theme-root` is pinned by tests). */
+.builder-page .builder-theme-root {
+  background: transparent;
+}
+
+/* ---- Catalog / discovery zone: burgundy ----------------------------------- */
+.builder-page .catalog-section {
+  border-color: var(--aur-burgundy-line);
+  /* Resting: warm near-black with only an oxblood undertone. Burgundy is
+     reserved for interaction (hover / focus), not for the large surface. */
+  background:
+    radial-gradient(ellipse at 0 0, rgba(74, 15, 31, 0.075), transparent 62%),
+    linear-gradient(180deg, rgba(74, 15, 31, 0.04), rgba(74, 15, 31, 0.012) 38%, transparent),
+    rgba(10, 9, 9, 0.9);
+  box-shadow:
+    0 24px 80px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(231, 221, 207, 0.04);
+}
+
+/* Search + filter controls: near-black fields with a brass rim at rest; the
+   burgundy shows up on hover/focus (border tint + inner glow).
+   Targeted via the catalog section (not `.catalog-controls`, which another
+   test forbids as an unscoped host selector). */
+.builder-page .catalog-section input[type="search"],
+.builder-page .catalog-section .filters select {
+  border-color: rgba(169, 130, 79, 0.3);
+  background:
+    linear-gradient(rgba(74, 15, 31, 0.03), rgba(74, 15, 31, 0.03)),
+    rgba(8, 7, 8, 0.92);
+  color: var(--aur-ivory);
+}
+
+.builder-page .catalog-section input[type="search"]:hover,
+.builder-page .catalog-section .filters select:hover {
+  border-color: rgba(150, 58, 80, 0.7);
+  box-shadow:
+    0 0 0 1px rgba(138, 52, 74, 0.2),
+    inset 0 0 16px rgba(74, 15, 31, 0.32);
+}
+
+.builder-page .catalog-section input[type="search"]:focus,
+.builder-page .catalog-section .filters select:focus {
+  border-color: var(--builder-color-accent);
+  box-shadow:
+    0 0 0 1px rgba(138, 52, 74, 0.35),
+    inset 0 0 18px rgba(74, 15, 31, 0.4);
+}
+
+/* Fragrance cards: quiet dark luxury at rest (near-black/charcoal, a faint
+   oxblood undertone, a hairline rim); oxblood illumination on hover/focus.
+   The keyboard focus outline (global :focus-visible, gold) is intentionally
+   left as-is. */
+.builder-page .perfume-card {
+  border-color: rgba(138, 52, 74, 0.1);
+  background:
+    radial-gradient(ellipse at 50% 0, rgba(74, 15, 31, 0.05), transparent 62%),
+    linear-gradient(180deg, rgba(25, 22, 23, 0.94), rgba(10, 8, 9, 0.97));
+}
+
+.builder-page .perfume-card:hover,
+.builder-page .perfume-card:focus-within {
+  border-color: rgba(150, 58, 80, 0.55);
+  /* The second inset layer carries the top-down velvet glow the old resting
+     gradient used to provide, so the hover look is unchanged while the
+     resting surface is darker. box-shadow is already in the card's
+     transition list, so it still eases in. */
+  box-shadow:
+    0 0 0 1px rgba(138, 52, 74, 0.22),
+    0 18px 40px rgba(0, 0, 0, 0.35),
+    inset 0 0 44px rgba(74, 15, 31, 0.3),
+    inset 0 40px 60px -30px rgba(74, 15, 31, 0.4);
+}
+
+/* ---- Builder / tooling zone: deep green ----------------------------------- */
+.builder-page .builder-panel {
+  border-color: var(--aur-green-line);
+  background:
+    radial-gradient(ellipse at 100% 0, rgba(23, 60, 50, 0.24), transparent 60%),
+    linear-gradient(180deg, rgba(23, 60, 50, 0.13), rgba(23, 60, 50, 0.04) 40%, transparent),
+    rgba(8, 10, 9, 0.9);
+  box-shadow:
+    0 24px 80px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(231, 221, 207, 0.04);
+}
+
+/* Outer shells only: My Box summary, Composer, Curator Bonus, Collection Card.
+   (Also matched inside the header's docked summary slot, which lives outside
+   .builder-page.) Their internals are left to inherit. */
+.builder-page .box-summary-card,
+#aurelian-builder-summary-slot .box-summary-card,
+.builder-page .compose-box-panel,
+.builder-page .curator-bonus-section,
+.builder-page .collection-snapshot {
+  border-color: var(--aur-green-line);
+  background:
+    radial-gradient(circle at 12% 0, rgba(23, 60, 50, 0.2), transparent 58%),
+    rgba(6, 9, 8, 0.6);
+  box-shadow: inset 0 1px 0 rgba(231, 221, 207, 0.035);
+}
+
+/* The docked My Box strip lives in the header slot, outside .builder-page, so
+   --aur-green-line is undefined there and the shell rule above leaves its
+   border-color invalid (computing to currentColor, i.e. bright ivory). Restore
+   the pre-zoning shared border values (.16 sides, .14 top) for the slot only. */
+#aurelian-builder-summary-slot .box-summary-card {
+  border-color: rgba(148, 163, 184, 0.16);
+  border-top-color: rgba(148, 163, 184, 0.14);
+}
+
+/* Mobile/inline sticky summary wrapper: the shared package reuses its root
+   background rule on it (opaque near-black + a gold glow), which reads as a
+   flat olive slab inside the green panel. Stays opaque -- it overlays
+   content scrolling underneath -- just tinted to the zone. */
+.builder-page .builder-panel-sticky-summary .builder-theme-root--custom {
+  background: linear-gradient(180deg, rgba(10, 18, 15, 0.97), rgba(8, 10, 9, 0.97));
+}
+
+/* Sticky review bar (mobile "Revisar mi caja"): cold navy -> zone surface. */
+.builder-page .review-action {
+  border-color: var(--aur-green-line);
+  background: rgba(8, 10, 9, 0.92);
+}
+
+/* Progress track picks up the zone; the fill keeps the existing theme-driven
+   accent gradient (status/progress meaning is not recolored). */
+.builder-page .slot-bar,
+.builder-page .discovery-progress-bar {
+  background: rgba(23, 60, 50, 0.34);
+}
+
+/* ---- Panels & shells: second pass ------------------------------------------
+   Same shells, same structure -- only darker and warmer. Cold slate/navy/mint
+   defaults from the shared package become warm near-black, ivory and brass. */
+
+/* Composer: the heading takes the house serif (as the wordmark and page
+   headlines do); size and spacing are untouched. */
+.builder-page .compose-box-header h3 {
+  font-family: Georgia, "Times New Roman", serif;
+  font-weight: 400;
+  letter-spacing: 0.005em;
+}
+
+/* Curator Bonus: the one "special" shell. A warm brass undertone and a brass
+   hairline set it apart from the green utility shells, so it reads as the
+   curated reward without becoming a fill. Locked is the resting state. */
+.builder-page .curator-bonus-section {
+  border-color: rgba(169, 130, 79, 0.24);
+  background:
+    radial-gradient(ellipse at 100% 0, rgba(200, 166, 101, 0.09), transparent 55%),
+    radial-gradient(circle at 8% 0, rgba(23, 60, 50, 0.18), transparent 55%),
+    linear-gradient(180deg, rgba(14, 12, 10, 0.82), rgba(7, 8, 7, 0.86));
+  box-shadow:
+    inset 0 1px 0 rgba(200, 166, 101, 0.14),
+    0 14px 34px rgba(0, 0, 0, 0.3);
+}
+
+/* Unlocked keeps the shared accent-driven glow (it was reachable only through
+   the shared rule this shell otherwise replaces), on the same warm base. */
+.builder-page .curator-bonus-section.unlocked {
+  border-color: color-mix(in srgb, var(--builder-color-accent) 40%, transparent);
+  background:
+    radial-gradient(circle at 16% 0, color-mix(in srgb, var(--builder-color-accent) 15%, transparent), transparent 42%),
+    radial-gradient(ellipse at 100% 0, rgba(200, 166, 101, 0.1), transparent 55%),
+    linear-gradient(180deg, rgba(20, 16, 10, 0.88), rgba(8, 8, 7, 0.9));
+  box-shadow:
+    inset 0 1px 0 rgba(200, 166, 101, 0.22),
+    0 18px 42px color-mix(in srgb, var(--builder-color-accent) 9%, transparent);
+}
+
+.builder-page .curator-bonus-section .discovery-progress-header > div > span {
+  color: rgba(200, 166, 101, 0.8);
+  letter-spacing: 0.16em;
+}
+
+.builder-page .curator-bonus-section .discovery-progress-header > div > strong {
+  color: var(--aur-ivory);
+  font-family: Georgia, "Times New Roman", serif;
+  font-weight: 400;
+  letter-spacing: 0.01em;
+}
+
+/* The locked pill's text color is !important in the shared package (left
+   alone); only its navy fill and slate rim are re-warmed here. */
+.builder-page .discovery-bonus-state {
+  border-color: rgba(169, 130, 79, 0.24);
+  background: rgba(8, 7, 6, 0.6);
+}
+
+.builder-page .curator-bonus-section .discovery-requirement.missing,
+.builder-page .curator-bonus-section:not(.unlocked) .discovery-progress-copy {
+  color: var(--builder-color-text-secondary);
+}
+
+.builder-page .curator-bonus-card {
+  border-color: rgba(169, 130, 79, 0.26);
+  background: rgba(8, 7, 6, 0.5);
+}
+
+.builder-page .curator-bonus-card span,
+.builder-page .curator-pick-slot span {
+  color: rgba(200, 166, 101, 0.72);
+}
+
+.builder-page .curator-bonus-card strong,
+.builder-page .curator-bonus-copy > strong {
+  color: var(--aur-ivory);
+}
+
+.builder-page .curator-bonus-card p {
+  color: var(--builder-color-text-muted);
+}
+
+.builder-page .curator-pick-slot:not(.active) {
+  border-color: rgba(231, 221, 207, 0.1);
+  background: rgba(8, 7, 6, 0.42);
+}
+
+.builder-page .curator-style-locked {
+  background: rgba(8, 7, 6, 0.4);
+}
+
+/* Collection Card internals + surrounding utility panels: slate hairlines and
+   navy fills become warm, barely-there rules on the dark shell. */
+.builder-page .collection-snapshot .collection-profile-summary,
+.builder-page .collection-snapshot .collection-dna-summary,
+.builder-page .collection-snapshot .collection-balance-summary,
+.builder-page .collection-snapshot .summary-panel,
+.builder-page .collection-snapshot .coverage-panel,
+.builder-page .next-improvement-section {
+  border-color: rgba(231, 221, 207, 0.08);
+}
+
+.builder-page .next-improvement-section {
+  background: rgba(8, 7, 6, 0.4);
+}
+
+.builder-page .collection-snapshot-header button {
+  background: rgba(8, 9, 8, 0.6);
+}
+
+/* The panel's collapse handle was a cold navy bar beside the green zone. */
+.builder-page .builder-panel-collapse-rail {
+  border-color: rgba(231, 221, 207, 0.1);
+  background: rgba(12, 11, 10, 0.7);
+  color: var(--builder-color-text-muted);
+}
+
+.builder-page .builder-panel-collapse-rail:hover,
+.builder-page .builder-panel-collapse-rail:focus-visible {
+  border-color: color-mix(in srgb, var(--builder-color-accent) 32%, transparent);
+  color: var(--builder-color-accent);
+}
+
+/* ---- Action hierarchy -----------------------------------------------------
+   PRIMARY   Agregar a caja / Armar mi caja / Revisar (unlocked): untouched --
+             they already render as the brass/gold token fill with dark ink.
+   SECONDARY dark surface + brass rim.
+   TERTIARY  ghost / muted. */
+.builder-page .compose-box-header-actions button.secondary,
+.builder-page .share-box-buttons button:first-child {
+  border-color: var(--aur-brass-line);
+  background: rgba(8, 11, 10, 0.62);
+  color: var(--aur-ivory);
+}
+
+.builder-page .compose-box-header-actions button.secondary:hover,
+.builder-page .share-box-buttons button:first-child:hover:not(:disabled) {
+  border-color: rgba(169, 130, 79, 0.75);
+  background: rgba(169, 130, 79, 0.12);
+}
+
+.builder-page .share-box-buttons button:not(:first-child) {
+  border-color: rgba(231, 221, 207, 0.14);
+  background: transparent;
+  color: var(--builder-color-text-secondary);
+}
+
+/* Locked "Revisar" keeps its disabled meaning; only the cold navy fill goes. */
+.builder-page .review-box-button:disabled,
+#aurelian-builder-summary-slot .review-box-button:disabled {
+  background: rgba(42, 42, 42, 0.6);
+}
+
+/* ---- Ivory where the shared defaults are cold white ------------------------ */
+.builder-page .compose-box-header h3,
+.builder-page .box-summary-metric strong,
+#aurelian-builder-summary-slot .box-summary-metric strong {
+  color: var(--aur-ivory);
+}
+
+.builder-page .box-summary-metric span,
+#aurelian-builder-summary-slot .box-summary-metric span {
+  color: var(--builder-color-text-muted);
+}
+
+/* The accent-colored total keeps its (theme-driven) emphasis. */
+.builder-page .box-summary-total strong,
+#aurelian-builder-summary-slot .box-summary-total strong {
+  color: var(--builder-color-accent);
+}
+
+/* ---- Header: a zone hairline on the Builder route only ----------------------
+   The header's own background/border rules are untouched (the docked summary
+   card must keep matching them). */
+.site-header:has(.site-header__inner--builder)::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 1px;
+  pointer-events: none;
+  background: linear-gradient(
+    90deg,
+    rgba(138, 52, 74, 0.55),
+    rgba(169, 130, 79, 0.28) 50%,
+    rgba(63, 122, 104, 0.4)
+  );
+}
+
+/* ---- Mobile tab bar: recolor only ------------------------------------------
+   Same 980px breakpoint the shared package already uses to switch to its tab
+   layout; no sizing, position or behavior is touched. Below that width the
+   left/right split no longer exists as columns, so zoning is carried by role
+   instead: the Explorar (catalog) tab takes the burgundy tint, Mi caja
+   (tooling) the deep-green one. The accent-colored count badge is untouched. */
+@media (max-width: 980px) {
+  /* Artwork: a short, much fainter strip anchored on the statue/velvet side
+     (a fixed pixel height instead of a width-driven one, so a narrow phone
+     paints a small, cheap region rather than scaling the image to the width). */
+  .builder-page {
+    --aur-art-size: auto 560px;
+    --aur-art-position: 12% 0;
+    --aur-art-box: 100% 560px;
+    --aur-art-veil: 0.92;
+  }
+
+  .builder-page .mobile-builder-tabs {
+    border-color: rgba(231, 221, 207, 0.12);
+    background: rgba(9, 10, 9, 0.84);
+  }
+
+  .builder-page .mobile-builder-tabs button {
+    color: var(--builder-color-text-muted);
+  }
+
+  .builder-page .mobile-builder-tabs button.is-active {
+    color: var(--aur-ivory);
+  }
+
+  .builder-page .mobile-builder-tabs button.is-active:first-child {
+    background:
+      linear-gradient(180deg, rgba(74, 15, 31, 0.6), rgba(74, 15, 31, 0.34)),
+      rgba(22, 17, 18, 0.94);
+    box-shadow: inset 0 0 0 1px rgba(138, 52, 74, 0.5);
+  }
+
+  .builder-page .mobile-builder-tabs button.is-active:last-child {
+    background:
+      linear-gradient(180deg, rgba(23, 60, 50, 0.5), rgba(23, 60, 50, 0.28)),
+      rgba(12, 16, 15, 0.94);
+    box-shadow: inset 0 0 0 1px rgba(63, 122, 104, 0.38);
+  }
+}
