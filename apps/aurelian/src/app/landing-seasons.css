@@ -1,0 +1,109 @@
+/* Aurelian visual evolution -- Landing Phase 2A: seasonal editorial cards.
+
+   HOST-OWNED and landing-only: every selector is keyed on `.seasonal-featured`,
+   the "Un vistazo al catálogo" grid (components/SeasonalFeaturedSelection.jsx).
+   Nothing here can reach the hero, the video section, the Builder, the catalog
+   page, the shared Builder package or Discovery Decants.
+
+   Season identity: each card carries `data-season`, taken from the card's SLOT
+   (SEASONAL_SLOTS in lib/seasonalSelection.js: spring, summer, fall, winter), not
+   from whichever fragrance fills it. So the Spring artwork stays Spring if the
+   recommended fragrance rotates or changes. The presentation below is mapped by
+   that attribute only -- never by fragrance ID, brand, name or position -- and
+   lives here, not in catalog data.
+
+   Layers, bottom to top, inside an isolated stacking context:
+     card surface + a faint season tint (the whole look if the art is missing)
+     ::before  the seasonal artwork (decorative; its strength is one variable)
+     ::after   a dark veil: calm over the bottle, near-black behind the text
+     the existing link: bottle image, season label, brand, name, points
+   The bottle stays the protagonist: the artwork is atmosphere, never a poster.
+   The text labels remain the only carriers of meaning (season, name, points).
+
+   Artwork slots (Aurelian-owned, background only, 2:3 portrait, no bottle, no
+   type): apps/aurelian/public/media/landing/seasons/
+     catalog-spring-editorial.webp   catalog-summer-editorial.webp
+     catalog-autumn-editorial.webp   catalog-winter-editorial.webp
+   (the slot's key is "fall", the file says "autumn"). If a file ever goes
+   missing that layer simply paints nothing and the tint carries the season. */
+
+.seasonal-featured .seasonal-card {
+  --season-art-strength: 0.62;
+  --season-tint: linear-gradient(transparent, transparent);
+
+  position: relative;
+  isolation: isolate;
+  border-color: rgba(169, 130, 79, 0.22);
+  border-radius: 10px;
+  background: var(--season-tint), var(--surface);
+  transition: border-color 0.3s ease;
+}
+
+/* The season, as presentation: a restrained tint and the artwork slot. */
+.seasonal-featured .seasonal-card[data-season="spring"] {
+  --season-tint: radial-gradient(ellipse 95% 62% at 50% 26%, rgba(122, 142, 108, 0.2), transparent 72%);
+  --season-art: url("/media/landing/seasons/catalog-spring-editorial.webp");
+}
+
+.seasonal-featured .seasonal-card[data-season="summer"] {
+  --season-tint: radial-gradient(ellipse 95% 62% at 50% 26%, rgba(176, 150, 72, 0.2), transparent 72%);
+  --season-art: url("/media/landing/seasons/catalog-summer-editorial.webp");
+}
+
+.seasonal-featured .seasonal-card[data-season="fall"] {
+  --season-tint: radial-gradient(ellipse 95% 62% at 50% 26%, rgba(112, 30, 42, 0.26), transparent 72%);
+  --season-art: url("/media/landing/seasons/catalog-autumn-editorial.webp");
+}
+
+.seasonal-featured .seasonal-card[data-season="winter"] {
+  --season-tint: radial-gradient(ellipse 95% 62% at 50% 26%, rgba(70, 86, 118, 0.22), transparent 72%);
+  --season-art: url("/media/landing/seasons/catalog-winter-editorial.webp");
+}
+
+.seasonal-featured .seasonal-card::before,
+.seasonal-featured .seasonal-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+.seasonal-featured .seasonal-card::before {
+  background: var(--season-art, none) center / cover no-repeat;
+  opacity: var(--season-art-strength);
+  transition: opacity 0.35s ease;
+}
+
+/* Calm over the bottle zone (the top half), near-black behind the lower text. */
+.seasonal-featured .seasonal-card::after {
+  background: linear-gradient(
+    180deg,
+    rgba(8, 7, 7, 0.28) 0%,
+    rgba(8, 7, 7, 0.12) 34%,
+    rgba(8, 7, 7, 0.72) 60%,
+    rgba(8, 7, 7, 0.92) 100%
+  );
+}
+
+/* A little more of the season, and a brass edge, on hover or keyboard focus. */
+.seasonal-featured .seasonal-card:hover,
+.seasonal-featured .seasonal-card:focus-within {
+  --season-art-strength: 0.88;
+  border-color: rgba(169, 130, 79, 0.5);
+}
+
+/* The link fills the card; its focus ring is drawn inside the card's edge. */
+.seasonal-featured .seasonal-card__link {
+  border-radius: inherit;
+}
+
+.seasonal-featured .seasonal-card__link:focus-visible {
+  outline-offset: -4px;
+}
+
+/* The bottle: only a restrained grounding shadow, no glow. */
+.seasonal-featured .seasonal-card__image img {
+  filter: drop-shadow(0 12px 14px rgba(0, 0, 0, 0.5));
+}

@@ -73,7 +73,7 @@ export function SeasonalFeaturedSelection() {
         const phase = transition.phases[index];
         const interactive = phase === "visible";
         return (
-          <article className={`seasonal-card seasonal-card--${phase}`} data-fragrance-id={item.id} data-transition-phase={phase} key={season.key}>
+          <article className={`seasonal-card seasonal-card--${phase}`} data-fragrance-id={item.id} data-season={season.key} data-transition-phase={phase} key={season.key}>
             <Link aria-disabled={interactive ? undefined : true} aria-label={`Ver ${item.name} en el catálogo`} className="seasonal-card__link" href={`/catalogo?fragrance=${encodeURIComponent(item.id)}`} tabIndex={interactive ? undefined : -1}>
               <div className="seasonal-card__image"><img alt={`Frasco de ${item.name}`} height="240" src={resolveAsset(item.imageAssetKey)} width="240" /></div>
               <p className="seasonal-card__season">Selección de {season.label.toLowerCase()}</p>
