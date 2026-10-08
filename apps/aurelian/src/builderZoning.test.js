@@ -126,7 +126,7 @@ describe("Aurelian Phase 1 atmospheric zoning (host-owned)", () => {
 });
 
 describe("merchant boundaries: the zoning palette never reaches shared or Discovery Decants code", () => {
-  const palette = /4a0f1f|173c32|a9824f|e7ddcf|--aur-|aurelian-atmosphere|builder-zoning|builder-intro\.css|builder-geometry\.css|builder-header\.css|landing-hero\.css|landing-video\.css|landing-seasons\.css|catalog-seasons\.css|catalog-atmosphere|aurelian-hero-stage|media\/landing|builder-renaissance-background|discovery-intro-renaissance|media\/atmosphere/i;
+  const palette = /4a0f1f|173c32|a9824f|e7ddcf|--aur-|aurelian-atmosphere|builder-zoning|builder-intro\.css|builder-geometry\.css|builder-header\.css|landing-hero\.css|landing-video\.css|landing-seasons\.css|catalog-seasons\.css|catalog-atmosphere|landing-how-it-works\.css|landing-how__|aurelian-hero-stage|media\/landing|builder-renaissance-background|discovery-intro-renaissance|media\/atmosphere/i;
 
   it("is absent from the shared Builder package (source and stylesheet)", () => {
     const files = [

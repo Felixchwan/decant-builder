@@ -1,0 +1,208 @@
+/* Aurelian visual evolution -- Landing Phase 2B: "Cómo funciona" as three chapters.
+
+   HOST-OWNED and landing-only: every selector is keyed on `.landing-how`, the
+   section rendered by components/LandingHowItWorks.jsx. Nothing here can reach the
+   hero, the bias/video section, the seasonal cards, the Builder, the catalog page,
+   the shared Builder package or Discovery Decants. The generic `.steps` styles in
+   globals.css (still used by other pages) are left exactly as they were.
+
+   Composition: not three cards -- three chapters. Each is a quiet two-column row
+   of copy and one decorative visual, with no shell, no fill and no divider; the
+   white space between chapters is the rhythm. The section keeps the existing
+   `.section--surface` band, so the transitions into and out of it are unchanged.
+
+   Alternation is keyed on the step's SEMANTIC key, never on its position:
+     explore   copy | visual
+     build     visual | copy    (the one chapter that mirrors)
+     discover  copy | visual
+   The DOM always reads copy then visual, so reading order, focus order and the
+   stacked mobile order (number, title, copy, visual) are the same sequence; only
+   the grid placement mirrors on wide screens. Below 900px every chapter stacks.
+
+   Visuals are decorative (aria-hidden, backgrounds, no <img>) and Aurelian-owned.
+   Artwork slots, 5:4, in apps/aurelian/public/media/landing/how-it-works/:
+     how-it-works-explore.webp   how-it-works-build.webp   how-it-works-discover.webp
+   Until a file exists its layer paints nothing and the frame stays a dark panel
+   with one restrained tint per step (deep green, aged brass, oxblood). The art
+   sits under a soft vignette and a hairline of aged brass, like the video frame,
+   so it can never glare brighter than the hero or the seasonal cards. The art is
+   composed 5:4 with its subject in the central 70% of the height, because the
+   stacked layouts crop it to 3:2 (tablet) and 4:3 (phone). */
+
+.landing-how {
+  padding-block: clamp(3.5rem, 7vw, 6.5rem);
+}
+
+.landing-how__intro h2 {
+  margin: 0;
+}
+
+.landing-how__intro .section-lede {
+  margin-top: 1.25rem;
+}
+
+.landing-how__chapters {
+  display: grid;
+  gap: clamp(3.5rem, 7vw, 6.5rem);
+  margin: clamp(2.5rem, 4vw, 3.5rem) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.landing-how__chapter {
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+  align-items: center;
+  column-gap: clamp(2.5rem, 6vw, 6rem);
+}
+
+.landing-how__chapter[data-step="build"] {
+  grid-template-columns: minmax(0, 6fr) minmax(0, 5fr);
+}
+
+.landing-how__chapter[data-step="build"] .landing-how__copy {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.landing-how__chapter[data-step="build"] .landing-how__visual {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+.landing-how__copy {
+  max-width: 28rem;
+}
+
+/* The editorial marker: small, tracked, brass, with a short hairline. It guides
+   the sequence; it never competes with the title. */
+.landing-how__number {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  margin: 0 0 1.25rem;
+  color: var(--gold);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.24em;
+  line-height: 1;
+}
+
+.landing-how__number::after {
+  content: "";
+  width: 2.5rem;
+  height: 1px;
+  background: rgba(169, 130, 79, 0.5);
+}
+
+.landing-how__copy h3 {
+  margin: 0 0 1rem;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(1.7rem, 2.8vw, 2.5rem);
+  font-weight: 400;
+  letter-spacing: -0.02em;
+  line-height: 1.12;
+  text-wrap: balance;
+}
+
+.landing-how__copy h3 + p {
+  margin: 0;
+  color: var(--secondary);
+  font-size: 1.05rem;
+  line-height: 1.7;
+}
+
+/* The visual: a quiet frame, 10px, a brass hairline, a dark shadow. Its fallback
+   (art missing) is the tint over near-black. */
+.landing-how__visual {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  aspect-ratio: 5 / 4;
+  border: 1px solid rgba(169, 130, 79, 0.32);
+  border-radius: 10px;
+  background:
+    var(--how-art) center / cover no-repeat,
+    var(--how-tint),
+    #0b0a09;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.4);
+}
+
+.landing-how__visual::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 80% 80% at 50% 45%, transparent 50%, rgba(8, 7, 7, 0.5) 100%),
+    linear-gradient(180deg, rgba(8, 7, 7, 0.18), transparent 30%, rgba(8, 7, 7, 0.28));
+}
+
+.landing-how__chapter[data-step="explore"] .landing-how__visual {
+  --how-art: url("/media/landing/how-it-works/how-it-works-explore.webp");
+  --how-tint: radial-gradient(ellipse 70% 70% at 35% 40%, rgba(23, 60, 50, 0.42), transparent 70%);
+}
+
+.landing-how__chapter[data-step="build"] .landing-how__visual {
+  --how-art: url("/media/landing/how-it-works/how-it-works-build.webp");
+  --how-tint: radial-gradient(ellipse 70% 70% at 50% 45%, rgba(169, 130, 79, 0.2), transparent 70%);
+}
+
+.landing-how__chapter[data-step="discover"] .landing-how__visual {
+  --how-art: url("/media/landing/how-it-works/how-it-works-discover.webp");
+  --how-tint: radial-gradient(ellipse 70% 70% at 62% 42%, rgba(74, 15, 31, 0.46), transparent 70%);
+}
+
+/* One clear action to close the section, with the approved availability line. */
+.landing-how__cta {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.1rem;
+  margin-top: clamp(3.5rem, 7vw, 6rem);
+  text-align: center;
+}
+
+.landing-how__cta p {
+  max-width: 34rem;
+  margin: 0;
+  color: var(--secondary);
+  font-size: 0.9rem;
+}
+
+/* Narrow screens: every chapter reads number, title, copy, visual -- in that
+   order, mirrored or not. */
+@media (max-width: 900px) {
+  .landing-how__chapter,
+  .landing-how__chapter[data-step="build"] {
+    grid-template-columns: minmax(0, 1fr);
+    row-gap: 1.75rem;
+  }
+
+  .landing-how__chapter[data-step="build"] .landing-how__copy,
+  .landing-how__chapter[data-step="build"] .landing-how__visual {
+    grid-column: 1;
+    grid-row: auto;
+  }
+
+  .landing-how__copy {
+    max-width: 34rem;
+  }
+
+  /* Stacked, the frame is as wide as the page: crop it wider than 5:4 (the art
+     keeps its subject in the central band) so a chapter stays a chapter. */
+  .landing-how__visual {
+    aspect-ratio: 3 / 2;
+  }
+}
+
+@media (max-width: 600px) {
+  .landing-how__chapters {
+    gap: 3.5rem;
+  }
+
+  .landing-how__visual {
+    aspect-ratio: 4 / 3;
+  }
+}
