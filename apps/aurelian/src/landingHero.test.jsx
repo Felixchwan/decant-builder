@@ -35,10 +35,10 @@ describe("Aurelian landing hero (host-owned, route-safe)", () => {
   });
 
   it("is keyed only on landing-only hooks, so it can never reach the Builder or other routes", () => {
-    expect(selectors.length).toBeGreaterThan(20);
+    expect(selectors.length).toBeGreaterThan(15);
     selectors.forEach((selector) => {
       expect(selector, selector).toMatch(
-        /^(?:\.aurelian-hero-stage|body:has\(\.aurelian-hero\)|:root:has\(\.aurelian-hero\))/
+        /^\.aurelian-hero-stage/
       );
     });
     expect(withoutComments).not.toContain("!important");
@@ -138,29 +138,9 @@ describe("Aurelian landing hero (host-owned, route-safe)", () => {
     expect(read(APP_ROOT, "src", "components", "HeroMedia.jsx")).toContain("export function HeroMedia");
   });
 
-  it("brings the shared header into continuity on the landing route only", () => {
-    // The bar's 4.25rem desktop height is the one shared rule in globals.css (see
-    // headerConsistency.test.js), not a landing-only override.
-    expect(withoutComments).not.toContain("--site-header-height");
-    expect(rules.find(({ selector }) => selector === ":root:has(.aurelian-hero)")).toBeUndefined();
-    expect(read(APP_ROOT, "src", "app", "globals.css")).toMatch(/@media \(min-width:981px\) \{ :root \{ --site-header-height:4\.25rem; \} \}/);
-
-    const nav = rules.find(({ selector }) => selector === "body:has(.aurelian-hero) .desktop-nav a");
-    expect(nav.body).toMatch(/text-transform:\s*uppercase;/);
-    expect(nav.body).toMatch(/letter-spacing:\s*0\.16em;/);
-
-    // The header CTA is a quiet brass outline here so the hero's primary is the strongest action.
-    const cta = rules.find(({ selector }) => selector === "body:has(.aurelian-hero) .desktop-cta");
-    expect(cta.body).toMatch(/background:\s*transparent;/);
-    expect(cta.body).toMatch(/border-radius:\s*8px;/);
-
-    // No sizes, spacing or hit areas of the header's controls are touched
-    // (the decorative 1px hairline pseudo-element is the one sized element).
-    rules
-      .filter(({ selector }) => selector.startsWith("body:has") && !selector.endsWith("::after"))
-      .forEach(({ selector, body }) => {
-        expect(body, selector).not.toMatch(/(?:^|[;\s])(?:width|height|min-height|padding[\w-]*|margin[\w-]*)\s*:/);
-      });
+  it("leaves the shared header's skin to site-header.css, so the hero stylesheet holds only hero rules", () => {
+    expect(withoutComments).not.toMatch(/site-header|desktop-nav|desktop-cta|mobile-menu|--site-header-height/);
+    expect(selectors.some((selector) => selector.startsWith("body:has") || selector.startsWith(":root:has"))).toBe(false);
   });
 
   it("does not touch the pinned hero rules in globals.css", () => {

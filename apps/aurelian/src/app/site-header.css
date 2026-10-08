@@ -1,0 +1,75 @@
+/* Aurelian visual evolution -- one site-header skin for every primary route.
+
+   HOST-OWNED. The Home header is the canonical design: the Builder's approved
+   header language (tracked uppercase navigation, a zone hairline, tailored
+   geometry) with the call to action as a quiet brass outline. It used to be
+   keyed on the landing route alone, so /como-funciona, /catalogo and /contacto
+   fell back to the plain defaults in globals.css (mixed-case nav at .88rem, a
+   filled CTA, no hairline). The same rules now apply to the shared header
+   component on every route, in this one place -- never per route.
+
+   Scope: every header except the Builder's. The Builder route has its own
+   header skin (builder-geometry.css, builder-zoning.css, builder-header.css) and
+   has no header CTA, so `:not(:has(.site-header__inner--builder))` leaves it
+   exactly as it was.
+
+   Skin only. No rule here sets a height, a width, padding, margin or a
+   breakpoint: the bar's height is the one shared rule in globals.css, the logo
+   and the mobile menu's behavior are untouched, and the text of the links is
+   unchanged (the casing is `text-transform`, so there are no duplicated
+   labels). The CTA keeps its size from `.button--compact`; only its paint and
+   type change. */
+
+.site-header:not(:has(.site-header__inner--builder))::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 1px;
+  pointer-events: none;
+  background: linear-gradient(
+    90deg,
+    rgba(138, 52, 74, 0.55),
+    rgba(169, 130, 79, 0.28) 50%,
+    rgba(63, 122, 104, 0.4)
+  );
+}
+
+.site-header:not(:has(.site-header__inner--builder)) .desktop-nav a {
+  font-size: 0.72rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.site-header:not(:has(.site-header__inner--builder)) .desktop-nav a:focus-visible::after {
+  opacity: 1;
+  transform: scaleX(1);
+}
+
+.site-header:not(:has(.site-header__inner--builder)) .desktop-cta {
+  border-color: rgba(200, 166, 101, 0.5);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--gold);
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.site-header:not(:has(.site-header__inner--builder)) .desktop-cta:hover {
+  background: rgba(200, 166, 101, 0.12);
+}
+
+.site-header:not(:has(.site-header__inner--builder)) .mobile-menu summary {
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.site-header:not(:has(.site-header__inner--builder)) .mobile-menu nav {
+  border-radius: 10px;
+}
+
+.site-header:not(:has(.site-header__inner--builder)) .mobile-menu nav .button {
+  border-radius: 8px;
+}

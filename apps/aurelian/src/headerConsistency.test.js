@@ -41,3 +41,59 @@ describe("one site-header height on every primary route", () => {
       });
   });
 });
+
+describe("one site-header skin on every primary route (the Home header is the reference)", () => {
+  const skin = read("site-header.css");
+  const rules = [...skin.matchAll(/([^{}]+)\{([^{}]*)\}/g)].map(([, selector, body]) => ({ selector: selector.trim(), body }));
+  const SCOPE = ".site-header:not(:has(.site-header__inner--builder))";
+  const rule = (selector) => rules.find((candidate) => candidate.selector === `${SCOPE} ${selector}`)?.body ?? "";
+
+  it("is loaded by the layout after the global header defaults", () => {
+    const layout = readFileSync(join(APP_DIR, "layout.jsx"), "utf8");
+    expect(layout.indexOf('import "./site-header.css";')).toBeGreaterThan(layout.indexOf('import "./globals.css";'));
+  });
+
+  it("is one shared system: every rule hangs off the same non-Builder header scope, none off a route", () => {
+    expect(rules.length).toBeGreaterThan(6);
+    rules.forEach(({ selector }) => {
+      expect(selector.startsWith(SCOPE), selector).toBe(true);
+      expect(selector, selector).not.toMatch(/body:has|aurelian-hero|contact|catalog|como-funciona|landing|builder-page|:root/);
+    });
+    expect(skin).not.toContain("!important");
+  });
+
+  it("gives the nav the Home treatment: small, tracked, uppercase, with the focus underline", () => {
+    const nav = rule(".desktop-nav a");
+    expect(nav).toMatch(/font-size:\s*0\.72rem;/);
+    expect(nav).toMatch(/letter-spacing:\s*0\.16em;/);
+    expect(nav).toMatch(/text-transform:\s*uppercase;/);
+    expect(rule(".desktop-nav a:focus-visible::after")).toMatch(/opacity:\s*1;/);
+  });
+
+  it("gives the header CTA the Home outlined treatment, never the filled brass button", () => {
+    const cta = rule(".desktop-cta");
+    expect(cta).toMatch(/background:\s*transparent;/);
+    expect(cta).toMatch(/border-color:\s*rgba\(200, 166, 101, 0\.5\);/);
+    expect(cta).toMatch(/border-radius:\s*8px;/);
+    expect(cta).toMatch(/color:\s*var\(--gold\);/);
+    expect(cta).toMatch(/font-size:\s*0\.72rem;/);
+    expect(cta).toMatch(/letter-spacing:\s*0\.14em;/);
+    expect(cta).toMatch(/text-transform:\s*uppercase;/);
+    expect(rule(".desktop-cta:hover")).toMatch(/background:\s*rgba\(200, 166, 101, 0\.12\);/);
+  });
+
+  it("is skin only: no size, spacing or position on the bar, the links or the CTA (the 1px hairline aside)", () => {
+    rules
+      .filter(({ selector }) => !selector.endsWith("::after") || selector.includes(".desktop-nav"))
+      .forEach(({ selector, body }) => {
+        expect(body, selector).not.toMatch(/(?:^|[;\s])(?:width|height|min-height|max-height|padding[\w-]*|margin[\w-]*|gap|display|position)\s*:/);
+      });
+    expect(skin).not.toMatch(/@media/);
+  });
+
+  it("changes casing in CSS only: the link labels in the header component are unchanged", () => {
+    const header = readFileSync(join(APP_DIR, "..", "components", "SiteHeader.jsx"), "utf8");
+    ['["/", "Inicio"]', '["/como-funciona", "Cómo funciona"]', '["/catalogo", "Catálogo"]', '["/contacto", "Contacto"]', ">Construye tu caja<"].forEach((label) => expect(header).toContain(label));
+    expect(header).not.toMatch(/toUpperCase|INICIO|CATÁLOGO/);
+  });
+});
