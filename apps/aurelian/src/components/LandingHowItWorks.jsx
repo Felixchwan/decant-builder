@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { aurelianCatalog } from "../merchant/catalog.js";
 
-// The landing's "Cómo funciona" section: three chapters of one small ritual.
+// The "Cómo funciona" experience: three chapters of one small ritual. It lives on
+// its own page (/como-funciona); the landing only carries a short teaser (see
+// LandingHowItWorksTeaser).
 //
 // Each step has a semantic key (explore / build / discover). The stylesheet maps
 // each key to its decorative artwork slot and, for the Build chapter, to the
@@ -26,12 +28,18 @@ export const HOW_IT_WORKS_STEPS = Object.freeze([
   },
 ]);
 
-export function LandingHowItWorks() {
+// `headingLevel` is the level of the section heading: "h2" when it sits inside a
+// page that already has its own h1 (the default), "h1" when it opens the dedicated
+// /como-funciona page -- in which case the chapter titles step up to h2 so the
+// outline stays h1 > h2. The look is identical either way (same classes).
+export function LandingHowItWorks({ headingLevel = "h2" }) {
+  const Heading = headingLevel === "h1" ? "h1" : "h2";
+  const ChapterHeading = headingLevel === "h1" ? "h2" : "h3";
   return (
     <section className="section section--surface landing-how">
       <div className="page-shell">
         <div className="landing-how__intro">
-          <h2 className="display-heading">Cómo funciona</h2>
+          <Heading className="display-heading">Cómo funciona</Heading>
           <p className="section-lede">Tres pasos para construir criterio.</p>
         </div>
         <ol className="landing-how__chapters" role="list">
@@ -40,13 +48,14 @@ export function LandingHowItWorks() {
               <div className="landing-how__copy">
                 {/* The list already numbers the chapters; this is the visible editorial marker. */}
                 <p aria-hidden="true" className="landing-how__number">{String(index + 1).padStart(2, "0")}</p>
-                <h3>{step.title}</h3>
+                <ChapterHeading>{step.title}</ChapterHeading>
                 <p>{step.body}</p>
               </div>
               <div aria-hidden="true" className="landing-how__visual" />
             </li>
           ))}
         </ol>
+        {/* The close of the three acts: the way in, with the availability line directly beneath it. */}
         <div className="landing-how__cta">
           <Link className="button" href="/build-your-box">Arma tu Discovery Box</Link>
           <p>Aurelian revisa disponibilidad y después comparte las instrucciones de pago.</p>

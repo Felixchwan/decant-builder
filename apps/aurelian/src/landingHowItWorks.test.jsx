@@ -17,7 +17,7 @@ const withoutComments = css.replace(/\/\*[\s\S]*?\*\//g, "");
 const rules = [...withoutComments.matchAll(/([^{}]+)\{([^{}]*)\}/g)]
   .map(([, selector, body]) => ({ selector: selector.trim(), body }))
   .filter(({ selector }) => !selector.startsWith("@"));
-const selectors = rules.flatMap(({ selector }) => selector.split(",").map((part) => part.trim()));
+const selectors = rules.flatMap(({ selector }) => selector.split(/,(?![^(]*\))/).map((part) => part.trim()));
 
 const section = renderToStaticMarkup(<LandingHowItWorks />);
 const homeMarkup = renderToStaticMarkup(<HomePage />);
@@ -87,21 +87,38 @@ describe("landing 'Cómo funciona': three chapters of one ritual", () => {
     expect(section).not.toMatch(/\.webp|how-it-works-/);
   });
 
-  it("sits where it did: after the bias section and before the featured selection, with the approved sections intact", () => {
+  it("is no longer on Home: the full three-act section lives on /como-funciona", () => {
+    expect(homeMarkup).not.toContain("landing-how__chapters");
+    expect(homeMarkup).not.toContain('class="section section--surface landing-how"');
+    // The teaser's one line may echo the first step's words; what must be gone is the chapter headings.
+    for (const { title } of HOW_IT_WORKS_STEPS) {
+      expect(homeMarkup).not.toContain(`<h3>${title}</h3>`);
+      expect(homeMarkup).not.toContain(`<h2>${title}</h2>`);
+    }
+    expect(homeMarkup).not.toContain("Tres pasos para construir criterio.");
+    expect(homeMarkup).not.toMatch(/how-it-works-|\.webp.*how-it-works/);
+    const page = read(APP_ROOT, "src", "app", "page.jsx");
+    expect(page).not.toContain('import { LandingHowItWorks } from');
+    expect(page).not.toContain("<LandingHowItWorks />");
+    expect(page).not.toContain("De la curiosidad a una selección propia.");
+    expect(page).not.toContain("steps--three");
+    const route = read(APP_ROOT, "src", "app", "como-funciona", "page.jsx");
+    expect(route).toContain('<LandingHowItWorks headingLevel="h1" />');
+  });
+
+  it("keeps the approved sections around the Home teaser intact and in order", () => {
     const hero = homeMarkup.indexOf('class="aurelian-hero-stage"');
     const explain = homeMarkup.indexOf("Qué es una Discovery Box");
     const bias = homeMarkup.indexOf('class="section page-shell landing-bias"');
-    const how = homeMarkup.indexOf('class="section section--surface landing-how"');
+    const teaser = homeMarkup.indexOf('class="section section--surface landing-how-teaser"');
     const featured = homeMarkup.indexOf("Selección destacada");
     const boxStory = homeMarkup.indexOf("De 6 a 14 formas de explorar.");
-    expect([hero, explain, bias, how, featured, boxStory].every((index) => index > -1)).toBe(true);
+    expect([hero, explain, bias, teaser, featured, boxStory].every((index) => index > -1)).toBe(true);
     expect(hero).toBeLessThan(explain);
     expect(explain).toBeLessThan(bias);
-    expect(bias).toBeLessThan(how);
-    expect(how).toBeLessThan(featured);
+    expect(bias).toBeLessThan(teaser);
+    expect(teaser).toBeLessThan(featured);
     expect(featured).toBeLessThan(boxStory);
-    expect(homeMarkup.match(/Cómo funciona/g)).toHaveLength(1);
-    // The sections around it are untouched.
     expect(homeMarkup).toContain("<h1>Descubre antes de elegir.</h1>");
     expect(homeMarkup).toContain("Nuestro sesgo declarado");
     expect(homeMarkup).toContain('class="featured-grid seasonal-featured"');
@@ -109,12 +126,14 @@ describe("landing 'Cómo funciona': three chapters of one ritual", () => {
     expect(homeMarkup).toContain("Construye una colección que se sienta tuya.");
   });
 
-  it("is the only thing the page imports for this section, with no inline copy left behind", () => {
-    const page = read(APP_ROOT, "src", "app", "page.jsx");
-    expect(page).toContain('import { LandingHowItWorks } from "../components/LandingHowItWorks.jsx";');
-    expect(page).toContain("<LandingHowItWorks />");
-    expect(page).not.toContain("De la curiosidad a una selección propia.");
-    expect(page).not.toContain("steps--three");
+  it("opens the dedicated page with the same experience under an h1, with chapter titles as h2", () => {
+    const page = renderToStaticMarkup(<LandingHowItWorks headingLevel="h1" />);
+    expect(page.match(/<h1\b[^>]*>Cómo funciona<\/h1>/g)).toHaveLength(1);
+    expect(page).not.toMatch(/<h3|<h4/);
+    expect([...page.matchAll(/<h2>([^<]+)<\/h2>/g)].map((match) => match[1])).toEqual(HOW_IT_WORKS_STEPS.map(({ title }) => title));
+    // Identical to the section rendered inside a page, apart from the heading tags.
+    const normalize = (markup) => markup.replace(/<\/?h[123]\b/g, "<h").replace(/ class="display-heading"/, "");
+    expect(normalize(page)).toBe(normalize(section));
   });
 });
 
@@ -126,7 +145,8 @@ describe("landing 'Cómo funciona' presentation (host-owned, decorative, semanti
   });
 
   it("alternates by the step's semantic key, never by position", () => {
-    expect(withoutComments).not.toMatch(/nth-child|nth-of-type|first-child|last-child|:has\(|:nth-/);
+    // Chapter presentation never depends on position (the teaser's and the details' own :last-child rules are about their copy, not the chapters).
+    expect(withoutComments.replace(/\.landing-how-(?:teaser|details)[^{]*\{[^}]*\}/g, "")).not.toMatch(/nth-child|nth-of-type|first-child|last-child|:has\(|:nth-/);
     const mirrored = selectors.filter((selector) => selector.includes('data-step="build"') && !selector.includes("--how"));
     expect(mirrored.length).toBeGreaterThan(0);
     // Only the Build chapter mirrors; explore and discover use the default composition.

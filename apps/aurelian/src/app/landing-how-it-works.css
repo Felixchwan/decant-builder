@@ -1,5 +1,20 @@
 /* Aurelian visual evolution -- Landing Phase 2B: "Cómo funciona" as three chapters.
 
+   Route ownership: the three-act experience below now lives on its own page,
+   /como-funciona (app/como-funciona/page.jsx). The landing carries only the
+   compact, text-only teaser at the end of this file, so none of the artwork loads
+   on Home. The chapter styles are unchanged by the move: the section heading is an
+   h1 on that page and an h2 anywhere else, and the chapter titles are h2 / h3
+   accordingly, so every heading rule here covers both levels.
+
+   The page reads as one composition, top to bottom: a short centred title, the
+   three acts, a compact close (the one Builder call to action, centred, with the
+   availability line beneath it), then "Cómo se procesa tu pedido": the five
+   operational steps in two columns (the last across both), the closing line and
+   the Curator Bonus note across the full width. Those later blocks use the same
+   hand as the acts -- hairlines, small brass numbers, Georgia headings, open
+   space -- and never cards, fills, shadows or icons.
+
    HOST-OWNED and landing-only: every selector is keyed on `.landing-how`, the
    section rendered by components/LandingHowItWorks.jsx. Nothing here can reach the
    hero, the bias/video section, the seasonal cards, the Builder, the catalog page,
@@ -26,25 +41,35 @@
    with one restrained tint per step (deep green, aged brass, oxblood). The art
    sits under a soft vignette and a hairline of aged brass, like the video frame,
    so it can never glare brighter than the hero or the seasonal cards. The art is
-   composed 5:4 with its subject in the central 70% of the height, because the
-   stacked layouts crop it to 3:2 (tablet) and 4:3 (phone). */
+   composed 5:4 with its subject in the central 70% of the height, and every
+   layout frames it by CSS cropping alone (`cover`, one shared centre position,
+   source files untouched): 3:2 on wide screens, 16:10 stacked on tablet, 4:3 on
+   phones, where the frame is already narrow and over-cropping would lose the
+   subject. */
 
+/* The page intro: a compact, centred editorial title, not a hero. The band's
+   padding is only a short beat under the header and a short breath after the
+   closing call to action; the operational section brings its own. */
 .landing-how {
-  padding-block: clamp(3.5rem, 7vw, 6.5rem);
+  padding-block: clamp(1.75rem, 3.5vw, 2.75rem) clamp(1.75rem, 3vw, 2.5rem);
 }
 
-.landing-how__intro h2 {
-  margin: 0;
+.landing-how__intro {
+  text-align: center;
+}
+
+.landing-how__intro :is(h1, h2) {
+  margin: 0 auto;
 }
 
 .landing-how__intro .section-lede {
-  margin-top: 1.25rem;
+  margin: 1rem auto 0;
 }
 
 .landing-how__chapters {
   display: grid;
-  gap: clamp(3.5rem, 7vw, 6.5rem);
-  margin: clamp(2.5rem, 4vw, 3.5rem) 0 0;
+  gap: clamp(3rem, 5vw, 4.25rem);
+  margin: clamp(1.25rem, 2.5vw, 2rem) 0 0;
   padding: 0;
   list-style: none;
 }
@@ -95,7 +120,7 @@
   background: rgba(169, 130, 79, 0.5);
 }
 
-.landing-how__copy h3 {
+.landing-how__copy :is(h2, h3) {
   margin: 0 0 1rem;
   font-family: Georgia, "Times New Roman", serif;
   font-size: clamp(1.7rem, 2.8vw, 2.5rem);
@@ -105,7 +130,7 @@
   text-wrap: balance;
 }
 
-.landing-how__copy h3 + p {
+.landing-how__copy :is(h2, h3) + p {
   margin: 0;
   color: var(--secondary);
   font-size: 1.05rem;
@@ -118,7 +143,7 @@
   position: relative;
   isolation: isolate;
   overflow: hidden;
-  aspect-ratio: 5 / 4;
+  aspect-ratio: 3 / 2;
   border: 1px solid rgba(169, 130, 79, 0.32);
   border-radius: 10px;
   background:
@@ -154,13 +179,15 @@
   --how-tint: radial-gradient(ellipse 70% 70% at 62% 42%, rgba(74, 15, 31, 0.46), transparent 70%);
 }
 
-/* One clear action to close the section, with the approved availability line. */
+/* The close of the three acts, not a fourth chapter: the one way in, centred,
+   with the approved availability line directly beneath it. No rule, no band; the
+   section's own bottom hairline is the only separation from what follows. */
 .landing-how__cta {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 1.1rem;
-  margin-top: clamp(3.5rem, 7vw, 6rem);
+  gap: 0.85rem;
+  margin-top: clamp(2.25rem, 4.5vw, 3.5rem);
   text-align: center;
 }
 
@@ -168,7 +195,136 @@
   max-width: 34rem;
   margin: 0;
   color: var(--secondary);
-  font-size: 0.9rem;
+  font-size: 0.95rem;
+}
+
+/* Operational section: "Cómo se procesa tu pedido". The same hand as the acts --
+   hairlines, small brass numbers, Georgia headings, open space -- but plainer
+   and denser, so it reads as the practical half of one page. On wide screens the
+   five steps run in two columns (01|02, 03|04, then 05 anchoring the last row);
+   the DOM stays 01 to 05, so reading order never changes. */
+.landing-how-details {
+  padding-block: clamp(1.75rem, 3.5vw, 2.75rem) clamp(3rem, 6vw, 5rem);
+}
+
+.landing-how-details__intro {
+  text-align: center;
+}
+
+.landing-how-details__heading {
+  margin: 0 auto 1rem;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(2rem, 4vw, 3.2rem);
+  font-weight: 400;
+  letter-spacing: -0.025em;
+  line-height: 1.08;
+  text-wrap: balance;
+}
+
+/* The intro sits right under its heading, at a readable measure. */
+.landing-how-details__intro > p {
+  max-width: 40rem;
+  margin: 0 auto;
+  color: var(--secondary);
+  font-size: 1.1rem;
+  line-height: 1.65;
+}
+
+.landing-how-process {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: clamp(2.5rem, 6vw, 5rem);
+  margin: clamp(1.5rem, 3vw, 2.25rem) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.landing-how-process__step {
+  padding: 1.5rem 0 2.25rem;
+  border-top: 1px solid var(--border);
+}
+
+.landing-how-process__number {
+  margin: 0 0 0.9rem;
+  color: var(--gold);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.24em;
+  line-height: 1;
+}
+
+.landing-how-process__step h3 {
+  margin: 0 0 0.7rem;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(1.3rem, 2vw, 1.6rem);
+  font-weight: 400;
+  letter-spacing: -0.015em;
+  line-height: 1.2;
+}
+
+.landing-how-process__step h3 + p {
+  max-width: 30rem;
+  margin: 0;
+  color: var(--secondary);
+  line-height: 1.7;
+}
+
+/* The last step anchors the final row: its heading on the left, its words on the
+   right, across the same two columns as the steps above. */
+.landing-how-process__step[data-step="payment"] {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: clamp(2.5rem, 6vw, 5rem);
+  align-items: start;
+}
+
+.landing-how-process__step[data-step="payment"] > .landing-how-process__number,
+.landing-how-process__step[data-step="payment"] > h3 {
+  grid-column: 1;
+}
+
+.landing-how-process__step[data-step="payment"] > h3 + p {
+  grid-column: 2;
+  grid-row: 2;
+}
+
+/* The closing line belongs to the process, not to a void beneath it. */
+.landing-how-details__closing {
+  max-width: 44rem;
+  margin: clamp(0.5rem, 1.5vw, 1.25rem) 0 0;
+  color: var(--secondary);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(1.15rem, 1.8vw, 1.45rem);
+  font-style: italic;
+  line-height: 1.5;
+}
+
+/* Curator Bonus: a deliberate last chapter. Same note, same facts; on wide screens
+   its title sits left and its rules right, across the full width of the page. */
+.landing-how-details .bonus-note {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  column-gap: clamp(2.5rem, 6vw, 5rem);
+  align-items: start;
+  max-width: none;
+  margin: clamp(3rem, 5vw, 4.5rem) 0 0;
+}
+
+.landing-how-details .bonus-note > .eyebrow,
+.landing-how-details .bonus-note > h2 {
+  grid-column: 1;
+}
+
+.landing-how-details .bonus-note > h2 {
+  margin: 0;
+}
+
+.landing-how-details .bonus-note > p:last-child {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  max-width: 38rem;
+  margin: 0;
 }
 
 /* Narrow screens: every chapter reads number, title, copy, visual -- in that
@@ -190,19 +346,78 @@
     max-width: 34rem;
   }
 
-  /* Stacked, the frame is as wide as the page: crop it wider than 5:4 (the art
-     keeps its subject in the central band) so a chapter stays a chapter. */
+  /* Stacked, the frame is as wide as the page: crop it wider than on desktop (the
+     art keeps its subject in the central band) so a chapter stays a chapter. */
   .landing-how__visual {
-    aspect-ratio: 3 / 2;
+    aspect-ratio: 16 / 10;
+  }
+
+  /* One reading column: 01, 02, 03, 04, 05, then the closing line and the note. */
+  .landing-how-process {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .landing-how-process__step[data-step="payment"] {
+    display: block;
+  }
+
+  .landing-how-details .bonus-note {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .landing-how-details .bonus-note > p:last-child {
+    grid-column: 1;
+    grid-row: auto;
+    margin-top: 1rem;
   }
 }
 
 @media (max-width: 600px) {
-  .landing-how__chapters {
-    gap: 3.5rem;
-  }
-
   .landing-how__visual {
     aspect-ratio: 4 / 3;
+  }
+}
+
+/* The landing teaser: a headline, one line and one way in. Text only, no artwork,
+   so it stays well under a tenth of the section it replaced. It keeps the
+   `.section--surface` band, so the transitions around it are the same ones. */
+.landing-how-teaser {
+  padding-block: clamp(2.75rem, 5vw, 4.25rem);
+}
+
+.landing-how-teaser__inner {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1.5rem 3rem;
+}
+
+.landing-how-teaser__copy {
+  max-width: 52rem;
+}
+
+.landing-how-teaser h2 {
+  margin: 0 0 0.9rem;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(1.9rem, 3.6vw, 3rem);
+  font-weight: 400;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+
+.landing-how-teaser__copy > p:last-child {
+  margin: 0;
+  color: var(--secondary);
+  font-size: 1.05rem;
+}
+
+.landing-how-teaser .text-link {
+  flex: none;
+}
+
+@media (max-width: 720px) {
+  .landing-how-teaser__inner {
+    align-items: flex-start;
+    flex-direction: column;
   }
 }

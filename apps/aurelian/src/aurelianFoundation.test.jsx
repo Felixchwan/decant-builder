@@ -144,7 +144,8 @@ describe("Aurelian application foundation", () => {
     expect(stylesheet).not.toMatch(/(?:\.aurelian-hero|\.section|\.service-band|\.final-cta)\s*\{[^}]*(?:100s?vh|min-(?:height|block-size))/);
     expect(stylesheet).not.toMatch(/(^|\n)\.hero\s*\{/);
     expect(homeMarkup).toContain("<h3><span>01</span>Prueba antes de decidir</h3>");
-    expect(homeMarkup).toContain("<h3>Explora sin comprometerte</h3>");
+    expect(homeMarkup).not.toContain("<h3>Explora sin comprometerte</h3>"); // the three acts live on /como-funciona; Home keeps a teaser
+    expect(homeMarkup).toContain("<h2>Tres pasos para descubrir mejor.</h2>");
     expect(homeMarkup).not.toMatch(/<article><span>0[1-4]<\/span><h3>/);
     expect(homeMarkup).not.toMatch(/<article><b>[1-3]<\/b>/);
     expect(stylesheet).not.toMatch(/\.feature-grid article\s*\{[^}]*min-height/);
