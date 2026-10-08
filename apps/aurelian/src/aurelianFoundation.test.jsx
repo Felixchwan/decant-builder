@@ -140,8 +140,9 @@ describe("Aurelian application foundation", () => {
     expect(stylesheet).toMatch(/\.page-intro--compact\s*\{\s*padding-block:/);
     expect(stylesheet).toMatch(/\.section\s*\{\s*padding-block:clamp\(2\.5rem,3\.3vw,3rem\)/);
     expect(stylesheet).toMatch(/\.final-cta\s*\{\s*padding-block:3rem/);
-    expect(stylesheet).toMatch(/\.service-band p:last-child\s*\{\s*margin-bottom:0/);
-    expect(stylesheet).not.toMatch(/(?:\.aurelian-hero|\.section|\.service-band|\.final-cta)\s*\{[^}]*(?:100s?vh|min-(?:height|block-size))/);
+    // The Home no longer ends with the "Servicio inicial" band or the "De 6 a 14 formas" block: their styles went with them.
+    expect(stylesheet).not.toMatch(/\.service-band|\.box-story/);
+    expect(stylesheet).not.toMatch(/(?:\.aurelian-hero|\.section|\.final-cta)\s*\{[^}]*(?:100s?vh|min-(?:height|block-size))/);
     expect(stylesheet).not.toMatch(/(^|\n)\.hero\s*\{/);
     expect(homeMarkup).toContain("<h3><span>01</span>Prueba antes de decidir</h3>");
     expect(homeMarkup).not.toContain("<h3>Explora sin comprometerte</h3>"); // the three acts live on /como-funciona; Home keeps a teaser

@@ -26,7 +26,10 @@ export default function HowItWorksPage() {
           <li className="landing-how-process__step" data-step="payment"><p aria-hidden="true" className="landing-how-process__number">05</p><h3>Recibe las instrucciones de pago</h3><p>Solo después de confirmar disponibilidad compartiremos cómo continuar. El servicio inicial es para Monterrey y su área metropolitana.</p></li>
         </ol>
         <p className="landing-how-details__closing">Nuestro objetivo no es solo entregarte fragancias, sino ayudarte a comparar cada vez con más criterio.</p>
-        <aside className="bonus-note"><p className="eyebrow">Curator Bonus</p><h2>Dos espacios para ampliar el descubrimiento.</h2><p>La caja tiene una capacidad física de {aurelianConfig.box.totalPhysicalSlots} espacios: hasta {aurelianConfig.box.maxSelectableSlots} selecciones tuyas y {aurelianConfig.box.bonusSlotCount} espacios Curator Bonus. Al alcanzar {aurelianConfig.curatorBonus.targetPoints} puntos, podrás indicar si prefieres que la curaduría complemente tu selección o se acerque a tus gustos. Las opciones dependen de disponibilidad.</p></aside>
+        <aside className="landing-how-bonus">
+          <div className="landing-how-bonus__copy"><p className="eyebrow">Curator Bonus</p><h2>Dos espacios para ampliar el descubrimiento.</h2><p>La caja tiene una capacidad física de {aurelianConfig.box.totalPhysicalSlots} espacios: hasta {aurelianConfig.box.maxSelectableSlots} selecciones tuyas y {aurelianConfig.box.bonusSlotCount} espacios Curator Bonus. Al alcanzar {aurelianConfig.curatorBonus.targetPoints} puntos, podrás indicar si prefieres que la curaduría complemente tu selección o se acerque a tus gustos. Las opciones dependen de disponibilidad.</p></div>
+          <div aria-hidden="true" className="landing-how__visual" data-art="curator" />
+        </aside>
       </section>
     </>
   );

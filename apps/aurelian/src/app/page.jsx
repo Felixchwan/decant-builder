@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { LandingHowItWorksTeaser } from "../components/LandingHowItWorksTeaser.jsx";
 import { LandingVideo } from "../components/LandingVideo.jsx";
+import { SocialFollow } from "../components/SocialFollow.jsx";
 import { SeasonalFeaturedSelection } from "../components/SeasonalFeaturedSelection.jsx";
 import { aurelianCatalog } from "../merchant/catalog.js";
 
@@ -18,9 +19,7 @@ export default function HomePage() {
       <section className="section page-shell landing-bias"><div className="landing-bias__copy"><p className="eyebrow">Nuestro sesgo declarado</p><h2 className="display-heading">No estamos aquí para vender más. Estamos aquí para ayudarte a distinguir lo que de verdad es tuyo.</h2><p className="section-lede">No priorizamos por margen ni por lo que más se vende. Priorizamos ayudarte a construir tu propio criterio — aunque eso signifique que, con el tiempo, compres menos.</p></div><LandingVideo /></section>
       <LandingHowItWorksTeaser />
       <section className="section page-shell"><div className="section-heading"><div><p className="eyebrow">Selección destacada</p><h2>Un vistazo al catálogo</h2></div><Link className="text-link" href="/catalogo">Ver las {aurelianCatalog.length} fragancias</Link></div><p className="section-lede">No son las fragancias “mejor valoradas”: son un punto de partida distinto en cada estación.</p><SeasonalFeaturedSelection /></section>
-      <section className="section page-shell box-story"><div><p className="eyebrow">Discovery Box</p><h2 className="display-heading">De 6 a 14 formas de explorar.</h2></div><div><p>Construye una selección con un mínimo de 12 puntos. El sistema contempla 16 espacios físicos: hasta 14 selecciones y 2 espacios Curator Bonus cuando se cumplen las reglas actuales.</p><Link className="text-link" href="/como-funciona">Entender puntos y Curator Bonus</Link></div></section>
-      <section className="service-band"><div className="page-shell"><p className="eyebrow">Servicio inicial</p><h2>Monterrey y área metropolitana</h2><p>La disponibilidad se confirma personalmente antes de compartir instrucciones de pago.</p></div></section>
-      <section className="final-cta page-shell"><p className="eyebrow">Tu siguiente descubrimiento</p><h2>Construye una colección que se sienta tuya.</h2><p>No hay una fragancia perfecta ni una lista de más vendidos que seguir: solo la que tú decidas que es tuya. Elige 6–14 fragancias. Revisaremos disponibilidad antes de continuar con el pago.</p><Link className="button" href="/build-your-box">Construye tu Discovery Box</Link></section>
+      <section className="final-cta page-shell"><p className="eyebrow">Tu siguiente descubrimiento</p><h2>Construye una colección que se sienta tuya.</h2><p>No hay una fragancia perfecta ni una lista de más vendidos que seguir: solo la que tú decidas que es tuya. Elige 6–14 fragancias. Revisaremos disponibilidad antes de continuar con el pago.</p><div className="landing-closing__foot"><Link className="button" href="/build-your-box">Construye tu Discovery Box</Link><SocialFollow /></div></section>
     </>
   );
 }

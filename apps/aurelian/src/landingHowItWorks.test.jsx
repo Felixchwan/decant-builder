@@ -112,13 +112,13 @@ describe("landing 'Cómo funciona': three chapters of one ritual", () => {
     const bias = homeMarkup.indexOf('class="section page-shell landing-bias"');
     const teaser = homeMarkup.indexOf('class="section section--surface landing-how-teaser"');
     const featured = homeMarkup.indexOf("Selección destacada");
-    const boxStory = homeMarkup.indexOf("De 6 a 14 formas de explorar.");
-    expect([hero, explain, bias, teaser, featured, boxStory].every((index) => index > -1)).toBe(true);
+    const closing = homeMarkup.indexOf("Tu siguiente descubrimiento");
+    expect([hero, explain, bias, teaser, featured, closing].every((index) => index > -1)).toBe(true);
     expect(hero).toBeLessThan(explain);
     expect(explain).toBeLessThan(bias);
     expect(bias).toBeLessThan(teaser);
     expect(teaser).toBeLessThan(featured);
-    expect(featured).toBeLessThan(boxStory);
+    expect(featured).toBeLessThan(closing);
     expect(homeMarkup).toContain("<h1>Descubre antes de elegir.</h1>");
     expect(homeMarkup).toContain("Nuestro sesgo declarado");
     expect(homeMarkup).toContain('class="featured-grid seasonal-featured"');
@@ -146,7 +146,7 @@ describe("landing 'Cómo funciona' presentation (host-owned, decorative, semanti
 
   it("alternates by the step's semantic key, never by position", () => {
     // Chapter presentation never depends on position (the teaser's and the details' own :last-child rules are about their copy, not the chapters).
-    expect(withoutComments.replace(/\.landing-how-(?:teaser|details)[^{]*\{[^}]*\}/g, "")).not.toMatch(/nth-child|nth-of-type|first-child|last-child|:has\(|:nth-/);
+    expect(withoutComments.replace(/\.landing-how-(?:teaser|details|bonus)[^{]*\{[^}]*\}/g, "")).not.toMatch(/nth-child|nth-of-type|first-child|last-child|:has\(|:nth-/);
     const mirrored = selectors.filter((selector) => selector.includes('data-step="build"') && !selector.includes("--how"));
     expect(mirrored.length).toBeGreaterThan(0);
     // Only the Build chapter mirrors; explore and discover use the default composition.
@@ -176,7 +176,8 @@ describe("landing 'Cómo funciona' presentation (host-owned, decorative, semanti
 
   it("maps each semantic step to one Aurelian-owned artwork slot, with a dark fallback underneath", () => {
     const urls = [...withoutComments.matchAll(/url\(\s*["']?([^"')]+)["']?\s*\)/g)].map((match) => match[1]);
-    expect(urls.sort()).toEqual(Object.values(EXPECTED_ART).map((file) => `/media/landing/how-it-works/${file}`).sort());
+    // The three acts plus the Curator Bonus slot (declared; its file arrives separately).
+    expect(urls.sort()).toEqual([...Object.values(EXPECTED_ART), "how-it-works-curator.webp"].map((file) => `/media/landing/how-it-works/${file}`).sort());
     for (const [key, file] of Object.entries(EXPECTED_ART)) {
       const rule = rules.find(({ selector, body }) => selector === `.landing-how__chapter[data-step="${key}"] .landing-how__visual` && body.includes("--how-art"));
       expect(rule.body).toContain(`/media/landing/how-it-works/${file}`);
@@ -186,10 +187,11 @@ describe("landing 'Cómo funciona' presentation (host-owned, decorative, semanti
     expect(frame.body).toMatch(/var\(--how-art\)[^,]*,\s*var\(--how-tint\),\s*#0b0a09/);
   });
 
-  it("ships exactly the three artwork files: light WebP, 5:4, mapped by semantic step key", () => {
+  it("ships exactly the four artworks (the three acts and the Curator Bonus): light WebP, 5:4, mapped by semantic key", () => {
     expect(existsSync(ART_DIR)).toBe(true);
     const present = readdirSync(ART_DIR).filter((file) => /\.webp$/i.test(file));
-    expect(present.sort()).toEqual(Object.values(EXPECTED_ART).sort());
+    const required = [...Object.values(EXPECTED_ART), "how-it-works-curator.webp"];
+    expect(present.sort()).toEqual([...required].sort());
     for (const [key, file] of Object.entries(EXPECTED_ART)) {
       // The file name carries the semantic step key, the stylesheet maps that key to the file.
       expect(file).toBe(`how-it-works-${key}.webp`);

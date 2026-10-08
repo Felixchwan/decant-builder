@@ -1,0 +1,89 @@
+/* Aurelian visual evolution -- the landing's closing: the final call to action and
+   a small "Síguenos en" detail.
+
+   HOST-OWNED and landing-only: every selector is keyed on `.landing-closing__foot`
+   or `.landing-follow`, both rendered only by app/page.jsx (the final CTA section)
+   and components/SocialFollow.jsx. Nothing here reaches the hero, the other
+   sections, the Builder, the catalog, the shared packages or Discovery Decants. The
+   `.final-cta` rules in globals.css are untouched.
+
+   Composition: the closing CTA stays exactly as it was (eyebrow, headline, copy,
+   one button, all centred). Its last row is a three-column line: an empty cell, the
+   button precisely centred, and, in the bottom-right where the section used to be
+   empty, a quiet follow cluster -- a short label and two small hairline-framed
+   icons. It is a closing detail, not a section, a band or a second call to action.
+   On narrow screens the row stacks and the cluster sits centred beneath the button.
+   The DOM order is always button, then cluster, so reading and focus order never
+   depend on the layout. */
+
+.landing-closing__foot {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: 1rem 1.5rem;
+}
+
+.landing-closing__foot > .button {
+  grid-column: 2;
+}
+
+.landing-follow {
+  grid-column: 3;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.85rem;
+}
+
+.landing-follow__label {
+  color: var(--secondary);
+  font-size: 0.85rem;
+  letter-spacing: 0.02em;
+}
+
+.landing-follow__list {
+  display: flex;
+  gap: 0.6rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.landing-follow__link {
+  display: grid;
+  place-items: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border: 1px solid rgba(169, 130, 79, 0.32);
+  border-radius: 8px;
+  color: var(--secondary);
+  transition: border-color 0.2s ease, color 0.2s ease;
+}
+
+.landing-follow__link:hover,
+.landing-follow__link:focus-visible {
+  border-color: rgba(200, 166, 101, 0.7);
+  color: var(--gold);
+}
+
+@media (max-width: 720px) {
+  .landing-closing__foot {
+    grid-template-columns: minmax(0, 1fr);
+    justify-items: center;
+    gap: 1.75rem;
+  }
+
+  .landing-closing__foot > .button,
+  .landing-follow {
+    grid-column: 1;
+  }
+
+  .landing-follow {
+    justify-content: center;
+  }
+
+  .landing-follow__link {
+    width: 2.75rem;
+    height: 2.75rem;
+  }
+}

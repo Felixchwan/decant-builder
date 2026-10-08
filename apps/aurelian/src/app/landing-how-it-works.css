@@ -11,7 +11,8 @@
    three acts, a compact close (the one Builder call to action, centred, with the
    availability line beneath it), then "Cómo se procesa tu pedido": the five
    operational steps in two columns (the last across both), the closing line and
-   the Curator Bonus note across the full width. Those later blocks use the same
+   the Curator Bonus as a last chapter (its copy beside one more framed visual).
+   Those later blocks use the same
    hand as the acts -- hairlines, small brass numbers, Georgia headings, open
    space -- and never cards, fills, shadows or icons.
 
@@ -300,31 +301,47 @@
   line-height: 1.5;
 }
 
-/* Curator Bonus: a deliberate last chapter. Same note, same facts; on wide screens
-   its title sits left and its rules right, across the full width of the page. */
-.landing-how-details .bonus-note {
+/* Curator Bonus: the page's last chapter, in the same hand as the three acts --
+   one block of copy beside one decorative visual, a hairline above, no card shell.
+   The words and every fact are exactly the note it replaces. The visual is the
+   same framed Fragrance Atelier treatment as the acts (same 10px frame, brass
+   hairline, vignette, crops and dark fallback), with its own art slot:
+     how-it-works-curator.webp   (apps/aurelian/public/media/landing/how-it-works/)
+   Until that file exists the frame is the dark panel with its oxblood-and-brass
+   tint. DOM order is copy, then visual, at every width. */
+.landing-how-bonus {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  column-gap: clamp(2.5rem, 6vw, 5rem);
-  align-items: start;
-  max-width: none;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+  align-items: center;
+  column-gap: clamp(2.5rem, 6vw, 6rem);
   margin: clamp(3rem, 5vw, 4.5rem) 0 0;
+  padding-top: clamp(2rem, 4vw, 3rem);
+  border-top: 1px solid var(--border);
 }
 
-.landing-how-details .bonus-note > .eyebrow,
-.landing-how-details .bonus-note > h2 {
-  grid-column: 1;
+.landing-how-bonus__copy {
+  max-width: 28rem;
 }
 
-.landing-how-details .bonus-note > h2 {
+.landing-how-bonus__copy h2 {
+  margin: 0 0 1rem;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(1.7rem, 3vw, 2.5rem);
+  font-weight: 400;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+  text-wrap: balance;
+}
+
+.landing-how-bonus__copy > p:last-child {
   margin: 0;
+  color: var(--secondary);
+  line-height: 1.7;
 }
 
-.landing-how-details .bonus-note > p:last-child {
-  grid-column: 2;
-  grid-row: 1 / span 2;
-  max-width: 38rem;
-  margin: 0;
+.landing-how-bonus .landing-how__visual {
+  --how-art: url("/media/landing/how-it-works/how-it-works-curator.webp");
+  --how-tint: radial-gradient(ellipse 70% 70% at 55% 45%, rgba(74, 15, 31, 0.4), transparent 70%), radial-gradient(ellipse 60% 60% at 40% 55%, rgba(169, 130, 79, 0.16), transparent 70%);
 }
 
 /* Narrow screens: every chapter reads number, title, copy, visual -- in that
@@ -361,14 +378,13 @@
     display: block;
   }
 
-  .landing-how-details .bonus-note {
+  .landing-how-bonus {
     grid-template-columns: minmax(0, 1fr);
+    row-gap: 1.75rem;
   }
 
-  .landing-how-details .bonus-note > p:last-child {
-    grid-column: 1;
-    grid-row: auto;
-    margin-top: 1rem;
+  .landing-how-bonus__copy {
+    max-width: 34rem;
   }
 }
 

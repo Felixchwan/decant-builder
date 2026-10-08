@@ -75,6 +75,11 @@ describe("/como-funciona: the dedicated destination", () => {
   it("keeps the artwork decorative: no <img> and no art in markup", () => {
     expect(route).not.toMatch(/<img|<picture|<video|\.webp/);
     expect(route.match(/<div aria-hidden="true" class="landing-how__visual"><\/div>/g)).toHaveLength(3);
+    // The Curator Bonus has its own decorative visual, after its copy.
+    expect(route.match(/<div aria-hidden="true" class="landing-how__visual" data-art="curator"><\/div>/g)).toHaveLength(1);
+    const bonus = route.slice(route.indexOf('<aside class="landing-how-bonus">'));
+    expect(bonus.indexOf("landing-how-bonus__copy")).toBeLessThan(bonus.indexOf("landing-how__visual"));
+    expect(bonus).toContain("Dos espacios para ampliar el descubrimiento.");
   });
 
   it("keeps the complete ordering details and the Curator Bonus rules, below the three acts", () => {
@@ -119,7 +124,7 @@ describe("the operational process: one page, one hand", () => {
 
   it("keeps the reading order 01 to 05 with the closing line and Curator Bonus last", () => {
     const at = (needle) => details.indexOf(needle);
-    const sequence = ["Cómo se procesa tu pedido", 'data-step="catalog"', 'data-step="selection"', 'data-step="request"', 'data-step="review"', 'data-step="payment"', "landing-how-details__closing", "bonus-note"].map(at);
+    const sequence = ["Cómo se procesa tu pedido", 'data-step="catalog"', 'data-step="selection"', 'data-step="request"', 'data-step="review"', 'data-step="payment"', "landing-how-details__closing", "landing-how-bonus"].map(at);
     expect(sequence.every((index) => index > -1)).toBe(true);
     expect([...sequence].sort((a, b) => a - b)).toEqual(sequence);
   });
@@ -222,8 +227,8 @@ describe("Home keeps one compact teaser", () => {
   it("sits between the bias section and the featured selection", () => {
     expect(home.indexOf("landing-bias")).toBeLessThan(home.indexOf("landing-how-teaser"));
     expect(home.indexOf("landing-how-teaser")).toBeLessThan(home.indexOf("Selección destacada"));
-    // The existing link to the full rules still lands on the page that carries them.
-    expect(home).toContain('href="/como-funciona">Entender puntos y Curator Bonus</a>');
+    // The only way into the full process from Home is the teaser's one link.
+    expect([...home.matchAll(/href="\/como-funciona"/g)]).toHaveLength(1);
   });
 });
 
