@@ -17,12 +17,14 @@ const ICONS = {
   ),
 };
 
-// The landing's closing detail: "Síguenos en", then the two accounts. It is a quiet
-// line, not a section: no heading, no band, no second call to action.
-export function SocialFollow() {
+// A quiet closing detail: a short label, then the two accounts. It is a line, not
+// a section: no heading, no band, no second call to action. The landing uses the
+// default "Síguenos en"; the contact page passes its own wording. The links come
+// from the one host-owned list in lib/socialLinks.js.
+export function SocialFollow({ label = "Síguenos en" }) {
   return (
     <nav aria-label="Redes sociales de Aurelian" className="landing-follow">
-      <span className="landing-follow__label">Síguenos en</span>
+      <span className="landing-follow__label">{label}</span>
       <ul className="landing-follow__list" role="list">
         {AURELIAN_SOCIAL_LINKS.map(({ key, label, href }) => (
           <li key={key}>

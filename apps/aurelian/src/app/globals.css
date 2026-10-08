@@ -137,7 +137,7 @@ h1 { max-width:15ch; margin-bottom:1.4rem; font-size:clamp(2.8rem,7vw,6.4rem); }
 .feature-grid h3,.steps h3 { display:flex; align-items:baseline; gap:.65rem; margin:0 0 1rem; font-family:Georgia,serif; font-size:1.4rem; font-weight:400; }
 .feature-grid h3 span,.steps h3 span,.process-list span { flex:none; color:var(--gold); font-size:.82rem; font-family:Inter,ui-sans-serif,system-ui,sans-serif; font-weight:800; letter-spacing:.12em; }
 .feature-grid article > p:last-child,.steps article > p:last-child { margin-bottom:0; }
-.feature-grid p,.steps p,.process-list p,.contact-grid p { color:var(--secondary); }
+.feature-grid p,.steps p,.process-list p { color:var(--secondary); }
 .steps { display:grid; grid-template-columns:repeat(4,1fr); gap:1.5rem; margin-top:2rem; }
 .steps--three { grid-template-columns:repeat(3,1fr); }
 .section-heading { display:flex; justify-content:space-between; align-items:flex-end; gap:2rem; }
@@ -342,13 +342,6 @@ h1 { max-width:15ch; margin-bottom:1.4rem; font-size:clamp(2.8rem,7vw,6.4rem); }
 .bonus-note { max-width:52rem; margin:1rem 0 3rem; padding:clamp(1.5rem,4vw,3rem); border:1px solid var(--border); background:linear-gradient(135deg,rgba(200,166,101,.1),rgba(17,17,15,.94)); }
 .bonus-note h2 { font-family:Georgia,serif; font-size:clamp(1.7rem,3vw,2.6rem); font-weight:400; }
 .bonus-note > p:last-child { margin-bottom:0; color:var(--secondary); }
-.contact-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:1rem; margin:4rem 0 2rem; }
-.contact-grid article { padding:2rem; border:1px solid var(--border); background:var(--surface); }
-.contact-grid article > span { color:var(--gold); font-size:.72rem; font-weight:800; letter-spacing:.18em; }
-.contact-grid h2 { font-family:Georgia,serif; font-weight:400; }
-.pending-note { max-width:34rem; margin-bottom:2rem; padding-left:1rem; border-left:1px solid var(--gold); color:var(--muted); }
-.pending-note strong { color:var(--secondary); }
-.pending-note p { margin:.35rem 0 0; }
 /* When the first-time Discovery Intent screen is active, its own headline is
    the entry moment — the static page header above it would otherwise repeat
    that moment. Purely presentational and self-healing: if .discovery-intent
@@ -397,7 +390,6 @@ body:has(.discovery-intent) #builder-entry-header { display:none; }
   .hero-media__frame { aspect-ratio:4/5; }
   .feature-grid,.steps,.featured-grid,.catalog-explorer-grid { grid-template-columns:repeat(2,1fr); }
   .section-heading { align-items:flex-start; flex-direction:column; }
-  .contact-grid { grid-template-columns:1fr; }
 }
 @media (max-width:560px) {
   .page-shell,.site-header__inner,.site-footer { width:min(100% - 1.25rem,1180px); }

@@ -11,6 +11,7 @@ import "./catalog-seasons.css";
 import "./catalog-controls.css";
 import "./landing-how-it-works.css";
 import "./landing-closing.css";
+import "./contact-page.css";
 import { SiteHeader } from "../components/SiteHeader.jsx";
 import { SiteFooter } from "../components/SiteFooter.jsx";
 
