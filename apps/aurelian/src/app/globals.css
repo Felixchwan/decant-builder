@@ -12,6 +12,11 @@ button,input,select { font:inherit; }
 .page-shell { width:min(1180px,calc(100% - 2rem)); margin-inline:auto; }
 .site-header { position:sticky; z-index:50; top:0; border-bottom:1px solid rgba(200,166,101,.13); background:rgba(9,10,9,.88); backdrop-filter:blur(18px); }
 .site-header__inner { width:min(1240px,calc(100% - 2rem)); min-height:var(--site-header-height); margin:auto; display:flex; align-items:center; gap:2rem; }
+/* One header height on every route. The approved Home bar (4.25rem) is the shared
+   desktop height; below this width every route already agrees (4.75rem on tablets,
+   4.25rem on phones, see the 560px rule). Routes must not set their own: this is the
+   single place the desktop value lives (the Builder keeps its own identical one). */
+@media (min-width:981px) { :root { --site-header-height:4.25rem; } }
 .wordmark { display:flex; flex-direction:column; line-height:1; letter-spacing:.22em; }
 .wordmark span { font-family:Georgia,"Times New Roman",serif; font-size:1rem; }
 .wordmark small { margin-top:.35rem; color:var(--gold); font-size:.55rem; letter-spacing:.42em; }

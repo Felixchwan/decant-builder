@@ -29,8 +29,8 @@ export default function ContactPage() {
           <a aria-label="Escribir por WhatsApp (se abre en una pestaña nueva)" className="button" href={WHATSAPP_HREF} rel="noopener noreferrer" target="_blank">Escribir por WhatsApp</a>
         </div>
         <div className="contact-channel__secondary">
-          <SocialFollow label="También puedes encontrarnos en" />
           <Link className="button contact-channel__cta" href="/build-your-box">Preparar mi Discovery Box</Link>
+          <SocialFollow label="También puedes encontrarnos en" />
         </div>
       </div>
     </section>

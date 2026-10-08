@@ -11,12 +11,13 @@
    type; only the space around them is tightened) -> service / review / payment as
    three open columns separated by hairlines, with small brass numbers and serif
    titles -> one contact area: WhatsApp (number, the approved sentence and one
-   action) beside a secondary column holding the social links (the same
-   SocialFollow component the landing uses) and the Discovery Box call to action.
+   action) beside a secondary column holding the Discovery Box call to action and,
+   anchored lower-right as a quiet closing detail, the social links (the same
+   SocialFollow component the landing uses).
    No card shells, fills, shadows or icon tiles.
 
    Reading order is the DOM order at every width; narrow screens simply stack the
-   same sequence (01, 02, 03, WhatsApp, social links, call to action). */
+   same sequence (01, 02, 03, WhatsApp, call to action, social links). */
 
 .contact-page {
   padding-block: clamp(1.75rem, 3.5vw, 2.75rem) clamp(2.5rem, 5vw, 4rem);
@@ -122,9 +123,12 @@
   border-left: 1px solid var(--border);
 }
 
-/* The reused follow cluster: left-aligned here, never bottom-right. */
+/* The reused follow cluster, as a quiet closing detail: the Discovery Box action
+   sits at the top of its column and the cluster is anchored to the lower-right
+   edge, level with the WhatsApp button's baseline, so it never floats mid-column. */
 .contact-channel .landing-follow {
-  justify-content: flex-start;
+  align-self: flex-end;
+  justify-content: flex-end;
 }
 
 /* The Discovery Box call to action: an outlined, secondary action so WhatsApp, the
@@ -158,5 +162,11 @@
     padding-left: 0;
     border-top: 1px solid var(--border);
     border-left: 0;
+  }
+
+  /* Stacked, the cluster follows the action in the same left-aligned reading line. */
+  .contact-channel .landing-follow {
+    align-self: flex-start;
+    justify-content: flex-start;
   }
 }

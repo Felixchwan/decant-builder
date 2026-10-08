@@ -236,12 +236,9 @@
    The Builder's approved header language, route-safe: tracked uppercase
    navigation, a 69px bar, a zone hairline, tailored geometry. The landing keeps
    what suits a public page: the header CTA stays, but as a quiet brass outline so
-   the hero's brass action is the strongest one in the first viewport. */
-@media (min-width: 981px) {
-  :root:has(.aurelian-hero) {
-    --site-header-height: 4.25rem;
-  }
-}
+   the hero's brass action is the strongest one in the first viewport. The bar's
+   height is NOT set here: its 4.25rem desktop value is the one shared rule in
+   globals.css, so every route's header has the same height as this one. */
 
 body:has(.aurelian-hero) .site-header::after {
   content: "";

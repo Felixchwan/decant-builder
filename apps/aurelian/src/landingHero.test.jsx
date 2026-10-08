@@ -139,12 +139,11 @@ describe("Aurelian landing hero (host-owned, route-safe)", () => {
   });
 
   it("brings the shared header into continuity on the landing route only", () => {
-    const root = rules.find(({ selector }) => selector === ":root:has(.aurelian-hero)");
-    expect(root.body).toMatch(/--site-header-height:\s*4\.25rem;/);
-    // Desktop only, matching the Builder header's own switch.
-    expect(withoutComments.slice(0, withoutComments.indexOf(":root:has(.aurelian-hero)"))).toMatch(
-      /@media \(min-width: 981px\)\s*\{\s*$/
-    );
+    // The bar's 4.25rem desktop height is the one shared rule in globals.css (see
+    // headerConsistency.test.js), not a landing-only override.
+    expect(withoutComments).not.toContain("--site-header-height");
+    expect(rules.find(({ selector }) => selector === ":root:has(.aurelian-hero)")).toBeUndefined();
+    expect(read(APP_ROOT, "src", "app", "globals.css")).toMatch(/@media \(min-width:981px\) \{ :root \{ --site-header-height:4\.25rem; \} \}/);
 
     const nav = rules.find(({ selector }) => selector === "body:has(.aurelian-hero) .desktop-nav a");
     expect(nav.body).toMatch(/text-transform:\s*uppercase;/);

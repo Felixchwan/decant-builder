@@ -125,11 +125,22 @@ describe("/contacto: the Discovery Box call to action and the page's order", () 
     expect(builder[0].attrs).toContain("contact-channel__cta");
   });
 
-  it("reads: intro, the three facts, WhatsApp, social links, then the call to action", () => {
+  it("reads: intro, the three facts, WhatsApp, the call to action, then the social links as the closing detail", () => {
     const at = (needle) => markup.indexOf(needle);
-    const sequence = ["<h1>", "data-fact=\"service\"", "data-fact=\"review\"", "data-fact=\"payment\"", "<h2>WhatsApp</h2>", "contact-channel__number", "wa.me", "landing-follow", "contact-channel__cta"].map(at);
+    const sequence = ["<h1>", "data-fact=\"service\"", "data-fact=\"review\"", "data-fact=\"payment\"", "<h2>WhatsApp</h2>", "contact-channel__number", "wa.me", "contact-channel__cta", "landing-follow"].map(at);
     expect(sequence.every((index) => index > -1)).toBe(true);
     expect([...sequence].sort((a, b) => a - b)).toEqual(sequence);
+  });
+
+  it("anchors the social cluster to the lower-right of the secondary column on desktop and left-aligns it when stacked", () => {
+    const css = readFileSync(join(APP_ROOT, "src", "app", "contact-page.css"), "utf8").replace(/\/\*[\s\S]*?\*\//g, "");
+    const desktop = css.split("@media")[0];
+    const stacked = css.slice(css.indexOf("@media (max-width: 900px)"));
+    const follow = (text) => text.match(/\.contact-channel \.landing-follow\s*\{([^}]*)\}/)?.[1] ?? "";
+    expect(follow(desktop)).toMatch(/align-self:\s*flex-end;/);
+    expect(follow(desktop)).toMatch(/justify-content:\s*flex-end;/);
+    expect(follow(stacked)).toMatch(/align-self:\s*flex-start;/);
+    expect(follow(stacked)).toMatch(/justify-content:\s*flex-start;/);
   });
 });
 
