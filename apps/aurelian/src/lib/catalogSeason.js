@@ -69,6 +69,19 @@ export function filterCatalogBySeason(catalog, season) {
   return season ? catalog.filter((item) => isSeasonCompatible(item, season)) : catalog;
 }
 
+// The /catalogo URL after choosing a season in the manual filter. `search` is the
+// current query string; every param but `season` is kept as it is (`fragrance=`
+// included). A valid season key sets the single `season` param in place;
+// null ("Todas") removes it, and with it any repeated or invalid values.
+export function buildCatalogSeasonHref(search = "", season = null) {
+  const params = new URLSearchParams(search);
+  const valid = parseCatalogSeason(season);
+  if (valid) params.set(CATALOG_SEASON_PARAM, valid);
+  else params.delete(CATALOG_SEASON_PARAM);
+  const query = params.toString();
+  return query ? `/catalogo?${query}` : "/catalogo";
+}
+
 // Where "Ver catálogo completo" leads: /catalogo with every query param except
 // `season` kept, so leaving seasonal mode never drops a compatible param such
 // as ?fragrance=. `searchParams` is Next's already-resolved object

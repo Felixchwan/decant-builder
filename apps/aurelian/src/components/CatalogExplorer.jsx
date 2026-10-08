@@ -1,11 +1,13 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { startTransition, useEffect, useMemo, useOptimistic, useRef, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { createCatalogAssetResolver } from "@discovery-box/catalog";
 import { aurelianCatalog } from "../merchant/catalog.js";
 import { filterCatalog } from "../lib/filterCatalog.js";
-import { filterCatalogBySeason, getCatalogSeasonLabel } from "../lib/catalogSeason.js";
+import { buildCatalogSeasonHref, filterCatalogBySeason, getCatalogSeasonLabel, parseCatalogSeason } from "../lib/catalogSeason.js";
+import { SEASONAL_SLOTS } from "../lib/seasonalSelection.js";
 import { resolveCatalogFragranceIntent } from "../lib/resolveCatalogFragranceIntent.js";
 import { loadPerceptualLearningState } from "../perceptualLearning/perceptualLearningPersistence.js";
 import { buildLearnerRecord } from "../perceptualLearning/learnerRecord.js";
@@ -71,9 +73,26 @@ export function CatalogLearningEvidenceLink({ fragranceId, fragranceName, learne
   );
 }
 
+// The app router exists inside the running app. A bare static render of this
+// component (the unit tests) has none, and then the season control falls back to
+// a plain navigation instead of failing.
+function useOptionalRouter() {
+  try {
+    return useRouter();
+  } catch {
+    return null;
+  }
+}
+
 // `season` is the validated public season key from /catalogo?season=..., or
-// null/undefined for the full catalog (the default, unchanged behavior).
-export function CatalogExplorer({ season = null }) {
+// null/undefined for the full catalog (the default, unchanged behavior). The URL
+// is the source of truth: the page reads it on the server and passes it down, the
+// manual "Temporada" control writes it back, and the select always shows what the
+// URL says. While a change is in flight the control and the list already show the
+// chosen season (optimistic), then settle on whatever the new URL resolves to.
+export function CatalogExplorer({ season: urlSeason = null }) {
+  const router = useOptionalRouter();
+  const [season, setOptimisticSeason] = useOptimistic(urlSeason);
   const [query, setQuery] = useState("");
   const [points, setPoints] = useState("all");
   const [requestedFragrance, setRequestedFragrance] = useState(null);
@@ -92,6 +111,17 @@ export function CatalogExplorer({ season = null }) {
   }, [points, query, season]);
   const seasonTotal = useMemo(() => filterCatalogBySeason(aurelianCatalog, season).length, [season]);
   const seasonLabel = season ? getCatalogSeasonLabel(season) : null;
+
+  // "Todas" removes only `season`; every other param (fragrance=, ...) is kept.
+  function changeSeason(value) {
+    const next = parseCatalogSeason(value);
+    const href = buildCatalogSeasonHref(window.location.search, next);
+    startTransition(() => {
+      setOptimisticSeason(next);
+      if (router) router.push(href, { scroll: false });
+      else window.location.assign(href);
+    });
+  }
 
   useEffect(() => {
     const frame = window.requestAnimationFrame(() => {
@@ -126,6 +156,12 @@ export function CatalogExplorer({ season = null }) {
           <select value={points} onChange={(event) => setPoints(event.target.value)}>
             <option value="all">Todos</option>
             {pointOptions.map((value) => <option key={value} value={value}>{value} {value === 1 ? "punto" : "puntos"}</option>)}
+          </select>
+        </label>
+        <label>Temporada
+          <select value={season ?? "all"} onChange={(event) => changeSeason(event.target.value)}>
+            <option value="all">Todas</option>
+            {SEASONAL_SLOTS.map(({ key, label }) => <option key={key} value={key}>{label}</option>)}
           </select>
         </label>
       </div>

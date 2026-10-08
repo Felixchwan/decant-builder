@@ -8,6 +8,7 @@ import "./landing-hero.css";
 import "./landing-video.css";
 import "./landing-seasons.css";
 import "./catalog-seasons.css";
+import "./catalog-controls.css";
 import "./landing-how-it-works.css";
 import "./landing-closing.css";
 import { SiteHeader } from "../components/SiteHeader.jsx";

@@ -1,0 +1,58 @@
+/* Aurelian visual evolution -- the standalone /catalogo: a tighter opening and a
+   three-control filter panel.
+
+   HOST-OWNED and /catalogo-only: every selector is keyed on `.catalog-page`, the
+   wrapper of the standalone catalog page (components/CatalogPageView.jsx). It
+   cannot reach the Builder, which renders its own `.catalog-controls` inside
+   `.builder-scope`, nor the landing, the shared packages or Discovery Decants. The
+   generic `.page-intro` and `.catalog-controls` rules in globals.css are left as
+   they were; this file only tightens them for this one page (it loads after
+   globals.css, at the same specificity).
+
+   Density: the page used to open with a hero-sized band of padding and a tall gap
+   before the controls. The eyebrow, headline and lede keep their type and their
+   editorial feel; only the space around them is tightened so the filter panel and
+   the first row of fragrances arrive sooner.
+
+   Controls: Search | Points | Season on one row where it is comfortable (search
+   about 58%, the two selects about 21% each, proportionally, never in fixed
+   pixels), search across the full first row with Points and Season sharing the
+   second on tablets, and one column on phones. Every control keeps its 3rem
+   minimum height. */
+
+.catalog-page {
+  padding-block: clamp(1.75rem, 3.5vw, 2.75rem) 2rem;
+}
+
+.catalog-page > .eyebrow {
+  margin-bottom: 0.6rem;
+}
+
+.catalog-page > h1 {
+  margin-bottom: 1rem;
+}
+
+.catalog-page > .lede {
+  margin-bottom: 0;
+}
+
+.catalog-page .catalog-controls {
+  grid-template-columns: minmax(0, 11fr) minmax(0, 4fr) minmax(0, 4fr);
+  margin-top: clamp(1.5rem, 2.5vw, 2rem);
+}
+
+@media (max-width: 720px) {
+  .catalog-page .catalog-controls {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .catalog-page .catalog-controls > label:first-child {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 560px) {
+  .catalog-page .catalog-controls {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
