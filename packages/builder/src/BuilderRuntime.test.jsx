@@ -293,6 +293,108 @@ describe("Fragrance details: result-scoped navigation wiring", () => {
   });
 });
 
+describe("Initial details intent: details only, through the existing open path", () => {
+  const effectStart = runtimeSource.indexOf("const hasOpenedInitialDetailRef = useRef(false);");
+  const effectEnd = runtimeSource.indexOf("const closePerfumeDetails = useCallback(");
+  const effectSource = runtimeSource.slice(effectStart, effectEnd);
+
+  it("is a generic, merchant-neutral prop that is resolved by the selection module and never mutates the selection", () => {
+    expect(runtimeSource).toContain("initialDetailFragranceId = null,");
+    expect(runtimeSource).toContain("resolveInitialDetailIntent({");
+    expect(effectStart).toBeGreaterThan(-1);
+    expect(effectSource).not.toMatch(/setSelectedPerfumes|addPerfume|setPendingPerfume|setActiveFilters|setSearchQuery|setComposer/);
+  });
+
+  it("opens through the same openPerfumeDetails a card click uses, tagged with its own analytics source", () => {
+    expect(effectSource).toContain('openPerfumeDetails(initialDetailPerfume, "initial_detail");');
+    expect(runtimeSource.match(/function openPerfumeDetails\(/g)).toHaveLength(1);
+  });
+
+  it("waits for the owned portal root and opens at most once", () => {
+    expect(effectSource).toContain("!portalRoot");
+    expect(effectSource).toContain("hasOpenedInitialDetailRef.current");
+    expect(effectSource).toMatch(/\[initialDetailPerfume, portalRoot\]/);
+  });
+
+  it("reports an unknown id with the existing 'fragrance not available' status, not a new string", () => {
+    expect(runtimeSource).toContain('initialDetailIntent.status === "unavailable" ? t("app.initialFragranceUnavailable")');
+  });
+
+  it("leaves the initial mobile tab alone: details are a modal over whichever tab is open", () => {
+    expect(runtimeSource).toContain('initialFragranceIntent && initialFragranceIntent.status !== "unavailable" ? "box" : "catalog"');
+  });
+});
+
+describe("PerfumeDetailsModal: dialog semantics, focus and containment", () => {
+  const modalStart = runtimeSource.indexOf("function PerfumeDetailsModal(");
+  const modalEnd = runtimeSource.indexOf("function DetailTagGroup(");
+  const modalSource = runtimeSource.slice(modalStart, modalEnd);
+
+  it("is a modal dialog named by the visible perfume title", () => {
+    expect(modalStart).toBeGreaterThan(-1);
+    expect(modalSource).toContain('role="dialog"');
+    expect(modalSource).toContain('aria-modal="true"');
+    expect(modalSource).toContain("aria-labelledby={titleId}");
+    expect(modalSource).toContain("<h3 id={titleId}>{perfume.name}</h3>");
+    expect(modalSource).toContain("const titleId = useId();");
+    // The overlay is presentation only; the dialog itself is focusable so a click inside it keeps focus in.
+    expect(modalSource).toContain('<div className="modal-overlay" role="presentation" onClick={handleClose}>');
+    expect(modalSource).toContain("tabIndex={-1}");
+  });
+
+  it("moves focus in on open: the remembered Previous/Next control, else Close, else the dialog itself", () => {
+    expect(modalSource).toContain('dialog.querySelector(`[data-detail-focus="${remembered}"]:not([disabled])`)');
+    expect(modalSource).toContain('dialog.querySelector(".perfume-details-close")');
+    expect(modalSource).toMatch(/\[portalRoot, focusMemoryRef\]/);
+    expect(modalSource).toContain('data-detail-focus="previous"');
+    expect(modalSource).toContain('data-detail-focus="next"');
+  });
+
+  it("keeps Tab inside the dialog while it is the topmost layer, and defers to the stacked rare-selection confirmation", () => {
+    expect(modalSource).toContain('event.key !== "Tab" || !isFocusContained');
+    expect(modalSource).toContain("onKeyDown={handleDialogKeyDown}");
+    expect(runtimeSource).toContain("isFocusContained={!pendingPerfume}");
+  });
+
+  it("takes focus back into the dialog when a layer stacked above it closes, instead of leaving it on <body>", () => {
+    expect(modalSource).toContain("if (!isFocusContained || !dialog || dialog.contains(dialog.ownerDocument.activeElement)) {");
+    expect(modalSource).toContain('dialog.querySelector(".perfume-details-meta-add:not([disabled])")');
+    expect(modalSource).toMatch(/\[isFocusContained\]\);/);
+  });
+
+  it("keeps every existing behavior: Escape / arrows, scroll lock, close, navigation, add", () => {
+    expect(runtimeSource).toContain('if (event.key === "Escape") {\n        closePerfumeDetails();'.replace(/\n/g, runtimeSource.includes("\r\n") ? "\r\n" : "\n"));
+    expect(modalSource).toContain("acquireBodyScrollLock(document)");
+    expect(modalSource).toContain("onClick={handleClose}");
+    expect(modalSource).toContain("onClick={onPrevious}");
+    expect(modalSource).toContain("onClick={onNext}");
+    expect(modalSource).toContain("onClick={handleAddToBox}");
+  });
+});
+
+describe("Details focus restoration: opener first, stable Builder surface otherwise", () => {
+  it("remembers the opener once per open (not per previous/next remount), and nothing for a deep link", () => {
+    const openStart = runtimeSource.indexOf("function openPerfumeDetails(");
+    const open = runtimeSource.slice(openStart, openStart + 700);
+
+    expect(open).toContain("if (!wasDetailOpenRef.current) {");
+    expect(open).toContain("document.activeElement");
+    expect(open).toContain("opener !== document.body");
+  });
+
+  it("returns focus to the opener when it can still take it, else to the Builder's main surface, never <body>", () => {
+    expect(runtimeSource).toContain("const target = isRestorableFocusTarget(opener) ? opener : builderMainRef.current;");
+    expect(runtimeSource).toContain('<main className="app" ref={builderMainRef} tabIndex={-1} style={{ outline: "none" }}>');
+    expect(runtimeSource).toContain("target?.focus({ preventScroll: true });");
+  });
+
+  it("does not touch analytics: the details-opened sources are exactly the ones that existed", () => {
+    const sources = [...runtimeSource.matchAll(/openPerfumeDetails\([^,]+,\s*"([a-z_]+)"/g)].map((match) => match[1]);
+
+    expect([...new Set(sources)].sort()).toEqual(["composer_proposal", "initial_detail", "intent_recommendation", "manual", "note_explorer"]);
+  });
+});
+
 describe("Composer proposal generation lifecycle wiring", () => {
   const start = runtimeSource.indexOf("function handleComposeMyBox()");
   const end = runtimeSource.indexOf("function handleCancelComposerProposal()");

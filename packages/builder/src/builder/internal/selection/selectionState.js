@@ -128,6 +128,36 @@ export function applyInitialFragranceIntent({
   return { intent, selectedPerfumes: nextSelectedPerfumes };
 }
 
+// A details-only counterpart to the initial fragrance (add) intent above: it
+// resolves which catalog record a host asked to see opened, and never touches
+// the selection. An add intent, when present, always wins -- the two are never
+// both honored -- so a details request can't stack a modal on top of the add
+// flow's own confirmation.
+//   "none"        no details intent (absent, or an add intent took precedence)
+//   "ready"       the canonical catalog record to open
+//   "unavailable" an id was requested that this catalog doesn't contain
+export function resolveInitialDetailIntent({
+  initialDetailFragranceId,
+  initialFragranceId = null,
+  catalog,
+}) {
+  if (
+    initialDetailFragranceId === null ||
+    initialDetailFragranceId === undefined ||
+    (initialFragranceId !== null && initialFragranceId !== undefined)
+  ) {
+    return { status: "none", perfume: null };
+  }
+
+  const perfume = Number.isInteger(initialDetailFragranceId)
+    ? catalog.find((item) => item?.id === initialDetailFragranceId)
+    : null;
+
+  return perfume
+    ? { status: "ready", perfume }
+    : { status: "unavailable", perfume: null };
+}
+
 export function removeSelectedPerfumeAtIndex({
   selectedPerfumes,
   index,

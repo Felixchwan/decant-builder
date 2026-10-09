@@ -1,12 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { DiscoveryBoxBuilder } from "@discovery-box/builder";
 import { createWhatsAppFinalizationAdapter } from "@discovery-box/builder/finalization";
 import { createCatalogAssetResolver, notes } from "@discovery-box/catalog";
 import { aurelianCatalog } from "../merchant/catalog.js";
 import { aurelianConfig } from "../merchant/config.js";
-import { parseFragranceIntent, FRAGRANCE_QUERY_PARAM } from "../lib/parseFragranceIntent.js";
+import { FRAGRANCE_QUERY_PARAM } from "../lib/parseFragranceIntent.js";
+import { resolveBuilderIntentsFromSearch, DETAILS_QUERY_PARAM } from "../lib/parseDetailsIntent.js";
 import { getIntentRecommendationHint } from "../discoveryIntent/intentRecommendationPolicy.js";
 import { explainRecommendation } from "../discoveryIntent/recommendationExplanation.js";
 import { createAnalytics, buildAnalyticsContext } from "../analytics/createAnalytics.js";
@@ -39,11 +41,28 @@ export function BuilderExperience({
   isDevelopment = false,
   analyticsDebugEnabled = false,
 }) {
-  const [initialFragranceId] = useState(() =>
-    typeof window === "undefined" ? null : parseFragranceIntent(window.location.search),
+  // Two separate deep links, read once at mount: ?fragrance=<id> adds to the box,
+  // ?details=<id> only opens that perfume's details. A valid add intent wins if both
+  // are present (see resolveBuilderIntentsFromSearch).
+  //
+  // The query comes from Next's own useSearchParams(), NOT window.location. On a
+  // client-side navigation with this component's chunk already loaded (every visit
+  // after the first in a session), the component renders in the same commit that
+  // updates the URL -- and during that render window.location still holds the PREVIOUS
+  // page's URL, so the intent would be read as empty and then stripped by the effect
+  // below. The router's value is already the new one in that render (the same reason
+  // ObservationCaptureFlow reads it). window.location is only the fallback when there is
+  // no App Router context (unit tests, a bare render).
+  const searchParams = useSearchParams();
+  const [{ initialFragranceId, initialDetailFragranceId }] = useState(() =>
+    resolveBuilderIntentsFromSearch(
+      searchParams ? searchParams.toString() : typeof window === "undefined" ? "" : window.location.search,
+    ),
   );
+  // A details link skips the intent screen just like an add link: the visitor asked
+  // for one specific perfume, so "what are you looking for today" is not the next step.
   const [skipsDiscoveryIntent] = useState(
-    () => initialFragranceId !== null || hasPersistedBox(),
+    () => initialFragranceId !== null || initialDetailFragranceId !== null || hasPersistedBox(),
   );
   const [selectedIntentId, setSelectedIntentId] = useState(null);
   // Read directly from the provider wrapping this component's own subtree
@@ -69,9 +88,12 @@ export function BuilderExperience({
   );
 
   useEffect(() => {
+    // Both intents are one-shot: once consumed (valid or not) they leave the URL,
+    // so a reload or a shared link can't repeat them. Only these two params go.
     const url = new URL(window.location.href);
-    if (url.searchParams.has(FRAGRANCE_QUERY_PARAM)) {
-      url.searchParams.delete(FRAGRANCE_QUERY_PARAM);
+    const consumed = [FRAGRANCE_QUERY_PARAM, DETAILS_QUERY_PARAM].filter((param) => url.searchParams.has(param));
+    if (consumed.length > 0) {
+      consumed.forEach((param) => url.searchParams.delete(param));
       window.history.replaceState(window.history.state, "", `${url.pathname}${url.search}${url.hash}`);
     }
   }, []);
@@ -113,6 +135,7 @@ export function BuilderExperience({
       config={aurelianConfig}
       isDevelopment={isDevelopment}
       initialFragranceId={initialFragranceId}
+      initialDetailFragranceId={initialDetailFragranceId}
       initialRecommendationHint={getIntentRecommendationHint(selectedIntentId)}
       explainRecommendation={explainRecommendation}
       finalizationAdapter={finalizationAdapter}

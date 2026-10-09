@@ -3,6 +3,7 @@ import { BuilderMount } from "../../components/BuilderMount.jsx";
 import { IntroPreferenceProvider } from "../../components/IntroPreferenceProvider.jsx";
 import { aurelianConfig } from "../../merchant/config.js";
 import { FRAGRANCE_QUERY_PARAM, FRAGRANCE_ID_PATTERN } from "../../lib/parseFragranceIntent.js";
+import { DETAILS_QUERY_PARAM } from "../../lib/parseDetailsIntent.js";
 
 export const metadata = { title: "Construye tu Discovery Box", description: "Selecciona 6–14 fragancias para crear tu Discovery Box Aurelian.", alternates: { canonical: "/build-your-box" } };
 
@@ -31,9 +32,10 @@ export const metadata = { title: "Construye tu Discovery Box", description: "Sel
 //
 // This performs the exact same shallow existence check BuilderExperience
 // performs — not persistence validation, just "does a value exist under this
-// key" — using the same storage key and the same fragrance-param identity
-// (FRAGRANCE_QUERY_PARAM / FRAGRANCE_ID_PATTERN) so the two can't drift
-// apart silently. See entryHeaderVisibility test coverage in
+// key" — using the same storage key and the same deep-link identities
+// (FRAGRANCE_QUERY_PARAM, DETAILS_QUERY_PARAM, FRAGRANCE_ID_PATTERN) so the two
+// can't drift apart silently. Either deep link (add to box, or open details)
+// skips the intent screen, so either keeps this header visible. See entryHeaderVisibility test coverage in
 // BuilderExperience.test.jsx, which executes this exact script text against
 // BuilderExperience's real gate to catch any future disagreement. If this
 // script fails for any reason, the header simply stays visible — never worse
@@ -48,10 +50,13 @@ export const metadata = { title: "Construye tu Discovery Box", description: "Sel
 export const ENTRY_HEADER_VISIBILITY_SCRIPT = `
 try {
   var params = new URLSearchParams(window.location.search);
-  var values = params.getAll(${JSON.stringify(FRAGRANCE_QUERY_PARAM)});
-  var hasFragranceLink = values.length === 1 && new RegExp(${JSON.stringify(FRAGRANCE_ID_PATTERN.source)}).test(values[0]);
+  var idPattern = new RegExp(${JSON.stringify(FRAGRANCE_ID_PATTERN.source)});
+  var hasIntentLink = [${JSON.stringify(FRAGRANCE_QUERY_PARAM)}, ${JSON.stringify(DETAILS_QUERY_PARAM)}].some(function (name) {
+    var values = params.getAll(name);
+    return values.length === 1 && idPattern.test(values[0]);
+  });
   var hasBox = window.localStorage.getItem(${JSON.stringify(aurelianConfig.persistence.storageKey)}) !== null;
-  if (!hasFragranceLink && !hasBox) {
+  if (!hasIntentLink && !hasBox) {
     var header = document.getElementById('builder-entry-header');
     if (header) header.style.display = 'none';
   }

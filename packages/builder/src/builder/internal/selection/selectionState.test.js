@@ -6,6 +6,7 @@ import {
   getSelectedPerfumeIds,
   hydrateSelectedPerfumes,
   removeSelectedPerfumeAtIndex,
+  resolveInitialDetailIntent,
   resolveInitialFragranceIntent,
   reorderSelectedPerfumes,
 } from "./selectionState.js";
@@ -281,6 +282,38 @@ describe("selectionState", () => {
       expect(resolveInitialFragranceIntent({ initialFragranceId: 99, catalog, selectedPerfumes: selected, maxSelectableSlots: 2 })).toEqual({ status: "unavailable", perfume: null });
       expect(resolveInitialFragranceIntent({ initialFragranceId: "1", catalog, selectedPerfumes: selected, maxSelectableSlots: 2 })).toEqual({ status: "unavailable", perfume: null });
       expect(ids(selected)).toEqual([1]);
+    });
+  });
+
+  describe("resolveInitialDetailIntent", () => {
+    it("resolves the canonical catalog record to open, never touching a selection", () => {
+      const catalog = freezeSelection([perfume(1), perfume(2), perfume(3)]);
+
+      expect(resolveInitialDetailIntent({ initialDetailFragranceId: 2, catalog })).toEqual({ status: "ready", perfume: catalog[1] });
+      expect(ids(catalog)).toEqual([1, 2, 3]);
+    });
+
+    it("is details-only: a warned (rare-selection) perfume resolves like any other and carries no confirmation state", () => {
+      const catalog = [perfume(1), perfume(500, { warningMessage: "rare" })];
+      const result = resolveInitialDetailIntent({ initialDetailFragranceId: 500, catalog });
+
+      expect(result.status).toBe("ready");
+      expect(Object.keys(result)).toEqual(["status", "perfume"]);
+    });
+
+    it("reports unknown and non-integer ids as unavailable, without throwing", () => {
+      const catalog = [perfume(1)];
+
+      expect(resolveInitialDetailIntent({ initialDetailFragranceId: 99, catalog })).toEqual({ status: "unavailable", perfume: null });
+      expect(resolveInitialDetailIntent({ initialDetailFragranceId: "1", catalog })).toEqual({ status: "unavailable", perfume: null });
+    });
+
+    it("is inactive when absent, and an add intent always takes precedence", () => {
+      const catalog = [perfume(1), perfume(2)];
+
+      expect(resolveInitialDetailIntent({ initialDetailFragranceId: null, catalog })).toEqual({ status: "none", perfume: null });
+      expect(resolveInitialDetailIntent({ catalog })).toEqual({ status: "none", perfume: null });
+      expect(resolveInitialDetailIntent({ initialDetailFragranceId: 2, initialFragranceId: 1, catalog })).toEqual({ status: "none", perfume: null });
     });
   });
 

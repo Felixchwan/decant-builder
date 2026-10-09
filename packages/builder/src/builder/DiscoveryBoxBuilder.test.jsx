@@ -104,6 +104,19 @@ describe("DiscoveryBoxBuilder asset resolver boundary", () => {
     expect(appCalls.map(({ initialFragranceId }) => initialFragranceId)).toEqual([null, 104]);
   });
 
+  it("forwards an optional details-only initial intent without changing the default", () => {
+    const assetResolver = createCatalogAssetResolver({ basePath: "/merchant-assets" });
+
+    renderToStaticMarkup(
+      <>
+        <DiscoveryBoxBuilder catalog={[]} config={discoveryDecantsConfig} assetResolver={assetResolver} />
+        <DiscoveryBoxBuilder catalog={[]} config={discoveryDecantsConfig} assetResolver={assetResolver} initialDetailFragranceId={104} />
+      </>,
+    );
+
+    expect(appCalls.map(({ initialDetailFragranceId }) => initialDetailFragranceId)).toEqual([null, 104]);
+  });
+
   it("forwards an optional initial recommendation hint expressed only in Composer's own request vocabulary, without changing the default", () => {
     const assetResolver = createCatalogAssetResolver({ basePath: "/merchant-assets" });
     const hint = { strategy: "signature", preferredOccasions: ["daily"], preferredVibes: ["fresh"], excludedPerfumeIds: [] };

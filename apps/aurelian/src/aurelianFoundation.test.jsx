@@ -331,7 +331,13 @@ describe("Aurelian application foundation", () => {
     const mountSource = readFileSync(join(APP_ROOT, "src", "components", "BuilderMount.jsx"), "utf8");
     expect(mountSource).toContain("ssr: false");
     const experienceSource = readFileSync(join(APP_ROOT, "src", "components", "BuilderExperience.jsx"), "utf8");
-    expect(experienceSource).toContain("parseFragranceIntent(window.location.search)");
+    // Intents come from the router's own search params (the new URL is already there in the
+    // navigation render; window.location still holds the previous page's), with
+    // window.location only as the no-router fallback. See BuilderExperience.test.jsx.
+    expect(experienceSource).toContain("const searchParams = useSearchParams();");
+    expect(experienceSource).toContain("resolveBuilderIntentsFromSearch(");
+    expect(experienceSource).toContain("searchParams ? searchParams.toString() :");
+    expect(experienceSource).toContain("window.location.search");
     expect(experienceSource).toContain("window.history.replaceState");
     expect(experienceSource).toContain("initialFragranceId={initialFragranceId}");
     expect(mountSource).not.toContain("aurelianCatalog");

@@ -206,3 +206,80 @@ describe("CatalogLearningEvidenceLink (Phase 5.0)", () => {
     expect(markup).toContain("Ver lo que noté sobre esta fragancia");
   });
 });
+
+describe("CatalogExplorer bottle and name: explore details, never add", () => {
+  // One render for the whole file: the catalog is 92 cards, so rendering it per card would be quadratic.
+  const markup = renderToStaticMarkup(<CatalogExplorer />);
+  const cardMarkup = (item) => {
+    const start = markup.indexOf(`data-fragrance-id="${item.id}"`);
+    const end = markup.indexOf("</article>", start);
+    return markup.slice(start, end);
+  };
+  const links = (html) => [...html.matchAll(/<a\b([^>]*)>([\s\S]*?)<\/a>/g)].map(([, attrs, inner]) => ({ attrs, inner }));
+  const attr = (attrs, name) => attrs.match(new RegExp(String.raw`(?:^|\s)${name}="([^"]*)"`))?.[1];
+
+  it("links both the bottle and the name to the Builder details, for every card, with ?details= and never ?fragrance=", () => {
+    aurelianCatalog.forEach((item) => {
+      const href = `/build-your-box?details=${encodeURIComponent(item.id)}`;
+      const card = cardMarkup(item);
+      const detailsLinks = links(card).filter(({ attrs }) => attr(attrs, "href") === href);
+
+      expect(detailsLinks, item.name).toHaveLength(2);
+      expect(card).toContain(`<h2><a `);
+      expect(card).toContain(`>${renderToStaticMarkup(<>{item.name}</>)}</a></h2>`);
+    });
+  });
+
+  it("keeps the Add button on the add contract: ?fragrance=, and nothing else carries it", () => {
+    const item = aurelianCatalog[0];
+    const card = cardMarkup(item);
+    const add = links(card).filter(({ attrs }) => attr(attrs, "href") === `/build-your-box?fragrance=${item.id}`);
+
+    expect(add).toHaveLength(1);
+    expect(add[0].attrs).toContain("product-card__action");
+    expect(add[0].inner).toBe("Agregar a mi Discovery Box");
+    expect(attr(add[0].attrs, "aria-label")).toBe(`Agregar ${item.name} a mi Discovery Box`);
+    // The details links never add, and the add link never merely explores.
+    expect(links(card).filter(({ attrs }) => /details=/.test(attr(attrs, "href") ?? "")).every(({ attrs }) => !/fragrance=/.test(attr(attrs, "href")))).toBe(true);
+  });
+
+  it("gives the name link one clear accessible name that contains its visible text, and the bottle link no second tab stop", () => {
+    const item = aurelianCatalog[0];
+    const [bottle, name] = links(cardMarkup(item)).filter(({ attrs }) => /details=/.test(attr(attrs, "href") ?? ""));
+
+    expect(attr(name.attrs, "aria-label")).toBe(`Ver notas y detalles de ${item.name} en el Builder`);
+    expect(attr(name.attrs, "aria-label")).toContain(item.name);
+    expect(name.attrs).not.toMatch(/tabindex/);
+    expect(name.attrs).not.toMatch(/aria-hidden/);
+
+    // The bottle repeats the name link for pointer/touch only: out of the tab order and the a11y tree.
+    expect(attr(bottle.attrs, "aria-hidden")).toBe("true");
+    expect(attr(bottle.attrs, "tabindex")).toBe("-1");
+    expect(bottle.inner).toContain(`alt="Frasco de ${item.name}"`);
+  });
+
+  it("does not make the whole card clickable: the article holds links only on the bottle, name, add action and learning disclosure", () => {
+    const item = aurelianCatalog[0];
+    const card = cardMarkup(item);
+
+    expect(card).not.toMatch(/<article[^>]*(?:onclick|role="link")/i);
+    expect(links(card).map(({ attrs }) => attr(attrs, "href"))).toEqual([
+      `/build-your-box?details=${item.id}`,
+      `/build-your-box?details=${item.id}`,
+      `/build-your-box?fragrance=${item.id}`,
+      `/mis-descubrimientos/observar?fragrance=${item.id}`,
+      `/mis-descubrimientos/comparar?fragrance=${item.id}`,
+      "/mis-descubrimientos",
+    ]);
+  });
+
+  it("preserves the 'Explorar esta fragancia' learning disclosure exactly (native <details>, its own purpose)", () => {
+    const card = cardMarkup(aurelianCatalog[0]);
+
+    expect(card).toContain('<details class="product-card__learning">');
+    expect(card).toContain("Explorar esta fragancia");
+    expect(card).toContain("Registrar lo que percibo");
+    expect(card).toContain("Comparar con otra");
+    expect(card).not.toMatch(/<details[^>]*>[\s\S]*details=/);
+  });
+});

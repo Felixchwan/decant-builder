@@ -9,6 +9,7 @@ import { filterCatalog } from "../lib/filterCatalog.js";
 import { buildCatalogSeasonHref, filterCatalogBySeason, getCatalogSeasonLabel, parseCatalogSeason } from "../lib/catalogSeason.js";
 import { SEASONAL_SLOTS } from "../lib/seasonalSelection.js";
 import { resolveCatalogFragranceIntent } from "../lib/resolveCatalogFragranceIntent.js";
+import { DETAILS_QUERY_PARAM } from "../lib/parseDetailsIntent.js";
 import { loadPerceptualLearningState } from "../perceptualLearning/perceptualLearningPersistence.js";
 import { buildLearnerRecord } from "../perceptualLearning/learnerRecord.js";
 import { buildEvidenceRevisit } from "../perceptualLearning/evidenceRevisit.js";
@@ -29,6 +30,12 @@ function getCatalogTierPresentation(id) {
     color: "#a78bfa",
     background: "rgba(124,58,237,0.16)",
   };
+}
+
+// Explore a perfume's details in the Builder. Deliberately NOT ?fragrance=, which
+// means "add to my box" and stays on the "Agregar a mi Discovery Box" button only.
+function buildBuilderDetailsHref(fragranceId) {
+  return `/build-your-box?${DETAILS_QUERY_PARAM}=${encodeURIComponent(fragranceId)}`;
 }
 
 function getStorage() {
@@ -174,8 +181,19 @@ export function CatalogExplorer({ season: urlSeason = null }) {
             const tier = getCatalogTierPresentation(item.id);
             return (
               <article className={`product-card${requestedFragrance?.id === item.id ? " product-card--highlighted" : ""}`} data-fragrance-id={item.id} key={item.id} ref={requestedFragrance?.id === item.id ? requestedCardRef : undefined} tabIndex={requestedFragrance?.id === item.id ? -1 : undefined}>
-                <div className="product-card__image"><img alt={`Frasco de ${item.name}`} loading="lazy" src={resolveAsset(item.imageAssetKey)} /></div>
-                <p className="eyebrow">{item.brand}</p><h2>{item.name}</h2>
+                {/* The bottle and the name both lead to the same place: this perfume's details in the Builder
+                    (?details=, which never adds it to the box). The name link is the one keyboard stop and the
+                    one announced link; the bottle link repeats it for pointer and touch users only, so it is
+                    taken out of the tab order and the accessibility tree rather than read twice. */}
+                <div className="product-card__image">
+                  <Link aria-hidden="true" className="product-card__image-link" href={buildBuilderDetailsHref(item.id)} tabIndex={-1}>
+                    <img alt={`Frasco de ${item.name}`} loading="lazy" src={resolveAsset(item.imageAssetKey)} />
+                  </Link>
+                </div>
+                <p className="eyebrow">{item.brand}</p>
+                <h2>
+                  <Link aria-label={`Ver notas y detalles de ${item.name} en el Builder`} className="product-card__name-link" href={buildBuilderDetailsHref(item.id)}>{item.name}</Link>
+                </h2>
                 <div className="product-card__actions">
                   <p
                     className="product-card__points"

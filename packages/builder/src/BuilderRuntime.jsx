@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 import { getTierData } from "./utils/tierUtils";
 import PerfumeCard from "./components/PerfumeCard";
 import FilterBar from "./components/FilterBar";
@@ -48,8 +48,14 @@ import { useBuilderPortalRoot } from "./builder/internal/portal/useBuilderPortal
 import { renderOwnedPortal } from "./builder/internal/portal/renderOwnedPortal.jsx";
 import { acquireBodyScrollLock } from "./builder/internal/portal/bodyScrollLock.js";
 import {
+  getFocusableElements,
+  getTabWrapTarget,
+  isRestorableFocusTarget,
+} from "./builder/internal/portal/modalFocus.js";
+import {
   addSelectedPerfume,
   applyInitialFragranceIntent,
+  resolveInitialDetailIntent,
   canAddPerfume,
   removeSelectedPerfumeAtIndex,
   reorderSelectedPerfumes,
@@ -79,6 +85,10 @@ function App({
   analytics = noopAnalytics,
   finalizationAdapter,
   initialFragranceId = null,
+  // Details-only counterpart to initialFragranceId: opens this perfume's detail
+  // view once after mount and never touches the box. Ignored when an
+  // initialFragranceId is also supplied (see resolveInitialDetailIntent).
+  initialDetailFragranceId = null,
   initialRecommendationHint = null,
   explainRecommendation,
   assetResolver,
@@ -174,6 +184,15 @@ function App({
     [initialFragranceId, MAX_SELECTABLE_SLOTS, perfumes, persistedBuilderState.selectedPerfumes]
   );
   const initialFragranceIntent = initialSelectionState.intent;
+  const initialDetailIntent = useMemo(
+    () =>
+      resolveInitialDetailIntent({
+        initialDetailFragranceId,
+        initialFragranceId,
+        catalog: perfumes,
+      }),
+    [initialDetailFragranceId, initialFragranceId, perfumes]
+  );
   const [selectedPerfumes, setSelectedPerfumes] = useState(initialSelectionState.selectedPerfumes);
   const [curatorBonusPreference, setCuratorBonusPreference] = useState(
     persistedBuilderState.curatorBonusPreference
@@ -183,6 +202,7 @@ function App({
   );
   const [restoreMessage, setRestoreMessage] = useState(() =>
     getInitialFragranceIntentMessage(initialFragranceIntent, t) ||
+    (initialDetailIntent.status === "unavailable" ? t("app.initialFragranceUnavailable") : "") ||
     (persistedBuilderState.wasRestored ? builderConfig.persistence.restoreMessage : "")
   );
   const [activeMobileTab, setActiveMobileTab] = useState(
@@ -252,6 +272,15 @@ function App({
   // details were opened from a scoped collection (a Note Explorer result set).
   // null = the default scope, the catalog's own visible list.
   const [detailScopedPerfumeIds, setDetailScopedPerfumeIds] = useState(null);
+  // Focus bookkeeping for the details dialog, kept here (not in the modal) because
+  // the modal remounts on every previous/next: the element that opened it, which
+  // modal control had focus (so Previous/Next keep it across a remount), whether a
+  // dialog was open, and the stable surface focus falls back to when there is no
+  // opener (an initial deep link) or it is gone.
+  const detailTriggerRef = useRef(null);
+  const detailFocusMemoryRef = useRef(null);
+  const wasDetailOpenRef = useRef(false);
+  const builderMainRef = useRef(null);
   const intentRecommendationsRef = useRef(null);
   const fullCatalogRef = useRef(null);
   const composerGenerationRunnerRef = useRef(null);
@@ -587,6 +616,14 @@ const isComposerProposalStale = isComposerBoxProposalStale(
   // Note Explorer's currently displayed results. Omitted, navigation is over
   // the catalog's visible list exactly as before.
   function openPerfumeDetails(perfume, source, scopedPerfumeIds = null) {
+    if (!wasDetailOpenRef.current) {
+      // Remember what opened the dialog so closing can give focus back to it. An
+      // initial deep link has no opener (focus is on <body>): nothing to remember.
+      const opener = typeof document === "undefined" ? null : document.activeElement;
+      detailTriggerRef.current = opener && opener !== document.body ? opener : null;
+      detailFocusMemoryRef.current = null;
+    }
+
     const navigationPerfumes = resolveDetailNavigationPerfumes({
       scopedPerfumeIds,
       catalog: perfumes,
@@ -603,10 +640,48 @@ const isComposerProposalStale = isComposerBoxProposalStale(
     });
   }
 
+  // Opens the host-requested details once, through the same path a card click
+  // takes. It waits for the portal root (the modal renders nothing without it),
+  // and the ref keeps it to a single open even if effects re-run.
+  const hasOpenedInitialDetailRef = useRef(false);
+  const initialDetailPerfume = initialDetailIntent.perfume;
+  useEffect(() => {
+    if (!initialDetailPerfume || !portalRoot || hasOpenedInitialDetailRef.current) {
+      return;
+    }
+
+    hasOpenedInitialDetailRef.current = true;
+    openPerfumeDetails(initialDetailPerfume, "initial_detail");
+    // openPerfumeDetails is re-created every render; this must run once per
+    // resolved perfume + ready portal, not on every render.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialDetailPerfume, portalRoot]);
+
   const closePerfumeDetails = useCallback(() => {
     setDetailPerfume(null);
     setDetailScopedPerfumeIds(null);
   }, []);
+
+  // When the details close, focus goes back to whatever opened them if it can
+  // still take it; otherwise (deep link, or the opener was removed/hidden) to the
+  // Builder's own main surface, never to <body>.
+  useEffect(() => {
+    if (detailPerfume) {
+      wasDetailOpenRef.current = true;
+      return;
+    }
+
+    if (!wasDetailOpenRef.current) {
+      return;
+    }
+
+    wasDetailOpenRef.current = false;
+    const opener = detailTriggerRef.current;
+    detailTriggerRef.current = null;
+    detailFocusMemoryRef.current = null;
+    const target = isRestorableFocusTarget(opener) ? opener : builderMainRef.current;
+    target?.focus({ preventScroll: true });
+  }, [detailPerfume]);
 
   function openNoteExplorerPerfumeDetails(perfumeId, orderedPerfumeIds) {
     const perfume = perfumes.find((item) => item.id === perfumeId);
@@ -1112,7 +1187,10 @@ const confirmAddPerfume = () => {
       style={builderThemeStyle}
       data-builder-instance={builderInstanceId}
     >
-    <main className="app">
+    {/* tabIndex -1 + no outline: a programmatic-only focus target. Focus returns here when
+        the details dialog closes with no opener to go back to; it is not a control, so it
+        draws no ring (inline, because the shared stylesheet is frozen -- styleNamespace.test). */}
+    <main className="app" ref={builderMainRef} tabIndex={-1} style={{ outline: "none" }}>
       {restoreMessage && (
         <p className="builder-restore-message" role="status">
           {restoreMessage}
@@ -1316,6 +1394,8 @@ const confirmAddPerfume = () => {
         onAddToBox={addPerfume}
         onPrevious={() => navigateDetailPerfume(-1)}
         onNext={() => navigateDetailPerfume(1)}
+        focusMemoryRef={detailFocusMemoryRef}
+        isFocusContained={!pendingPerfume}
         previousPerfume={previousDetailPerfume}
         nextPerfume={nextDetailPerfume}
         canNavigate={canNavigateDetails}
@@ -1522,9 +1602,13 @@ function PerfumeDetailsModal({
   previousPerfume,
   nextPerfume,
   canNavigate,
+  focusMemoryRef,
+  isFocusContained = true,
   onClose,
 }) {
   const t = translator?.t || ((key) => key);
+  const dialogRef = useRef(null);
+  const titleId = useId();
   const touchStartRef = useRef(null);
   const touchCurrentRef = useRef(null);
   const swipeFeedbackTimeoutRef = useRef(null);
@@ -1571,6 +1655,70 @@ function PerfumeDetailsModal({
       }
     };
   }, []);
+
+  // Focus enters the dialog when it opens: the control the user was just on
+  // (Previous/Next survive the remount a navigation causes), else Close. Runs
+  // when the portal exists, since the dialog renders nothing before that.
+  useEffect(() => {
+    const dialog = dialogRef.current;
+
+    if (!dialog) {
+      return;
+    }
+
+    const remembered = focusMemoryRef?.current;
+    const target =
+      (remembered && dialog.querySelector(`[data-detail-focus="${remembered}"]:not([disabled])`)) ||
+      dialog.querySelector(".perfume-details-close") ||
+      dialog;
+    target.focus({ preventScroll: true });
+  }, [portalRoot, focusMemoryRef]);
+
+  // When a layer stacked above the dialog (the rare-selection confirmation) goes
+  // away, focus was inside that layer and is now on <body>; bring it back to the
+  // dialog -- Add to box if it can still be pressed, else Close.
+  useEffect(() => {
+    const dialog = dialogRef.current;
+
+    if (!isFocusContained || !dialog || dialog.contains(dialog.ownerDocument.activeElement)) {
+      return;
+    }
+
+    const target =
+      dialog.querySelector(".perfume-details-meta-add:not([disabled])") ||
+      dialog.querySelector(".perfume-details-close") ||
+      dialog;
+    target.focus({ preventScroll: true });
+  }, [isFocusContained]);
+
+  // Tab / Shift+Tab stay inside the dialog while it is the topmost layer. The
+  // rare-selection confirmation stacks above it; then Tab belongs to that.
+  function handleDialogKeyDown(event) {
+    if (event.key !== "Tab" || !isFocusContained) {
+      return;
+    }
+
+    const dialog = dialogRef.current;
+    const wrapTarget = getTabWrapTarget({
+      container: dialog,
+      focusable: getFocusableElements(dialog),
+      active: dialog?.ownerDocument?.activeElement,
+      shiftKey: event.shiftKey,
+    });
+
+    if (wrapTarget) {
+      event.preventDefault();
+      wrapTarget.focus();
+    }
+  }
+
+  // Remember which Previous/Next control has focus, so it can be given back after
+  // the remount a navigation causes; any other control resets the memory.
+  function handleDialogFocus(event) {
+    if (focusMemoryRef) {
+      focusMemoryRef.current = event.target?.getAttribute?.("data-detail-focus") || null;
+    }
+  }
 
   useEffect(() => {
     if (!showNavigationHint) {
@@ -1685,11 +1833,18 @@ function PerfumeDetailsModal({
   // overlay would paint BENEATH it at the same z-index, since the portal root
   // sits after the app root in the document.
   return renderOwnedPortal(
-    <div className="modal-overlay" onClick={handleClose}>
+    <div className="modal-overlay" role="presentation" onClick={handleClose}>
       <div
+        ref={dialogRef}
         className={`perfume-details-modal ${
           swipeFeedback ? `is-swipe-${swipeFeedback}` : ""
         }`}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        tabIndex={-1}
+        onKeyDown={handleDialogKeyDown}
+        onFocus={handleDialogFocus}
         onClick={(event) => event.stopPropagation()}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
@@ -1710,7 +1865,7 @@ function PerfumeDetailsModal({
           </button>
 
           <div className="perfume-details-title">
-            <h3>{perfume.name}</h3>
+            <h3 id={titleId}>{perfume.name}</h3>
             <p>{perfume.brand}</p>
           </div>
 
@@ -1764,6 +1919,7 @@ function PerfumeDetailsModal({
                 <button
                   type="button"
                   className="perfume-image-nav previous"
+                  data-detail-focus="previous"
                   onClick={onPrevious}
                   disabled={!canNavigate}
                   title={
@@ -1786,6 +1942,7 @@ function PerfumeDetailsModal({
                 <button
                   type="button"
                   className="perfume-image-nav next"
+                  data-detail-focus="next"
                   onClick={onNext}
                   disabled={!canNavigate}
                   title={nextPerfume ? t("details.nextTitle", { name: nextPerfume.name }) : t("details.nextFallback")}

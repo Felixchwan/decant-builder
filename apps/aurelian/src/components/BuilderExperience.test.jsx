@@ -1,7 +1,16 @@
+import { readFileSync } from "node:fs";
 import { renderToStaticMarkup } from "react-dom/server";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 const builderCalls = vi.hoisted(() => []);
+// What the App Router's useSearchParams() currently reports. null = no router context (a
+// bare render), which is how every test below that doesn't navigate runs.
+const routerState = vi.hoisted(() => ({ search: null }));
+
+vi.mock("next/navigation", async (importOriginal) => ({
+  ...(await importOriginal()),
+  useSearchParams: () => (routerState.search === null ? null : new URLSearchParams(routerState.search)),
+}));
 
 vi.mock("@discovery-box/builder", () => ({
   DiscoveryBoxBuilder(props) {
@@ -14,6 +23,7 @@ import { BuilderExperience, hasPersistedBox } from "./BuilderExperience.jsx";
 import { IntroPreferenceContext } from "./IntroPreferenceProvider.jsx";
 import { aurelianConfig } from "../merchant/config.js";
 import { parseFragranceIntent, FRAGRANCE_QUERY_PARAM } from "../lib/parseFragranceIntent.js";
+import { parseDetailsIntent, DETAILS_QUERY_PARAM } from "../lib/parseDetailsIntent.js";
 import { ENTRY_HEADER_VISIBILITY_SCRIPT } from "../app/build-your-box/page.jsx";
 import { ANALYTICS_EVENTS } from "@discovery-box/builder/analytics";
 
@@ -62,6 +72,7 @@ function mockWindow({ storedValue = null, search = "" } = {}) {
 afterEach(() => {
   globalThis.window = originalWindow;
   builderCalls.length = 0;
+  routerState.search = null;
 });
 
 describe("BuilderExperience entry routing", () => {
@@ -100,6 +111,142 @@ describe("BuilderExperience entry routing", () => {
   });
 });
 
+describe("BuilderExperience details-only deep link (?details=)", () => {
+  it("skips the Discovery Intent screen and hands the Builder the details id, with no add intent", () => {
+    mockWindow({ search: "?details=1" });
+
+    const markup = renderToStaticMarkup(<BuilderExperience />);
+
+    expect(markup).not.toContain("¿Qué buscas hoy?");
+    expect(builderCalls).toHaveLength(1);
+    expect(builderCalls[0].initialDetailFragranceId).toBe(1);
+    expect(builderCalls[0].initialFragranceId).toBeNull();
+    expect(builderCalls[0].initialRecommendationHint).toBeNull();
+  });
+
+  it("passes a well-formed id the catalog doesn't contain straight through (the Builder reports it)", () => {
+    mockWindow({ search: "?details=999999" });
+
+    renderToStaticMarkup(<BuilderExperience />);
+
+    expect(builderCalls[0].initialDetailFragranceId).toBe(999999);
+  });
+
+  it("treats malformed or repeated details values as no intent, so a first-time visitor still gets the intent screen", () => {
+    ["?details=abc", "?details=", "?details=0", "?details=1&details=2"].forEach((search) => {
+      mockWindow({ search });
+      builderCalls.length = 0;
+
+      const markup = renderToStaticMarkup(<BuilderExperience />);
+
+      expect(markup, search).toContain("¿Qué buscas hoy?");
+      expect(builderCalls, search).toHaveLength(0);
+    });
+  });
+
+  it("never combines the two links: a valid ?fragrance= wins and the details request is dropped", () => {
+    mockWindow({ search: "?fragrance=1&details=2" });
+
+    renderToStaticMarkup(<BuilderExperience />);
+
+    expect(builderCalls[0].initialFragranceId).toBe(1);
+    expect(builderCalls[0].initialDetailFragranceId).toBeNull();
+  });
+
+  it("leaves the add link exactly as it was: ?fragrance= alone sends no details intent", () => {
+    mockWindow({ search: "?fragrance=1" });
+
+    renderToStaticMarkup(<BuilderExperience />);
+
+    expect(builderCalls[0].initialFragranceId).toBe(1);
+    expect(builderCalls[0].initialDetailFragranceId).toBeNull();
+  });
+
+  it("consumes only the two intent params from the URL, with replaceState, and leaves everything else", () => {
+    const source = readFileSync(new URL("./BuilderExperience.jsx", import.meta.url), "utf8");
+
+    expect(source).toContain("[FRAGRANCE_QUERY_PARAM, DETAILS_QUERY_PARAM]");
+    expect(source).toContain("window.history.replaceState(window.history.state,");
+    expect(source).not.toMatch(/history\.pushState/);
+    expect(source).not.toMatch(/searchParams\.(?:clear|set)\(/);
+  });
+});
+
+describe("repeat client-side navigation: the intent is read from the router, not a stale window.location", () => {
+  // On every catalog -> Builder visit after the first in a session, the Builder's chunk is
+  // already loaded, so BuilderExperience renders in the SAME commit that updates the URL. In
+  // that render window.location still holds the page being left (/catalogo, no query) while
+  // the router's search params already hold the new query. Reading window.location therefore
+  // saw "no intent" and the strip effect then removed the param. These tests keep
+  // window.location stale on purpose, so they fail if the component ever reads it first.
+  function navigateFromCatalog(routerSearch) {
+    routerState.search = routerSearch;
+    mockWindow({ search: "" });
+    builderCalls.length = 0;
+
+    const markup = renderToStaticMarkup(<BuilderExperience />);
+
+    return { markup, props: builderCalls[0] };
+  }
+
+  it("resolves a details intent on the first AND the second visit, from a stale /catalogo location", () => {
+    const first = navigateFromCatalog("details=1");
+    expect(first.props.initialDetailFragranceId).toBe(1);
+    expect(first.props.initialFragranceId).toBeNull();
+    expect(first.markup).not.toContain("¿Qué buscas hoy?");
+
+    // back to /catalogo, then another perfume
+    const second = navigateFromCatalog("details=404");
+    expect(second.props.initialDetailFragranceId).toBe(404);
+    expect(second.markup).not.toContain("¿Qué buscas hoy?");
+
+    const third = navigateFromCatalog("details=202");
+    expect(third.props.initialDetailFragranceId).toBe(202);
+  });
+
+  it("resolves an add intent on every visit, so the second and third adds still execute", () => {
+    expect(navigateFromCatalog("fragrance=1").props.initialFragranceId).toBe(1);
+    expect(navigateFromCatalog("fragrance=2").props.initialFragranceId).toBe(2);
+    expect(navigateFromCatalog("fragrance=3").props.initialFragranceId).toBe(3);
+  });
+
+  it("keeps every contract when the query comes from the router", () => {
+    // add wins when both are valid; details alone opens details; an invalid add doesn't block a valid details
+    expect(navigateFromCatalog("fragrance=1&details=2").props).toMatchObject({ initialFragranceId: 1, initialDetailFragranceId: null });
+    expect(navigateFromCatalog("details=2&ref=x").props).toMatchObject({ initialFragranceId: null, initialDetailFragranceId: 2 });
+    expect(navigateFromCatalog("fragrance=abc&details=2").props).toMatchObject({ initialFragranceId: null, initialDetailFragranceId: 2 });
+    // unknown id: still passed through for the Builder to report
+    expect(navigateFromCatalog("details=999999").props.initialDetailFragranceId).toBe(999999);
+  });
+
+  it("shows the intent screen for a router query with no valid intent, whatever the stale location says", () => {
+    ["", "details=abc", "fragrance=1&fragrance=2", "other=x"].forEach((search) => {
+      const { markup, props } = navigateFromCatalog(search);
+
+      expect(markup, search).toContain("¿Qué buscas hoy?");
+      expect(props, search).toBeUndefined();
+    });
+  });
+
+  it("only falls back to window.location when there is no router context", () => {
+    routerState.search = null;
+    mockWindow({ search: "?details=7" });
+
+    renderToStaticMarkup(<BuilderExperience />);
+
+    expect(builderCalls[0].initialDetailFragranceId).toBe(7);
+  });
+
+  it("leaves the URL-cleanup effect as the one-shot, two-param replaceState it was", () => {
+    const source = readFileSync(new URL("./BuilderExperience.jsx", import.meta.url), "utf8");
+
+    expect(source).toContain("const searchParams = useSearchParams();");
+    expect(source).toContain("[FRAGRANCE_QUERY_PARAM, DETAILS_QUERY_PARAM]");
+    expect(source).toContain("window.history.replaceState(window.history.state,");
+    expect(source).not.toMatch(/useRouter|router\.(?:replace|push)/);
+  });
+});
+
 describe("entry header pre-hydration visibility script", () => {
   it("agrees with BuilderExperience's real first-render gate across representative cases", () => {
     const cases = [
@@ -109,13 +256,19 @@ describe("entry header pre-hydration visibility script", () => {
       { label: "deep-linked fragrance, with a stored box too", search: `?${FRAGRANCE_QUERY_PARAM}=1`, storedValue: "{}" },
       { label: "unrelated query param only", search: "?other=x", storedValue: null },
       { label: "malformed fragrance value", search: `?${FRAGRANCE_QUERY_PARAM}=abc`, storedValue: null },
+      { label: "details link, no stored box", search: `?${DETAILS_QUERY_PARAM}=1`, storedValue: null },
+      { label: "details link, with a stored box too", search: `?${DETAILS_QUERY_PARAM}=1`, storedValue: "{}" },
+      { label: "malformed details value", search: `?${DETAILS_QUERY_PARAM}=abc`, storedValue: null },
+      { label: "repeated details value", search: `?${DETAILS_QUERY_PARAM}=1&${DETAILS_QUERY_PARAM}=2`, storedValue: null },
+      { label: "both links at once", search: `?${FRAGRANCE_QUERY_PARAM}=1&${DETAILS_QUERY_PARAM}=2`, storedValue: null },
     ];
 
     cases.forEach(({ label, search, storedValue }) => {
       const scriptHidesHeader = runEntryHeaderVisibilityScript({ search, storedValue });
 
       mockWindow({ storedValue, search });
-      const realGateSkipsIntentScreen = parseFragranceIntent(search) !== null || hasPersistedBox();
+      const realGateSkipsIntentScreen =
+        parseFragranceIntent(search) !== null || parseDetailsIntent(search) !== null || hasPersistedBox();
       globalThis.window = originalWindow;
 
       // The inline script hides the header exactly when BuilderExperience is

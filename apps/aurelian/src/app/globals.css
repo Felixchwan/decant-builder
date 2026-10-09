@@ -241,6 +241,12 @@ h1 { max-width:15ch; margin-bottom:1.4rem; font-size:clamp(2.8rem,7vw,6.4rem); }
 .product-card .eyebrow { text-align:center; }
 .product-card__image { display:grid; aspect-ratio:1/1.08; place-items:center; margin-bottom:1rem; background:radial-gradient(circle,rgba(200,166,101,.1),transparent 65%); }
 .product-card__image img { width:85%; height:85%; object-fit:contain; }
+/* The bottle and the name link to the perfume's Builder details. The bottle link fills the image cell so the
+   image keeps its exact size; the name link keeps the heading's own type and only underlines on hover/focus
+   (the global gold :focus-visible outline already covers keyboard focus). */
+.product-card__image-link { display:grid; place-items:center; width:100%; height:100%; }
+.product-card h2 a { color:inherit; text-decoration:none; }
+.product-card h2 a:hover,.product-card h2 a:focus-visible { text-decoration:underline; text-decoration-color:var(--gold); text-underline-offset:.22em; }
 .product-card h2 { min-height:3rem; font-family:Georgia,serif; font-size:1.25rem; font-weight:400; text-align:center; }
 .product-card__actions { display:grid; grid-template-columns:auto minmax(0,1fr); gap:14px; align-items:stretch; margin-top:.85rem; }
 .product-card__points { display:inline-flex; align-items:center; justify-content:center; gap:.35rem; min-height:3rem; margin:0; padding:.5rem .58rem; border:1px solid currentColor; font-size:.76rem; font-weight:800; line-height:1; white-space:nowrap; }
