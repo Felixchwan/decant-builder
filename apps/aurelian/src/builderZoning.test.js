@@ -38,10 +38,14 @@ describe("Aurelian Phase 1 atmospheric zoning (host-owned)", () => {
 
   it("maps the approved palette to host-scoped variables", () => {
     expect(zoningCss).toContain("--aur-charcoal: #2a2a2a;");
-    expect(zoningCss).toContain("--aur-burgundy: #4a0f1f;");
     expect(zoningCss).toContain("--aur-green: #173c32;");
     expect(zoningCss).toContain("--aur-brass: #a9824f;");
-    expect(zoningCss).toContain("--aur-ivory: #e7ddcf;");
+    // Burgundy and ivory are Aurelian-global (globals.css), defined once and shared with the
+    // public site; the zoning file must not redeclare them (see burgundyInteraction.test.js).
+    expect(zoningCss).not.toMatch(/--aur-(?:burgundy|ivory)[\w-]*:/);
+    const globalsCss = read(APP_ROOT, "src", "app", "globals.css");
+    expect(globalsCss).toContain("--aur-burgundy: #4a0f1f;");
+    expect(globalsCss).toContain("--aur-ivory: #e7ddcf;");
   });
 
   it("scopes every rule to the Builder page, the docked summary slot, or the Builder-route header", () => {

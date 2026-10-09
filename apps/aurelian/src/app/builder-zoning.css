@@ -23,14 +23,16 @@
 
 .builder-page {
   --aur-charcoal: #2a2a2a;
-  --aur-burgundy: #4a0f1f;
   --aur-green: #173c32;
   --aur-brass: #a9824f;
-  --aur-ivory: #e7ddcf;
+
+  /* The burgundy values (--aur-burgundy, --aur-burgundy-line and the lifted/rim/
+     wash/glow family) and --aur-ivory are Aurelian-global now, defined once in
+     globals.css so the public site shares them; every rule below reads them
+     unchanged. */
 
   /* Lifted, low-alpha derivatives used only for hairlines/rims, so a zone
      edge is perceivable without ever becoming a saturated red or green. */
-  --aur-burgundy-line: rgba(138, 52, 74, 0.14);
   --aur-green-line: rgba(63, 122, 104, 0.2);
   --aur-brass-line: rgba(169, 130, 79, 0.5);
 
@@ -361,6 +363,20 @@
 .builder-page .share-box-buttons button:first-child:hover:not(:disabled) {
   border-color: rgba(169, 130, 79, 0.75);
   background: rgba(169, 130, 79, 0.12);
+}
+
+/* "Explorar por nota" opens a different, exploratory mode, so it reads as burgundy
+   (considering this) rather than brass (primary) when hovered or keyboard-focused. At
+   rest it keeps the secondary look above; "Armar mi caja" stays the one brass action.
+   It is the only `button.secondary` in .compose-box-header-actions (a class used once
+   in the Builder), so this does not reach "Descargar PNG" or any other secondary
+   control. Rim, wash and glow only: the text stays ivory, the box doesn't move, and the
+   global gold :focus-visible outline still shows. */
+.builder-page .compose-box-header-actions button.secondary:hover,
+.builder-page .compose-box-header-actions button.secondary:focus-visible {
+  border-color: var(--aur-burgundy-rim);
+  background: var(--aur-burgundy-wash);
+  box-shadow: 0 0 14px var(--aur-burgundy-glow);
 }
 
 .builder-page .share-box-buttons button:not(:first-child) {

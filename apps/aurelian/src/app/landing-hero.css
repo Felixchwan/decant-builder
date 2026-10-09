@@ -168,9 +168,15 @@
   color: #e7ddcf;
 }
 
-.aurelian-hero-stage .button--outline:hover {
-  border-color: rgba(200, 166, 101, 0.6);
-  background: rgba(200, 166, 101, 0.1);
+/* Secondary, exploratory action: hover and keyboard focus read as burgundy ("consider this
+   route") -- an oxblood wash, a burgundy rim and a faint glow behind the unchanged ivory
+   text -- never brighter than the brass primary beside it. The global gold :focus-visible
+   outline still shows on focus. Box size and type are untouched (box-shadow only). */
+.aurelian-hero-stage .button--outline:hover,
+.aurelian-hero-stage .button--outline:focus-visible {
+  border-color: var(--aur-burgundy-lift);
+  background: var(--aur-burgundy-wash);
+  box-shadow: 0 0 16px var(--aur-burgundy-glow);
 }
 
 /* Mid-width desktops give the copy column less room, so the eyebrow is tracked a
