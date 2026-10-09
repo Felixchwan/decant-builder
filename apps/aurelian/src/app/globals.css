@@ -290,7 +290,11 @@ h1 { max-width:15ch; margin-bottom:1.4rem; font-size:clamp(2.8rem,7vw,6.4rem); }
 .product-card__points { display:inline-flex; align-items:center; justify-content:center; gap:.35rem; min-height:3rem; margin:0; padding:.5rem .58rem; border:1px solid currentColor; font-size:.76rem; font-weight:800; line-height:1; white-space:nowrap; }
 .product-card__action { width:100%; min-width:0; min-height:3rem; margin-top:0; padding-inline:.7rem; display:inline-flex; align-items:center; justify-content:center; background:transparent; color:var(--gold); font-size:.78rem; line-height:1.22; }
 .product-card__action:hover,.product-card__action:focus-visible { background:var(--gold); color:var(--ink); }
-.product-card--highlighted { border-color:var(--gold); box-shadow:0 0 0 1px rgba(200,166,101,.38),0 18px 45px rgba(0,0,0,.28); }
+/* The card ?fragrance= brings into view: a brass rim with a faint burgundy glow, for a couple of
+   seconds only (CatalogExplorer removes the class). Border colour and shadow only, so nothing
+   shifts; the fade is plain colour easing and is skipped under reduced motion. */
+.product-card--highlighted { border-color:var(--gold); box-shadow:0 0 0 1px rgba(200,166,101,.38),0 0 26px var(--aur-burgundy-glow),0 18px 45px rgba(0,0,0,.28); }
+@media (prefers-reduced-motion:no-preference) { .product-card { transition:border-color .6s ease,box-shadow .6s ease; } }
 /* Quiet, secondary-tier learning affordance -- deliberately lighter than
    .product-card__action (no fill, muted resting color) so the commercial CTA
    above it stays the card's one primary action. Native <details>/<summary>,

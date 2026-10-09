@@ -7,7 +7,8 @@ import { describe, expect, it } from "vitest";
 import CatalogPage from "./app/catalogo/page.jsx";
 import { CatalogExplorer } from "./components/CatalogExplorer.jsx";
 import { CatalogPageView } from "./components/CatalogPageView.jsx";
-import { buildCatalogSeasonHref, getExplicitSeasonWeight, parseCatalogSeason } from "./lib/catalogSeason.js";
+import { buildCatalogSeasonHref, buildSeasonalFragranceHref, getExplicitSeasonWeight, parseCatalogSeason } from "./lib/catalogSeason.js";
+import { resolveCatalogFragranceIntent } from "./lib/resolveCatalogFragranceIntent.js";
 import { filterCatalog } from "./lib/filterCatalog.js";
 import { SEASONAL_SLOTS } from "./lib/seasonalSelection.js";
 import { aurelianCatalog } from "./merchant/catalog.js";
@@ -187,5 +188,99 @@ describe("catalog density and control layout (host-owned CSS)", () => {
     for (const file of ["BuilderExperience.jsx", "BuilderMount.jsx", "SeasonalFeaturedSelection.jsx", "LandingHowItWorks.jsx", "SocialFollow.jsx"]) {
       expect(read(APP_ROOT, "src", "components", file), file).not.toMatch(trace);
     }
+  });
+});
+
+describe("landing handoff: season + fragrance (buildSeasonalFragranceHref)", () => {
+  it("writes season first, then the fragrance, using the catalog's existing ?fragrance= contract", () => {
+    expect(buildSeasonalFragranceHref("fall", 4)).toBe("/catalogo?season=fall&fragrance=4");
+    expect(buildSeasonalFragranceHref("winter", "5")).toBe("/catalogo?season=winter&fragrance=5");
+  });
+
+  it("degrades to the season alone, or the plain catalog, rather than writing values the catalog would ignore", () => {
+    expect(buildSeasonalFragranceHref("fall", "abc")).toBe("/catalogo?season=fall");
+    expect(buildSeasonalFragranceHref("fall", 0)).toBe("/catalogo?season=fall");
+    expect(buildSeasonalFragranceHref("fall", undefined)).toBe("/catalogo?season=fall");
+    expect(buildSeasonalFragranceHref("autumn", 4)).toBe("/catalogo?fragrance=4");
+    expect(buildSeasonalFragranceHref(null, null)).toBe("/catalogo");
+  });
+
+  it("the link the helper writes round-trips through the page's own parsing", () => {
+    const url = new URL(buildSeasonalFragranceHref("fall", 4), "https://example.test");
+    expect(parseCatalogSeason(url.searchParams.getAll("season"))).toBe("fall");
+    expect(resolveCatalogFragranceIntent(url.search, aurelianCatalog)?.name).toBe("Legend EDT");
+  });
+});
+
+describe("season + fragrance: the target is looked up in the rendered seasonal result", () => {
+  const legend = aurelianCatalog.find((item) => item.name === "Legend EDT");
+  const acqua = aurelianCatalog.find((item) => item.name === "Acqua di Gio EDT");
+  const cardIds = (markup) => [...markup.matchAll(/class="product-card[^"]*" data-fragrance-id="(\d+)"/g)].map((match) => Number(match[1]));
+  // The page hands CatalogPageView the validated season (the page itself suspends on its promise, which a static render can't await).
+  const page = (params) => renderToStaticMarkup(<CatalogPageView season={parseCatalogSeason(params.season)} />);
+
+  it("season=fall&fragrance=<Legend>: the Fall filter applies and the rendered cards include Legend EDT", () => {
+    expect(resolveCatalogFragranceIntent(`?season=fall&fragrance=${legend.id}`, aurelianCatalog)?.id).toBe(legend.id);
+    const markup = page({ season: "fall", fragrance: String(legend.id) });
+    expect(cardIds(markup)).toContain(legend.id);
+    expect(cardIds(markup).length).toBeLessThan(aurelianCatalog.length);
+  });
+
+  it("a fragrance not compatible with the season is never rendered, so there is nothing to scroll to or highlight, and the season stays", () => {
+    const markup = page({ season: "winter", fragrance: String(acqua.id) });
+    expect(acqua.seasons).not.toContain("winter");
+    expect(cardIds(markup)).not.toContain(acqua.id);
+    expect(seasonSelect(markup).find(({ selected }) => selected).value).toBe("winter");
+    // the highlight class is applied only by the client effect after a card has been brought into view
+    expect(markup).not.toContain("product-card--highlighted");
+  });
+
+  it("an invalid or repeated fragrance id resolves to no target and never throws; the season filter is untouched", () => {
+    for (const bad of ["abc", "0", "-3", "1.5", "99999", "4abc", ""]) {
+      const search = `?season=fall&fragrance=${bad}`;
+      expect(() => resolveCatalogFragranceIntent(search, aurelianCatalog)).not.toThrow();
+      expect(resolveCatalogFragranceIntent(search, aurelianCatalog)).toBeNull();
+    }
+    expect(resolveCatalogFragranceIntent("?season=fall&fragrance=4&fragrance=5", aurelianCatalog)).toBeNull();
+    const markup = page({ season: "fall", fragrance: "abc" });
+    expect(cardIds(markup).length).toBeGreaterThan(0);
+    expect(seasonSelect(markup).find(({ selected }) => selected).value).toBe("fall");
+  });
+
+  it("an invalid season falls back to the full catalog, and a valid fragrance is still resolved against it", () => {
+    const markup = page({ season: "autumn", fragrance: String(legend.id) });
+    expect(cardIds(markup)).toHaveLength(aurelianCatalog.length);
+    expect(resolveCatalogFragranceIntent(`?season=autumn&fragrance=${legend.id}`, aurelianCatalog)?.id).toBe(legend.id);
+  });
+});
+
+describe("the requested card's emphasis is temporary and respects reduced motion", () => {
+  const source = read(APP_ROOT, "src", "components", "CatalogExplorer.jsx");
+  const globals = read(APP_ROOT, "src", "app", "globals.css").replace(/\r\n/g, "\n");
+
+  it("highlights only after the card is brought into view, for a bounded time, and clears the timer on cleanup", () => {
+    expect(source).toContain("const CATALOG_HIGHLIGHT_MS = 2600;");
+    expect(source).toContain("setHighlightedId(requestedFragrance.id);");
+    expect(source).toContain("window.setTimeout(() => setHighlightedId(null), CATALOG_HIGHLIGHT_MS)");
+    expect(source).toContain("window.clearTimeout(timer);");
+    // the class follows the temporary id, never the standing request
+    expect(source).toContain('highlightedId === item.id ? " product-card--highlighted"');
+    expect(source).not.toContain('requestedFragrance?.id === item.id ? " product-card--highlighted"');
+  });
+
+  it("scrolls the rendered card, with no smooth scrolling under reduced motion, and keeps focus handling", () => {
+    expect(source).toContain('window.matchMedia?.("(prefers-reduced-motion: reduce)").matches');
+    expect(source).toContain('behavior: reduceMotion ? "auto" : "smooth"');
+    expect(source).toContain('block: "center"');
+    expect(source).toContain("card.focus({ preventScroll: true });");
+    expect(source).toContain("if (!requestedFragrance || !requestedCardRef.current) return undefined;");
+  });
+
+  it("emphasizes with border colour and shadow only, and fades only when motion is allowed", () => {
+    const rule = globals.match(/\.product-card--highlighted \{([^}]*)\}/)[1];
+    expect(rule).toMatch(/border-color:var\(--gold\)/);
+    expect(rule).toMatch(/var\(--aur-burgundy-glow\)/);
+    expect(rule).not.toMatch(/(?:^|[;\s])(?:width|height|margin|padding|transform|animation|top|left)\s*:/);
+    expect(globals).toMatch(/@media \(prefers-reduced-motion:no-preference\) \{ \.product-card \{ transition:border-color \.6s ease,box-shadow \.6s ease; \} \}/);
   });
 });

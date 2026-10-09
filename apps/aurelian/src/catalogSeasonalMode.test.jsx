@@ -114,20 +114,21 @@ describe("seasonal mode (the page body)", () => {
   });
 });
 
-describe("landing seasonal cards deep-link by season role", () => {
-  it("links each slot to /catalogo?season=<key>, in slot order, never by fragrance", () => {
+describe("landing seasonal cards deep-link by season role, carrying their own fragrance", () => {
+  it("links each slot to /catalogo?season=<key>&fragrance=<its own id>, in slot order", () => {
     const markup = renderToStaticMarkup(<HomePage />);
-    const cards = [...markup.matchAll(/<article class="seasonal-card[^"]*"[^>]*data-season="([a-z]+)"[\s\S]*?<\/article>/g)];
-    expect(cards.map((match) => match[1])).toEqual(["spring", "summer", "fall", "winter"]);
-    for (const [card, season] of cards) {
-      expect(card).toContain(`href="/catalogo?season=${season}"`);
+    const cards = [...markup.matchAll(/<article class="seasonal-card[^"]*" data-fragrance-id="(\d+)" data-season="([a-z]+)"[\s\S]*?<\/article>/g)];
+    expect(cards.map((match) => match[2])).toEqual(["spring", "summer", "fall", "winter"]);
+    for (const [card, id, season] of cards) {
+      expect(card).toContain(`href="/catalogo?season=${season}&amp;fragrance=${id}"`);
       expect(card).not.toMatch(/href="\/catalogo\?fragrance=/);
     }
     expect(markup).not.toMatch(/href="\/catalogo\?season=autumn/);
 
     const source = read(APP_ROOT, "src", "components", "SeasonalFeaturedSelection.jsx");
-    expect(source).toContain("href={`/catalogo?${CATALOG_SEASON_PARAM}=${season.key}`}");
-    expect(source).not.toMatch(/href=\{`\/catalogo[^`]*item\./);
+    // built by the one seasonal-URL helper, from the card's own item, not assembled inline
+    expect(source).toContain("href={buildSeasonalFragranceHref(season.key, item.id)}");
+    expect(source).not.toMatch(/href=\{`\/catalogo/);
     // The rotating fragrance content stays: the bottle, name and points are still rendered.
     expect(source).toContain("<h3>{item.name}</h3>");
   });
@@ -208,5 +209,32 @@ describe("boundaries: Builder, shared packages and Discovery Decants are untouch
       ...sourceFiles(join(REPOSITORY_ROOT, "src")),
     ];
     files.forEach((file) => expect(read(file), file).not.toMatch(trace));
+  });
+});
+
+describe("landing seasonal cards: canonical fragrance per season (initial, unrotated selection)", () => {
+  const byName = (name) => aurelianCatalog.find((item) => item.name === name);
+  const EXPECTED = [
+    ["spring", "Acqua di Gio EDT"],
+    ["summer", "Light Blue Pour Homme EDT"],
+    ["fall", "Legend EDT"],
+    ["winter", "Le Male"],
+  ];
+
+  it("maps Spring/Summer/Fall/Winter to Acqua di Gio EDT, Light Blue Pour Homme EDT, Legend EDT and Le Male by their catalog ids", () => {
+    const markup = renderToStaticMarkup(<HomePage />);
+    for (const [season, name] of EXPECTED) {
+      const item = byName(name);
+      expect(item, name).toBeTruthy();
+      expect(markup).toContain(`href="/catalogo?season=${season}&amp;fragrance=${item.id}"`);
+    }
+    expect(EXPECTED.map(([, name]) => byName(name).id)).toEqual([1, 2, 4, 5]);
+  });
+
+  it("every seasonal card's fragrance is compatible with its own season, so the target is always in the filtered result", () => {
+    for (const [season, name] of EXPECTED) {
+      const visible = filterCatalog(aurelianCatalog, "", "all", season);
+      expect(visible.map(({ id }) => id)).toContain(byName(name).id);
+    }
   });
 });

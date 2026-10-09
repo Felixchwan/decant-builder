@@ -11,6 +11,7 @@
 //   RELEVANCE      decided only by explicit editorial `seasonWeights`, and only
 //                  to ORDER an already-compatible subset.
 import { getExplicitSeasonWeight as getCatalogExplicitSeasonWeight } from "@discovery-box/catalog";
+import { FRAGRANCE_ID_PATTERN, FRAGRANCE_QUERY_PARAM } from "./parseFragranceIntent.js";
 import { SEASONAL_SLOTS } from "./seasonalSelection.js";
 
 export const CATALOG_SEASON_PARAM = "season";
@@ -67,6 +68,21 @@ export function rankBySeasonalRelevance(items, season, weightOf = getExplicitSea
 
 export function filterCatalogBySeason(catalog, season) {
   return season ? catalog.filter((item) => isSeasonCompatible(item, season)) : catalog;
+}
+
+// Where a landing seasonal card leads: the season AND the card's own fragrance, so the
+// catalog can open the seasonal subset and bring that exact fragrance into view. It is the
+// catalog's existing `?fragrance=` intent (resolveCatalogFragranceIntent), never the Builder's
+// add or details contracts. A season key that is not valid yields the plain catalog; a
+// fragrance id that is not a plain positive integer is left off, so the link degrades to the
+// season alone instead of carrying a value the catalog would ignore anyway.
+export function buildSeasonalFragranceHref(season, fragranceId) {
+  const params = new URLSearchParams();
+  const valid = parseCatalogSeason(season);
+  if (valid) params.set(CATALOG_SEASON_PARAM, valid);
+  if (FRAGRANCE_ID_PATTERN.test(String(fragranceId))) params.set(FRAGRANCE_QUERY_PARAM, String(fragranceId));
+  const query = params.toString();
+  return query ? `/catalogo?${query}` : "/catalogo";
 }
 
 // The /catalogo URL after choosing a season in the manual filter. `search` is the

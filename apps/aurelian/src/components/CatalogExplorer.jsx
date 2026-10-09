@@ -15,6 +15,8 @@ import { buildLearnerRecord } from "../perceptualLearning/learnerRecord.js";
 import { buildEvidenceRevisit } from "../perceptualLearning/evidenceRevisit.js";
 
 const resolveAsset = createCatalogAssetResolver({ basePath: "/catalog-assets" });
+// How long a card brought into view by ?fragrance= keeps its emphasis before it settles back.
+const CATALOG_HIGHLIGHT_MS = 2600;
 const pointOptions = [...new Set(aurelianCatalog.map((item) => item.points))].sort((a, b) => a - b);
 const tierPresentation = [
   { maxId: 100, emoji: "🟤", color: "#b87333", background: "rgba(184,115,51,0.12)" },
@@ -103,6 +105,10 @@ export function CatalogExplorer({ season: urlSeason = null }) {
   const [query, setQuery] = useState("");
   const [points, setPoints] = useState("all");
   const [requestedFragrance, setRequestedFragrance] = useState(null);
+  // The card currently emphasized: set when the requested card is brought into view, cleared
+  // after CATALOG_HIGHLIGHT_MS. Separate from requestedFragrance, which stays so the card keeps
+  // its focusable ref for the whole visit.
+  const [highlightedId, setHighlightedId] = useState(null);
   // Starts null (this component is server-rendered, unlike
   // LearnerRecordContainer/ObservationCaptureFlow/ComparisonCaptureFlow,
   // which are all {ssr:false}-mounted) and is populated post-mount, same
@@ -144,13 +150,25 @@ export function CatalogExplorer({ season: urlSeason = null }) {
     return () => window.cancelAnimationFrame(frame);
   }, []);
 
+  // One shot, against the rendered (already season-filtered) cards: when the requested fragrance
+  // is not among them -- not compatible with the season, or not in the catalog -- there is no ref,
+  // so nothing scrolls, focuses or highlights, and the season is never changed to reveal it.
   useEffect(() => {
     if (!requestedFragrance || !requestedCardRef.current) return undefined;
+    let timer;
     const frame = window.requestAnimationFrame(() => {
-      requestedCardRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
-      requestedCardRef.current?.focus({ preventScroll: true });
+      const card = requestedCardRef.current;
+      if (!card) return;
+      const reduceMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+      card.scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "center" });
+      card.focus({ preventScroll: true });
+      setHighlightedId(requestedFragrance.id);
+      timer = window.setTimeout(() => setHighlightedId(null), CATALOG_HIGHLIGHT_MS);
     });
-    return () => window.cancelAnimationFrame(frame);
+    return () => {
+      window.cancelAnimationFrame(frame);
+      window.clearTimeout(timer);
+    };
   }, [requestedFragrance]);
 
   return (
@@ -180,7 +198,7 @@ export function CatalogExplorer({ season: urlSeason = null }) {
           {visible.map((item) => {
             const tier = getCatalogTierPresentation(item.id);
             return (
-              <article className={`product-card${requestedFragrance?.id === item.id ? " product-card--highlighted" : ""}`} data-fragrance-id={item.id} key={item.id} ref={requestedFragrance?.id === item.id ? requestedCardRef : undefined} tabIndex={requestedFragrance?.id === item.id ? -1 : undefined}>
+              <article className={`product-card${highlightedId === item.id ? " product-card--highlighted" : ""}`} data-fragrance-id={item.id} key={item.id} ref={requestedFragrance?.id === item.id ? requestedCardRef : undefined} tabIndex={requestedFragrance?.id === item.id ? -1 : undefined}>
                 {/* The bottle and the name both lead to the same place: this perfume's details in the Builder
                     (?details=, which never adds it to the box). The name link is the one keyboard stop and the
                     one announced link; the bottle link repeats it for pointer and touch users only, so it is
