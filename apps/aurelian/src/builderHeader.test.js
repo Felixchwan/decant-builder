@@ -43,11 +43,16 @@ describe("Aurelian Builder header: collapsed summary strip (host-owned, desktop-
     });
   });
 
-  it("only touches the collapsed strip, so the expanded dock keeps its real bottom edge and layout", () => {
+  it("touches only the collapsed strip and the expanded dock's top row, so the dock keeps its real bottom edge and layout", () => {
+    const EXPANDED = ".builder-panel-sticky-summary-card.is-docked:not(.is-collapsed)";
     rules
       .filter(({ selector }) => selector.startsWith("#aurelian-builder-summary-slot"))
       .forEach(({ selector }) => {
         expect(selector, selector).toMatch(/\.is-collapsed|\.builder-panel-docked-collapsed/);
+        // the one expanded-state exception is the row-centering pair below; nothing else
+        if (selector.includes(":not(.is-collapsed)")) {
+          expect(selector, selector).toMatch(new RegExp(`^#aurelian-builder-summary-slot ${EXPANDED.replace(/[().]/g, "\\$&")}(?: > \\.panel-header)?$`));
+        }
       });
     // Both the class and the wrapper this relies on are still emitted by the shared runtime.
     const panel = read(REPOSITORY_ROOT, "packages", "builder", "src", "components", "BuilderPanel.jsx");
@@ -74,6 +79,31 @@ describe("Aurelian Builder header: collapsed summary strip (host-owned, desktop-
     expect(read(REPOSITORY_ROOT, "packages", "builder", "styles.css")).toMatch(
       /\.builder-panel-docked-collapsed-actions\s*\{[^}]*gap:\s*8px;/
     );
+  });
+
+  it("centers the EXPANDED dock's Mi caja / Vaciar caja / Revisar row on the header axis, by container geometry only", () => {
+    const EXPANDED = "#aurelian-builder-summary-slot .builder-panel-sticky-summary-card.is-docked:not(.is-collapsed)";
+    const card = rules.find(({ selector }) => selector === EXPANDED);
+    const row = rules.find(({ selector }) => selector === `${EXPANDED} > .panel-header`);
+
+    // no top inset (the shared 22px exists to clear the in-panel padding), and the row spans exactly the header's height
+    expect(card.body.replace(/\s+/g, " ").trim()).toBe("padding-top: 0;");
+    expect(row.body.replace(/\s+/g, " ").trim()).toBe("height: var(--site-header-height);");
+
+    // vertical only: no horizontal padding, gap, width, margin, transform or per-control nudge anywhere in the pair
+    [card, row].forEach(({ body }) => {
+      expect(body).not.toMatch(/padding-(?:left|right|inline|bottom)|(?:^|[;\s])padding\s*:|gap|width|margin|transform|translate|align-|justify-|(?:^|[;\s])(?:top|bottom|left|right)\s*:/);
+    });
+    // it targets the row itself, never the individual controls
+    expect(withoutComments).not.toMatch(/\.builder-clear-button|\.review-box-button|\.builder-box-header-title/);
+  });
+
+  it("needs no shared-package edit: the cause is still the package's own inset, which the host overrides", () => {
+    const shared = read(REPOSITORY_ROOT, "packages", "builder", "styles.css");
+
+    expect(shared).toMatch(/\.builder-panel-sticky-summary-card \{[^}]*padding: 22px 22px 18px;/);
+    expect(shared).toMatch(/\.builder-panel-sticky-summary-card\.is-docked \{[^}]*margin: 0;[^}]*\}/);
+    expect(shared).not.toMatch(/aurelian-builder-summary-slot/);
   });
 
   it("trims the Builder header modestly (4.75rem to 4.25rem), reusing the value phones already use", () => {

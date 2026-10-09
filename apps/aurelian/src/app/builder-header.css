@@ -31,7 +31,10 @@
        sticky panel offsets, the dock's overflow math -- derives from this one
        variable, so it stays in sync by itself.
    Click targets, semantics and the card's background (which must keep matching
-   the header's) are untouched. */
+   the header's) are untouched.
+
+   The EXPANDED dock gets one matching correction (see the last two rules): its
+   "Mi caja / Vaciar caja / Revisar" row is centered on the same header axis. */
 
 @media (min-width: 981px) {
   :root:has(.site-header__inner--builder) {
@@ -48,5 +51,24 @@
   #aurelian-builder-summary-slot .builder-panel-docked-collapsed {
     justify-content: flex-end;
     gap: 8px;
+  }
+
+  /* EXPANDED dock: center the "Mi caja / Vaciar caja / Revisar" row on the header's axis.
+     The shared card carries `padding: 22px 22px 18px` -- its 22px top inset exists to clear
+     the in-panel card's own panel padding, and `.is-docked` deliberately leaves it alone.
+     Docked into the 68px header, that inset pushed the row down to y=22..68, flush against
+     the bar's bottom edge (about 10px below the logo and nav axis). So: no top inset, and the
+     row (a flex container that already centers its three children, `align-items: center`) is
+     given exactly the header's height. The row then spans the same band as the logo and nav,
+     and its children are centered in it whatever their own heights (they differ by width).
+     Horizontal geometry, control sizes, gaps, type and colors are untouched; the 18px margin
+     under the row is too, so the rest of the card keeps its place (the row's old footprint,
+     22px + its height, was within a few pixels of the header height at every desktop width). */
+  #aurelian-builder-summary-slot .builder-panel-sticky-summary-card.is-docked:not(.is-collapsed) {
+    padding-top: 0;
+  }
+
+  #aurelian-builder-summary-slot .builder-panel-sticky-summary-card.is-docked:not(.is-collapsed) > .panel-header {
+    height: var(--site-header-height);
   }
 }
