@@ -80,7 +80,7 @@ describe("burgundy interaction language: tokens", () => {
   });
 });
 
-describe("burgundy interaction language: the three approved controls", () => {
+describe("burgundy interaction language: the approved controls", () => {
   const hover = ".desktop-nav a:not([aria-current=\"page\"]):hover";
   const focus = ".desktop-nav a:not([aria-current=\"page\"]):focus-visible";
 
@@ -126,15 +126,13 @@ describe("burgundy interaction language: the three approved controls", () => {
     expect(hoverRule.body).not.toMatch(/200,\s*166,\s*101/);
   });
 
-  it("gives the Builder 'Explorar por nota' a burgundy hover and focus, scoped to the one control that is exactly that", () => {
-    const selector = ".builder-page .compose-box-header-actions button.secondary:hover, .builder-page .compose-box-header-actions button.secondary:focus-visible";
-    const body = rule(zoning, selector);
-
-    expect(body).toMatch(/border-color:\s*var\(--aur-burgundy-rim\);/);
-    expect(body).toMatch(/background:\s*var\(--aur-burgundy-wash\);/);
-    expect(body).toMatch(/box-shadow:\s*0 0 14px var\(--aur-burgundy-glow\);/);
-    expect(body).not.toMatch(/(?:^|[;\s])color:/);
-    // the shared secondary rule (also "Descargar PNG") keeps its brass hover, untouched
+  it("no longer themes the Builder's 'Explorar por nota' burgundy: it is a green tool now (builder-actions.css)", () => {
+    // the burgundy rim/wash/glow rule that used to follow the shared secondary hover is gone
+    expect(strip(zoning)).not.toMatch(/compose-box-header-actions button\.secondary:focus-visible/);
+    rulesOf(zoning).forEach(({ selector, body }) => {
+      if (selector.includes("compose-box-header-actions")) expect(body, selector).not.toMatch(/aur-burgundy/);
+    });
+    // the shared secondary hover (also "Descargar PNG") keeps its brass, untouched
     expect(rule(zoning, ".builder-page .compose-box-header-actions button.secondary:hover, .builder-page .share-box-buttons button:first-child:hover:not(:disabled)")).toMatch(/169,\s*130,\s*79/);
     // the primary stays brass: nothing here targets the non-secondary button
     expect(strip(zoning)).not.toMatch(/compose-box-header-actions button:not\(\.secondary\)/);
@@ -142,10 +140,11 @@ describe("burgundy interaction language: the three approved controls", () => {
 
   it("does not recolor anything else: the burgundy interaction tokens appear only in the three approved places", () => {
     const interactionTokens = /aur-burgundy-(?:wash|glow|rim|lift)/;
-    const users = ["builder-zoning.css", "landing-hero.css", "globals.css", "site-header.css", "builder-header.css", "builder-geometry.css", "builder-intro.css", "contact-page.css", "landing-closing.css", "landing-how-it-works.css", "landing-seasons.css", "landing-video.css", "catalog-seasons.css", "catalog-controls.css"]
+    const users = ["builder-zoning.css", "builder-actions.css", "landing-hero.css", "globals.css", "site-header.css", "builder-header.css", "builder-geometry.css", "builder-intro.css", "contact-page.css", "landing-closing.css", "landing-how-it-works.css", "landing-seasons.css", "landing-video.css", "catalog-seasons.css", "catalog-controls.css"]
       .filter((name) => interactionTokens.test(strip(css(name))));
 
-    expect(users.sort()).toEqual(["builder-zoning.css", "globals.css", "landing-hero.css"]);
+    // builder-actions.css: the cautionary hover/focus of "Vaciar caja" (the docked box card only)
+    expect(users.sort()).toEqual(["builder-actions.css", "globals.css", "landing-hero.css"]);
   });
 
   it("adds no new motion: no transition or animation in the new rules, so reduced-motion behavior is as it was", () => {

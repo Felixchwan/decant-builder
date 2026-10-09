@@ -19,6 +19,7 @@ export const enUS = {
   "general.unlocked": "Unlocked",
   "general.locked": "Locked",
   "general.addToBox": "Add to Box",
+  "general.addToTheBox": "Add to Box",
   "general.add": "Add",
   "general.added": "Added",
   "general.boxFull": "Box full",

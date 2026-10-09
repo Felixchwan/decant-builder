@@ -21,6 +21,13 @@ describe("createTranslator", () => {
     expect(translator.t("composer.composeMyBox")).toBe("Armar mi caja");
   });
 
+  it("offers the catalog card's longer add label in both locales, without touching the shared one", () => {
+    expect(createTranslator("es-MX").t("general.addToTheBox")).toBe("Agregar a la caja");
+    expect(createTranslator("es-MX").t("general.addToBox")).toBe("Agregar a caja");
+    // English is the same words either way, so a host on en-US sees no change
+    expect(createTranslator("en-US").t("general.addToTheBox")).toBe(createTranslator("en-US").t("general.addToBox"));
+  });
+
   it("falls back safely for unsupported locales and missing keys", () => {
     expect(normalizeLocale("fr-FR")).toBe("en-US");
     expect(createTranslator("fr-FR").t("general.myBox")).toBe("My Box");

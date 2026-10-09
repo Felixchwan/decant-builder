@@ -164,6 +164,9 @@ export function BuilderExperience({
       // docked box (builder-collection-card.css); the package only provides
       // the anchor. Discovery Decants never passes this.
       dockShareActions
+      // Aurelian shows a catalog card's add button as filled "Agregado" once the fragrance is in
+      // the box (builder-card-actions.css); Discovery Decants never passes this.
+      showAddedState
     />
   );
 }

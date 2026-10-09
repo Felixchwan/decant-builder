@@ -155,6 +155,44 @@
     text-align: left;
   }
 
+  /* The panel's own utility row. At >=981px the actions are the rail above whenever the box card
+     is expanded, so the row only reaches the panel flow when the box card is collapsed -- where it
+     would sit as an orphaned utility strip above the Composer. It is not wanted there: display
+     none takes it out of layout, the tab order and the accessibility tree, and expanding the box
+     brings the rail back. (Collapsing the whole panel hides the rail, see below.) With no row, the
+     Composer no longer needs the 14px lead that sat under it, so its top margin goes and it sits
+     one panel inset (18px) below the panel's top edge instead of 33px. Below 981px the panel is
+     inline, the row is the horizontal one above, and nothing here applies. */
+  .builder-page .builder-panel > .share-box-actions {
+    display: none;
+  }
+
+  .builder-page .builder-panel > .compose-box-panel:first-child {
+    margin-top: 0;
+  }
+
+  /* The box card COLLAPSED (the chevron on its strip), >=981px. The row above is hidden, but it
+     is still the panel's first child, so the rule just above does not match and the Composer
+     keeps a stale 14px lead; and the panel keeps its full 18px inset. Measured at 1440, 1024
+     and 981 (the same at each): header bottom 69, panel top 87 (the page's own 18px inset, shared
+     with the catalog's top edge and left alone), Composer top 120. 33px from the panel's top
+     edge to the Composer = 1px border + 18px panel padding + 14px Composer margin; the hidden
+     row and every wrapper contribute 0 (display none; the row's margin is 0 and the collapsible
+     row has 0 margin once the card shrinks to the 68px header). So the two gaps that remain are
+     the panel's padding and that margin. The collapsed card's presence is the state hook, read
+     from the root because the card is portaled into the header, outside .builder-page (the same
+     :root:has(...) reach the rail's collapse rule uses). With it, the Composer sits 15px
+     (1px border + 14px padding) below the panel's top edge, 33px below the header, instead of
+     33px/51px. The expanded state, its spacing, the Composer's own padding and the panel's
+     sides are untouched. */
+  :root:has(#aurelian-builder-summary-slot .builder-panel-sticky-summary-card.is-docked.is-collapsed) .builder-page .builder-panel {
+    padding-top: 14px;
+  }
+
+  :root:has(#aurelian-builder-summary-slot .builder-panel-sticky-summary-card.is-docked.is-collapsed) .builder-page .builder-panel > .share-box-actions + .compose-box-panel {
+    margin-top: 0;
+  }
+
   /* Collapsing the right-hand panel leaves the docked card in the header but with nothing
      beside it to anchor to, so the rail goes with it: display none removes it from layout,
      the tab order and the accessibility tree. Reopening the panel brings it straight back. */

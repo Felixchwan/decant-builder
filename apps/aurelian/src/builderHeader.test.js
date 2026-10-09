@@ -43,21 +43,29 @@ describe("Aurelian Builder header: collapsed summary strip (host-owned, desktop-
     });
   });
 
-  it("touches only the collapsed strip and the expanded dock's top row, so the dock keeps its real bottom edge and layout", () => {
+  it("touches only the docked card: the collapsed strip, the expanded dock's top row, and the three controls' columns", () => {
     const EXPANDED = ".builder-panel-sticky-summary-card.is-docked:not(.is-collapsed)";
     rules
       .filter(({ selector }) => selector.startsWith("#aurelian-builder-summary-slot"))
       .forEach(({ selector }) => {
-        expect(selector, selector).toMatch(/\.is-collapsed|\.builder-panel-docked-collapsed/);
-        // the one expanded-state exception is the row-centering pair below; nothing else
+        // the expanded-state exceptions: the row-centering pair, and the shared three-column row
         if (selector.includes(":not(.is-collapsed)")) {
-          expect(selector, selector).toMatch(new RegExp(`^#aurelian-builder-summary-slot ${EXPANDED.replace(/[().]/g, "\\$&")}(?: > \\.panel-header)?$`));
+          selector.split(",").forEach((part) => {
+            const allowed = [
+              `#aurelian-builder-summary-slot ${EXPANDED}`,
+              `#aurelian-builder-summary-slot ${EXPANDED} > .panel-header`,
+              "#aurelian-builder-summary-slot .builder-panel-docked-collapsed",
+            ];
+            expect(allowed, part).toContain(part.trim());
+          });
         }
       });
-    // Both the class and the wrapper this relies on are still emitted by the shared runtime.
+    // Both the class and the wrappers this relies on are still emitted by the shared runtime.
     const panel = read(REPOSITORY_ROOT, "packages", "builder", "src", "components", "BuilderPanel.jsx");
     expect(panel).toContain('" is-collapsed"');
     expect(panel).toContain('className="builder-panel-docked-collapsed"');
+    expect(panel).toContain('className="builder-panel-docked-collapsed-actions"');
+    expect(panel).toContain('className="panel-header-actions"');
   });
 
   it("removes the stray hairline by color only, so the strip's box does not change size", () => {
@@ -68,16 +76,13 @@ describe("Aurelian Builder header: collapsed summary strip (host-owned, desktop-
     expect(withoutComments).not.toMatch(/(?:^|[;\s])background[\w-]*\s*:/);
   });
 
-  it("centers the strip on the header's own axis and groups the three controls with the existing 8px gap", () => {
+  it("centers the strip on the header's own axis, with the expanded card's own 22px side padding", () => {
     const strip = ruleFor(".builder-panel-sticky-summary-card.is-collapsed");
     expect(strip.body).toMatch(/height:\s*var\(--site-header-height\);/);
-
-    const cluster = ruleFor(".builder-panel-docked-collapsed");
-    expect(cluster.body).toMatch(/justify-content:\s*flex-end;/);
-    expect(cluster.body).toMatch(/gap:\s*8px;/);
-    // 8px is the gap the Clear/Review pair already shares in the shared package.
+    expect(strip.body).toMatch(/padding:\s*0 22px;/);
+    // the expanded card's horizontal padding, from the package, is what the collapsed strip now matches
     expect(read(REPOSITORY_ROOT, "packages", "builder", "styles.css")).toMatch(
-      /\.builder-panel-docked-collapsed-actions\s*\{[^}]*gap:\s*8px;/
+      /\.builder-panel-sticky-summary-card \{[^}]*padding: 22px 22px 18px;/
     );
   });
 
@@ -94,8 +99,42 @@ describe("Aurelian Builder header: collapsed summary strip (host-owned, desktop-
     [card, row].forEach(({ body }) => {
       expect(body).not.toMatch(/padding-(?:left|right|inline|bottom)|(?:^|[;\s])padding\s*:|gap|width|margin|transform|translate|align-|justify-|(?:^|[;\s])(?:top|bottom|left|right)\s*:/);
     });
-    // it targets the row itself, never the individual controls
-    expect(withoutComments).not.toMatch(/\.builder-clear-button|\.review-box-button|\.builder-box-header-title/);
+  });
+
+  describe("three stable control positions (expanded and collapsed)", () => {
+    const SLOT = "#aurelian-builder-summary-slot";
+    const GRID = `${SLOT} .builder-panel-sticky-summary-card.is-docked:not(.is-collapsed) > .panel-header, ${SLOT} .builder-panel-docked-collapsed`;
+    const body = (selector) => rules.find((rule) => rule.selector.replace(/\s+/g, " ") === selector)?.body.replace(/\s+/g, " ").trim();
+
+    it("gives the expanded row and the collapsed row the same three-track grid, centered on the header axis", () => {
+      expect(body(GRID)).toBe("display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; column-gap: 0;");
+    });
+
+    it("lets the action buttons be grid items of those rows, so each takes its own column", () => {
+      expect(body(`${SLOT} .panel-header-actions, ${SLOT} .builder-panel-docked-collapsed-actions`)).toBe("display: contents;");
+    });
+
+    it("puts expand/minimize left, Vaciar caja in the middle track and Revisar right, by explicit column", () => {
+      expect(body(`${SLOT} .builder-box-header-title, ${SLOT} .builder-panel-docked-collapsed .summary-collapse-toggle`)).toBe("grid-column: 1; justify-self: start;");
+      expect(body(`${SLOT} .builder-clear-button`)).toBe("grid-column: 2; justify-self: center;");
+      expect(body(`${SLOT} .review-box-button`)).toBe("grid-column: 3; justify-self: end;");
+      // the 1px puts the collapsed chevron on the expanded chevron's axis (it sits inside the strip's border)
+      expect(body(`${SLOT} .builder-panel-docked-collapsed .summary-collapse-toggle`)).toBe("margin-left: 1px;");
+    });
+
+    it("moves nothing with transforms, per-state pixel nudges or position offsets, and never touches a control's size or type", () => {
+      expect(withoutComments).not.toMatch(/transform|translate|(?:^|[;\s])(?:top|bottom|left|right)\s*:|position\s*:/);
+      expect(withoutComments).not.toMatch(/(?:^|[;\s])(?:width|min-width|max-width|height\s*:\s*\d|min-height|font-size|line-height)\s*:/);
+      // the only margin anywhere is the 1px chevron alignment
+      expect([...withoutComments.matchAll(/margin[\w-]*\s*:\s*([^;]+);/g)].map((m) => m[1])).toEqual(["1px"]);
+    });
+
+    it("leaves Revisar and Vaciar in the same horizontal place whether the box is expanded or collapsed (and whether Vaciar is there)", () => {
+      // both rows share the grid above and the same 22px side padding, so the columns resolve to the same x;
+      // Revisar names column 3 explicitly, so an empty box (no Vaciar caja) cannot slide it into column 2
+      expect(body(`${SLOT} .review-box-button`)).toMatch(/grid-column: 3;/);
+      expect(body(`${SLOT} .builder-clear-button`)).toMatch(/grid-column: 2;/);
+    });
   });
 
   it("needs no shared-package edit: the cause is still the package's own inset, which the host overrides", () => {
@@ -116,7 +155,7 @@ describe("Aurelian Builder header: collapsed summary strip (host-owned, desktop-
 
   it("changes no control size, semantics or click target", () => {
     expect(withoutComments).not.toMatch(
-      /(?:^|[;\s])(?:width|min-width|min-height|font-size|line-height|margin[\w-]*|display|position|top|right|left)\s*:/
+      /(?:^|[;\s])(?:width|min-width|min-height|font-size|line-height|position|top|right|left)\s*:/
     );
     expect(withoutComments).not.toMatch(/(?:^|[;\s])pointer-events\s*:/);
   });

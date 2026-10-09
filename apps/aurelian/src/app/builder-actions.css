@@ -1,0 +1,129 @@
+/* Aurelian Builder action semantics -- paint only.
+
+   HOST-OWNED and Builder-route-only: every selector is under .builder-page (or, for the one
+   control that lives in the header-docked box card, #aurelian-builder-summary-slot), which only
+   Aurelian's Builder route has, so nothing here can reach the public site, the shared package
+   or Discovery Decants. This file is paint (color, outline, glow) plus exactly one fit rule for
+   the catalog card's add label; the shared package keeps zero-specificity selectors, so these
+   plain host selectors win without !important.
+
+   Two action roles are given their own color language here, kept apart from each other and from
+   the existing ones:
+
+     brass / gold      primary and selection actions (Agregar a la caja, Armar mi caja, Revisar)
+     burgundy          exploratory / navigation actions on the public site
+     green (this file) TOOLS: a control that opens a utility rather than choosing or navigating
+                       ("Explorar por nota")
+     oxblood           CAUTION: a control that discards ("Vaciar caja"), see the end of this file
+
+   Green is the lifted, muted sage below, never the deep zone green (#173c32, 1.6:1 on black),
+   which stays surface-only. #5aa686 is 6.7:1 on the button's near-black ground and 5.8:1 on its
+   own hover wash, so it can carry the 14.76px label. */
+
+.builder-page {
+  --aur-green-text: #5aa686;
+  --aur-green-rim: rgba(90, 166, 134, 0.55);
+  --aur-green-wash: rgba(23, 60, 50, 0.6);
+  --aur-green-glow: rgba(90, 166, 134, 0.18);
+}
+
+/* ---- "Explorar por nota": the tool --------------------------------------------------------
+   Resting: dark ground, green outline, green text. Hover and keyboard focus: a subtle green
+   wash, a brighter rim and a faint glow. The focus ring is green too (the global gold ring would
+   make it read as a brass action). "Armar mi caja" is not a `button.secondary` and is untouched;
+   "Descargar PNG" lives in .share-box-buttons and keeps its brass rim from builder-zoning.css. */
+.builder-page .compose-box-header-actions button.secondary {
+  border-color: var(--aur-green-rim);
+  background: rgba(8, 11, 10, 0.78);
+  color: var(--aur-green-text);
+}
+
+.builder-page .compose-box-header-actions button.secondary:hover,
+.builder-page .compose-box-header-actions button.secondary:focus-visible {
+  border-color: var(--aur-green-text);
+  background: var(--aur-green-wash);
+  box-shadow: 0 0 12px var(--aur-green-glow);
+}
+
+.builder-page .compose-box-header-actions button.secondary:focus-visible {
+  outline: 2px solid var(--aur-green-text);
+}
+
+/* ---- Catalog card add button: outline until added ---------------------------------------
+   The button used to be filled brass on every card, so a catalog of 90 cards read as 90
+   primary actions and "already in your box" had no visual answer. Now:
+
+     default   brass outline, brass text, no fill       (Agregar a la caja)
+     hover     a subtle brass tint
+     added     filled brass with dark ink, as the button always looked   (Agregado)
+
+   The outline is an inset box-shadow, not a border, so the button keeps its exact size in all
+   three states and cards never shift. The added state only exists when the host opts in
+   (showAddedState), which makes the package mark the card's button `is-added`. */
+.builder-page .perfume-card-compact-actions button {
+  background: transparent;
+  box-shadow: inset 0 0 0 1px rgba(200, 166, 101, 0.7);
+  color: var(--gold);
+}
+
+.builder-page .perfume-card-compact-actions button:hover:not(:disabled) {
+  background: rgba(200, 166, 101, 0.14);
+  box-shadow: inset 0 0 0 1px var(--gold);
+}
+
+.builder-page .perfume-card-compact-actions button.is-added,
+.builder-page .perfume-card-compact-actions button.is-added:hover:not(:disabled) {
+  background: var(--gold);
+  box-shadow: inset 0 0 0 1px var(--gold);
+  color: var(--ink);
+  cursor: default;
+}
+
+/* A full box disables every add button; an item already in the box is still a fact, not an
+   unavailable action, so its filled "Agregado" keeps full strength. */
+.builder-page .perfume-card-compact-actions button.is-added:disabled {
+  opacity: 1;
+}
+
+/* ---- The longer label has to fit ---------------------------------------------------------
+   "Agregar a la caja" is 116px at the button's 14.76px; the add button's text area is 101-117px
+   wide depending on the points badge beside it, so on most cards it wrapped to two lines and
+   made those cards taller. Fixed by type, not layout: one line, and 13px (102px) on the whole
+   button (so every label and state shares one line height and no card changes height) so it
+   sits inside the button on every card. Narrower cards (the three-column grid beside the open panel
+   at 981-1219px) cannot hold even that, so there the package's own short label ("Agregar")
+   takes over, exactly as it already does at <=520px. "Agregado" is short enough everywhere. */
+.builder-page .perfume-card-compact-actions button {
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+@media (min-width: 981px) and (max-width: 1219px) {
+  .builder-page .perfume-card-compact-actions button:not(.is-added) .perfume-card-add-label-full {
+    display: none;
+  }
+
+  .builder-page .perfume-card-compact-actions button:not(.is-added) .perfume-card-add-label-short {
+    display: inline;
+  }
+}
+
+/* ---- "Vaciar caja": a cautionary, oxblood answer ------------------------------------------
+   In the docked box card the three controls now have three different jobs, and the colors say so:
+
+     expand / minimize   neutral utility (the card's own chevron, unchanged)
+     Vaciar caja         cautionary: it discards the whole box
+     Revisar             the primary brass action
+
+   At rest "Vaciar caja" keeps the neutral dark look it has always had. On hover and keyboard focus
+   it takes the Builder's oxblood: a burgundy wash, a burgundy rim (the button has no border, so
+   the rim is its existing inset hairline in burgundy), ivory text and the faint dark glow the other burgundy interactions use. It is deliberately not red and not a fill, so it can't
+   be mistaken for the primary action. Behavior, size and position are untouched, and the global gold
+   focus ring still shows on keyboard focus. Scoped to the docked card (>=981px); the inline mobile
+   control keeps its existing look. */
+#aurelian-builder-summary-slot .builder-clear-button:hover:not(:disabled),
+#aurelian-builder-summary-slot .builder-clear-button:focus-visible {
+  background: var(--aur-burgundy-wash);
+  color: var(--aur-ivory);
+  box-shadow: inset 0 0 0 1px var(--aur-burgundy-rim), 0 0 14px var(--aur-burgundy-glow);
+}

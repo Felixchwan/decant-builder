@@ -106,4 +106,51 @@ describe("PerfumeCard", () => {
     expect(markup).toContain("Agregar");
     expect(markup).toContain("disabled");
   });
+
+  describe("opt-in added state (isInBox)", () => {
+    const labels = { add: "Agregar", addToBox: "Agregar a la caja", added: "Agregado", viewDetails: "Ver detalles" };
+    const addButton = (markup) => markup.slice(markup.indexOf('<div class="perfume-card-compact-actions">'));
+
+    it("renders the card's add button exactly as it always did by default: same label, no class, no extra markup", () => {
+      const byDefault = renderPerfumeCard({}, { labels });
+      const explicitlyOff = renderPerfumeCard({}, { labels, isInBox: false });
+
+      expect(explicitlyOff).toBe(byDefault);
+      expect(addButton(byDefault)).toContain("Agregar a la caja");
+      expect(addButton(byDefault)).not.toContain("Agregado");
+      expect(addButton(byDefault)).not.toContain("is-added");
+      expect(addButton(byDefault)).toContain("<button>");
+    });
+
+    it("marks the button added and swaps both its labels when the fragrance is in the box", () => {
+      const markup = addButton(renderPerfumeCard({}, { labels, isInBox: true }));
+
+      expect(markup).toContain('class="perfume-card-add-button is-added"');
+      expect(markup).toContain('<span class="perfume-card-add-label-full">Agregado</span>');
+      expect(markup).toContain('<span class="perfume-card-add-label-short">Agregado</span>');
+      expect(markup).not.toContain("Agregar a la caja");
+    });
+
+    it("falls back to an English 'Added' when a host supplies no added label", () => {
+      const markup = addButton(renderPerfumeCard({}, { isInBox: true }));
+
+      expect(markup).toContain(">Added<");
+    });
+
+    it("keeps the add handler and the full-box disabling in the added state, so nothing about adding changes", () => {
+      const disabled = addButton(renderPerfumeCard({}, { labels, isInBox: true, isDisabled: true }));
+      const enabled = addButton(renderPerfumeCard({}, { labels, isInBox: true, isDisabled: false }));
+
+      expect(disabled).toContain("disabled");
+      expect(enabled).not.toContain("disabled");
+    });
+
+    it("leaves the details trigger and the info icon untouched in the added state", () => {
+      const byDefault = renderPerfumeCard({}, { labels });
+      const added = renderPerfumeCard({}, { labels, isInBox: true });
+      const details = (markup) => markup.slice(0, markup.indexOf('<div class="perfume-card-compact-actions">'));
+
+      expect(details(added)).toBe(details(byDefault));
+    });
+  });
 });

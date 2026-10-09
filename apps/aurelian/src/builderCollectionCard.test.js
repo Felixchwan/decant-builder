@@ -10,7 +10,7 @@ const read = (...segments) => readFileSync(join(...segments), "utf8");
 const css = read(APP_ROOT, "src", "app", "builder-collection-card.css").replace(/\r\n/g, "\n");
 const withoutComments = css.replace(/\/\*[\s\S]*?\*\//g, "");
 const rules = [...withoutComments.matchAll(/([^{}]+)\{([^{}]*)\}/g)]
-  .map(([, selector, body]) => ({ selector: selector.trim(), body: body.replace(/\s+/g, " ").trim() }))
+  .map((match) => ({ selector: match[1].trim(), body: match[2].replace(/\s+/g, " ").trim(), index: match.index }))
   .filter(({ selector }) => !selector.startsWith("@"));
 const body = (selector) => rules.find((rule) => rule.selector === selector)?.body;
 
@@ -18,8 +18,10 @@ const body = (selector) => rules.find((rule) => rule.selector === selector)?.bod
 // desktop-only rail, which is the one @media block and hangs off the header slot because the
 // docked card is portaled out of .builder-page.
 const SLOT = "#aurelian-builder-summary-slot .builder-panel-summary-accessory";
-const rowRules = rules.filter(({ selector }) => selector.startsWith(".builder-page "));
-const railRules = rules.filter(({ selector }) => !selector.startsWith(".builder-page "));
+const mediaIndex = withoutComments.indexOf("@media (min-width: 981px)");
+const rowRules = rules.filter(({ selector, index }) => index < mediaIndex && selector.startsWith(".builder-page "));
+const railRules = rules.filter(({ selector }) => selector.includes(".builder-panel-summary-accessory"));
+const panelRules = rules.filter(({ selector, index }) => index > mediaIndex && selector.startsWith(".builder-page "));
 const rail = (suffix = "") => body(`${SLOT}${suffix}`);
 
 const panelSource = read(REPOSITORY_ROOT, "packages", "builder", "src", "components", "BuilderPanel.jsx").replace(/\r\n/g, "\n");
@@ -99,6 +101,64 @@ describe("Collection Card actions: desktop rail beside the docked box (host-owne
     expect(withoutComments.lastIndexOf(".builder-page .share-box-buttons button")).toBeLessThan(mediaStart);
     expect(panelSource).toContain('<div className="builder-panel-summary-accessory">');
     expect(panelSource).toContain('window.matchMedia("(min-width: 981px)")');
+  });
+
+  it("hides the panel's own utility row at desktop, so no orphan strip sits above the Composer in any box or panel state", () => {
+    expect(panelRules.map(({ selector }) => selector)).toEqual([
+      ".builder-page .builder-panel > .share-box-actions",
+      ".builder-page .builder-panel > .compose-box-panel:first-child",
+    ]);
+    expect(body(".builder-page .builder-panel > .share-box-actions")).toBe("display: none;");
+    // the Composer sheds only its top lead (14px); one panel inset remains
+    expect(body(".builder-page .builder-panel > .compose-box-panel:first-child")).toBe("margin-top: 0;");
+    // the same rules sit inside the desktop block, so the inline (<=980px) row and its spacing are untouched
+    panelRules.forEach(({ index }) => expect(index).toBeGreaterThan(mediaIndex));
+    expect(rowRules.map(({ selector }) => selector)).not.toContain(".builder-page .builder-panel > .share-box-actions");
+  });
+
+  describe("top spacing above the Composer, by state", () => {
+    const COLLAPSED =
+      ":root:has(#aurelian-builder-summary-slot .builder-panel-sticky-summary-card.is-docked.is-collapsed) .builder-page .builder-panel";
+    const collapsedRules = rules.filter(({ selector }) => selector.startsWith(":root:has(#aurelian-builder-summary-slot .builder-panel-sticky-summary-card"));
+
+    it("tightens the collapsed desktop state only: panel padding 18px -> 14px and the stale 14px Composer lead removed", () => {
+      expect(collapsedRules.map(({ selector }) => selector)).toEqual([
+        COLLAPSED,
+        `${COLLAPSED} > .share-box-actions + .compose-box-panel`,
+      ]);
+      expect(body(COLLAPSED)).toBe("padding-top: 14px;");
+      expect(body(`${COLLAPSED} > .share-box-actions + .compose-box-panel`)).toBe("margin-top: 0;");
+      // 1px border + 14px padding = a 15px gap, inside the requested 12-16px band
+      expect(1 + 14).toBeGreaterThanOrEqual(12);
+      expect(1 + 14).toBeLessThanOrEqual(16);
+    });
+
+    it("keys on the collapsed, docked card itself (the existing .is-collapsed class), and only at >=981px", () => {
+      collapsedRules.forEach(({ index }) => expect(index).toBeGreaterThan(mediaIndex));
+      expect(COLLAPSED).toContain(".is-docked.is-collapsed");
+      expect(panelSource).toContain(`isDockedAndCollapsed ? " is-collapsed" : ""`);
+    });
+
+    it("leaves the expanded state exactly as approved: no padding rule for it, and the existing first-child margin reset only", () => {
+      // expanded keeps the package's 18px panel padding and the Composer's 0 margin from the rule above
+      expect(rules.filter(({ selector, body: ruleBody }) => /padding/.test(ruleBody) && /\.builder-panel(?![-\w])/.test(selector)).map(({ selector }) => selector)).toEqual([COLLAPSED]);
+      expect(body(".builder-page .builder-panel > .compose-box-panel:first-child")).toBe("margin-top: 0;");
+      expect(sharedCss).toMatch(/\.builder-panel \{[^}]*padding: 18px;/);
+    });
+
+    it("leaves <=980px alone: nothing outside the desktop media block touches the panel or the Composer", () => {
+      rules
+        .filter(({ index }) => index < mediaIndex)
+        .forEach(({ selector }) => expect(selector, selector).not.toMatch(/builder-panel(?!-)|compose-box-panel/));
+      // below 981px nothing is docked, so the collapsed-card class (and this rule) cannot exist there
+      expect(panelSource).toContain('window.matchMedia("(min-width: 981px)")');
+    });
+
+    it("changes no shared package file or stylesheet, and leaves the Composer's own padding to the package", () => {
+      expect(withoutComments).not.toMatch(/compose-box-panel[^{]*\{[^}]*padding/);
+      expect(sharedCss).not.toContain("is-collapsed .builder-panel");
+      expect(sharedCss).not.toMatch(/builder-collection-card/);
+    });
   });
 
   it("scopes every rail rule to the anchor under the header slot (the docked card is outside .builder-page)", () => {

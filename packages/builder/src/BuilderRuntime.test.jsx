@@ -634,6 +634,15 @@ describe("Shared modal scroll-lock: BuilderRuntime wiring", () => {
   });
 });
 
+describe("BuilderRuntime added-state boundary", () => {
+  it("defaults showAddedState to false and only ever adds a presentation flag to a card; adding itself is untouched", () => {
+    expect(runtimeSource).toMatch(/showAddedState\s*=\s*false,/);
+    expect(runtimeSource).toContain("return showAddedState && selectedPerfumes.some(");
+    expect(runtimeSource.match(/isInBox=\{isPerfumeInBox\(perfume\)\}/g)).toHaveLength(2);
+    expect(runtimeSource).toMatch(/const eligibility = canAddPerfume\(\{/);
+  });
+});
+
 describe("BuilderRuntime docked share actions boundary", () => {
   it("defaults dockShareActions to false and only relays it to the panel; the runtime holds no share-action logic or anchor of its own", () => {
     expect(runtimeSource).toMatch(/dockShareActions\s*=\s*false,/);

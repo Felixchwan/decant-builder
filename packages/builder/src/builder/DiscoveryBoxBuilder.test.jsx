@@ -217,4 +217,22 @@ describe("DiscoveryBoxBuilder asset resolver boundary", () => {
 
     expect(appCalls.map(({ dockShareActions }) => dockShareActions)).toEqual([false, true]);
   });
+
+  it("defaults the added-state opt-in to false and forwards an explicit opt-in unchanged", () => {
+    const assetResolver = createCatalogAssetResolver({ basePath: "/merchant-assets" });
+
+    renderToStaticMarkup(
+      <>
+        <DiscoveryBoxBuilder catalog={[]} config={discoveryDecantsConfig} assetResolver={assetResolver} />
+        <DiscoveryBoxBuilder
+          catalog={[]}
+          config={discoveryDecantsConfig}
+          assetResolver={assetResolver}
+          showAddedState
+        />
+      </>,
+    );
+
+    expect(appCalls.map(({ showAddedState }) => showAddedState)).toEqual([false, true]);
+  });
 });

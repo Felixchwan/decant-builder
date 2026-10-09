@@ -19,6 +19,7 @@ export const esMX = {
   "general.unlocked": "Desbloqueado",
   "general.locked": "Bloqueado",
   "general.addToBox": "Agregar a caja",
+  "general.addToTheBox": "Agregar a la caja",
   "general.add": "Agregar",
   "general.added": "Agregado",
   "general.boxFull": "Caja llena",

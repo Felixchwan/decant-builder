@@ -119,6 +119,10 @@ function App({
   // instead of in the panel flow. false/absent keeps them exactly where they
   // always were (see DiscoveryBoxBuilder.jsx's doc comment).
   dockShareActions = false,
+  // Generic, opt-in presentation capability: catalog cards whose fragrance is already in the
+  // box render their add button in an added state (see DiscoveryBoxBuilder.jsx's doc comment).
+  // false/absent renders every card exactly as it always has.
+  showAddedState = false,
   // Generic, opt-in presentation hook for the catalog heading row: absent
   // by default, which renders the row exactly as it always has -- no
   // button, no extra DOM. A host that wants a compact affordance there
@@ -1110,6 +1114,12 @@ const confirmAddPerfume = () => {
     }
   }
 
+  // Always false unless the host opted in with showAddedState, so a host that never does
+  // renders the card's add button unchanged.
+  function isPerfumeInBox(perfume) {
+    return showAddedState && selectedPerfumes.some((selected) => selected.id === perfume.id);
+  }
+
   function renderCatalogCard(perfume) {
     const tierData = getTierData(perfume.id);
 
@@ -1122,9 +1132,11 @@ const confirmAddPerfume = () => {
         onAddToBox={addPerfume}
         onOpenDetails={(perfume) => openPerfumeDetails(perfume, "manual")}
         isDisabled={totalSlots >= MAX_SELECTABLE_SLOTS}
+        isInBox={isPerfumeInBox(perfume)}
         labels={{
           add: t("general.add"),
-          addToBox: t("general.addToBox"),
+          addToBox: t("general.addToTheBox"),
+          added: t("general.added"),
           viewDetails: t("details.view"),
         }}
       />
@@ -1299,9 +1311,11 @@ const confirmAddPerfume = () => {
                         onAddToBox={(addedPerfume) => addPerfume(addedPerfume, "intent_recommendation")}
                         onOpenDetails={(perfume) => openPerfumeDetails(perfume, "intent_recommendation")}
                         isDisabled={totalSlots >= MAX_SELECTABLE_SLOTS}
+                        isInBox={isPerfumeInBox(perfume)}
                         labels={{
                           add: t("general.add"),
-                          addToBox: t("general.addToBox"),
+                          addToBox: t("general.addToTheBox"),
+                          added: t("general.added"),
                           viewDetails: t("details.view"),
                         }}
                       />

@@ -18,10 +18,12 @@
        so the same border floated above the header's own edge as a 360px-wide
        line that read like an empty slot. Its color goes transparent (not its
        width, so the box does not change size by a pixel).
-     - A split control group: the shared strip pins the expand chevron to the
-       far left and the two actions to the far right (space-between). They are
-       one cluster, so they now sit together at the right with the same 8px gap
-       the two actions already share.
+     - Three stable control positions (see the last block): expand/minimize on
+       the left, "Vaciar caja" in the center, "Revisar" on the right, on the
+       SAME horizontal axes in the expanded and the collapsed dock. (The
+       collapsed strip used to cluster all three at the right with 8px between
+       them, a different place from the expanded row, so toggling the dock moved
+       Vaciar and Revisar by 12px and left Vaciar one mis-click from Revisar.)
      - Vertical centering: the strip is given the header's own inner height so
        its flex row centers the three controls on the same axis as the logo and
        navigation, instead of sitting ~8px high.
@@ -44,13 +46,8 @@
   #aurelian-builder-summary-slot .builder-panel-sticky-summary-card.is-collapsed {
     height: var(--site-header-height);
     max-height: none;
-    padding: 0 10px;
+    padding: 0 22px;
     border-bottom-color: transparent;
-  }
-
-  #aurelian-builder-summary-slot .builder-panel-docked-collapsed {
-    justify-content: flex-end;
-    gap: 8px;
   }
 
   /* EXPANDED dock: center the "Mi caja / Vaciar caja / Revisar" row on the header's axis.
@@ -70,5 +67,61 @@
 
   #aurelian-builder-summary-slot .builder-panel-sticky-summary-card.is-docked:not(.is-collapsed) > .panel-header {
     height: var(--site-header-height);
+  }
+
+  /* THREE STABLE CONTROL POSITIONS, expanded and collapsed.
+
+     Both rows are one grid with the same three tracks (`1fr auto 1fr`) over the same inner width
+     (the collapsed card now has the expanded card's 22px side padding, so both span x = card + 22
+     .. card + 338):
+
+       left   expand / minimize   x = card + 23 in both states (the strip's chevron, and the
+                                  collapsed chevron, sit on the same vertical axis; the 1px is the
+                                  strip border the expanded chevron sits inside)
+       center "Vaciar caja"       the middle track is `auto`, so it is centered on the card itself,
+                                  whatever the title's width
+       right  "Revisar"           flush to the right padding, exactly where the expanded row had it
+
+     The two action wrappers (`.panel-header-actions`, `.builder-panel-docked-collapsed-actions`)
+     become `display: contents`, so their buttons are the grid's own items and can take a column
+     each. Each control names its column explicitly, so when the box is empty and there is no
+     "Vaciar caja", "Revisar" stays on the right instead of sliding into the middle. Nothing moves
+     vertically: both rows keep the header's height and `align-items: center`.
+
+     The centered Vaciar leaves about 22px to Revisar (it was 8px) and 20px to the "Mi caja" title,
+     and about 72px to the collapsed chevron. That spacing is the click-safety: each button's own box
+     is its click target (no pseudo-element or padding extends one), so the 22px/72px are real
+     pointer distances, not just visual ones. Sizes, type and colors are untouched. */
+  #aurelian-builder-summary-slot .builder-panel-sticky-summary-card.is-docked:not(.is-collapsed) > .panel-header,
+  #aurelian-builder-summary-slot .builder-panel-docked-collapsed {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    column-gap: 0;
+  }
+
+  #aurelian-builder-summary-slot .panel-header-actions,
+  #aurelian-builder-summary-slot .builder-panel-docked-collapsed-actions {
+    display: contents;
+  }
+
+  #aurelian-builder-summary-slot .builder-box-header-title,
+  #aurelian-builder-summary-slot .builder-panel-docked-collapsed .summary-collapse-toggle {
+    grid-column: 1;
+    justify-self: start;
+  }
+
+  #aurelian-builder-summary-slot .builder-panel-docked-collapsed .summary-collapse-toggle {
+    margin-left: 1px;
+  }
+
+  #aurelian-builder-summary-slot .builder-clear-button {
+    grid-column: 2;
+    justify-self: center;
+  }
+
+  #aurelian-builder-summary-slot .review-box-button {
+    grid-column: 3;
+    justify-self: end;
   }
 }

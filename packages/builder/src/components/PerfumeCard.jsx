@@ -8,6 +8,10 @@ function PerfumeCard({
   onAddToBox,
   onOpenDetails,
   isDisabled,
+  // Opt-in presentation state (see DiscoveryBoxBuilder's showAddedState): true only for a
+  // card whose fragrance is already in the box AND whose host asked to see that. Absent/false
+  // renders the card exactly as it always has -- same label, same markup, no extra class.
+  isInBox = false,
   labels = {},
 }) {
   const imageFallback = perfume.imageFallback;
@@ -15,6 +19,7 @@ function PerfumeCard({
   const brandAsset = brandAssetKey ? assetResolver(brandAssetKey) : "";
   const addLabel = labels.add || "Add";
   const addToBoxLabel = labels.addToBox || "Add to box";
+  const addedLabel = labels.added || "Added";
   const viewDetailsLabel = labels.viewDetails || "View notes & details";
 
   return (
@@ -94,9 +99,13 @@ function PerfumeCard({
           <span>{perfume.points} pt</span>
         </div>
 
-        <button onClick={() => onAddToBox(perfume)} disabled={isDisabled}>
-          <span className="perfume-card-add-label-full">{addToBoxLabel}</span>
-          <span className="perfume-card-add-label-short">{addLabel}</span>
+        <button
+          className={isInBox ? "perfume-card-add-button is-added" : undefined}
+          onClick={() => onAddToBox(perfume)}
+          disabled={isDisabled}
+        >
+          <span className="perfume-card-add-label-full">{isInBox ? addedLabel : addToBoxLabel}</span>
+          <span className="perfume-card-add-label-short">{isInBox ? addedLabel : addLabel}</span>
         </button>
       </div>
     </article>
