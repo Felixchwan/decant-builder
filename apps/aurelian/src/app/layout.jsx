@@ -4,6 +4,7 @@ import "./builder-zoning.css";
 import "./builder-intro.css";
 import "./builder-geometry.css";
 import "./builder-header.css";
+import "./builder-collection-card.css";
 import "./landing-hero.css";
 import "./site-header.css";
 import "./landing-video.css";

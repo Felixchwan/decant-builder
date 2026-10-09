@@ -1,0 +1,37 @@
+/* Aurelian Builder right rail -- the Collection Card block, simplified.
+
+   HOST-OWNED and Builder-route-only: every selector is under .builder-page, which only
+   Aurelian's Builder route has, so nothing here can reach the public site, the shared
+   package or Discovery Decants (which keep their heading, tooltip and layout).
+
+   The block used to open with a "COLLECTION CARD" heading and an (i) tooltip button. That
+   toolbar is shared-package markup (one `.share-box-toolbar` holding the label, the info
+   button and the tooltip; the package's own tests pin it), so it is hidden here rather than
+   removed there. `display: none` takes it out of the layout, the tab order and the
+   accessibility tree, which leaves the two actions -- Descargar PNG and, where the browser
+   supports it, Compartir tarjeta.
+
+   The actions then share the row's width: one fills it, two split it evenly with the
+   package's own 8px gap. That reads as a quiet, balanced utility row instead of one small
+   button floating at the right edge. The -4px top margin only existed to tuck the block under
+   the old label row, so it goes.
+
+   Everything else about the block is the package's: both buttons' handlers, wiring, labels,
+   size, type and colors (the host's own brass/ivory hierarchy for them is in
+   builder-zoning.css). Nothing here is animated, and no color is introduced. */
+
+.builder-page .share-box-toolbar {
+  display: none;
+}
+
+.builder-page .share-box-actions {
+  margin: 0 0 12px;
+}
+
+.builder-page .share-box-buttons {
+  justify-content: stretch;
+}
+
+.builder-page .share-box-buttons button {
+  flex: 1 1 0;
+}
