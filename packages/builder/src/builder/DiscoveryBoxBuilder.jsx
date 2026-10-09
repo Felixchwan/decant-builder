@@ -22,6 +22,7 @@ import { validateBuilderConfig } from "./config/index.js";
  * @param {number|null} [props.composerMinimumPoints] Optional, opt-in lower bound on total points the "Compose my box" action must reach before its result counts as a completed proposal. Absent/null by default, which preserves today's Composer behavior exactly (any valid box within budget is a success). The Builder never derives this from its own config — a host that wants "my box isn't done until it hits N points" (e.g. a merchant with a fixed minimum-order requirement) computes N itself and passes it here.
  * @param {boolean} [props.showBuilderHero] Generic host capability for the Builder's own shared hero section (the title + description above the catalog). Defaults to true, which renders it exactly as it always has. A host with its own intro presentation above the Builder passes false to suppress this section entirely; the Builder holds no preference state of its own here and never reads storage for it.
  * @param {boolean} [props.enablePanelCollapse] Optional, opt-in desktop capability: renders a full-height collapse rail at the left edge of the box panel column, letting a user hide it so the catalog can reclaim that width. Defaults to false, which renders the box panel column exactly as it always has -- no rail, no extra DOM, no grid-track changes. Purely a local, non-persisted layout preference; the Builder never derives this from config or storage.
+ * @param {boolean} [props.dockShareActions] Optional, opt-in presentation capability: when true AND the box summary is docked into the host's stickySummaryPortalTarget and expanded, the Collection Card share actions (the same block, handlers and status the panel always renders) are rendered inside the docked summary card behind a stable, unstyled anchor, `.builder-panel-summary-accessory`, instead of in the panel flow, so a host can position them beside the box. Defaults to false, which renders them in the panel flow exactly as they always were. Below the docking breakpoint, or while the dock is collapsed, they stay in the panel flow either way. The package gives the anchor no visual treatment; placement, icons and responsive behavior belong to the host.
  * @param {() => void} [props.onCatalogInfoRequest] Optional, opt-in presentation hook: when supplied, renders a compact accessible info button at the end of the catalog heading row and calls this handler on click. Absent by default, which renders the row exactly as it always has -- no button, no extra DOM. The Builder never interprets what the click should do; a host wires this to whatever local presentation concern it owns (e.g. restoring a dismissed intro block).
  */
 export default function DiscoveryBoxBuilder({
@@ -40,6 +41,7 @@ export default function DiscoveryBoxBuilder({
   composerMinimumPoints = null,
   showBuilderHero = true,
   enablePanelCollapse = false,
+  dockShareActions = false,
   onCatalogInfoRequest,
 }) {
   if (!config) {
@@ -102,6 +104,7 @@ export default function DiscoveryBoxBuilder({
       composerMinimumPoints={composerMinimumPoints}
       showBuilderHero={showBuilderHero}
       enablePanelCollapse={enablePanelCollapse}
+      dockShareActions={dockShareActions}
       onCatalogInfoRequest={onCatalogInfoRequest}
     />
   );

@@ -160,6 +160,10 @@ export function BuilderExperience({
       // Discovery Decants never passes this, so it keeps today's
       // permanently-visible panel column unchanged by default.
       enablePanelCollapse
+      // Aurelian positions the Collection Card actions as a rail beside the
+      // docked box (builder-collection-card.css); the package only provides
+      // the anchor. Discovery Decants never passes this.
+      dockShareActions
     />
   );
 }

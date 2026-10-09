@@ -44,15 +44,23 @@ button,input,select { font:inherit; }
   --aur-burgundy-rim: rgba(138, 52, 74, 0.5);    /* rims and soft text glow */
   --aur-burgundy-wash: rgba(74, 15, 31, 0.6);    /* hover/focus fill */
   --aur-burgundy-glow: rgba(74, 15, 31, 0.4);    /* faint outer glow */
+  /* The ONE burgundy that may carry small text. The lifted value above is only 2.52:1 on the
+     header (#090a09) and the base is 1.30:1, both below the 4.5:1 small text needs. This is
+     a muted brick / lifted oxblood: warmer and less saturated than the lift's own hue (345deg),
+     chosen over #c05972, which cleared 4.5:1 but read dusty rose. #b85d63 is 4.52:1. Interactive
+     state only. */
+  --aur-burgundy-text-interactive: #b85d63;
   --aur-ivory: #e7ddcf;
 }
 
-/* Inactive navigation, hover or keyboard focus: ivory text with a burgundy underline and
-   a faint burgundy glow. The ACTIVE route is excluded, so it keeps its brass text and brass
-   underline (including on hover); the global gold :focus-visible outline still applies. No
-   size, spacing or type changes: color, shadow and the existing 1px underline only. */
+/* Inactive navigation, hover or keyboard focus: the text itself turns the readable interactive
+   burgundy (4.52:1; see the token), over a burgundy underline and a faint dark glow. The ACTIVE
+   route is excluded, so it keeps its brass text and brass underline (including on hover); the
+   global gold :focus-visible outline still applies. The glow is the dark token, not the lifted
+   rim, so it can't wash out the text behind it. No size, spacing or type changes: color, shadow
+   and the existing 1px underline only. */
 .desktop-nav a:not([aria-current="page"]):hover,
-.desktop-nav a:not([aria-current="page"]):focus-visible { color:var(--aur-ivory); text-shadow:0 0 14px var(--aur-burgundy-rim); }
+.desktop-nav a:not([aria-current="page"]):focus-visible { color:var(--aur-burgundy-text-interactive); text-shadow:0 0 14px var(--aur-burgundy-glow); }
 .desktop-nav a:not([aria-current="page"]):hover::after,
 .desktop-nav a:not([aria-current="page"]):focus-visible::after { background:var(--aur-burgundy-lift); opacity:1; transform:scaleX(1); }
 .mobile-menu { display:none; margin-left:auto; }

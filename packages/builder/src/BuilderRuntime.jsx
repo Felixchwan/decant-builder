@@ -114,6 +114,11 @@ function App({
   // false/absent renders the box panel column exactly as it always has --
   // no rail, no extra wrapper, no grid-track changes.
   enablePanelCollapse = false,
+  // Generic, opt-in presentation capability: renders the Collection Card share
+  // actions inside the docked summary card (behind a stable, unstyled anchor)
+  // instead of in the panel flow. false/absent keeps them exactly where they
+  // always were (see DiscoveryBoxBuilder.jsx's doc comment).
+  dockShareActions = false,
   // Generic, opt-in presentation hook for the catalog heading row: absent
   // by default, which renders the row exactly as it always has -- no
   // button, no extra DOM. A host that wants a compact affordance there
@@ -1177,6 +1182,7 @@ const confirmAddPerfume = () => {
       onReviewCustomerInfoChange={setReviewCustomerInfo}
       onMobileTabChange={setActiveMobileTab}
       stickySummaryPortalTarget={stickySummaryPortalTarget}
+      dockShareActions={dockShareActions}
     />
   );
 

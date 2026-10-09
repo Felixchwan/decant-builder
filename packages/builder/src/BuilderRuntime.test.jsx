@@ -633,3 +633,11 @@ describe("Shared modal scroll-lock: BuilderRuntime wiring", () => {
     expect(runtimeSource).toContain('{t("rareSelection.title")}');
   });
 });
+
+describe("BuilderRuntime docked share actions boundary", () => {
+  it("defaults dockShareActions to false and only relays it to the panel; the runtime holds no share-action logic or anchor of its own", () => {
+    expect(runtimeSource).toMatch(/dockShareActions\s*=\s*false,/);
+    expect(runtimeSource).toContain("dockShareActions={dockShareActions}");
+    expect(runtimeSource).not.toContain("builder-panel-summary-accessory");
+  });
+});

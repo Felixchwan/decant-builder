@@ -78,6 +78,7 @@ import { noopAnalytics } from "../analytics/noopAnalytics.js";
 import { metadataAssets } from "@discovery-box/catalog";
 import { acquireBodyScrollLock } from "../builder/internal/portal/bodyScrollLock.js";
 import { renderOwnedPortal } from "../builder/internal/portal/renderOwnedPortal.jsx";
+import { getShareActionsPlacement } from "../builder/internal/summary/shareActionsPlacement.js";
 import {
   createCollectionCardExportStage,
   removeCollectionCardExportStage,
@@ -169,6 +170,7 @@ const BuilderPanel = forwardRef(function BuilderPanel({
   analytics = noopAnalytics,
   finalizationAdapter,
   stickySummaryPortalTarget = null,
+  dockShareActions = false,
 }, ref) {
     const translator = useMemo(
       () => createTranslator(builderConfig.locale, builderConfig.taxonomyLabels),
@@ -710,6 +712,82 @@ const BuilderPanel = forwardRef(function BuilderPanel({
   // rendering path is untouched by isSummaryCollapsed entirely.
   const isDockedAndCollapsed = isSummaryDocked && isSummaryCollapsed;
 
+  // The Collection Card share actions are one block of markup with one set of
+  // handlers/state. By default it renders in the panel's own flow, as it always
+  // has; a host that opts in (dockShareActions) gets it inside the docked
+  // summary card instead, behind a stable anchor it can position beside the
+  // box. getShareActionsPlacement decides which parent hosts it -- it is never
+  // rendered twice.
+  const shareActionsPlacement = getShareActionsPlacement({
+    dockShareActions,
+    isSummaryDocked,
+    isSummaryCollapsed,
+  });
+  // A host that renders these as compact icon-only controls still needs a
+  // hover/long-press name for sighted users, so the docked placement (and only
+  // that one) also exposes each action's own label as a native title.
+  const shareActionTitle = (isActive, label) =>
+    shareActionsPlacement === "summary"
+      ? isActive ? builderConfig.collectionCard.generatingLabel : label
+      : undefined;
+  const shareActionsBlock = (
+    <div className="share-box-actions">
+      <div className="share-box-toolbar">
+        <span className="share-box-label">{t("collectionCard.label")}</span>
+
+        <span className="share-info-wrap">
+          <button
+            type="button"
+            className="share-info-button"
+            aria-label={t("collectionCard.tooltip")}
+            aria-describedby="share-box-tooltip"
+            aria-expanded={isShareTooltipOpen}
+            onClick={() => setIsShareTooltipOpen((isOpen) => !isOpen)}
+            onBlur={() => setIsShareTooltipOpen(false)}
+          >
+            i
+          </button>
+          <span
+            id="share-box-tooltip"
+            className={`share-box-tooltip ${
+              isShareTooltipOpen ? "is-visible" : ""
+            }`}
+            role="tooltip"
+          >
+            {builderConfig.collectionCard.tooltip}
+          </span>
+        </span>
+      </div>
+
+      <div className="share-box-buttons" aria-busy={isShareGenerating}>
+        <button
+          type="button"
+          title={shareActionTitle(activeShareAction === "download", builderConfig.collectionCard.downloadLabel)}
+          onClick={handleDownloadShareImage}
+          disabled={isShareGenerating}
+        >
+          {activeShareAction === "download" ? builderConfig.collectionCard.generatingLabel : builderConfig.collectionCard.downloadLabel}
+        </button>
+        {canNativeShareCard && (
+          <button
+            type="button"
+            title={shareActionTitle(activeShareAction === "share", builderConfig.collectionCard.shareLabel)}
+            onClick={handleNativeShareCard}
+            disabled={isShareGenerating}
+          >
+            {activeShareAction === "share" ? builderConfig.collectionCard.generatingLabel : builderConfig.collectionCard.shareLabel}
+          </button>
+        )}
+      </div>
+
+      {shareStatus && (
+        <p className="share-box-status" aria-live="polite">
+          {shareStatus}
+        </p>
+      )}
+    </div>
+  );
+
   const stickySummaryContent = (
     <div
       className={`builder-panel-sticky-summary-card${isSummaryDocked ? " is-docked" : ""}${
@@ -855,6 +933,13 @@ const BuilderPanel = forwardRef(function BuilderPanel({
               />
             </div>
           </div>
+
+          {shareActionsPlacement === "summary" && (
+            // Stable, merchant-neutral anchor for host-owned actions beside the
+            // docked box. Opt-in (dockShareActions); the package gives it no
+            // visual treatment of its own.
+            <div className="builder-panel-summary-accessory">{shareActionsBlock}</div>
+          )}
         </>
       )}
     </div>
@@ -898,59 +983,7 @@ const BuilderPanel = forwardRef(function BuilderPanel({
         <div className="builder-panel-sticky-summary">{stickySummaryContent}</div>
       )}
 
-      <div className="share-box-actions">
-        <div className="share-box-toolbar">
-          <span className="share-box-label">{t("collectionCard.label")}</span>
-
-          <span className="share-info-wrap">
-            <button
-              type="button"
-              className="share-info-button"
-              aria-label={t("collectionCard.tooltip")}
-              aria-describedby="share-box-tooltip"
-              aria-expanded={isShareTooltipOpen}
-              onClick={() => setIsShareTooltipOpen((isOpen) => !isOpen)}
-              onBlur={() => setIsShareTooltipOpen(false)}
-            >
-              i
-            </button>
-            <span
-              id="share-box-tooltip"
-              className={`share-box-tooltip ${
-                isShareTooltipOpen ? "is-visible" : ""
-              }`}
-              role="tooltip"
-            >
-              {builderConfig.collectionCard.tooltip}
-            </span>
-          </span>
-        </div>
-
-        <div className="share-box-buttons" aria-busy={isShareGenerating}>
-          <button
-            type="button"
-            onClick={handleDownloadShareImage}
-            disabled={isShareGenerating}
-          >
-            {activeShareAction === "download" ? builderConfig.collectionCard.generatingLabel : builderConfig.collectionCard.downloadLabel}
-          </button>
-          {canNativeShareCard && (
-            <button
-              type="button"
-              onClick={handleNativeShareCard}
-              disabled={isShareGenerating}
-            >
-              {activeShareAction === "share" ? builderConfig.collectionCard.generatingLabel : builderConfig.collectionCard.shareLabel}
-            </button>
-          )}
-        </div>
-
-        {shareStatus && (
-          <p className="share-box-status" aria-live="polite">
-            {shareStatus}
-          </p>
-        )}
-      </div>
+      {shareActionsPlacement === "panel" && shareActionsBlock}
 
       <ComposeMyBoxPanel
         builderConfig={builderConfig}

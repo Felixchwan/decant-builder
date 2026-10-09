@@ -36,14 +36,47 @@ describe("burgundy interaction language: tokens", () => {
     });
   });
 
-  it("never uses burgundy as text: wash, rim, underline and glow only", () => {
+  // WCAG relative luminance / contrast, so the text token's readability is a computed fact, not a claim.
+  const luminance = (hex) => {
+    const channel = (offset) => {
+      const value = parseInt(hex.slice(offset, offset + 2), 16) / 255;
+      return value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4;
+    };
+    return 0.2126 * channel(1) + 0.7152 * channel(3) + 0.0722 * channel(5);
+  };
+  const contrast = (a, b) => (Math.max(luminance(a), luminance(b)) + 0.05) / (Math.min(luminance(a), luminance(b)) + 0.05);
+  const HEADER_BACKGROUND = "#090a09";
+
+  it("defines ONE burgundy that may carry small text, and it clears 4.5:1 on the header where the others don't", () => {
+    const root = rulesOf(globals).filter(({ selector }) => selector === ":root").map(({ body }) => body).join(";");
+
+    expect(root).toContain("--aur-burgundy-text-interactive: #b85d63;");
+    expect(contrast("#b85d63", HEADER_BACKGROUND)).toBeGreaterThanOrEqual(4.5);
+    // the existing tokens stay what they were, and are the reason this one exists
+    expect(contrast("#8a344a", HEADER_BACKGROUND)).toBeLessThan(3);
+    expect(contrast("#4a0f1f", HEADER_BACKGROUND)).toBeLessThan(1.5);
+    expect(root).toContain("--aur-burgundy: #4a0f1f;");
+    expect(root).toContain("--aur-burgundy-lift: #8a344a;");
+    expect(root).toContain("--aur-burgundy-wash: rgba(74, 15, 31, 0.6);");
+  });
+
+  it("never uses burgundy as text, except that one token, and only for inactive-nav hover and focus", () => {
+    const textUsers = [];
     [globals, zoning, hero].forEach((text) => {
       rulesOf(text).forEach(({ selector, body }) => {
         [...body.matchAll(/(?:^|[;\s])color:\s*([^;]+);/g)].forEach((match) => {
+          if (/aur-burgundy-text-interactive/.test(match[1])) {
+            textUsers.push(selector);
+            return;
+          }
           expect(match[1], `${selector} color`).not.toMatch(/aur-burgundy|#4a0f1f|#8a344a|74,\s*15,\s*31|138,\s*52,\s*74/i);
         });
       });
     });
+
+    expect(textUsers).toEqual([
+      ".desktop-nav a:not([aria-current=\"page\"]):hover, .desktop-nav a:not([aria-current=\"page\"]):focus-visible",
+    ]);
   });
 });
 
@@ -58,8 +91,8 @@ describe("burgundy interaction language: the three approved controls", () => {
   it("inactive nav hover and keyboard focus get the same burgundy treatment", () => {
     expect(navRules()).toHaveLength(2);
     expect(textRule().selector).toBe(`${hover}, ${focus}`);
-    expect(textRule().body).toMatch(/color:\s*var\(--aur-ivory\);/);
-    expect(textRule().body).toMatch(/text-shadow:\s*0 0 14px var\(--aur-burgundy-rim\);/);
+    expect(textRule().body).toMatch(/color:\s*var\(--aur-burgundy-text-interactive\);/);
+    expect(textRule().body).toMatch(/text-shadow:\s*0 0 14px var\(--aur-burgundy-glow\);/);
 
     expect(underlineRule().selector).toBe(`${hover}::after, ${focus}::after`);
     expect(underlineRule().body).toMatch(/background:\s*var\(--aur-burgundy-lift\);/);

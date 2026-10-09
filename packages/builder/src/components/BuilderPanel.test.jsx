@@ -18,6 +18,7 @@ import { fragrances as perfumes, notes } from "@discovery-box/catalog";
 import { createTranslator } from "../i18n/createTranslator.js";
 import { esMX } from "../i18n/locales/es-MX.js";
 import { buildScentDna } from "../utils/buildScentDna.js";
+import { getShareActionsPlacement } from "../builder/internal/summary/shareActionsPlacement.js";
 import BuilderPanel, {
   ComposerGenerateButton,
   ComposerProposalDetailTrigger,
@@ -153,6 +154,66 @@ describe("Collection Card actions (Vista previa removed)", () => {
     expect(shareButtonsSource).toContain("handleDownloadShareImage");
     expect(shareButtonsSource).toContain("handleNativeShareCard");
     expect(shareButtonsSource.match(/<button/g)).toHaveLength(2);
+  });
+});
+
+describe("Opt-in docked share actions (dockShareActions)", () => {
+  const normalized = builderPanelSource.replace(/\r\n/g, "\n");
+
+  it("renders nothing extra by default: the actions stay in the panel flow with no accessory anchor and no title attributes", () => {
+    const markup = renderBuilderPanel();
+
+    expect(markup).toContain('class="share-box-actions"');
+    expect(markup).toContain('class="share-box-buttons"');
+    expect(markup).not.toContain("builder-panel-summary-accessory");
+    expect(markup).not.toMatch(/<button[^>]*title=/);
+  });
+
+  it("an opt-in alone changes nothing while the summary is not docked (no host slot / below the docking breakpoint)", () => {
+    const withoutOptIn = renderBuilderPanel();
+    const withOptIn = renderBuilderPanel({ dockShareActions: true });
+
+    expect(withOptIn).toBe(withoutOptIn);
+    expect(withOptIn).not.toContain("builder-panel-summary-accessory");
+  });
+
+  it("defaults the prop to false and renders the one block through exactly two mutually exclusive placements", () => {
+    expect(normalized).toMatch(/dockShareActions = false,\n\}, ref\) \{/);
+    expect(normalized).toContain('{shareActionsPlacement === "panel" && shareActionsBlock}');
+    expect(normalized).toContain('{shareActionsPlacement === "summary" && (');
+    expect(normalized.match(/\{shareActionsBlock\}/g)).toHaveLength(1);
+    expect(normalized.match(/<div className="share-box-actions">/g)).toHaveLength(1);
+    // only ever inside the expanded docked card, never the collapsed variant
+    expect(getShareActionsPlacement({ dockShareActions: true, isSummaryDocked: true, isSummaryCollapsed: true })).toBe("panel");
+  });
+
+  it("reuses the existing handlers and state rather than a second implementation", () => {
+    expect(normalized.match(/onClick=\{handleDownloadShareImage\}/g)).toHaveLength(1);
+    expect(normalized.match(/onClick=\{handleNativeShareCard\}/g)).toHaveLength(1);
+    expect(normalized.match(/disabled=\{isShareGenerating\}/g)).toHaveLength(2);
+  });
+
+  it("gives the docked placement alone a native title per action, from the same labels, so icon-only hosts keep a hover name", () => {
+    expect(normalized).toContain('shareActionsPlacement === "summary"');
+    expect(normalized).toMatch(/title=\{shareActionTitle\(activeShareAction === "download", builderConfig\.collectionCard\.downloadLabel\)\}/);
+    expect(normalized).toMatch(/title=\{shareActionTitle\(activeShareAction === "share", builderConfig\.collectionCard\.shareLabel\)\}/);
+  });
+
+  it("knows no merchant: the anchor and placement helper carry only generic names and no host copy", () => {
+    const helperSource = readFileSync(new URL("../builder/internal/summary/shareActionsPlacement.js", import.meta.url), "utf8");
+    const start = normalized.indexOf('{shareActionsPlacement === "summary" && (');
+    const accessory = normalized.slice(start, normalized.indexOf("</>", start));
+
+    [helperSource, accessory].forEach((text) => {
+      expect(text).not.toMatch(/aurelian|discovery.?decants|descargar|compartir/i);
+    });
+    expect(accessory).toContain('className="builder-panel-summary-accessory"');
+  });
+
+  it("adds no styling to the package: the anchor has no rule in the shared stylesheet", () => {
+    const sharedCss = readFileSync(new URL("../../styles.css", import.meta.url), "utf8");
+
+    expect(sharedCss).not.toContain("builder-panel-summary-accessory");
   });
 });
 
