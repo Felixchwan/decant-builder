@@ -21,7 +21,12 @@ const SLOT = "#aurelian-builder-summary-slot .builder-panel-summary-accessory";
 const mediaIndex = withoutComments.indexOf("@media (min-width: 981px)");
 const rowRules = rules.filter(({ selector, index }) => index < mediaIndex && selector.startsWith(".builder-page "));
 const railRules = rules.filter(({ selector }) => selector.includes(".builder-panel-summary-accessory"));
-const panelRules = rules.filter(({ selector, index }) => index > mediaIndex && selector.startsWith(".builder-page "));
+const GUTTER = ".builder-page .builder-panel-collapsible-row::before";
+const GUTTER_COLLAPSED = ".builder-page .layout--panel-collapsed .builder-panel-collapsible-row::before";
+const gutterRules = rules.filter(({ selector }) => selector === GUTTER || selector === GUTTER_COLLAPSED);
+const panelRules = rules.filter(
+  ({ selector, index }) => index > mediaIndex && selector.startsWith(".builder-page ") && !gutterRules.some((gutter) => gutter.selector === selector)
+);
 const rail = (suffix = "") => body(`${SLOT}${suffix}`);
 
 const panelSource = read(REPOSITORY_ROOT, "packages", "builder", "src", "components", "BuilderPanel.jsx").replace(/\r\n/g, "\n");
@@ -174,7 +179,7 @@ describe("Collection Card actions: desktop rail beside the docked box (host-owne
     const anchor = rail();
     expect(anchor).toMatch(/position: absolute;/);
     expect(anchor).toMatch(/left: -7px;/);
-    expect(anchor).toMatch(/top: calc\(var\(--site-header-height\) \+ 27px\);/);
+    expect(anchor).toContain("top: calc(var(--site-header-height) + 17px);");
     expect(anchor).toMatch(/width: 26px;/);
     expect(anchor).toMatch(/height: 171px;/);
     expect(anchor).toMatch(/display: flex;/);
@@ -219,5 +224,69 @@ describe("Collection Card actions: desktop rail beside the docked box (host-owne
     expect(body(`:root:has(.layout--panel-collapsed) ${SLOT}`)).toBe("display: none;");
     // the hook is the Builder's own collapsed-layout class, the one the other host files already key on
     expect(read(REPOSITORY_ROOT, "packages", "builder", "src", "BuilderRuntime.jsx")).toContain("layout--panel-collapsed");
+  });
+});
+
+describe("Collection Card actions: rail offset follows the compacted docked box", () => {
+  it("sits 10px higher than before (27px -> 17px below the header), the exact amount the expanded header row's margin shrank", () => {
+    // the docked row's bottom margin went 18px -> 8px, so the rack's frame moved up 10px; the rail is centred on the
+    // rack, so its top moved by the same 10px, and its size, left clearance and column layout are unchanged
+    expect(rail()).toContain("top: calc(var(--site-header-height) + 17px);");
+    expect(rail()).toMatch(/left: -7px;/);
+    expect(rail()).toMatch(/width: 26px;/);
+    expect(rail()).toMatch(/height: 171px;/);
+    expect(rail(" .share-box-buttons button")).toMatch(/width: 26px;/);
+    expect(rail(" .share-box-buttons button")).toMatch(/height: 26px;/);
+  });
+});
+
+describe("Side-control gutter: a solid near-black strip behind the rail (host-owned, desktop-docked only)", () => {
+  const gutter = () => body(GUTTER);
+  const strip = () => withoutComments.slice(withoutComments.indexOf(GUTTER));
+
+  it("is one pseudo-element on the collapsible row, inside the single desktop media block, and nowhere else", () => {
+    expect(gutterRules.map(({ selector }) => selector)).toEqual([GUTTER, GUTTER_COLLAPSED]);
+    gutterRules.forEach(({ index }) => expect(index).toBeGreaterThan(mediaIndex));
+    expect(withoutComments.match(/@media/g)).toHaveLength(1);
+    // nothing in the <=980px layers mentions it
+    rules.filter(({ index }) => index < mediaIndex).forEach(({ selector }) => expect(selector, selector).not.toMatch(/collapsible-row/));
+  });
+
+  it("uses the page's existing near-black token, with no new color, opacity, blur or image", () => {
+    expect(gutter()).toContain("background: var(--bg);");
+    expect(gutter()).not.toMatch(/#|rgb|hsl|opacity|blur|gradient|url|shadow|border|filter/);
+  });
+
+  it("never takes a pointer event and sits below the rail, the column and the docked controls", () => {
+    expect(gutter()).toMatch(/pointer-events: none;/);
+    expect(gutter()).toMatch(/z-index: -1;/);
+    // the rail itself is positioned in the header slot and is not given a lower layer by this rule
+    expect(rail()).not.toMatch(/z-index: -/);
+  });
+
+  it("adds no layout width: absolutely positioned, only the existing 30px gutter wide, hung from the row's left edge", () => {
+    expect(gutter()).toMatch(/position: absolute;/);
+    expect(gutter()).toMatch(/left: 0;/);
+    expect(gutter()).toMatch(/width: 30px;/);
+    expect(gutter()).not.toMatch(/(?:^|[;\s])(?:margin|padding|right|min-width|max-width|float|display)\b/);
+  });
+
+  it("meets the header line exactly: its top is the row's live clearance below the docked card plus the 18px layout offset", () => {
+    expect(gutter()).toContain("top: calc(-1 * (var(--builder-docked-summary-overflow) + 18px));");
+    expect(gutter()).toContain("height: calc(var(--builder-docked-summary-overflow) + 18px);");
+    // the live clearance is the one the host already derives from the measured docked card height, and the
+    // package's sticky row already reads it
+    expect(read(APP_ROOT, "src", "app", "globals.css")).toContain("--builder-docked-summary-overflow:max(0px,");
+    expect(sharedCss).toContain("var(--builder-docked-summary-overflow, 0px)");
+  });
+
+  it("draws nothing when the right panel is collapsed, so no orphan strip is left", () => {
+    expect(body(GUTTER_COLLAPSED)).toBe("display: none;");
+  });
+
+  it("leaves the shared package stylesheet alone, and Discovery Decants never loads it", () => {
+    expect(sharedCss).not.toMatch(/collapsible-row::before/);
+    expect(strip()).not.toMatch(/!important/);
+    expect(read(REPOSITORY_ROOT, "src", "main.jsx")).not.toMatch(/builder-collection-card/);
   });
 });

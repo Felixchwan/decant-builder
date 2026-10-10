@@ -58,15 +58,24 @@
      row (a flex container that already centers its three children, `align-items: center`) is
      given exactly the header's height. The row then spans the same band as the logo and nav,
      and its children are centered in it whatever their own heights (they differ by width).
-     Horizontal geometry, control sizes, gaps, type and colors are untouched; the 18px margin
-     under the row is too, so the rest of the card keeps its place (the row's old footprint,
-     22px + its height, was within a few pixels of the header height at every desktop width). */
+     Horizontal geometry, control sizes, gaps, type and colors are untouched. The row's own
+     bottom margin is the one other change (see the rule below): it is the only thing between the
+     header line and the rack, and shrinking it is what anchors the box to the header. */
   #aurelian-builder-summary-slot .builder-panel-sticky-summary-card.is-docked:not(.is-collapsed) {
     padding-top: 0;
   }
 
+  /* The package gives this row an 18px bottom margin before the rack (written for the in-panel card,
+     where it separates the title from the content). Docked, it left the rack's frame 17px below the
+     header line and its first slot 29px below it, so the box read as suspended under the header
+     instead of hanging from it. 8px leaves the frame 7px below the line and the first slot 19px, with
+     nothing clipped. The card is this much shorter, and everything that depends on its height
+     follows from it: the panel's clearance is measured live (--builder-docked-summary-height), and
+     the action rail's `top` (builder-collection-card.css) moved up by the same 10px. Collapsed
+     cards have no such row. */
   #aurelian-builder-summary-slot .builder-panel-sticky-summary-card.is-docked:not(.is-collapsed) > .panel-header {
     height: var(--site-header-height);
+    margin-bottom: 8px;
   }
 
   /* THREE STABLE CONTROL POSITIONS, expanded and collapsed.

@@ -57,7 +57,7 @@
   #aurelian-builder-summary-slot .builder-panel-summary-accessory {
     position: absolute;
     left: -7px;
-    top: calc(var(--site-header-height) + 27px);
+    top: calc(var(--site-header-height) + 17px);
     width: 26px;
     height: 171px;
     display: flex;
@@ -197,6 +197,40 @@
      beside it to anchor to, so the rail goes with it: display none removes it from layout,
      the tab order and the accessibility tree. Reopening the panel brings it straight back. */
   :root:has(.layout--panel-collapsed) #aurelian-builder-summary-slot .builder-panel-summary-accessory {
+    display: none;
+  }
+
+  /* ---- The side-control gutter ----------------------------------------------------------------
+
+     Above the collapse rail, beside the docked box, nothing of the panel exists yet: the box lives
+     in the header, the panel column starts below it, and the 30px between the catalog and the box
+     (the 20px collapse rail plus its 10px gap to the box) shows the page artwork and its gradient.
+     The Download / Share rail floats over that, so the controls look cut out of the background.
+
+     This fills that gap with the page's own near-black (--bg, the header's ground): one solid strip,
+     the collapse rail's width plus its gap, running from the header line down to the top of the
+     collapse rail, so the two read as one continuous dark gutter. The row is the owner because it is
+     what the rail sits in and what scrolls with it: the strip lives in its stacking context at
+     z-index -1 (above the page art, below the rail, the column and the docked card's controls), and
+     scrolls away with it, so the rail takes its place with no seam and no floating rectangle. Its
+     height is the row's own clearance below the docked card, which is measured live
+     (--builder-docked-summary-overflow), plus the 18px between the header and the layout, so it meets
+     the header line exactly whatever the card's height. It adds no layout width (absolutely
+     positioned, outside the flow) and never takes a pointer event. Nothing is drawn when the panel is
+     collapsed: the rail is elsewhere and the docked card has no accessory beside it. */
+  .builder-page .builder-panel-collapsible-row::before {
+    content: "";
+    position: absolute;
+    z-index: -1;
+    top: calc(-1 * (var(--builder-docked-summary-overflow) + 18px));
+    left: 0;
+    width: 30px;
+    height: calc(var(--builder-docked-summary-overflow) + 18px);
+    background: var(--bg);
+    pointer-events: none;
+  }
+
+  .builder-page .layout--panel-collapsed .builder-panel-collapsible-row::before {
     display: none;
   }
 }

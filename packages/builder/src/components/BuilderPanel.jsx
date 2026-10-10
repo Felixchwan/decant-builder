@@ -28,6 +28,7 @@ import {
   sortNoteExplorerMatchesByProminence,
 } from "../builder/internal/intelligence/buildNoteExplorerViewModel.js";
 import { isCuratorBonusUnlocked as deriveCuratorBonusUnlocked } from "../builder/internal/curatorBonus/isCuratorBonusUnlocked.js";
+import { isCuratorBonusUnlockTransition } from "../builder/internal/curatorBonus/isCuratorBonusUnlockTransition.js";
 import { buildBuilderThemeStyle, hasCustomBuilderTheme } from "../builder/theme/builderTheme.js";
 import {
   getAccordRecommendationCopy,
@@ -196,7 +197,8 @@ const BuilderPanel = forwardRef(function BuilderPanel({
     const [isNoteExplorerOpen, setIsNoteExplorerOpen] = useState(false);
     const [isCollectionSnapshotOpen, setIsCollectionSnapshotOpen] = useState(false);
     const [selectedDnaAccord, setSelectedDnaAccord] = useState(null);
-    const previousCuratorBonusUnlockedRef = useRef(false);
+    // null until the first effect run has looked at the box (see isCuratorBonusUnlockTransition).
+    const previousCuratorBonusUnlockedRef = useRef(null);
     const curatorBonusModuleRef = useRef(null);
     const [isCuratorBonusAnimating, setIsCuratorBonusAnimating] = useState(false);
     const [shareStatus, setShareStatus] = useState("");
@@ -684,7 +686,12 @@ const BuilderPanel = forwardRef(function BuilderPanel({
     useEffect(() => {
       let animationTimeout;
 
-      if (isCuratorBonusUnlocked && !previousCuratorBonusUnlockedRef.current) {
+      if (
+        isCuratorBonusUnlockTransition({
+          previous: previousCuratorBonusUnlockedRef.current,
+          current: isCuratorBonusUnlocked,
+        })
+      ) {
         setIsCuratorBonusAnimating(true);
         window.requestAnimationFrame(() => {
           curatorBonusModuleRef.current?.scrollIntoView({

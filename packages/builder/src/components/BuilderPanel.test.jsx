@@ -2812,3 +2812,46 @@ describe("Shared modal scroll-lock: BuilderPanel wiring", () => {
     expect(collectionDnaPanelSource).toContain('role="dialog"');
   });
 });
+
+describe("Curator Bonus unlock celebration: restored-unlocked box vs a real unlock", () => {
+  const start = normalizedPanelSource.indexOf("const previousCuratorBonusUnlockedRef");
+  const effectStart = normalizedPanelSource.indexOf("isCuratorBonusUnlockTransition({");
+  const effect = normalizedPanelSource.slice(effectStart, normalizedPanelSource.indexOf("[isCuratorBonusUnlocked]);", effectStart));
+
+  it("remembers the last unlocked state from null, so a first look at an already-unlocked box is not an unlock", () => {
+    expect(start).toBeGreaterThan(-1);
+    expect(normalizedPanelSource).toContain("const previousCuratorBonusUnlockedRef = useRef(null);");
+    expect(normalizedPanelSource).not.toMatch(/previousCuratorBonusUnlockedRef = useRef\((?:false|true)\)/);
+  });
+
+  it("starts the celebration, the Curator Bonus scroll and the 1600ms clear only on the helper's transition", () => {
+    expect(normalizedPanelSource).toContain(
+      'import { isCuratorBonusUnlockTransition } from "../builder/internal/curatorBonus/isCuratorBonusUnlockTransition.js";'
+    );
+    expect(effect).toContain("previous: previousCuratorBonusUnlockedRef.current,");
+    expect(effect).toContain("current: isCuratorBonusUnlocked,");
+    // the real transition keeps its animation, its smooth scroll to the module and its timing, unchanged
+    expect(effect).toContain("setIsCuratorBonusAnimating(true);");
+    expect(effect).toContain("window.requestAnimationFrame(");
+    expect(effect).toContain('behavior: "smooth"');
+    expect(effect).toContain('block: "center"');
+    expect(effect).toContain("}, 1600);");
+    // the previous value is recorded on every run, restored or not, and the pending timer is always cleared on cleanup
+    expect(effect).toContain("previousCuratorBonusUnlockedRef.current = isCuratorBonusUnlocked;");
+    expect(effect).toContain("window.clearTimeout(animationTimeout);");
+  });
+
+  it("gates the scroll behind the transition, never behind a bare unlocked check or a route/host flag", () => {
+    const beforeScroll = effect.slice(0, effect.indexOf("window.requestAnimationFrame("));
+
+    expect(beforeScroll).not.toMatch(/if \(\s*isCuratorBonusUnlocked\s*&&\s*!previousCuratorBonusUnlockedRef/);
+    expect(beforeScroll).not.toMatch(/pathname|aurelian|isDevelopment|setTimeout\([^)]*,\s*\d+\)\s*;?\s*\n\s*window\.requestAnimationFrame/i);
+  });
+
+  it("leaves the unlocked state itself, the Curator Bonus copy and its rules to their own modules", () => {
+    expect(normalizedPanelSource).toContain("isCuratorBonusUnlocked");
+    expect(
+      readFileSync(new URL("../builder/internal/curatorBonus/isCuratorBonusUnlocked.js", import.meta.url), "utf8")
+    ).not.toContain("isCuratorBonusUnlockTransition");
+  });
+});

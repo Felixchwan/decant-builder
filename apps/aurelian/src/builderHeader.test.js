@@ -93,11 +93,15 @@ describe("Aurelian Builder header: collapsed summary strip (host-owned, desktop-
 
     // no top inset (the shared 22px exists to clear the in-panel padding), and the row spans exactly the header's height
     expect(card.body.replace(/\s+/g, " ").trim()).toBe("padding-top: 0;");
-    expect(row.body.replace(/\s+/g, " ").trim()).toBe("height: var(--site-header-height);");
+    // ...and the row's only other declaration is its bottom margin, 18px (the package's) -> 8px, which is what hangs
+    // the rack from the header line. It is scoped to this selector, so the collapsed strip and <=980px keep theirs.
+    expect(row.body.replace(/\s+/g, " ").trim()).toBe("height: var(--site-header-height); margin-bottom: 8px;");
+    expect(read(REPOSITORY_ROOT, "packages", "builder", "styles.css")).toMatch(/\.panel-header \{[^}]*margin-bottom: 18px;/);
+    expect(rules.filter(({ body }) => /margin-bottom/.test(body)).map(({ selector }) => selector)).toEqual([`${EXPANDED} > .panel-header`]);
 
-    // vertical only: no horizontal padding, gap, width, margin, transform or per-control nudge anywhere in the pair
+    // vertical only: no horizontal padding, gap, width, side/top margin, transform or per-control nudge anywhere in the pair
     [card, row].forEach(({ body }) => {
-      expect(body).not.toMatch(/padding-(?:left|right|inline|bottom)|(?:^|[;\s])padding\s*:|gap|width|margin|transform|translate|align-|justify-|(?:^|[;\s])(?:top|bottom|left|right)\s*:/);
+      expect(body).not.toMatch(/padding-(?:left|right|inline|bottom)|(?:^|[;\s])padding\s*:|gap|width|margin-(?:left|right|inline|top)|(?:^|[;\s])margin\s*:|transform|translate|align-|justify-|(?:^|[;\s])(?:top|bottom|left|right)\s*:/);
     });
   });
 
@@ -125,8 +129,8 @@ describe("Aurelian Builder header: collapsed summary strip (host-owned, desktop-
     it("moves nothing with transforms, per-state pixel nudges or position offsets, and never touches a control's size or type", () => {
       expect(withoutComments).not.toMatch(/transform|translate|(?:^|[;\s])(?:top|bottom|left|right)\s*:|position\s*:/);
       expect(withoutComments).not.toMatch(/(?:^|[;\s])(?:width|min-width|max-width|height\s*:\s*\d|min-height|font-size|line-height)\s*:/);
-      // the only margin anywhere is the 1px chevron alignment
-      expect([...withoutComments.matchAll(/margin[\w-]*\s*:\s*([^;]+);/g)].map((m) => m[1])).toEqual(["1px"]);
+      // the only margins anywhere are the expanded row's 8px bottom margin and the 1px chevron alignment
+      expect([...withoutComments.matchAll(/margin[\w-]*\s*:\s*([^;]+);/g)].map((m) => m[1])).toEqual(["8px", "1px"]);
     });
 
     it("leaves Revisar and Vaciar in the same horizontal place whether the box is expanded or collapsed (and whether Vaciar is there)", () => {
