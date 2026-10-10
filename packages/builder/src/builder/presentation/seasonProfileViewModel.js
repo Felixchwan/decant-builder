@@ -1,4 +1,6 @@
-export const SEASON_AXIS_ORDER = ["spring", "summer", "fall", "winter"];
+import { SEASON_IDS, describeSeasonalLevels } from "../internal/intelligence/seasonalEvidence.js";
+
+export const SEASON_AXIS_ORDER = [...SEASON_IDS];
 const SEASON_AXIS_POINTS = {
   spring: { x: 50, y: 10 },
   summer: { x: 90, y: 50 },
@@ -44,6 +46,9 @@ export function buildSeasonProfileViewModel({ seasonRows = [], translator } = {}
   };
 }
 
+// The conclusion under the radar. It is the shared seasonal shape (seasonalEvidence.js) that the "Season
+// Balance" stars and the season gaps also read, computed from the very levels the radar plots: "Balanced across
+// seasons" is exactly the 4-5 star band, and a box that is not balanced is described by the season(s) it leans on.
 function buildSeasonProfileSummary({ axes, activeAxes, translator }) {
   if (activeAxes.length === 0) {
     return {
@@ -56,22 +61,12 @@ function buildSeasonProfileSummary({ axes, activeAxes, translator }) {
     };
   }
 
-  const sorted = [...axes].sort((a, b) => {
-    const scoreDelta = b.score - a.score;
-    if (scoreDelta !== 0) {
-      return scoreDelta;
-    }
-    return SEASON_AXIS_ORDER.indexOf(a.id) - SEASON_AXIS_ORDER.indexOf(b.id);
-  });
-  const scores = axes.map((axis) => axis.score);
-  const maxScore = Math.max(...scores);
-  const minActiveScore = Math.min(...activeAxes.map((axis) => axis.score));
-  const top = sorted[0];
-  const second = sorted[1];
-  const isBalanced = activeAxes.length === axes.length && maxScore - minActiveScore <= 14 && maxScore >= 35;
-  const isPair = second && top.score - second.score <= 10 && areAdjacentSeasons(top.id, second.id);
+  const { shape } = describeSeasonalLevels(
+    Object.fromEntries(axes.map((axis) => [axis.id, axis.score]))
+  );
+  const labelOf = (seasonId) => axes.find((axis) => axis.id === seasonId)?.label || seasonId;
 
-  if (isBalanced) {
+  if (shape.kind === "balanced") {
     return {
       label:
         translator?.t?.("collectionIntelligence.seasonProfileBalanced") ||
@@ -82,42 +77,35 @@ function buildSeasonProfileSummary({ axes, activeAxes, translator }) {
     };
   }
 
-  if (isPair) {
+  if (shape.kind === "pair") {
+    const [first, second] = shape.seasons.map(labelOf);
+
     return {
       label:
         translator?.t?.("collectionIntelligence.seasonProfilePair", {
-          seasonOne: top.label,
-          seasonTwo: second.label,
-        }) || `Leans ${top.label} and ${second.label}`,
+          seasonOne: first,
+          seasonTwo: second,
+        }) || `Leans ${first} and ${second}`,
       accessibleLabel:
         translator?.t?.("collectionIntelligence.seasonProfilePairA11y", {
-          seasonOne: top.label,
-          seasonTwo: second.label,
-        }) || `Season profile leans toward ${top.label} and ${second.label}.`,
+          seasonOne: first,
+          seasonTwo: second,
+        }) || `Season profile leans toward ${first} and ${second}.`,
     };
   }
+
+  const season = labelOf(shape.seasons[0]);
 
   return {
     label:
       translator?.t?.("collectionIntelligence.seasonProfileSingle", {
-        season: top.label,
-      }) || `Leans ${top.label}`,
+        season,
+      }) || `Leans ${season}`,
     accessibleLabel:
       translator?.t?.("collectionIntelligence.seasonProfileSingleA11y", {
-        season: top.label,
-      }) || `Season profile leans toward ${top.label}.`,
+        season,
+      }) || `Season profile leans toward ${season}.`,
   };
-}
-
-function areAdjacentSeasons(firstSeason, secondSeason) {
-  const firstIndex = SEASON_AXIS_ORDER.indexOf(firstSeason);
-  const secondIndex = SEASON_AXIS_ORDER.indexOf(secondSeason);
-
-  if (firstIndex === -1 || secondIndex === -1) {
-    return false;
-  }
-
-  return Math.abs(firstIndex - secondIndex) === 1 || Math.abs(firstIndex - secondIndex) === 3;
 }
 
 function getSeasonPolygonPoint(axisPoint, score) {

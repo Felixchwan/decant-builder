@@ -1,3 +1,5 @@
+import { buildSeasonalEvidence } from "../builder/internal/intelligence/seasonalEvidence.js";
+
 const EMPTY_PROFILE = {
   id: "in-progress",
   title: "Collection In Progress",
@@ -347,7 +349,11 @@ function analyzeCollection(boxSummary = {}) {
         collectionSize,
         3.8
       ),
-      seasonSpread: normalizeSeasonSpread(seasonStrengths),
+      // The same season balance the stars, the radar and the season gaps use (not a second formula).
+      seasonSpread: buildSeasonalEvidence({
+        seasonStrengths,
+        selectedCount: boxSummary.selectedCount ?? collectionSize,
+      }).balanceScore,
       occasionSpread: normalizeOccasionSpread(occasions.length),
     },
   };
@@ -446,24 +452,6 @@ function normalizeSpread({ seasonCount, occasionCount, vibeCount }) {
       Math.min(occasionCount / 8, 1) * 38 +
       Math.min(vibeCount / 14, 1) * 28)
   );
-}
-
-function normalizeSeasonSpread(seasonStrengths = {}) {
-  const values = ["spring", "summer", "fall", "winter"].map(
-    (season) => seasonStrengths[season] || 0
-  );
-  const total = values.reduce((sum, value) => sum + value, 0);
-
-  if (total <= 0) {
-    return 0;
-  }
-
-  const activeSeasonRatio = values.filter((value) => value > 0).length / 4;
-  const ideal = total / 4;
-  const imbalance =
-    values.reduce((sum, value) => sum + Math.abs(value - ideal), 0) / total;
-
-  return clampScore(activeSeasonRatio * 45 + (1 - imbalance) * 55);
 }
 
 function normalizeOccasionSpread(occasionCount) {

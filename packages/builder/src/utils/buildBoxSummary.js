@@ -35,6 +35,9 @@ export function buildBoxSummary(selectedPerfumes, notes) {
   }, {});
 
   return {
+    // How many fragrances the summary describes. Coverage and the season levels are relative to this, so a
+    // 6-fragrance box and a 12-fragrance box of the same shape read the same.
+    selectedCount: selectedPerfumes.length,
     occasions: [...new Set(allOccasions)],
     seasons: [...new Set(allSeasons)],
     notes: [...new Set(allNotes)],

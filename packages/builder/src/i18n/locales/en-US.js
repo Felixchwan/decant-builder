@@ -742,6 +742,7 @@ export const enUS = {
   "collectionIntelligence.profile.woodySophisticated": "Woody and sophisticated",
   "collectionIntelligence.profile.freshHeavy": "Fresh-heavy",
   "collectionIntelligence.profile.stillTakingShape": "Still taking shape",
+  "collectionIntelligence.profile.mixedCharacter": "Mixed character",
 
   "collectionIntelligence.strengthLevel.dominant": "Dominant",
   "collectionIntelligence.strengthLevel.excellent": "Excellent",
@@ -771,10 +772,10 @@ export const enUS = {
   "collectionIntelligence.field.strongestCoverage": "Strongest coverage",
 
   "collectionIntelligence.balance.versatility": "Versatility",
-  "collectionIntelligence.balance.depth": "Depth",
+  "collectionIntelligence.balance.breadth": "Scent Breadth",
   "collectionIntelligence.balance.freshness": "Freshness",
   "collectionIntelligence.balance.seasonBalance": "Season Balance",
-  "collectionIntelligence.balance.signaturePotential": "Signature Potential",
+  "collectionIntelligence.balance.signatureCoherence": "Signature Coherence",
 
   "collectionIntelligence.improvement.coldWeather": "A warmer evening addition would add depth and improve cold-weather range.",
   "collectionIntelligence.improvement.formal": "A polished formal fragrance would make the box more useful for dressed-up occasions.",

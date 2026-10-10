@@ -276,11 +276,11 @@ describe("buildCollectionIntelligenceViewModel", () => {
         },
         balance: {
           rows: [
-            { label: "Versatility", level: 0 },
-            { label: "Depth", level: 0 },
-            { label: "Freshness", level: 0 },
-            { label: "Season Balance", level: 0 },
-            { label: "Signature Potential", level: 0 },
+            { label: "Versatility", level: 0, score: 0 },
+            { label: "Breadth", level: 0, score: 0 },
+            { label: "Freshness", level: 0, score: 0 },
+            { label: "Season Balance", level: 0, score: 0 },
+            { label: "Signature Coherence", level: 0, score: 0 },
           ],
         },
         boxIntelligence: {
@@ -330,10 +330,11 @@ describe("buildCollectionIntelligenceViewModel", () => {
     it("derives the expected profile, season, balance, curator insight, and next-improvement values", () => {
       const result = variedViewModel();
 
+      // three fresh, everyday fragrances all strong in spring and summer: a specialist box, not a "versatile" one
       expect(result.profile).toEqual({
-        traits: ["Highly Versatile", "Office Friendly", "Spring/Summer Specialist"],
-        primaryTrait: "Highly Versatile",
-        supportingTraits: ["Office Friendly", "Spring/Summer Specialist"],
+        traits: ["Spring/Summer Specialist", "Office Friendly", "Fresh-Leaning"],
+        primaryTrait: "Spring/Summer Specialist",
+        supportingTraits: ["Office Friendly", "Fresh-Leaning"],
         hasProfileData: true,
       });
       expect(result.seasons).toEqual({
@@ -346,12 +347,14 @@ describe("buildCollectionIntelligenceViewModel", () => {
         strongest: { id: "summer", label: "Summer", count: 90, strength: 27, percent: 90 },
         weakest: { id: "winter", label: "Winter", count: 7, strength: 2, percent: 7 },
       });
+      // Season Balance is the weakest season (winter 7%) over the strongest (summer 90%): 1 star, matching the
+      // radar rows above and the winter gap below. Narrow tags and accords keep Versatility and Breadth at the floor.
       expect(result.balance.rows).toEqual([
-        { label: "Versatility", level: 4 },
-        { label: "Depth", level: 3 },
-        { label: "Freshness", level: 5 },
-        { label: "Season Balance", level: 2 },
-        { label: "Signature Potential", level: 2 },
+        { label: "Versatility", level: 1, score: 2 },
+        { label: "Breadth", level: 1, score: 0 },
+        { label: "Freshness", level: 5, score: 100 },
+        { label: "Season Balance", level: 1, score: 9 },
+        { label: "Signature Coherence", level: 1, score: 0 },
       ]);
       expect(result.boxIntelligence).toEqual({
         isEarly: false,
@@ -398,43 +401,82 @@ describe("buildCollectionIntelligenceViewModel", () => {
       ]);
     });
 
-    it("uses balanced profile copy when scores and selected count satisfy the balance threshold", () => {
-      const result = buildCollectionIntelligenceViewModel({
-        selectedPerfumes: [
-          freshOffice,
-          marineCasual,
-          greenDay,
-          perfume({
-            id: 14,
-            name: "Amber Date",
-            accords: ["amber", "warm spicy"],
-            vibes: ["warm"],
-            occasions: ["date", "night"],
-            seasons: ["fall", "winter"],
-          }),
-        ],
-        collectionSummary: summary({
-          seasonStrengths: { spring: 22, summer: 22, fall: 22, winter: 22 },
+    describe("balanced profile copy", () => {
+      const balancedSelected = [
+        freshOffice,
+        marineCasual,
+        greenDay,
+        perfume({
+          id: 14,
+          name: "Amber Date",
+          accords: ["amber", "warm spicy"],
+          vibes: ["warm", "seductive"],
+          occasions: ["date", "night"],
+          seasons: ["fall", "winter"],
+        }),
+        perfume({
+          id: 15,
+          name: "Formal Cedar",
+          accords: ["woody", "iris"],
+          vibes: ["elegant", "bold"],
+          occasions: ["formal", "office", "special"],
+          seasons: ["spring", "fall"],
+        }),
+        perfume({
+          id: 16,
+          name: "Classic Spice",
+          accords: ["warm spicy", "leather"],
+          vibes: ["classic", "cozy"],
+          occasions: ["date", "formal"],
+          seasons: ["fall", "winter"],
+        }),
+      ];
+      const balancedSummary = (seasonStrengths) =>
+        summary({
+          seasonStrengths,
           seasons: ["spring", "summer", "fall", "winter"],
-          occasions: ["daily", "office", "date", "night"],
-          vibes: ["fresh", "warm"],
+          occasions: ["daily", "office", "casual", "date", "night", "formal", "special"],
+          vibes: ["fresh", "warm", "elegant", "bold", "classic", "cozy", "seductive", "easy"],
           accordMap: {
             citrus: ["Fresh Office"],
             marine: ["Marine Casual"],
             amber: ["Amber Date"],
-            "warm spicy": ["Amber Date"],
+            "warm spicy": ["Amber Date", "Classic Spice"],
+            woody: ["Formal Cedar"],
           },
-          occasionCounts: { daily: 1, office: 1, date: 1, night: 1 },
-          vibeCounts: { fresh: 1, warm: 1 },
-        }),
-        scentDna: { scores: { versatility: 82, depth: 64, seasonBalance: 70 } },
+          occasionCounts: { daily: 2, office: 2, casual: 1, date: 2, night: 1, formal: 2, special: 1 },
+          vibeCounts: { fresh: 2, warm: 2, elegant: 2, bold: 1, classic: 1, cozy: 1, seductive: 1, easy: 1 },
+        });
+
+      it("calls a box balanced and versatile when it serves every season with range", () => {
+        // levels of 53 / 55 / 50 / 47 on six fragrances: the weakest season is within 90% of the strongest
+        const result = buildCollectionIntelligenceViewModel({
+          selectedPerfumes: balancedSelected,
+          collectionSummary: balancedSummary({ spring: 32, summer: 33, fall: 30, winter: 28 }),
+          scentDna: {},
+        });
+
+        expect(result.balance.rows.find(({ label }) => label === "Season Balance").level).toBeGreaterThanOrEqual(4);
+        expect(result.profile.traits[0]).toBe("Balanced Rotation");
+        expect(result.boxIntelligence.dominantProfile).toBe("Balanced and versatile");
+        expect(result.boxIntelligence.items[0]).toEqual({
+          type: "profile",
+          label: "Dominant profile",
+          value: "Balanced and versatile",
+        });
       });
 
-      expect(result.boxIntelligence.dominantProfile).toBe("Balanced and versatile");
-      expect(result.boxIntelligence.items[0]).toEqual({
-        type: "profile",
-        label: "Dominant profile",
-        value: "Balanced and versatile",
+      it("never calls the same fragrances balanced when their seasons are skewed, whatever their tags say", () => {
+        const result = buildCollectionIntelligenceViewModel({
+          selectedPerfumes: balancedSelected,
+          collectionSummary: balancedSummary({ spring: 52, summer: 56, fall: 10, winter: 6 }),
+          scentDna: {},
+        });
+
+        expect(result.balance.rows.find(({ label }) => label === "Season Balance").level).toBe(1);
+        expect(result.profile.traits).not.toContain("Balanced Rotation");
+        expect(result.boxIntelligence.dominantProfile).not.toBe("Balanced and versatile");
+        expect(result.boxIntelligence.mainGap).toEqual({ type: "winter", label: "Limited winter depth" });
       });
     });
   });
@@ -724,7 +766,7 @@ describe("buildCollectionIntelligenceViewModel", () => {
       "boxIntelligence",
       "nextImprovement",
     ]);
-    expect(result.profile.primaryTrait).toBe("Highly Versatile");
+    expect(result.profile.primaryTrait).toBe("Spring/Summer Specialist");
     expect(result.seasons.strongest.id).toBe("summer");
     expect(result.seasons.weakest.id).toBe("winter");
     expect(result.dna.visibleItems.map(({ label, count, displayLabel, normalizedKey }) => ({

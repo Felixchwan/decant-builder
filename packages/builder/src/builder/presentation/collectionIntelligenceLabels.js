@@ -47,6 +47,7 @@ const DOMINANT_PROFILE_KEYS = {
   "Woody and sophisticated": "collectionIntelligence.profile.woodySophisticated",
   "Fresh-heavy": "collectionIntelligence.profile.freshHeavy",
   "Still taking shape": "collectionIntelligence.profile.stillTakingShape",
+  "Mixed character": "collectionIntelligence.profile.mixedCharacter",
 };
 
 const SEASON_STRENGTH_LEVEL_KEYS = {
@@ -79,10 +80,10 @@ const COVERAGE_GAP_RECOMMENDED = "collectionIntelligence.coverageGap.recommended
 
 const BALANCE_DIMENSION_KEYS = {
   Versatility: "collectionIntelligence.balance.versatility",
-  Depth: "collectionIntelligence.balance.depth",
+  Breadth: "collectionIntelligence.balance.breadth",
   Freshness: "collectionIntelligence.balance.freshness",
   "Season Balance": "collectionIntelligence.balance.seasonBalance",
-  "Signature Potential": "collectionIntelligence.balance.signaturePotential",
+  "Signature Coherence": "collectionIntelligence.balance.signatureCoherence",
 };
 
 export function getBalanceDimensionLabel(label, translator) {

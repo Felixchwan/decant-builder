@@ -743,6 +743,7 @@ export const esMX = {
   "collectionIntelligence.profile.woodySophisticated": "Amaderada y sofisticada",
   "collectionIntelligence.profile.freshHeavy": "Predominantemente fresca",
   "collectionIntelligence.profile.stillTakingShape": "Aún tomando forma",
+  "collectionIntelligence.profile.mixedCharacter": "Carácter variado",
 
   "collectionIntelligence.strengthLevel.dominant": "Dominante",
   "collectionIntelligence.strengthLevel.excellent": "Excelente",
@@ -772,10 +773,10 @@ export const esMX = {
   "collectionIntelligence.field.strongestCoverage": "Cobertura más fuerte",
 
   "collectionIntelligence.balance.versatility": "Versatilidad",
-  "collectionIntelligence.balance.depth": "Profundidad",
+  "collectionIntelligence.balance.breadth": "Amplitud olfativa",
   "collectionIntelligence.balance.freshness": "Frescura",
   "collectionIntelligence.balance.seasonBalance": "Balance de temporada",
-  "collectionIntelligence.balance.signaturePotential": "Potencial de firma",
+  "collectionIntelligence.balance.signatureCoherence": "Coherencia de firma",
 
   "collectionIntelligence.improvement.coldWeather": "Un toque más cálido para la noche añadiría profundidad y mejoraría la cobertura de clima frío.",
   "collectionIntelligence.improvement.formal": "Una fragancia formal y pulida haría la caja más útil para ocasiones que piden vestir bien.",

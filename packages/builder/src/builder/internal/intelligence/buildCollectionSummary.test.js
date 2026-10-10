@@ -200,6 +200,7 @@ describe("buildCollectionSummary", () => {
       blockers: ["minimum-slots", "minimum-points"],
     });
     expect(summary.boxSummary).toEqual({
+      selectedCount: 0,
       occasions: [],
       seasons: [],
       notes: [],
@@ -271,12 +272,16 @@ describe("buildCollectionSummary", () => {
       { category: "occasions", target: "daily", label: "Daily Covered", level: "covered", count: 1 },
       { category: "occasions", target: "office", label: "Office Covered", level: "covered", count: 1 },
       { category: "occasions", target: "casual", label: "Casual Covered", level: "covered", count: 1 },
-      { category: "seasons", target: "spring", label: "Spring Covered", level: "covered", count: 10 },
-      { category: "seasons", target: "summer", label: "Summer Covered", level: "covered", count: 8 },
+      // season counts are the season's LEVEL (mean strength as a percentage), shared with the radar
+      { category: "seasons", target: "spring", label: "Strong Spring Coverage", level: "strong", count: 100 },
+      { category: "seasons", target: "summer", label: "Strong Summer Coverage", level: "strong", count: 80 },
       { category: "vibes", target: "fresh", label: "Fresh Covered", level: "covered", count: 1 },
       { category: "vibes", target: "clean", label: "Clean Covered", level: "covered", count: 1 },
       { category: "vibes", target: "versatile", label: "Versatile Covered", level: "covered", count: 1 },
     ]);
+    // fall and winter are 0% for this one fragrance: both are gaps
+    expect(summary.coverageSummary.gaps.map((gap) => gap.target)).toEqual(["fall", "winter"]);
+    // (scentDna is the Composer's own input and is unchanged)
     expect(dnaFrom(summary)).toMatchObject({
       scores: { versatility: 40, depth: 25, seasonBalance: 23 },
       topAccords: [
@@ -479,25 +484,35 @@ describe("buildCollectionSummary", () => {
       winter: 12,
     });
     expect(summary.coverageSummary.strengths).toEqual([
-      { category: "occasions", target: "daily", label: "Daily Covered", level: "covered", count: 2 },
-      { category: "occasions", target: "office", label: "Office Covered", level: "covered", count: 2 },
+      // two of the three fragrances are daily / office: that is two thirds of the box
+      { category: "occasions", target: "daily", label: "Strong Daily Coverage", level: "strong", count: 2 },
+      { category: "occasions", target: "office", label: "Strong Office Coverage", level: "strong", count: 2 },
       { category: "occasions", target: "casual", label: "Casual Covered", level: "covered", count: 1 },
       { category: "occasions", target: "date", label: "Date Covered", level: "covered", count: 1 },
       { category: "occasions", target: "night", label: "Night Covered", level: "covered", count: 1 },
       { category: "occasions", target: "formal", label: "Formal Covered", level: "covered", count: 1 },
-      { category: "seasons", target: "spring", label: "Strong Spring Coverage", level: "strong", count: 16 },
-      { category: "seasons", target: "summer", label: "Summer Covered", level: "covered", count: 8 },
-      { category: "seasons", target: "fall", label: "Strong Fall Coverage", level: "strong", count: 16 },
-      { category: "seasons", target: "winter", label: "Winter Covered", level: "covered", count: 12 },
+      // seasons: levels of 53 / 27 / 53 / 40 -- summer (27) is below the covered line, so it is a gap, not a strength
+      { category: "seasons", target: "spring", label: "Strong Spring Coverage", level: "strong", count: 53 },
+      { category: "seasons", target: "fall", label: "Strong Fall Coverage", level: "strong", count: 53 },
+      { category: "seasons", target: "winter", label: "Winter Covered", level: "covered", count: 40 },
       { category: "vibes", target: "fresh", label: "Fresh Covered", level: "covered", count: 1 },
-      { category: "vibes", target: "clean", label: "Clean Covered", level: "covered", count: 2 },
+      { category: "vibes", target: "clean", label: "Strong Clean Coverage", level: "strong", count: 2 },
       { category: "vibes", target: "versatile", label: "Versatile Covered", level: "covered", count: 1 },
       { category: "vibes", target: "elegant", label: "Elegant Covered", level: "covered", count: 1 },
       { category: "vibes", target: "bold", label: "Bold Covered", level: "covered", count: 1 },
       { category: "vibes", target: "seductive", label: "Seductive Covered", level: "covered", count: 1 },
     ]);
-    expect(summary.coverageSummary.gaps).toEqual([]);
-    expect(summary.coverageSummary.seasonalRecommendations).toEqual([]);
+    // summer (level 27) is the one season this box does not serve: the radar, the stars and Box Intelligence agree
+    expect(summary.coverageSummary.gaps).toEqual([
+      {
+        category: "seasons",
+        target: "summer",
+        label: "Summer fragrance recommended",
+        seasonColor: "rgba(253,230,138,0.60)",
+      },
+    ]);
+    // (not rendered anywhere today: it is the first catalog fragrance strong in the gap season)
+    expect(summary.coverageSummary.seasonalRecommendations.map(({ season }) => season)).toEqual(["summer"]);
   });
 
   it("reports fallback season gaps and catalog recommendations for missing coverage", () => {
@@ -612,7 +627,15 @@ describe("buildCollectionSummary", () => {
       fixtures.green,
       fixtures.marine,
     ]);
-    const balanced = summarize([fixtures.fresh, fixtures.woody, fixtures.warm]);
+    // fresh + woody + warm, with the woody one an all-season fragrance: seasonal levels 57 / 50 / 50 / 57. (With
+    // the spring/fall woody fixture the box has no summer to speak of -- 53 / 27 / 53 / 40 -- and is not balanced.)
+    const allSeasonWoody = {
+      ...fixtures.woody,
+      id: "woody-office-all-season",
+      seasons: ["spring", "summer", "fall", "winter"],
+      seasonWeights: { spring: 7, summer: 7, fall: 7, winter: 7 },
+    };
+    const balanced = summarize([fixtures.fresh, allSeasonWoody, fixtures.warm]);
     const maximum = summarize([
       fixtures.fresh,
       fixtures.woody,
@@ -865,10 +888,11 @@ describe("buildCollectionSummary", () => {
       { category: "occasions", target: "date", label: "Date Covered", level: "covered", count: 2 },
       { category: "occasions", target: "night", label: "Night Covered", level: "covered", count: 2 },
       { category: "occasions", target: "formal", label: "Strong Formal Coverage", level: "strong", count: 3 },
-      { category: "seasons", target: "spring", label: "Strong Spring Coverage", level: "strong", count: 32 },
-      { category: "seasons", target: "summer", label: "Strong Summer Coverage", level: "strong", count: 35 },
-      { category: "seasons", target: "fall", label: "Strong Fall Coverage", level: "strong", count: 34 },
-      { category: "seasons", target: "winter", label: "Strong Winter Coverage", level: "strong", count: 29 },
+      // even but moderate seasons (levels 40 / 44 / 43 / 36): every season is covered and none is strong
+      { category: "seasons", target: "spring", label: "Spring Covered", level: "covered", count: 40 },
+      { category: "seasons", target: "summer", label: "Summer Covered", level: "covered", count: 44 },
+      { category: "seasons", target: "fall", label: "Fall Covered", level: "covered", count: 43 },
+      { category: "seasons", target: "winter", label: "Winter Covered", level: "covered", count: 36 },
       { category: "vibes", target: "fresh", label: "Strong Fresh Coverage", level: "strong", count: 4 },
       { category: "vibes", target: "clean", label: "Strong Clean Coverage", level: "strong", count: 4 },
       { category: "vibes", target: "versatile", label: "Versatile Covered", level: "covered", count: 1 },

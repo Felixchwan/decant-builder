@@ -13,6 +13,8 @@ import {
   selectDnaExplorerDetail,
 } from "./buildDnaExplorerModel.js";
 import { buildNextImprovementResult, getObjectiveCompatibilityScore } from "./buildNextImprovement.js";
+import { buildCollectionMetrics } from "./collectionMetrics.js";
+import { getSeasonStrengthLevel } from "./seasonalEvidence.js";
 
 export {
   formatIntelligenceLabel,
@@ -40,6 +42,8 @@ export function buildCollectionIntelligenceViewModel({
   const safeCoverageSummary = coverageSummary || { strengths: [], gaps: [] };
   const selectedCount = safeSelectedPerfumes.length;
   const selectedPerfumeIds = new Set(safeSelectedPerfumes.map((perfume) => perfume.id));
+  // One set of numbers per box: the stars, the profile chips, Box Intelligence and its gap all read these.
+  const metrics = buildCollectionMetrics({ selectedPerfumes: safeSelectedPerfumes, boxSummary: summary });
   const balanceRecommendations = recommendations?.toBalanceYourBox || [];
   const curatorRecommendations = curatorBonus?.recommendations || [];
   const curatorPreference = curatorBonus?.preference || "complement";
@@ -57,11 +61,9 @@ export function buildCollectionIntelligenceViewModel({
     (safeCoverageSummary.strengths || []).length > 0 ||
     (safeCoverageSummary.gaps || []).length > 0;
   const profileTraits = buildCollectionCardProfileTraits({
+    selectedPerfumes: safeSelectedPerfumes,
     boxSummary: summary,
     coverageSummary: safeCoverageSummary,
-    scentDna,
-    selectedCount,
-    seasonRows,
   });
   const dnaItems = buildCollectionCardDnaItems({ boxSummary: summary, scentDna });
   const visibleDnaItems = dnaItems
@@ -79,16 +81,11 @@ export function buildCollectionIntelligenceViewModel({
     selectedPerfumeIds,
     recommendations,
   });
-  const balanceRows = buildCollectionBalanceRows({
-    boxSummary: summary,
-    scentDna,
-    selectedCount,
-    seasonRows,
-  });
+  const balanceRows = buildCollectionBalanceRows({ metrics });
   const boxIntelligence = buildBoxIntelligence({
     boxSummary: summary,
     coverageSummary: safeCoverageSummary,
-    scentDna,
+    metrics,
     selectedPerfumes: safeSelectedPerfumes,
   });
   const nextImprovement = buildNextImprovementResult({
@@ -157,57 +154,26 @@ function countSelectedPerfumesByAccord(selectedPerfumes, accord) {
   ).length;
 }
 
-function buildCollectionBalanceRows({ boxSummary, scentDna, selectedCount, seasonRows }) {
-  const scores = scentDna?.scores || {};
-  const accordCounts = getAccordCounts(boxSummary);
-  const vibeCounts = boxSummary.vibeCounts || {};
-  const occasionCounts = boxSummary.occasionCounts || {};
-  const freshSignals =
-    (vibeCounts.fresh || 0) +
-    (vibeCounts.clean || 0) +
-    (accordCounts.fresh || 0) +
-    (accordCounts.citrus || 0) +
-    (accordCounts.marine || 0);
-  const signatureSignals =
-    (occasionCounts.formal || 0) +
-    (occasionCounts.date || 0) +
-    (accordCounts.woody || 0) +
-    (accordCounts.iris || 0) +
-    (accordCounts.leather || 0) +
-    Math.round((scores.versatility || 0) / 30);
-  const maxSeasonScore = Math.max(...seasonRows.map((season) => season.count), 0);
+// The five "Collection Balance" rows. `score` is the 0-100 metric and `level` its 1-5 stars (equal 20-point
+// bands). What each one means:
+//   Versatility        how many different occasions, moods and seasons the box can serve
+//   Breadth            how wide a spread of accords and notes the box covers (it measures variety of scent
+//                      ingredients, not how dark or rich the scents are, hence "Breadth", not "Depth")
+//   Freshness          how fresh (citrus, marine, green, clean) the fragrances are
+//   Season Balance     how evenly the box serves the four seasons (shared with the radar and the season gaps)
+//   Signature Coherence how strongly one recognisable olfactory thread runs through the box (mean pairwise
+//                      similarity). High = a clear signature; low = an intentionally heterogeneous box. It is
+//                      independent of Versatility: a repetitive box is coherent (high) and not versatile (low)
+function buildCollectionBalanceRows({ metrics }) {
+  const row = (label, key) => ({ label, level: metrics.stars[key], score: metrics.scores[key] });
 
   return [
-    {
-      label: "Versatility",
-      level: scoreToFiveLevel(scores.versatility || 0),
-    },
-    {
-      label: "Depth",
-      level: scoreToFiveLevel(scores.depth || 0),
-    },
-    {
-      label: "Freshness",
-      level: scoreToFiveLevel(
-        selectedCount > 0 ? Math.min(100, (freshSignals / Math.max(selectedCount, 1)) * 42) : 0
-      ),
-    },
-    {
-      label: "Season Balance",
-      level: scoreToFiveLevel(scores.seasonBalance || maxSeasonScore),
-    },
-    {
-      label: "Signature Potential",
-      level: scoreToFiveLevel(
-        selectedCount > 0 ? Math.min(100, signatureSignals * 16) : 0
-      ),
-    },
+    row("Versatility", "versatility"),
+    row("Breadth", "breadth"),
+    row("Freshness", "freshness"),
+    row("Season Balance", "seasonBalance"),
+    row("Signature Coherence", "signature"),
   ];
-}
-
-function scoreToFiveLevel(score) {
-  if (score <= 0) return 0;
-  return Math.max(1, Math.min(5, Math.round(score / 20)));
 }
 
 export function formatFiveStarRating(level) {
@@ -272,7 +238,7 @@ function buildCuratorInsight({
 function buildBoxIntelligence({
   boxSummary,
   coverageSummary,
-  scentDna,
+  metrics,
   selectedPerfumes,
 }) {
   const selectedCount = selectedPerfumes.length;
@@ -302,7 +268,7 @@ function buildBoxIntelligence({
   });
   const dominantProfile = getDominantBoxProfile({
     profileSignals,
-    scentDna,
+    metrics,
     selectedCount,
   });
   const strongestCoverage = getStrongestBoxCoverage({
@@ -311,18 +277,15 @@ function buildBoxIntelligence({
     selectedCount,
   });
   const mostImportantGap = getMostImportantBoxGap({
-    boxSummary,
     coverageSummary,
-    seasonRows,
+    metrics,
     occasionCounts,
-    vibeCounts,
     accordCounts,
-    profileSignals,
     selectedCount,
   });
   const bestNextMove = getBestBoxNextMove({
     gap: mostImportantGap,
-    profileSignals,
+    metrics,
     occasionCounts,
     accordCounts,
   });
@@ -348,26 +311,9 @@ function buildBoxIntelligence({
   };
 }
 
+// Fresh vs warm is decided once, per fragrance, in collectionMetrics (the profile chips use the same lean). These
+// two character signals have no counterpart there, so they stay tag counts.
 function getBoxProfileSignals({ occasionCounts, vibeCounts, accordCounts }) {
-  const fresh =
-    (vibeCounts.fresh || 0) +
-    (vibeCounts.clean || 0) +
-    (accordCounts.fresh || 0) +
-    (accordCounts.citrus || 0) +
-    (accordCounts.marine || 0) +
-    (accordCounts.aquatic || 0) +
-    (accordCounts.aromatic || 0);
-  const warmEvening =
-    (occasionCounts.date || 0) +
-    (occasionCounts.night || 0) +
-    (occasionCounts.evening || 0) +
-    (occasionCounts.formal || 0) +
-    (vibeCounts.warm || 0) +
-    (vibeCounts.cozy || 0) +
-    (vibeCounts.seductive || 0) +
-    (accordCounts.amber || 0) +
-    (accordCounts["warm spicy"] || 0) +
-    (accordCounts.smoky || 0);
   const sweetSeductive =
     (vibeCounts.seductive || 0) +
     (accordCounts.sweet || 0) +
@@ -382,46 +328,43 @@ function getBoxProfileSignals({ occasionCounts, vibeCounts, accordCounts }) {
     (vibeCounts.elegant || 0);
 
   return {
-    fresh,
-    warmEvening,
     sweetSeductive,
     woodySophisticated,
   };
 }
 
-function getDominantBoxProfile({ profileSignals, scentDna, selectedCount }) {
-  const sortedSignals = Object.entries(profileSignals).sort(
-    ([, scoreA], [, scoreB]) => scoreB - scoreA
-  );
-  const [topSignal, topScore] = sortedSignals[0] || ["balanced", 0];
-  const secondScore = sortedSignals[1]?.[1] || 0;
-  const seasonBalance = scentDna?.scores?.seasonBalance || 0;
-  const versatility = scentDna?.scores?.versatility || 0;
+function getDominantBoxProfile({ profileSignals, metrics, selectedCount }) {
+  const { profile } = metrics;
 
-  if (
-    (selectedCount >= 6 && seasonBalance >= 60 && versatility >= 70) ||
-    (selectedCount >= 4 && seasonBalance >= 60 && versatility >= 70 && topScore <= secondScore + 4)
-  ) {
+  // The same "Balanced Rotation" the profile chip shows: every season served, with range.
+  if (selectedCount >= 4 && profile.isBalancedRotation) {
     return "Balanced and versatile";
   }
 
-  if (topSignal === "warmEvening") {
+  if (profile.lean === "warm") {
     return "Warm and evening-oriented";
   }
 
-  if (topSignal === "sweetSeductive") {
-    return "Sweet and seductive";
-  }
-
-  if (topSignal === "woodySophisticated") {
-    return "Woody and sophisticated";
-  }
-
-  if (topSignal === "fresh" && topScore > 0) {
+  if (profile.lean === "fresh") {
     return "Fresh-heavy";
   }
 
-  return selectedCount < 3 ? "Still taking shape" : "Balanced and versatile";
+  const [topSignal, topScore] =
+    Object.entries(profileSignals).sort(([, scoreA], [, scoreB]) => scoreB - scoreA)[0] || ["balanced", 0];
+
+  // A character signal only names the box when it runs through it (about one tag per fragrance or more).
+  if (topScore >= selectedCount && selectedCount > 0) {
+    if (topSignal === "sweetSeductive") {
+      return "Sweet and seductive";
+    }
+
+    if (topSignal === "woodySophisticated") {
+      return "Woody and sophisticated";
+    }
+  }
+
+  // Never "Balanced and versatile" here: that is only said of a box that is balanced across the seasons (above).
+  return selectedCount < 3 ? "Still taking shape" : "Mixed character";
 }
 
 function getStrongestBoxCoverage({ seasonRows, occasionCounts, selectedCount }) {
@@ -458,24 +401,30 @@ function getStrongestBoxCoverage({ seasonRows, occasionCounts, selectedCount }) 
 
 function getMostImportantBoxGap({
   coverageSummary,
-  seasonRows,
+  metrics,
   occasionCounts,
   accordCounts,
-  profileSignals,
   selectedCount,
 }) {
-  const winterScore = seasonRows.find((season) => season.id === "winter")?.count || 0;
-  const summerScore = seasonRows.find((season) => season.id === "summer")?.count || 0;
   const formalCount = occasionCounts.formal || 0;
   const eveningCount =
     (occasionCounts.date || 0) + (occasionCounts.night || 0) + (occasionCounts.evening || 0);
   const accordDiversity = Object.keys(accordCounts).length;
   const gapCandidate = (coverageSummary.gaps || [])[0];
+  // The same season the coverage list calls a gap: the weakest one below the covered line.
+  const weakestSeason = metrics.seasonal.gaps[0];
 
-  if (winterScore < 35 && profileSignals.fresh > profileSignals.warmEvening) {
+  if (weakestSeason === "fall" || weakestSeason === "winter") {
     return {
       type: "winter",
       label: "Limited winter depth",
+    };
+  }
+
+  if (weakestSeason && selectedCount >= 3) {
+    return {
+      type: "summer",
+      label: "Limited warm-weather freshness",
     };
   }
 
@@ -493,7 +442,7 @@ function getMostImportantBoxGap({
     };
   }
 
-  if (profileSignals.fresh >= profileSignals.warmEvening + 3) {
+  if (metrics.profile.lean === "fresh") {
     return {
       type: "warmth",
       label: "Missing warm or smoky character",
@@ -504,13 +453,6 @@ function getMostImportantBoxGap({
     return {
       type: "diversity",
       label: "Low accord diversity",
-    };
-  }
-
-  if (summerScore < 30 && selectedCount >= 3) {
-    return {
-      type: "summer",
-      label: "Limited warm-weather freshness",
     };
   }
 
@@ -527,7 +469,7 @@ function getMostImportantBoxGap({
   };
 }
 
-function getBestBoxNextMove({ gap, profileSignals, occasionCounts, accordCounts }) {
+function getBestBoxNextMove({ gap, metrics, occasionCounts, accordCounts }) {
   if (gap.type === "winter" || gap.type === "warmth") {
     return "Add one warm evening fragrance";
   }
@@ -552,7 +494,7 @@ function getBestBoxNextMove({ gap, profileSignals, occasionCounts, accordCounts 
     return "Add a polished woody fragrance";
   }
 
-  if (profileSignals.warmEvening > profileSignals.fresh + 2) {
+  if (metrics.profile.lean === "warm") {
     return "Add a fresh daytime fragrance";
   }
 
@@ -582,14 +524,6 @@ function uniqueInsightItems(items) {
     seenValues.add(normalizedValue);
     return true;
   });
-}
-
-function getSeasonStrengthLevel(score) {
-  if (score >= 90) return "Dominant";
-  if (score >= 70) return "Excellent";
-  if (score >= 50) return "Strong";
-  if (score >= 30) return "Moderate";
-  return "Weak";
 }
 
 function getCollectionProfileStrengths(boxSummary) {

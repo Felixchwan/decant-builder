@@ -1,3 +1,9 @@
+import {
+  buildCollectionMetrics,
+  isEveningFocused,
+} from "../intelligence/collectionMetrics.js";
+import { SEASON_IDS, buildSeasonalEvidence } from "../intelligence/seasonalEvidence.js";
+
 export function buildCollectionCardViewModel({
   selectedPerfumes,
   totalPoints,
@@ -17,11 +23,9 @@ export function buildCollectionCardViewModel({
     items.length
   );
   const profileTraits = buildCollectionCardProfileTraits({
+    selectedPerfumes,
     boxSummary,
     coverageSummary,
-    scentDna,
-    selectedCount: items.length,
-    seasonRows,
   });
   const dnaDescriptors = buildCollectionCardDnaItems({ boxSummary, scentDna })
     .slice(0, 3)
@@ -120,79 +124,66 @@ export function buildCollectionCardItems(selectedPerfumes) {
     : [];
 }
 
-export function buildCollectionCardProfileTraits({
-  boxSummary,
-  coverageSummary,
-  scentDna,
-  selectedCount,
-  seasonRows,
-}) {
+// The profile chips. Every lean here is read from the shared metrics (collectionMetrics.js), as numbers per
+// fragrance, so the chips, the stars, the radar and Box Intelligence describe the same box the same way.
+export function buildCollectionCardProfileTraits({ selectedPerfumes = [], boxSummary = {}, coverageSummary = { strengths: [] } } = {}) {
+  const selectedCount = Array.isArray(selectedPerfumes) ? selectedPerfumes.length : 0;
+
   if (selectedCount === 0) {
     return [];
   }
 
+  const metrics = buildCollectionMetrics({ selectedPerfumes, boxSummary });
+  const { seasonal, profile, stars } = metrics;
+  // A specialist chip is the radar's own sentence ("leans Spring and Summer") as a chip: the same shape, so the
+  // two cannot disagree. A box that is balanced across the seasons is never a specialist.
+  const leaning = seasonal.isBalanced ? [] : seasonal.shape.seasons;
+  const leansCool = leaning.length > 0 && leaning.every((season) => season === "spring" || season === "summer");
+  const leansWarm = leaning.length > 0 && leaning.every((season) => season === "fall" || season === "winter");
   const traits = [];
-  const occasionCounts = boxSummary.occasionCounts || {};
-  const vibeCounts = boxSummary.vibeCounts || {};
-  const accordCounts = getAccordCounts(boxSummary);
-  const profileSignals = getBoxProfileSignals({
-    occasionCounts,
-    vibeCounts,
-    accordCounts,
-  });
-  const versatilityScore = scentDna?.scores?.versatility || 0;
-  const depthScore = scentDna?.scores?.depth || 0;
-  const seasonBalanceScore = scentDna?.scores?.seasonBalance || 0;
-  const springScore = seasonRows.find((season) => season.id === "spring")?.count || 0;
-  const summerScore = seasonRows.find((season) => season.id === "summer")?.count || 0;
-  const fallScore = seasonRows.find((season) => season.id === "fall")?.count || 0;
-  const winterScore = seasonRows.find((season) => season.id === "winter")?.count || 0;
-  const dailySignals = (occasionCounts.daily || 0) + (occasionCounts.office || 0);
-  const eveningSignals =
-    (occasionCounts.date || 0) +
-    (occasionCounts.night || 0) +
-    (occasionCounts.evening || 0);
 
-  if (versatilityScore >= 78 && seasonBalanceScore >= 62) {
+  if (profile.isBalancedRotation) {
     traits.push("Balanced Rotation");
-  } else if (versatilityScore >= 72) {
+  } else if (stars.versatility >= 4) {
     traits.push("Highly Versatile");
   }
 
-  if (dailySignals >= 3 || (occasionCounts.office || 0) >= 2) {
-    traits.push("Office Friendly");
-  }
-
-  if (eveningSignals >= 3 || profileSignals.warmEvening >= profileSignals.fresh + 2) {
-    traits.push("Evening Focused");
-  }
-
-  if (profileSignals.fresh >= profileSignals.warmEvening + 2) {
-    traits.push("Fresh-Leaning");
-  }
-
-  if (profileSignals.warmEvening >= profileSignals.fresh + 2) {
-    traits.push("Warm-Leaning");
-  }
-
-  if ((occasionCounts.date || 0) + (occasionCounts.night || 0) >= 2) {
-    traits.push("Date Night Strong");
-  }
-
-  if (springScore + summerScore >= fallScore + winterScore + 24) {
+  // Seasonal character comes right after the balance chip: it is the part of the story the radar also tells, and
+  // the chips are capped (the card shows the first three), so it must not be the first thing cut.
+  if (leansCool) {
     traits.push("Spring/Summer Specialist");
   }
 
-  if (fallScore >= 55 && winterScore >= 45) {
-    traits.push("Autumn Specialist");
+  if (leansWarm) {
+    traits.push("Fall/Winter Specialist");
   }
 
-  if (depthScore >= 70 && selectedCount >= 5) {
+  if (profile.everydayShare >= 0.5) {
+    traits.push("Office Friendly");
+  }
+
+  if (isEveningFocused(profile)) {
+    traits.push("Evening Focused");
+  }
+
+  if (profile.lean === "fresh") {
+    traits.push("Fresh-Leaning");
+  }
+
+  if (profile.lean === "warm") {
+    traits.push("Warm-Leaning");
+  }
+
+  if (profile.dateNightCount >= 2 && profile.dateNightShare >= 0.35) {
+    traits.push("Date Night Strong");
+  }
+
+  if (stars.breadth >= 4 && selectedCount >= 5) {
     traits.push("Collector Friendly");
   }
 
-  if (versatilityScore >= 70 && depthScore >= 58 && selectedCount >= 4) {
-    traits.push("Signature Ready");
+  if (stars.signature >= 4 && selectedCount >= 4) {
+    traits.push("Coherent Signature");
   }
 
   if (traits.length === 0 && coverageSummary.strengths.length > 0) {
@@ -219,20 +210,19 @@ export function buildCollectionCardDnaItems({ boxSummary, scentDna }) {
     .slice(0, 6);
 }
 
+// The radar's rows: the shared seasonal levels, one row per season.
 export function buildCollectionCardSeasonRows(seasonCounts, selectedCount = 0) {
-  const seasons = ["spring", "summer", "fall", "winter"];
-  const maxSeasonStrength = Math.max(1, selectedCount * 10);
+  const { levels } = buildSeasonalEvidence({ seasonStrengths: seasonCounts, selectedCount });
 
-  return seasons.map((season) => {
-    const strength = seasonCounts[season] || 0;
-    const score = Math.round((strength / maxSeasonStrength) * 100);
+  return SEASON_IDS.map((season) => {
+    const strength = seasonCounts?.[season] || 0;
 
     return {
       id: season,
       label: formatLabel(season),
-      count: score,
+      count: levels[season],
       strength,
-      percent: score,
+      percent: levels[season],
     };
   });
 }
@@ -250,35 +240,18 @@ export function buildCollectionCardFilename(title, config) {
   return `${config.collectionCard.filenamePrefix}-${slug || "collection"}.png`;
 }
 
-function getBoxProfileSignals({ occasionCounts, vibeCounts, accordCounts }) {
-  const fresh =
-    (vibeCounts.fresh || 0) +
-    (vibeCounts.clean || 0) +
-    (accordCounts.citrus || 0) +
-    (accordCounts.fresh || 0) +
-    (accordCounts.green || 0) +
-    (accordCounts.aquatic || 0) +
-    (accordCounts.marine || 0);
-  const warmEvening =
-    (vibeCounts.warm || 0) +
-    (vibeCounts.sweet || 0) +
-    (accordCounts.amber || 0) +
-    (accordCounts.vanilla || 0) +
-    (accordCounts.spicy || 0) +
-    (accordCounts.tobacco || 0) +
-    (accordCounts.leather || 0) +
-    (occasionCounts.date || 0) +
-    (occasionCounts.night || 0) +
-    (occasionCounts.evening || 0);
-
-  return {
-    fresh,
-    warmEvening,
-  };
-}
-
+// Accord -> number of fragrances. The box summary stores the fragrance NAMES per accord, so count those.
 function getAccordCounts(boxSummary) {
-  return boxSummary.accordCounts || boxSummary.accordMap || {};
+  if (boxSummary.accordCounts) {
+    return boxSummary.accordCounts;
+  }
+
+  return Object.fromEntries(
+    Object.entries(boxSummary.accordMap || {}).map(([accord, perfumes]) => [
+      accord,
+      Array.isArray(perfumes) ? perfumes.length : Number(perfumes) || 0,
+    ])
+  );
 }
 
 function uniqueStrings(values) {

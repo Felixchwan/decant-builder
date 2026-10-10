@@ -270,7 +270,7 @@ describe("buildCollectionCardViewModel", () => {
       expect(buildCollectionCardItems(null)).toEqual([]);
     });
 
-    it("builds season rows in fixed spring, summer, fall, winter order without clamping percentages", () => {
+    it("builds season rows in fixed spring, summer, fall, winter order from the shared seasonal levels", () => {
       expect(
         buildCollectionCardSeasonRows(
           {
@@ -287,13 +287,15 @@ describe("buildCollectionCardViewModel", () => {
         { id: "fall", label: "Fall", count: 0, strength: 0, percent: 0 },
         { id: "winter", label: "Winter", count: 0, strength: 0, percent: 0 },
       ]);
+      // an empty box has no seasonal levels (it used to read 200%), and a level never exceeds 100
       expect(buildCollectionCardSeasonRows({ spring: 2 }, 0)[0]).toEqual({
         id: "spring",
         label: "Spring",
-        count: 200,
+        count: 0,
         strength: 2,
-        percent: 200,
+        percent: 0,
       });
+      expect(buildCollectionCardSeasonRows({ spring: 50 }, 2)[0].count).toBe(100);
     });
 
     it("builds DNA items from topAccords first and falls back to sorted accord counts", () => {
@@ -339,66 +341,46 @@ describe("buildCollectionCardViewModel", () => {
     it("returns no traits for empty selected count", () => {
       expect(
         buildCollectionCardProfileTraits({
+          selectedPerfumes: [],
           boxSummary: boxSummary(),
           coverageSummary: coverageSummary({ strengths: [{ label: "Ignored Strength" }] }),
-          scentDna: { scores: { versatility: 100, depth: 100, seasonBalance: 100 } },
-          selectedCount: 0,
-          seasonRows: buildCollectionCardSeasonRows({}, 0),
         })
       ).toEqual([]);
     });
 
     it("derives and caps profile traits in implementation order", () => {
+      // a box serving all four seasons (levels 62 / 70 / 60 / 48) with fresh and warm fragrances in it
       expect(
         buildCollectionCardProfileTraits({
+          selectedPerfumes,
           boxSummary: populatedSummary,
           coverageSummary: coverageSummary(),
-          scentDna: populatedScentDna,
-          selectedCount: selectedPerfumes.length,
-          seasonRows: buildCollectionCardSeasonRows(
-            populatedSummary.seasonStrengths,
-            selectedPerfumes.length
-          ),
         })
-      ).toEqual([
-        "Balanced Rotation",
-        "Office Friendly",
-        "Date Night Strong",
-        "Spring/Summer Specialist",
-        "Autumn Specialist",
-      ]);
+      ).toEqual(["Balanced Rotation", "Office Friendly", "Fresh-Leaning"]);
     });
 
     it("uses coverage strengths fallback and final textual fallback when no profile rules match", () => {
-      const neutralRows = buildCollectionCardSeasonRows({}, 1);
-
       expect(
         buildCollectionCardProfileTraits({
+          selectedPerfumes: [perfume()],
           boxSummary: boxSummary(),
           coverageSummary: coverageSummary({
             strengths: [{ label: "Clean Starter" }, { label: "Easy Wear" }],
           }),
-          scentDna: {},
-          selectedCount: 1,
-          seasonRows: neutralRows,
         })
       ).toEqual(["Clean Starter", "Easy Wear"]);
       expect(
         buildCollectionCardProfileTraits({
+          selectedPerfumes: [perfume()],
           boxSummary: boxSummary(),
           coverageSummary: coverageSummary(),
-          scentDna: {},
-          selectedCount: 1,
-          seasonRows: neutralRows,
         })
       ).toEqual(["Taking Shape"]);
       expect(
         buildCollectionCardProfileTraits({
+          selectedPerfumes: [perfume({ id: 1 }), perfume({ id: 2 }), perfume({ id: 3 })],
           boxSummary: boxSummary(),
           coverageSummary: coverageSummary(),
-          scentDna: {},
-          selectedCount: 3,
-          seasonRows: neutralRows,
         })
       ).toEqual(["Casual Heavy"]);
     });
@@ -532,7 +514,7 @@ describe("buildCollectionCardViewModel", () => {
             { id: "fall", label: "Fall", count: 60, strength: 24, percent: 60 },
             { id: "winter", label: "Winter", count: 48, strength: 19, percent: 48 },
           ],
-          profileTraits: ["Balanced Rotation", "Office Friendly", "Date Night Strong"],
+          profileTraits: ["Balanced Rotation", "Office Friendly", "Fresh-Leaning"],
         },
         curatorBonus: {
           isUnlocked: true,
@@ -563,7 +545,7 @@ describe("buildCollectionCardViewModel", () => {
           palette: "fresh",
           fragranceCount: 4,
           collectionPoints: 7,
-          profileTraits: ["Balanced Rotation", "Office Friendly", "Date Night Strong"],
+          profileTraits: ["Balanced Rotation", "Office Friendly", "Fresh-Leaning"],
           dnaDescriptors: ["Citrus", "Amber", "Woody"],
           primaryDna: "Citrus",
           isCuratorBonusUnlocked: true,
@@ -714,7 +696,7 @@ describe("buildCollectionCardViewModel", () => {
     expect(result.coverage.profileTraits).toEqual([
       "Balanced Rotation",
       "Office Friendly",
-      "Date Night Strong",
+      "Fresh-Leaning",
     ]);
     expect(result.curatorBonus.isUnlocked).toBe(false);
     expect(result.export).toEqual({
@@ -739,7 +721,7 @@ describe("buildCollectionCardViewModel", () => {
       palette: "office",
       fragranceCount: 4,
       collectionPoints: 7,
-      profileTraits: ["Balanced Rotation", "Office Friendly", "Date Night Strong"],
+      profileTraits: ["Balanced Rotation", "Office Friendly", "Fresh-Leaning"],
       dnaDescriptors: ["Citrus", "Amber", "Woody"],
       primaryDna: "Citrus",
       isCuratorBonusUnlocked: false,
