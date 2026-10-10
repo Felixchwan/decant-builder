@@ -3239,3 +3239,134 @@ describe("Recommendation cards open the existing Perfume Details", () => {
     ].forEach((path) => expect(read(path), path).not.toMatch(/onOpenDetails|detail-trigger|recommendation\.viewDetailsFor/));
   });
 });
+
+// Collection Intelligence presentation hooks. All three are neutral, merchant-free and inert without a
+// host stylesheet: an opt-in accord evidence card (default off keeps the hover tooltip exactly), a level
+// hook on the balance meter, and an aria-hidden wrapper on the seasonal-gap emoji.
+describe("Collection Intelligence: presentation hooks", () => {
+  const box = perfumes.slice(0, 6);
+  // The Collection Intelligence section only: the panel also renders a hidden legacy "Scent Palette"
+  // block (display: none in the shared stylesheet) that keeps its own tooltip.
+  const snapshotOf = (markup) =>
+    markup.slice(markup.indexOf('<section class="collection-snapshot'), markup.indexOf('<section class="box-intelligence"'));
+
+  it("keeps the hover-only accord tooltip by default (no evidence markup, no extra DOM)", () => {
+    const markup = snapshotOf(renderBuilderPanel({ selectedPerfumes: box }));
+
+    expect(markup).toContain("accord-tooltip");
+    expect(markup).toContain("tooltip-box");
+    expect(markup).not.toContain("accord-evidence");
+  });
+
+  it("renders the accord chips as real buttons when a host opts in, with the card closed at rest", () => {
+    const withOptIn = snapshotOf(renderBuilderPanel({ selectedPerfumes: box, showAccordEvidence: true }));
+    const accordCount = Object.keys(
+      buildCollectionSummary({
+        selectedPerfumes: box,
+        catalog: perfumes,
+        notes,
+        config: discoveryDecantsConfig,
+      }).boxSummary.accordMap
+    ).length;
+    const triggers = withOptIn.match(/<button[^>]*accord-evidence-trigger[^>]*>/g) || [];
+
+    expect(triggers).toHaveLength(accordCount);
+    triggers.forEach((trigger) => {
+      expect(trigger).toContain('type="button"');
+      expect(trigger).toContain('aria-expanded="false"');
+      expect(trigger).toMatch(/aria-label="[^"]+: \d+ fragrances?"/);
+    });
+    expect(withOptIn).not.toContain("tooltip-box");
+    expect(withOptIn).not.toContain('class="accord-evidence"');
+  });
+
+  it("labels the chips and the card count in the host's language", () => {
+    const markup = renderBuilderPanel({
+      builderConfig: aurelianConfig,
+      selectedPerfumes: box,
+      showAccordEvidence: true,
+    });
+
+    expect(markup).toMatch(/aria-label="[^"]+: \d+ fragancias?"/);
+  });
+
+  it("is plumbed as an opt-in capability that defaults to off at every layer", () => {
+    const builder = readFileSync(new URL("../builder/DiscoveryBoxBuilder.jsx", import.meta.url), "utf8");
+    const runtime = readFileSync(new URL("../BuilderRuntime.jsx", import.meta.url), "utf8");
+
+    expect(builder).toContain("showAccordEvidence = false,");
+    expect(runtime).toContain("showAccordEvidence = false,");
+    expect(normalizedPanelSource).toContain("showAccordEvidence = false,");
+    expect(normalizedPanelSource).toContain("showAccordEvidence={showAccordEvidence}");
+  });
+
+  it("marks every balance meter as an image with its level and an explicit 'N out of 5' label", () => {
+    const markup = renderBuilderPanel({ builderConfig: aurelianConfig, selectedPerfumes: box });
+    const meters = markup.match(/<strong[^>]*role="img"[^>]*data-level="\d"[^>]*>/g) || [];
+
+    expect(meters).toHaveLength(5);
+    meters.forEach((meter) => {
+      const [, level] = meter.match(/data-level="(\d)"/);
+
+      expect(meter).toContain(`: ${level} out of 5`);
+    });
+    // the five corrected metric labels survive the redesign untouched
+    ["Versatilidad", "Amplitud olfativa", "Frescura", "Balance de temporada", "Coherencia de firma"].forEach(
+      (label) => expect(markup).toContain(`${label}: `)
+    );
+  });
+
+  it("keeps the old star glyphs in the markup (Discovery Decants still draws them)", () => {
+    const markup = renderBuilderPanel({ selectedPerfumes: box });
+
+    expect(markup).toMatch(/[★☆]{5}/);
+  });
+
+  it("hides the seasonal-gap emoji from assistive technology without changing its text", () => {
+    const markup = renderBuilderPanel({ selectedPerfumes: [perfumes[0]] });
+
+    expect(markup).toContain("seasonal-gaps");
+    expect(markup).toMatch(/<span class="seasonal-gap-icon" aria-hidden="true">[^<]+<\/span>/);
+  });
+
+  it("gives the scent library the dialog semantics and focus handling of the other Builder dialogs", () => {
+    expect(normalizedPanelSource).toMatch(
+      /role="dialog"\s+aria-modal="true"\s+aria-labelledby="scent-library-title"/
+    );
+    // focus in on open, kept inside while open, and handed back to the opener on close
+    expect(normalizedPanelSource).toContain('dialogRef.current?.querySelector(".modal-header button")?.focus();');
+    expect(normalizedPanelSource).toContain("onKeyDown={handleDialogKeyDown}");
+    expect(normalizedPanelSource).toMatch(/opener\.focus\(\)/);
+    // and it still has Escape and the shared body scroll lock
+    expect(normalizedPanelSource).toMatch(/function ScentLibraryModal[\s\S]*acquireBodyScrollLock\(document\)/);
+    expect(normalizedPanelSource).toMatch(/function ScentLibraryModal[\s\S]*event\.key === "Escape"/);
+  });
+});
+
+describe("Biblioteca olfativa: closing a note's detail keeps focus in the dialog", () => {
+  it("marks each note's own button so focus can be handed back to the one that opened the detail", () => {
+    const noteId = "bergamot";
+    const markup = renderToStaticMarkup(
+      <ScentLibraryContent
+        entries={[{ noteId, name: "Bergamot", image: null, perfumeCount: 2, perfumes: [] }]}
+        translator={createTranslator("en-US")}
+        selectedNoteId={null}
+        onClose={() => {}}
+        onSelectNote={() => {}}
+        onCloseDetail={() => {}}
+      />
+    );
+
+    expect(markup).toMatch(new RegExp(`<button[^>]*scent-library-note-button[^>]*data-note-id="${noteId}"`));
+  });
+
+  it("restores focus to that note's button when the detail closes, and keeps the Escape order (detail, then dialog)", () => {
+    expect(normalizedPanelSource).toMatch(
+      /function ScentLibraryModal[\s\S]*previousNoteId && !selectedNoteId[\s\S]*noteButton\?\.focus\(\)/
+    );
+    // Escape: close the open detail first; only a second press closes the dialog
+    expect(normalizedPanelSource).toMatch(
+      /function ScentLibraryModal[\s\S]*if \(selectedNoteId\) \{\s*setSelectedNoteId\(null\);\s*return;\s*\}\s*onClose\(\);/
+    );
+  });
+});

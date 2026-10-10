@@ -171,6 +171,10 @@ export function BuilderExperience({
       // Aurelian labels the two individual recommendations with a lens (Versatilidad / Afinidad,
       // painted in builder-recommendations.css); Discovery Decants never passes this.
       showRecommendationLenses
+      // Aurelian opens a Dominant Accords evidence card (bottle, name and house of each fragrance behind a
+      // count) on hover, focus or tap (painted in builder-intelligence.css); Discovery Decants never
+      // passes this and keeps its hover tooltip.
+      showAccordEvidence
     />
   );
 }

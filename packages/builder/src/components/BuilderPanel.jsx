@@ -4,6 +4,7 @@ import { createRoot } from "react-dom/client";
 import { toBlob } from "html-to-image";
 import { getCollectionIdentityProfile } from "../utils/collectionIdentityEngine";
 import MetadataPreview from "./MetadataPreview.jsx";
+import AccordEvidenceGroup from "./AccordEvidenceGroup.jsx";
 import { useNoteEasterEgg } from "../builder/internal/notes/useNoteEasterEgg.js";
 import {
   buildCollectionCardSeasonRows,
@@ -175,6 +176,7 @@ const BuilderPanel = forwardRef(function BuilderPanel({
   stickySummaryPortalTarget = null,
   onOpenRecommendationPerfumeDetails,
   showRecommendationLenses = false,
+  showAccordEvidence = false,
   dockShareActions = false,
 }, ref) {
     const translator = useMemo(
@@ -1079,6 +1081,7 @@ const BuilderPanel = forwardRef(function BuilderPanel({
         isExpanded={isCollectionSnapshotOpen}
         portalRoot={portalRoot}
         selectedDnaAccord={selectedDnaAccord}
+        showAccordEvidence={showAccordEvidence}
         onToggle={() => setIsCollectionSnapshotOpen((isOpen) => !isOpen)}
         onOpenScentLibrary={() => setIsNotesModalOpen(true)}
         onOpenDnaAccord={setSelectedDnaAccord}
@@ -2609,6 +2612,8 @@ function DiscoveryBoxCoachmark({ model, onDismiss, onAction }) {
 function CollectionSnapshot({
   builderConfig,
   assetResolver,
+  selectedPerfumes,
+  showAccordEvidence = false,
   boxSummary,
   coverageSummary,
   intelligence,
@@ -2758,7 +2763,11 @@ function CollectionSnapshot({
             return (
               <div className="collection-balance-row" key={row.label}>
                 <span>{dimensionLabel}</span>
-                <strong aria-label={`${dimensionLabel}: ${row.level} out of 5`}>
+                <strong
+                  role="img"
+                  data-level={row.level}
+                  aria-label={`${dimensionLabel}: ${row.level} out of 5`}
+                >
                   {formatFiveStarRating(row.level)}
                 </strong>
               </div>
@@ -2800,28 +2809,37 @@ function CollectionSnapshot({
                 <div>
                   <span>{translator?.t?.("collectionIntelligence.dominantAccords") || "Dominant Accords"}</span>
 
-                  <div className="summary-tags">
-                    {Object.entries(boxSummary.accordMap).map(
-                      ([accord, perfumeNames]) => (
-                        <span className="accord-tooltip summary-metadata-chip-shell" key={accord}>
-                          <MetadataSummaryChip
-                            assetResolver={assetResolver}
-                            assetType="accords"
-                            value={accord}
-                            label={`${formatIntelligenceLabel(accord)} x${perfumeNames.length}`}
-                            translator={translator}
-                          />
+                  {showAccordEvidence ? (
+                    <AccordEvidenceGroup
+                      accordMap={boxSummary.accordMap}
+                      selectedPerfumes={selectedPerfumes}
+                      assetResolver={assetResolver}
+                      translator={translator}
+                    />
+                  ) : (
+                    <div className="summary-tags">
+                      {Object.entries(boxSummary.accordMap).map(
+                        ([accord, perfumeNames]) => (
+                          <span className="accord-tooltip summary-metadata-chip-shell" key={accord}>
+                            <MetadataSummaryChip
+                              assetResolver={assetResolver}
+                              assetType="accords"
+                              value={accord}
+                              label={`${formatIntelligenceLabel(accord)} x${perfumeNames.length}`}
+                              translator={translator}
+                            />
 
-                          <div className="tooltip-box">
-                            <strong>{accord}</strong>
-                            {perfumeNames.map((name) => (
-                              <p key={name}>{name}</p>
-                            ))}
-                          </div>
-                        </span>
-                      )
-                    )}
-                  </div>
+                            <div className="tooltip-box">
+                              <strong>{accord}</strong>
+                              {perfumeNames.map((name) => (
+                                <p key={name}>{name}</p>
+                              ))}
+                            </div>
+                          </span>
+                        )
+                      )}
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -2893,7 +2911,10 @@ function CollectionSnapshot({
                 key={`${item.category}-${item.target}`}
                 style={{ color: item.seasonColor }}
               >
-                {getSeasonIcon(item.target)} {getCoverageGapLabel(item, translator) || item.label}
+                <span className="seasonal-gap-icon" aria-hidden="true">
+                  {getSeasonIcon(item.target)}
+                </span>{" "}
+                {getCoverageGapLabel(item, translator) || item.label}
               </p>
             ))}
           </div>
@@ -3430,9 +3451,70 @@ function MetadataSummaryChip({ assetResolver, assetType, value, label, translato
   );
 }
 
+const FOCUSABLE_SELECTOR =
+  'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
 function ScentLibraryModal({ entries, translator, portalRoot, onClose, noteEasterEggs }) {
   const [selectedNoteId, setSelectedNoteId] = useState(null);
+  const dialogRef = useRef(null);
   const safeEntries = Array.isArray(entries) ? entries : [];
+
+  // Focus: in on open (the close button, as the Collection DNA dialog does), kept inside while open,
+  // and handed back to whatever opened the library (the "View details" button) when it closes.
+  useEffect(() => {
+    const opener = document.activeElement;
+
+    dialogRef.current?.querySelector(".modal-header button")?.focus();
+
+    return () => {
+      if (opener && opener.isConnected && typeof opener.focus === "function") {
+        opener.focus();
+      }
+    };
+  }, []);
+
+  // Closing a note's detail (its own X, or Escape) leaves focus on the note that opened it, not on the page:
+  // the detail unmounts with the button that had focus, so focus is handed back to the note's own button,
+  // which stays mounted inside the dialog. Escape still closes the detail first, then the dialog.
+  const previouslySelectedNoteIdRef = useRef(null);
+
+  useEffect(() => {
+    const previousNoteId = previouslySelectedNoteIdRef.current;
+
+    previouslySelectedNoteIdRef.current = selectedNoteId;
+
+    if (previousNoteId && !selectedNoteId) {
+      const noteButton = [...(dialogRef.current?.querySelectorAll("[data-note-id]") || [])].find(
+        (button) => button.getAttribute("data-note-id") === String(previousNoteId)
+      );
+
+      noteButton?.focus();
+    }
+  }, [selectedNoteId]);
+
+  const handleDialogKeyDown = (event) => {
+    if (event.key !== "Tab" || !dialogRef.current) {
+      return;
+    }
+
+    const focusable = [...dialogRef.current.querySelectorAll(FOCUSABLE_SELECTOR)];
+
+    if (focusable.length === 0) {
+      event.preventDefault();
+      return;
+    }
+
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+
+    if (event.shiftKey && (document.activeElement === first || !dialogRef.current.contains(document.activeElement))) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && (document.activeElement === last || !dialogRef.current.contains(document.activeElement))) {
+      event.preventDefault();
+      first.focus();
+    }
+  };
 
   useEffect(() => {
     const releaseBodyScrollLock = acquireBodyScrollLock(document);
@@ -3463,11 +3545,13 @@ function ScentLibraryModal({ entries, translator, portalRoot, onClose, noteEaste
   return renderOwnedPortal(
     <div className="modal-overlay scent-library-overlay" onClick={onClose}>
       <div
+        ref={dialogRef}
         className="modal-content scent-library-modal"
         role="dialog"
         aria-modal="true"
         aria-labelledby="scent-library-title"
         onClick={(event) => event.stopPropagation()}
+        onKeyDown={handleDialogKeyDown}
       >
         <ScentLibraryContent
           entries={safeEntries}
@@ -3571,6 +3655,7 @@ function ScentLibraryNoteItem({
       <button
         type="button"
         className="note-pill scent-library-note-button"
+        data-note-id={entry.noteId}
         onClick={onSelect}
         aria-expanded={isSelected}
         aria-controls={isSelected ? detailId : undefined}

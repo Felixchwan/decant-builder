@@ -1,0 +1,1338 @@
+/* Aurelian Collection Intelligence -- editorial paint.
+
+   HOST-OWNED, paint only. The shared Builder stylesheet is frozen and its selectors are zero
+   specificity (:where(.builder-scope)), so these plain host selectors win without !important
+   (two exceptions are marked below: the shared package itself uses !important there). Scope:
+
+     .builder-page            the inline surfaces: Collection Intelligence, Box Intelligence, Curator Bonus
+     .builder-portal-root     the dialogs the Builder portals to <body>, outside .builder-page:
+                              "Biblioteca olfativa" (the scent library) and the Collection DNA dialog
+
+   Nothing here can reach the public site, the shared package or Discovery Decants, which never load this
+   file. Typography, spacing and the information architecture are the Builder's own; this file changes
+   surfaces, rims, type and the marks that were generic (checks, stars, pills, emoji).
+
+   ---- The reading order -------------------------------------------------------------------------------
+     1. TITLE      Georgia, ivory, regular      "Perfil de la caja", "Análisis de la caja"
+     2. LABEL      Inter, tracked caps, brass   "OCASIONES", "BALANCE DE LA COLECCIÓN"
+     3. CONCLUSION Georgia, ivory               "Balanceado entre temporadas", "Perfil dominante" value
+     4. BODY       Inter, warm ivory / muted    descriptions, chip text, list rows
+   Pure white never appears; neutral text is ivory, secondary text is the warm secondary, and the one
+   cool tone (the tooling green) is reserved for controls that open a utility ("Ver detalles").
+
+   ---- Color roles -------------------------------------------------------------------------------------
+     aged brass   what is analysed and active: labels, meter marks, rims, ticks
+     ivory        what is concluded: titles and conclusions
+     tooling green  a control that opens a utility (shares builder-actions.css's tokens)
+     oxblood      the Curator Pick atmosphere only (a faint glow, never text)
+   Every raw color lives in the token block below; the rules after it only read tokens. */
+
+:is(.builder-page, .builder-portal-root) {
+  /* ink */
+  --aur-intel-ink: var(--aur-ivory);
+  --aur-intel-ink-soft: var(--secondary);
+  --aur-intel-ink-muted: var(--muted);
+  --aur-intel-brass: var(--gold);
+  --aur-intel-label: color-mix(in srgb, var(--gold) 82%, transparent);
+
+  /* brass hairlines, from a resting rule to a hovered rim: all the one gold at different strengths */
+  --aur-intel-hair: color-mix(in srgb, var(--gold) 16%, transparent);
+  --aur-intel-rim: color-mix(in srgb, var(--gold) 30%, transparent);
+  --aur-intel-rim-strong: color-mix(in srgb, var(--gold) 56%, transparent);
+  --aur-intel-wash: color-mix(in srgb, var(--gold) 7%, transparent);
+  --aur-intel-glow: color-mix(in srgb, var(--gold) 14%, transparent);
+  --aur-intel-mark-off: color-mix(in srgb, var(--gold) 20%, transparent);
+  --aur-intel-rule: color-mix(in srgb, var(--aur-ivory) 9%, transparent);
+
+  /* surfaces: warm near-blacks, never navy or slate */
+  --aur-intel-ground: rgba(8, 7, 6, 0.5);
+  --aur-intel-ground-deep: rgba(8, 7, 6, 0.72); /* the value builder-recommendations.css already uses */
+  /* opaque on purpose: it paints overlays (the evidence card, the dialog) that must never let text through */
+  --aur-intel-card: linear-gradient(180deg, rgb(22, 19, 15), var(--bg));
+  --aur-intel-shadow: rgba(0, 0, 0, 0.55);
+  --aur-intel-scrim: rgba(8, 7, 6, 0.8);
+
+  /* the Curator Pick atmosphere (oxblood + brass, behind text, never carrying it) */
+  --aur-intel-oxblood-glow: var(--aur-burgundy-wash);
+  --aur-intel-brass-haze: color-mix(in srgb, var(--gold) 10%, transparent);
+
+  /* geometry (the scale in builder-geometry.css: chips and tags sit one step under 8px controls) */
+  --aur-intel-radius-chip: 5px;
+  --aur-intel-radius-card: 8px;
+  --aur-intel-serif: Georgia, "Times New Roman", serif;
+}
+
+/* =========================================================================================================
+   1. Titles and labels
+   ========================================================================================================= */
+.builder-page .collection-snapshot-header h3,
+.builder-page .collection-snapshot .summary-panel h3,
+.builder-page .collection-snapshot .coverage-panel h3,
+.builder-page .box-intelligence-header h3 {
+  color: var(--aur-intel-ink);
+  font-family: var(--aur-intel-serif);
+  font-size: 1.0625rem;
+  font-weight: 400;
+  letter-spacing: 0.01em;
+  text-transform: none;
+}
+
+.builder-page .collection-profile-summary > span,
+.builder-page .collection-dna-summary > span,
+.builder-page .collection-balance-summary > span,
+.builder-page .collection-snapshot .summary-panel > div > span,
+.builder-page .season-profile-copy > span,
+.builder-page .box-intelligence-item > span {
+  color: var(--aur-intel-label);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+}
+
+.builder-page .collection-snapshot .analysis-subtitle,
+.builder-page .collection-snapshot .coverage-more,
+.builder-page .collection-snapshot .collection-empty-message {
+  color: var(--aur-intel-ink-muted);
+}
+
+.builder-page .collection-snapshot .summary-panel p,
+.builder-page .collection-snapshot .coverage-panel p {
+  color: var(--aur-intel-ink-soft);
+  font-size: 0.875rem;
+}
+
+/* The whole snapshot hairline between sections: warm and quiet. */
+.builder-page .collection-snapshot .collection-profile-summary,
+.builder-page .collection-snapshot .collection-dna-summary,
+.builder-page .collection-snapshot .collection-balance-summary,
+.builder-page .collection-snapshot .summary-panel,
+.builder-page .collection-snapshot .coverage-panel {
+  border-color: var(--aur-intel-rule);
+}
+
+/* On a narrow panel the title and the control wrap onto two lines instead of squeezing each other. */
+.builder-page .collection-snapshot-header {
+  flex-wrap: wrap;
+  row-gap: 0.6rem;
+}
+
+.builder-page .collection-snapshot-header h3 {
+  flex: 1 1 auto;
+}
+
+/* The expand / collapse control: same low radius and brass rim as the rest of the module. */
+.builder-page .collection-snapshot-header button {
+  border-color: var(--aur-intel-rim);
+  background: var(--aur-intel-ground);
+  color: var(--aur-intel-brass);
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+}
+
+.builder-page .collection-snapshot-header button:hover,
+.builder-page .collection-snapshot-header button:focus-visible {
+  border-color: var(--aur-intel-rim-strong);
+  background: var(--aur-intel-wash);
+}
+
+/* =========================================================================================================
+   2. Collection Profile: compact editorial traits (not pills)
+   ========================================================================================================= */
+.builder-page .collection-profile-chips {
+  gap: 6px;
+}
+
+.builder-page .collection-profile-chips span {
+  padding: 0.3rem 0.58rem;
+  border-color: var(--aur-intel-hair);
+  border-radius: var(--aur-intel-radius-chip);
+  background: var(--aur-intel-ground);
+  color: var(--aur-intel-ink-soft);
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  line-height: 1.2;
+}
+
+/* The first trait is the box's lead character: a slightly firmer rim, nothing louder. */
+.builder-page .collection-profile-chips span:first-child {
+  border-color: var(--aur-intel-rim);
+  color: var(--aur-intel-ink);
+}
+
+/* =========================================================================================================
+   3. Collection DNA: a scent vocabulary (name first, count second)
+   ========================================================================================================= */
+.builder-page .collection-dna-helper {
+  color: var(--aur-intel-ink-muted);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.03em;
+  text-align: left;
+}
+
+.builder-page .collection-dna-chips {
+  gap: 6px;
+}
+
+.builder-page .collection-dna-chip {
+  gap: 0.4rem;
+  min-height: 2.25rem;
+  padding: 0.35rem 0.65rem;
+  border-color: var(--aur-intel-hair);
+  border-radius: var(--aur-intel-radius-chip);
+  background: var(--aur-intel-ground);
+  color: var(--aur-intel-ink);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+}
+
+/* The shared chip plays a one-off diagonal sheen on first paint; a vocabulary stays still. */
+.builder-page .collection-dna-chip::before {
+  display: none;
+}
+
+/* The count is quieter than the word and sits like a superscript. */
+.builder-page .collection-dna-chips .collection-dna-chip strong {
+  align-self: flex-start;
+  margin-top: -0.12em;
+  color: var(--aur-intel-label);
+  font-size: 0.625rem;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.builder-page .collection-dna-chip:hover,
+.builder-page .collection-dna-chip:focus-visible {
+  border-color: var(--aur-intel-rim-strong);
+  background: var(--aur-intel-wash);
+  box-shadow: 0 0 14px var(--aur-intel-glow);
+  color: var(--aur-intel-ink);
+  transform: none;
+}
+
+.builder-page .collection-dna-chip:focus-visible {
+  outline: 2px solid var(--aur-intel-brass);
+  outline-offset: 2px;
+}
+
+.builder-page .collection-dna-chip.is-active,
+.builder-page .collection-dna-chip:active {
+  border-color: var(--aur-intel-rim-strong);
+  background: var(--aur-intel-wash);
+  box-shadow: inset 0 0 0 1px var(--aur-intel-hair);
+  color: var(--aur-intel-ink);
+}
+
+.builder-page .collection-dna-chip .collection-dna-chevron {
+  color: var(--aur-intel-label);
+}
+
+/* =========================================================================================================
+   4. Collection Balance: five marks, brass when reached
+   The shared markup is `<strong role="img" data-level="N">` holding the old star glyphs. The glyphs are
+   hidden and the same element draws five discrete marks instead (a mask cuts the gaps), so the 1-5 level
+   reads at a glance, with the explicit aria-label ("Season Balance: 2 of 5") unchanged.
+   ========================================================================================================= */
+.builder-page .collection-balance-list {
+  gap: 0;
+}
+
+.builder-page .collection-balance-row {
+  gap: 14px;
+  padding: 0.5rem 0;
+  border-top: 1px solid var(--aur-intel-rule);
+}
+
+.builder-page .collection-balance-row:first-child {
+  border-top: 0;
+  padding-top: 0.15rem;
+}
+
+.builder-page .collection-balance-row span {
+  color: var(--aur-intel-ink-soft);
+  font-size: 0.8125rem;
+  font-weight: 500;
+}
+
+.builder-page .collection-balance-row strong {
+  --aur-intel-level: 0;
+  display: block;
+  width: 5.25rem;
+  height: 0.375rem;
+  background: linear-gradient(
+    90deg,
+    var(--aur-intel-brass) calc(var(--aur-intel-level) * 20%),
+    var(--aur-intel-mark-off) 0
+  );
+  -webkit-mask-image: repeating-linear-gradient(
+    90deg,
+    var(--aur-intel-brass) 0 calc(20% - 3px),
+    transparent 0 20%
+  );
+  mask-image: repeating-linear-gradient(
+    90deg,
+    var(--aur-intel-brass) 0 calc(20% - 3px),
+    transparent 0 20%
+  );
+  border-radius: 1px;
+  color: transparent;
+  font-size: 0;
+  line-height: 0;
+  letter-spacing: 0;
+}
+
+.builder-page .collection-balance-row strong[data-level="1"] { --aur-intel-level: 1; }
+.builder-page .collection-balance-row strong[data-level="2"] { --aur-intel-level: 2; }
+.builder-page .collection-balance-row strong[data-level="3"] { --aur-intel-level: 3; }
+.builder-page .collection-balance-row strong[data-level="4"] { --aur-intel-level: 4; }
+.builder-page .collection-balance-row strong[data-level="5"] { --aur-intel-level: 5; }
+
+/* =========================================================================================================
+   5. Box Intelligence: written analysis, not KPI cards
+   ========================================================================================================= */
+.builder-page .box-intelligence {
+  gap: 0.35rem;
+  padding: 0.95rem 1rem 1rem;
+  border-color: var(--aur-intel-hair);
+  background: var(--aur-intel-ground);
+}
+
+.builder-page .box-intelligence-header span {
+  padding: 2px 7px;
+  border-color: var(--aur-intel-hair);
+  border-radius: 3px;
+  background: transparent;
+  color: var(--aur-intel-label);
+  font-size: 0.625rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+}
+
+.builder-page .box-intelligence-grid {
+  gap: 0;
+}
+
+.builder-page .box-intelligence-item {
+  gap: 0.25rem;
+  padding: 0.7rem 0 0.2rem;
+  border: 0;
+  border-top: 1px solid var(--aur-intel-rule);
+  border-radius: 0;
+  background: transparent;
+}
+
+.builder-page .box-intelligence-item strong {
+  color: var(--aur-intel-ink);
+  font-family: var(--aur-intel-serif);
+  font-size: 1rem;
+  font-weight: 400;
+  line-height: 1.3;
+}
+
+/* =========================================================================================================
+   6. Seasonal Profile: a technical illustration on an editorial page
+   ========================================================================================================= */
+.builder-page .season-profile-panel {
+  gap: 12px;
+  padding: 0.85rem 0.9rem;
+  border-color: var(--aur-intel-hair);
+  background: var(--aur-intel-ground);
+}
+
+.builder-page .season-profile-copy > span {
+  line-height: 1.4;
+}
+
+.builder-page .season-profile-copy p {
+  color: var(--aur-intel-ink-muted);
+  font-size: 0.75rem;
+}
+
+.builder-page .season-profile-copy strong {
+  color: var(--aur-intel-ink);
+  font-family: var(--aur-intel-serif);
+  font-size: 1rem;
+  font-weight: 400;
+  line-height: 1.25;
+}
+
+.builder-page .season-profile-grid-ring {
+  stroke: var(--aur-intel-rule);
+  stroke-width: 0.6;
+}
+
+.builder-page .season-profile-grid-ring-outer {
+  stroke: var(--aur-intel-hair);
+}
+
+.builder-page .season-profile-axis {
+  stroke: var(--aur-intel-rule);
+  stroke-width: 0.5;
+}
+
+.builder-page .season-profile-shape {
+  fill: var(--aur-intel-glow);
+  stroke: var(--aur-intel-brass);
+  stroke-width: 0.9;
+  filter: none;
+}
+
+.builder-page .season-profile-point {
+  fill: var(--aur-intel-brass);
+  stroke: var(--aur-intel-ground-deep);
+  stroke-width: 0.5;
+}
+
+.builder-page .season-profile-label {
+  fill: var(--aur-intel-ink-muted);
+  font-size: 5.2px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+}
+
+/* =========================================================================================================
+   7. Metadata groups (Ocasiones, Temporadas, Vibes, Acordes): one chip system
+   Category is carried by the icon and the word. The icon is muted, the geometry is shared by every group.
+   ========================================================================================================= */
+.builder-page .collection-snapshot .summary-tags {
+  justify-content: flex-start;
+  gap: 6px;
+  margin-top: 0.5rem;
+}
+
+.builder-page .collection-snapshot .summary-tags > span,
+.builder-page .collection-snapshot .summary-tags > .summary-metadata-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-height: 1.875rem;
+  padding: 0.25rem 0.6rem 0.25rem 0.35rem;
+  border: 1px solid var(--aur-intel-hair);
+  border-radius: var(--aur-intel-radius-chip);
+  background: var(--aur-intel-ground);
+  color: var(--aur-intel-ink-soft);
+  font-size: 0.78125rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  line-height: 1.2;
+  text-transform: none;
+}
+
+/* An asset-less chip has no icon column to pad for. */
+.builder-page .collection-snapshot .summary-tags > span:not(.summary-metadata-chip) {
+  padding-left: 0.6rem;
+}
+
+/* The shared chip text is a <span> of the summary panel, which carries the group-label style; the chip
+   word is body text, not a label. */
+.builder-page .collection-snapshot .summary-tags .summary-metadata-chip span {
+  display: inline;
+  color: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+  letter-spacing: inherit;
+  text-transform: none;
+}
+
+.builder-page .collection-snapshot .summary-metadata-chip img {
+  width: 1.25rem;
+  height: 1.25rem;
+  border: 1px solid var(--aur-intel-hair);
+  border-radius: 3px;
+  background: var(--aur-intel-ground-deep);
+  box-shadow: none;
+  filter: saturate(0.55) brightness(0.92);
+  opacity: 0.9;
+}
+
+/* =========================================================================================================
+   8. Accord evidence: the fragrances behind a Dominant Accord count
+   (opt-in markup: showAccordEvidence. The chips are buttons; the card opens on hover, focus or tap.)
+   ========================================================================================================= */
+.builder-page .accord-evidence-group {
+  position: relative;
+}
+
+.builder-page .collection-snapshot .accord-evidence-trigger {
+  cursor: pointer;
+  font-family: inherit;
+  transition:
+    border-color 160ms ease,
+    background-color 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.builder-page .collection-snapshot .accord-evidence-trigger:hover,
+.builder-page .collection-snapshot .accord-evidence-trigger.is-open {
+  border-color: var(--aur-intel-rim-strong);
+  background: var(--aur-intel-wash);
+  color: var(--aur-intel-ink);
+}
+
+.builder-page .collection-snapshot .accord-evidence-trigger:focus-visible {
+  outline: 2px solid var(--aur-intel-brass);
+  outline-offset: 2px;
+}
+
+.builder-page .collection-snapshot .accord-evidence-trigger.is-open {
+  box-shadow: 0 0 14px var(--aur-intel-glow);
+}
+
+/* The name leads; the count follows it, smaller and brass, like the DNA chips. */
+.builder-page .collection-snapshot .summary-tags .accord-evidence-trigger .accord-evidence-count {
+  align-self: flex-start;
+  margin-top: -0.1em;
+  color: var(--aur-intel-label);
+  font-size: 0.625rem;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.builder-page .accord-evidence {
+  position: absolute;
+  right: 0;
+  left: 0;
+  z-index: 30;
+  padding: 0.75rem 0.8rem 0.35rem;
+  border: 1px solid var(--aur-intel-rim);
+  border-radius: var(--aur-intel-radius-card);
+  background: var(--aur-intel-card);
+  box-shadow:
+    0 18px 40px var(--aur-intel-shadow),
+    inset 0 1px 0 var(--aur-intel-hair);
+  animation: aurelianIntelCardIn 140ms ease-out both;
+}
+
+/* The card is focusable only so that a click on it keeps focus inside the group (tabindex -1); it is never
+   reached by Tab, so it needs no ring of its own. The scrolling list, which is a tab stop, keeps its ring. */
+.builder-page .accord-evidence:focus {
+  outline: none;
+}
+
+.builder-page .collection-snapshot .accord-evidence .accord-evidence-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin: 0 0 0.5rem;
+  padding-bottom: 0.55rem;
+  border-bottom: 1px solid var(--aur-intel-hair);
+}
+
+.builder-page .accord-evidence-heading strong {
+  color: var(--aur-intel-label);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.builder-page .collection-snapshot .accord-evidence-heading span {
+  display: inline;
+  color: var(--aur-intel-ink-muted);
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  text-transform: none;
+}
+
+.builder-page .accord-evidence-list {
+  max-height: 14.5rem;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+  scrollbar-color: var(--aur-intel-rim) transparent;
+  scrollbar-width: thin;
+}
+
+.builder-page .accord-evidence-list:focus-visible {
+  outline: 2px solid var(--aur-intel-brass);
+  outline-offset: 2px;
+}
+
+.builder-page .accord-evidence-list li {
+  display: grid;
+  grid-template-columns: 2.5rem minmax(0, 1fr);
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.45rem 0;
+  border-top: 1px solid var(--aur-intel-rule);
+}
+
+.builder-page .accord-evidence-list li:first-child {
+  border-top: 0;
+}
+
+.builder-page .accord-evidence-list img {
+  width: 2.5rem;
+  height: 2.5rem;
+  padding: 2px;
+  border: 1px solid var(--aur-intel-hair);
+  border-radius: 4px;
+  background: var(--aur-intel-ground-deep);
+  object-fit: contain;
+}
+
+.builder-page .collection-snapshot .accord-evidence-list li > span {
+  display: grid;
+  gap: 0.1rem;
+  min-width: 0;
+  color: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+  letter-spacing: normal;
+  text-transform: none;
+}
+
+.builder-page .accord-evidence-list strong {
+  color: var(--aur-intel-ink);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+.builder-page .accord-evidence-list em {
+  color: var(--aur-intel-ink-muted);
+  font-size: 0.6875rem;
+  font-style: normal;
+  letter-spacing: 0.05em;
+}
+
+@keyframes aurelianIntelCardIn {
+  from {
+    opacity: 0;
+    transform: translateY(-3px);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* =========================================================================================================
+   9. Box analysis: coverage strengths and seasonal gaps (brass ticks, no emoji)
+   ========================================================================================================= */
+.builder-page .collection-snapshot .coverage-strength {
+  color: var(--aur-intel-ink-soft);
+  font-size: 0.8125rem;
+}
+
+/* The check mark is drawn, hairline and brass, instead of a typed glyph. */
+.builder-page .collection-snapshot .coverage-strength::before {
+  content: "";
+  width: 0.32rem;
+  height: 0.58rem;
+  margin: 0.2rem 0.3rem 0 0.18rem;
+  border: solid var(--aur-intel-brass);
+  border-width: 0 1px 1px 0;
+  transform: rotate(40deg);
+}
+
+.builder-page .collection-snapshot .seasonal-gaps h4 {
+  color: var(--aur-intel-label);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+}
+
+/* The shared markup colours each gap with an inline pastel per season and types an emoji before it;
+   both are replaced here by one quiet treatment. The inline colour can only be beaten with !important. */
+.builder-page .collection-snapshot .seasonal-gaps p {
+  display: flex;
+  align-items: baseline;
+  gap: 0.55rem;
+  color: var(--aur-intel-ink-soft) !important;
+  font-size: 0.8125rem;
+}
+
+.builder-page .collection-snapshot .seasonal-gaps p::before {
+  content: "";
+  flex: 0 0 auto;
+  width: 0.55rem;
+  height: 1px;
+  background: var(--aur-intel-brass);
+  transform: translateY(-0.2em);
+}
+
+.builder-page .collection-snapshot .seasonal-gap-icon {
+  display: none;
+}
+
+/* =========================================================================================================
+   10. "Ver detalles": a secondary, analytical action (it opens a utility, so it takes the tooling green
+   that "Explorar por nota" uses; the primary brass actions stay the only filled ones)
+   ========================================================================================================= */
+.builder-page .collection-snapshot .details-button {
+  min-height: 2.5rem;
+  margin-top: 0.5rem;
+  padding: 0.5rem 0.95rem;
+  border: 1px solid var(--aur-green-rim);
+  background: var(--aur-intel-ground);
+  color: var(--aur-green-text);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  transition:
+    border-color 160ms ease,
+    background-color 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.builder-page .collection-snapshot .details-button:hover,
+.builder-page .collection-snapshot .details-button:focus-visible {
+  border-color: var(--aur-green-text);
+  background: var(--aur-green-wash);
+  box-shadow: 0 0 12px var(--aur-green-glow);
+}
+
+.builder-page .collection-snapshot .details-button:focus-visible {
+  outline: 2px solid var(--aur-green-text);
+  outline-offset: 2px;
+}
+
+/* =========================================================================================================
+   11. Biblioteca olfativa (the scent library dialog, portalled outside .builder-page)
+   ========================================================================================================= */
+.builder-portal-root .scent-library-overlay {
+  background:
+    radial-gradient(circle at 50% 8%, var(--aur-intel-brass-haze), transparent 36%),
+    var(--aur-intel-scrim);
+}
+
+.builder-portal-root .scent-library-modal {
+  width: min(880px, 94vw);
+  padding: 0 1.75rem 1.5rem;
+  border: 1px solid var(--aur-intel-rim);
+  border-radius: 10px;
+  background: var(--aur-intel-card);
+  box-shadow:
+    0 28px 90px var(--aur-intel-shadow),
+    inset 0 1px 0 var(--aur-intel-hair);
+  scrollbar-color: var(--aur-intel-rim) transparent;
+  scrollbar-width: thin;
+}
+
+.builder-portal-root .scent-library-modal .modal-header {
+  top: 0;
+  align-items: flex-start;
+  gap: 1rem;
+  margin: 0 0 1.1rem;
+  padding: 1.75rem 0 1rem;
+  border-bottom: 1px solid var(--aur-intel-hair);
+  background: var(--aur-intel-card);
+}
+
+.builder-portal-root .scent-library-modal .modal-header h3 {
+  color: var(--aur-intel-ink);
+  font-family: var(--aur-intel-serif);
+  font-size: 1.5rem;
+  font-weight: 400;
+  letter-spacing: 0.01em;
+  line-height: 1.15;
+}
+
+.builder-portal-root .scent-library-modal .modal-header p {
+  margin-top: 0.4rem;
+  color: var(--aur-intel-ink-muted);
+  font-size: 0.875rem;
+}
+
+/* The close controls: a drawn cross on a quiet square (the shared glyph is a typed capital X). */
+.builder-portal-root .scent-library-modal .modal-header button,
+.builder-portal-root .scent-library-detail-header button {
+  position: relative;
+  flex: 0 0 auto;
+  width: 2.25rem;
+  height: 2.25rem;
+  padding: 0;
+  border: 1px solid var(--aur-intel-hair);
+  border-radius: 6px;
+  background: transparent;
+  color: transparent;
+  cursor: pointer;
+  font-size: 0;
+  transition:
+    border-color 160ms ease,
+    background-color 160ms ease;
+}
+
+.builder-portal-root .scent-library-modal .modal-header button::before,
+.builder-portal-root .scent-library-modal .modal-header button::after,
+.builder-portal-root .scent-library-detail-header button::before,
+.builder-portal-root .scent-library-detail-header button::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0.9rem;
+  height: 1px;
+  background: var(--aur-intel-ink-soft);
+  transform: translate(-50%, -50%) rotate(45deg);
+}
+
+.builder-portal-root .scent-library-modal .modal-header button::after,
+.builder-portal-root .scent-library-detail-header button::after {
+  transform: translate(-50%, -50%) rotate(-45deg);
+}
+
+.builder-portal-root .scent-library-modal .modal-header button:hover,
+.builder-portal-root .scent-library-modal .modal-header button:focus-visible,
+.builder-portal-root .scent-library-detail-header button:hover,
+.builder-portal-root .scent-library-detail-header button:focus-visible {
+  border-color: var(--aur-intel-rim-strong);
+  background: var(--aur-intel-wash);
+}
+
+.builder-portal-root .scent-library-modal button:focus-visible {
+  outline: 2px solid var(--aur-intel-brass);
+  outline-offset: 2px;
+}
+
+.builder-portal-root .scent-library-modal .scent-library-notes-grid {
+  grid-template-columns: repeat(auto-fill, minmax(10.25rem, 1fr));
+  gap: 0.5rem;
+}
+
+.builder-portal-root .scent-library-modal .scent-library-note-button {
+  gap: 0.6rem;
+  min-height: 2.75rem;
+  padding: 0.35rem 0.7rem 0.35rem 0.4rem;
+  border-color: var(--aur-intel-hair);
+  border-radius: var(--aur-intel-radius-card);
+  background: var(--aur-intel-ground);
+  color: var(--aur-intel-ink);
+}
+
+.builder-portal-root .scent-library-modal .scent-library-note-button:hover,
+.builder-portal-root .scent-library-modal .scent-library-note-button:focus-visible,
+.builder-portal-root .scent-library-modal .scent-library-note-shell.is-selected .scent-library-note-button {
+  border-color: var(--aur-intel-rim-strong);
+  background: var(--aur-intel-wash);
+  box-shadow: 0 0 14px var(--aur-intel-glow);
+  transform: none;
+}
+
+.builder-portal-root .scent-library-modal .scent-library-note-name {
+  color: var(--aur-intel-ink);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+/* The count is the quiet half of the cell. */
+.builder-portal-root .scent-library-modal .scent-library-note-count {
+  color: var(--aur-intel-label);
+  font-size: 0.6875rem;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  opacity: 1;
+}
+
+.builder-portal-root .scent-library-modal .scent-library-note-image,
+.builder-portal-root .scent-library-modal .scent-library-note-fallback {
+  border-color: var(--aur-intel-hair);
+  background: var(--aur-intel-ground-deep);
+  box-shadow: none;
+  color: var(--aur-intel-label);
+}
+
+.builder-portal-root .scent-library-modal .scent-library-detail {
+  margin-top: 0.5rem;
+  padding: 0.9rem 1rem;
+  border: 1px solid var(--aur-intel-hair);
+  border-radius: var(--aur-intel-radius-card);
+  background: var(--aur-intel-ground);
+}
+
+.builder-portal-root .scent-library-modal .scent-library-detail-header {
+  align-items: center;
+  gap: 0.9rem;
+}
+
+.builder-portal-root .scent-library-modal .scent-library-detail-header span {
+  color: var(--aur-intel-label);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.builder-portal-root .scent-library-modal .scent-library-detail-header strong {
+  color: var(--aur-intel-ink);
+  font-family: var(--aur-intel-serif);
+  font-size: 1.25rem;
+  font-weight: 400;
+}
+
+.builder-portal-root .scent-library-modal .scent-library-detail-header p {
+  color: var(--aur-intel-ink-muted);
+}
+
+.builder-portal-root .scent-library-modal .scent-library-perfume-list li {
+  border-color: var(--aur-intel-rule);
+  border-radius: var(--aur-intel-radius-card);
+  background: var(--aur-intel-ground);
+}
+
+.builder-portal-root .scent-library-modal .scent-library-perfume-list strong {
+  color: var(--aur-intel-ink);
+}
+
+.builder-portal-root .scent-library-modal .scent-library-perfume-list em {
+  color: var(--aur-intel-ink-muted);
+  font-style: normal;
+}
+
+/* =========================================================================================================
+   11b. Collection DNA dialog (opened from a DNA chip, portalled): the same system, no layout changes
+   ========================================================================================================= */
+.builder-portal-root .dna-modal-overlay {
+  background:
+    radial-gradient(circle at 50% 8%, var(--aur-intel-brass-haze), transparent 36%),
+    var(--aur-intel-scrim);
+}
+
+.builder-portal-root .dna-modal {
+  border-color: var(--aur-intel-rim);
+  border-radius: 10px;
+  background: var(--aur-intel-card);
+  box-shadow:
+    0 28px 90px var(--aur-intel-shadow),
+    inset 0 1px 0 var(--aur-intel-hair);
+  scrollbar-color: var(--aur-intel-rim) transparent;
+  scrollbar-width: thin;
+}
+
+.builder-portal-root .dna-modal-header {
+  border-bottom-color: var(--aur-intel-hair);
+  background: var(--aur-intel-card);
+  backdrop-filter: none;
+}
+
+.builder-portal-root .dna-modal-header span,
+.builder-portal-root .dna-modal-section > span,
+.builder-portal-root .dna-strength-heading span {
+  color: var(--aur-intel-label);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+}
+
+.builder-portal-root .dna-modal-header h3 {
+  color: var(--aur-intel-ink);
+  font-family: var(--aur-intel-serif);
+  font-size: 1.5rem;
+  font-weight: 400;
+  letter-spacing: 0.01em;
+}
+
+.builder-portal-root .dna-modal-header p,
+.builder-portal-root .dna-strength-card p,
+.builder-portal-root .dna-empty-message {
+  color: var(--aur-intel-ink-soft);
+}
+
+.builder-portal-root .dna-section-helper {
+  color: var(--aur-intel-ink-muted);
+}
+
+.builder-portal-root .dna-modal-section {
+  border-top-color: var(--aur-intel-rule);
+}
+
+.builder-portal-root .dna-accord-switcher button,
+.builder-portal-root .dna-contributor-trigger,
+.builder-portal-root .dna-quick-detail-tags span {
+  border-color: var(--aur-intel-hair);
+  border-radius: var(--aur-intel-radius-chip);
+  background: var(--aur-intel-ground);
+  color: var(--aur-intel-ink-soft);
+  font-weight: 500;
+}
+
+.builder-portal-root .dna-accord-switcher button:hover,
+.builder-portal-root .dna-accord-switcher button:focus-visible,
+.builder-portal-root .dna-accord-switcher button.is-active,
+.builder-portal-root .dna-contributor-trigger:hover,
+.builder-portal-root .dna-contributor-trigger:focus-visible,
+.builder-portal-root .dna-quick-detail-tags span.is-active {
+  border-color: var(--aur-intel-rim-strong);
+  background: var(--aur-intel-wash);
+  color: var(--aur-intel-ink);
+}
+
+.builder-portal-root .dna-accord-switcher strong {
+  color: var(--aur-intel-label);
+  font-size: 0.625rem;
+  font-weight: 600;
+}
+
+.builder-portal-root .dna-modal-close,
+.builder-portal-root .dna-perfume-row button {
+  border-color: var(--aur-intel-rim);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--aur-intel-ink);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  letter-spacing: 0.03em;
+}
+
+.builder-portal-root .dna-modal-close:hover,
+.builder-portal-root .dna-modal-close:focus-visible,
+.builder-portal-root .dna-perfume-row button:hover:not(:disabled),
+.builder-portal-root .dna-perfume-row button:focus-visible:not(:disabled) {
+  border-color: var(--aur-intel-rim-strong);
+  background: var(--aur-intel-wash);
+  color: var(--aur-intel-ink);
+}
+
+.builder-portal-root .dna-modal button:focus-visible {
+  outline: 2px solid var(--aur-intel-brass);
+  outline-offset: 2px;
+}
+
+.builder-portal-root .dna-strength-card,
+.builder-portal-root .dna-perfume-row {
+  border-color: var(--aur-intel-hair);
+  border-radius: var(--aur-intel-radius-card);
+  background: var(--aur-intel-ground);
+  color: var(--aur-intel-ink);
+}
+
+.builder-portal-root .dna-strength-heading strong {
+  color: var(--aur-intel-ink);
+  font-family: var(--aur-intel-serif);
+  font-size: 1rem;
+  font-weight: 400;
+}
+
+.builder-portal-root .dna-strength-meter i {
+  border-radius: 1px;
+  background: var(--aur-intel-mark-off);
+}
+
+.builder-portal-root .dna-strength-meter i.is-filled {
+  background: var(--aur-intel-brass);
+}
+
+.builder-portal-root .dna-main-contributors img,
+.builder-portal-root .dna-perfume-row img {
+  border-color: var(--aur-intel-hair);
+  border-radius: 4px;
+  background: var(--aur-intel-ground-deep);
+}
+
+.builder-portal-root .dna-contributor-trigger span {
+  color: var(--aur-intel-ink-soft);
+  font-weight: 500;
+}
+
+.builder-portal-root .dna-row-name-button {
+  font-weight: 600;
+}
+
+.builder-portal-root .dna-perfume-row span,
+.builder-portal-root .dna-perfume-row p {
+  color: var(--aur-intel-ink-muted);
+}
+
+.builder-portal-root .dna-quick-detail {
+  border-color: var(--aur-intel-hair);
+  border-radius: var(--aur-intel-radius-card);
+  background: var(--aur-intel-ground-deep);
+}
+
+.builder-portal-root .dna-quick-detail strong {
+  color: var(--aur-intel-ink);
+}
+
+.builder-portal-root .dna-quick-detail > div > span,
+.builder-portal-root .dna-quick-detail p {
+  color: var(--aur-intel-ink-muted);
+}
+
+.builder-portal-root .dna-quick-detail p span {
+  color: var(--aur-intel-label);
+  font-weight: 600;
+}
+
+/* =========================================================================================================
+   12. Curator Bonus: the visual base for a reserved gift (artwork comes later, into --aur-curator-pick-art)
+   ========================================================================================================= */
+.builder-page .curator-bonus-section .discovery-progress-header > div > span {
+  color: var(--aur-intel-label);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+}
+
+.builder-page .curator-bonus-section .discovery-progress-header > div > strong {
+  font-size: 1.0625rem;
+}
+
+/* The state tag. The shared package sets its colour with !important, so only !important can restyle it. */
+.builder-page .curator-bonus-section .discovery-bonus-state {
+  padding: 3px 9px;
+  border-color: var(--aur-intel-hair);
+  border-radius: 3px;
+  background: transparent;
+  color: var(--aur-intel-ink-muted) !important;
+  font-size: 0.625rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.builder-page .curator-bonus-section.unlocked .discovery-bonus-state {
+  border-color: var(--aur-intel-rim);
+  background: var(--aur-intel-wash);
+  color: var(--aur-intel-brass) !important;
+}
+
+/* Progress: a hairline track, not a pill gauge. */
+.builder-page .curator-bonus-section .discovery-progress-bar {
+  height: 4px;
+  border-radius: 2px;
+  background: var(--aur-intel-mark-off);
+}
+
+.builder-page .curator-bonus-section .discovery-progress-bar div {
+  background: var(--aur-intel-brass);
+}
+
+.builder-page .curator-bonus-section .discovery-progress-copy {
+  color: var(--aur-intel-ink-soft);
+}
+
+/* Unlocked, the line is the module's conclusion: serif and ivory, not a bold sans caption. */
+.builder-page .curator-bonus-section.unlocked .discovery-progress-copy {
+  color: var(--aur-intel-ink);
+  font-family: var(--aur-intel-serif);
+  font-size: 1rem;
+  font-weight: 400;
+}
+
+/* Requirements: a drawn brass tick when met, an open hairline ring when not (no green, no red). */
+.builder-page .curator-bonus-section .discovery-requirement {
+  color: var(--aur-intel-ink-soft);
+  font-weight: 500;
+}
+
+.builder-page .curator-bonus-section .discovery-requirement span {
+  position: relative;
+  width: 1rem;
+  height: 1rem;
+  border: 1px solid var(--aur-intel-mark-off);
+  border-radius: 50%;
+  background: transparent;
+}
+
+.builder-page .curator-bonus-section .discovery-requirement span::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+}
+
+.builder-page .curator-bonus-section .discovery-requirement.met span {
+  border-color: var(--aur-intel-rim-strong);
+  background: transparent;
+}
+
+.builder-page .curator-bonus-section .discovery-requirement.met span::before {
+  top: 0.13rem;
+  left: 0.31rem;
+  right: auto;
+  bottom: auto;
+  width: 0.22rem;
+  height: 0.46rem;
+  border: solid var(--aur-intel-brass);
+  border-width: 0 1px 1px 0;
+  transform: rotate(40deg);
+}
+
+.builder-page .curator-bonus-section .discovery-requirement.missing span::before {
+  display: none;
+}
+
+.builder-page .curator-bonus-section .discovery-requirement.missing {
+  color: var(--aur-intel-ink-muted);
+}
+
+/* The card around the explanation, the style control and the pick was a third nested box; it is now only
+   spacing, so the Curator Pick below is the one card in the module. */
+.builder-page .curator-bonus-section .curator-bonus-card,
+.builder-page .curator-bonus-section.unlocked .curator-bonus-card {
+  gap: 0.85rem;
+  margin-top: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+.builder-page .curator-bonus-section .curator-bonus-copy p {
+  color: var(--aur-intel-ink-soft);
+  font-size: 0.8125rem;
+}
+
+.builder-page .curator-bonus-section .curator-preference-control,
+.builder-page .curator-bonus-section .curator-style-locked {
+  padding: 0.85rem 0 0;
+  border: 0;
+  border-top: 1px solid var(--aur-intel-rule);
+  border-radius: 0;
+  background: transparent;
+}
+
+.builder-page .curator-bonus-section .curator-bonus-copy > strong {
+  font-family: var(--aur-intel-serif);
+  font-size: 1rem;
+  font-weight: 400;
+}
+
+.builder-page .curator-bonus-section .curator-preference-control label {
+  color: var(--aur-intel-label);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+}
+
+.builder-page .curator-bonus-section .curator-style-locked span {
+  color: var(--aur-intel-label);
+  font-weight: 600;
+  letter-spacing: 0.16em;
+}
+
+.builder-page .curator-bonus-section .curator-style-locked strong {
+  color: var(--aur-intel-ink-muted);
+  font-weight: 500;
+}
+
+.builder-page .curator-bonus-section .curator-preference-control select {
+  border-color: var(--aur-intel-rim);
+  border-radius: 6px;
+  background-color: var(--aur-intel-ground-deep);
+  color: var(--aur-intel-ink);
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+/* ---- The Curator Pick: a reserved gift ------------------------------------------------------------
+   The card is a dark lacquer with a brass rim and a faint oxblood-and-brass atmosphere low on the right.
+   Unlocked, its text keeps to the left and the lower right is left clear on purpose: artwork (a lacquered
+   box, a wax seal, a brass medallion) can be set into --aur-curator-pick-art without reworking the card;
+   it is masked to fade into the text side. With no artwork set, nothing is painted there. */
+.builder-page .curator-bonus-section .curator-pick-slot {
+  --aur-curator-pick-art: none;
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  border-color: var(--aur-intel-hair);
+  background:
+    radial-gradient(ellipse at 100% 100%, var(--aur-intel-oxblood-glow), transparent 62%),
+    radial-gradient(ellipse at 88% 100%, var(--aur-intel-brass-haze), transparent 55%),
+    var(--aur-intel-ground-deep);
+}
+
+.builder-page .curator-bonus-section .curator-pick-slot::after {
+  content: "";
+  position: absolute;
+  inset: 0 0 0 46%;
+  z-index: -1;
+  pointer-events: none;
+  background: var(--aur-curator-pick-art) right bottom / auto 100% no-repeat;
+  -webkit-mask-image: linear-gradient(90deg, transparent, var(--aur-intel-brass) 38%);
+  mask-image: linear-gradient(90deg, transparent, var(--aur-intel-brass) 38%);
+}
+
+.builder-page .curator-bonus-section .curator-pick-slot.active {
+  min-height: 8.25rem;
+  padding: 0.95rem;
+  border-color: var(--aur-intel-rim);
+  box-shadow: inset 0 1px 0 var(--aur-intel-hair);
+}
+
+.builder-page .curator-bonus-section .curator-pick-slot span {
+  color: var(--aur-intel-label);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+}
+
+.builder-page .curator-bonus-section .curator-pick-slot strong {
+  color: var(--aur-intel-ink);
+  font-family: var(--aur-intel-serif);
+  font-size: 1.125rem;
+  font-weight: 400;
+  line-height: 1.2;
+}
+
+.builder-page .curator-bonus-section .curator-pick-slot p {
+  color: var(--aur-intel-ink-muted);
+  line-height: 1.4;
+}
+
+/* The explanatory lines keep clear of the lower right, where the artwork will sit. */
+.builder-page .curator-bonus-section .curator-pick-slot.active p {
+  max-width: 68%;
+}
+
+/* =========================================================================================================
+   Small screens and input modes
+   ========================================================================================================= */
+@media (pointer: coarse) {
+  .builder-page .collection-dna-chip,
+  .builder-page .collection-snapshot .accord-evidence-trigger {
+    min-height: 2.75rem;
+  }
+
+  .builder-page .collection-snapshot .details-button {
+    min-height: 2.75rem;
+  }
+}
+
+@media (max-width: 480px) {
+  /* The conclusion and the radar stack: side by side the copy column was squeezed to a few words a line. */
+  .builder-page .season-profile-panel {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.75rem;
+  }
+
+  .builder-page .season-profile-chart {
+    justify-self: center;
+    width: 7rem;
+  }
+
+  .builder-portal-root .scent-library-modal {
+    padding: 0 1rem 1rem;
+  }
+
+  .builder-portal-root .scent-library-modal .modal-header {
+    padding-top: 1.25rem;
+  }
+
+  .builder-portal-root .scent-library-modal .modal-header h3 {
+    font-size: 1.25rem;
+  }
+
+  .builder-portal-root .scent-library-modal .scent-library-notes-grid {
+    grid-template-columns: repeat(auto-fill, minmax(8.75rem, 1fr));
+  }
+
+  .builder-page .curator-bonus-section .curator-pick-slot.active p {
+    max-width: 62%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .builder-page .accord-evidence {
+    animation: none;
+  }
+}

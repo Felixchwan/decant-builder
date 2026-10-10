@@ -126,6 +126,9 @@ function App({
   // Generic, opt-in presentation capability: label the two recommendation lanes with a lens
   // (see DiscoveryBoxBuilder.jsx's doc comment). false/absent renders them exactly as before.
   showRecommendationLenses = false,
+  // Generic, opt-in presentation capability: Dominant Accords chips open an evidence card (see
+  // DiscoveryBoxBuilder.jsx's doc comment). false/absent renders the chips and tooltip exactly as before.
+  showAccordEvidence = false,
   // Generic, opt-in presentation hook for the catalog heading row: absent
   // by default, which renders the row exactly as it always has -- no
   // button, no extra DOM. A host that wants a compact affordance there
@@ -1212,6 +1215,7 @@ const confirmAddPerfume = () => {
       stickySummaryPortalTarget={stickySummaryPortalTarget}
       dockShareActions={dockShareActions}
       showRecommendationLenses={showRecommendationLenses}
+      showAccordEvidence={showAccordEvidence}
     />
   );
 

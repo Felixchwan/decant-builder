@@ -777,6 +777,8 @@ export const esMX = {
   "collectionIntelligence.balance.freshness": "Frescura",
   "collectionIntelligence.balance.seasonBalance": "Balance de temporada",
   "collectionIntelligence.balance.signatureCoherence": "Coherencia de firma",
+  "collectionIntelligence.accordEvidence.countOne": "1 fragancia",
+  "collectionIntelligence.accordEvidence.countMany": "{count} fragancias",
 
   "collectionIntelligence.improvement.coldWeather": "Un toque más cálido para la noche añadiría profundidad y mejoraría la cobertura de clima frío.",
   "collectionIntelligence.improvement.formal": "Una fragancia formal y pulida haría la caja más útil para ocasiones que piden vestir bien.",

@@ -776,6 +776,8 @@ export const enUS = {
   "collectionIntelligence.balance.freshness": "Freshness",
   "collectionIntelligence.balance.seasonBalance": "Season Balance",
   "collectionIntelligence.balance.signatureCoherence": "Signature Coherence",
+  "collectionIntelligence.accordEvidence.countOne": "1 fragrance",
+  "collectionIntelligence.accordEvidence.countMany": "{count} fragrances",
 
   "collectionIntelligence.improvement.coldWeather": "A warmer evening addition would add depth and improve cold-weather range.",
   "collectionIntelligence.improvement.formal": "A polished formal fragrance would make the box more useful for dressed-up occasions.",
