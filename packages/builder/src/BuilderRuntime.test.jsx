@@ -388,10 +388,17 @@ describe("Details focus restoration: opener first, stable Builder surface otherw
     expect(runtimeSource).toContain("target?.focus({ preventScroll: true });");
   });
 
-  it("does not touch analytics: the details-opened sources are exactly the ones that existed", () => {
+  it("does not touch analytics: every existing details-opened source is unchanged, plus one merchant-neutral source for the recommendation lanes", () => {
     const sources = [...runtimeSource.matchAll(/openPerfumeDetails\([^,]+,\s*"([a-z_]+)"/g)].map((match) => match[1]);
 
-    expect([...new Set(sources)].sort()).toEqual(["composer_proposal", "initial_detail", "intent_recommendation", "manual", "note_explorer"]);
+    expect([...new Set(sources)].sort()).toEqual([
+      "composer_proposal",
+      "initial_detail",
+      "intent_recommendation",
+      "manual",
+      "note_explorer",
+      "recommendation",
+    ]);
   });
 });
 

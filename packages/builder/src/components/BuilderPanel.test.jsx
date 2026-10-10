@@ -23,8 +23,10 @@ import BuilderPanel, {
   ComposerGenerateButton,
   ComposerProposalDetailTrigger,
   ComposerProposalThumbnail,
+  RecommendationCard,
   ScentLibraryContent,
 } from "./BuilderPanel.jsx";
+import { createRecommendationDetailsOpener } from "../builder/internal/recommendations/createRecommendationDetailsOpener.js";
 import {
   getAdjacentPerfume,
   getDetailNavigation,
@@ -3042,5 +3044,198 @@ describe("Builder recommendation lenses (opt-in presentation)", () => {
       "../builder/presentation/recommendationExplanationLabels.js",
       "../builder/internal/intelligence/buildNextImprovement.js",
     ].forEach((path) => expect(read(path), path).not.toMatch(/lens/i));
+  });
+});
+
+describe("Recommendation cards open the existing Perfume Details", () => {
+  const selectedPerfumes = perfumes.slice(0, 3);
+  const laneSections = (markup) =>
+    markup
+      .split('<section class="recommendation-lane')
+      .slice(1)
+      .map((chunk) => `<section class="recommendation-lane${chunk}`);
+  const translatorFor = (config) => createTranslator(config.locale, config.taxonomyLabels);
+
+  // walk a React element tree (a hook-free component's return value) without a DOM
+  function findElements(node, predicate, found = []) {
+    if (Array.isArray(node)) {
+      node.forEach((child) => findElements(child, predicate, found));
+    } else if (node && typeof node === "object" && node.props) {
+      if (predicate(node)) found.push(node);
+      findElements(node.props.children, predicate, found);
+    }
+    return found;
+  }
+  const isTrigger = (element) => element.type === "button" && /recommendation-detail-trigger/.test(element.props.className || "");
+
+  function cardFor(recommendation, overrides = {}) {
+    return RecommendationCard({
+      recommendation,
+      isAdded: false,
+      isBoxFull: false,
+      onAddPerfume: () => {},
+      onOpenDetails: () => {},
+      translator: translatorFor(aurelianConfig),
+      ...overrides,
+    });
+  }
+
+  const recommendations = buildComposerRecommendations({
+    perfumes,
+    selectedPerfumes,
+    notes,
+    config: aurelianConfig,
+  });
+  const versatilityPick = recommendations.toBalanceYourBox[0];
+  const affinityPick = recommendations.basedOnYourPicks[0];
+
+  it("renders one native details button per recommendation: perfume name in its label, popup semantics, no nested controls", () => {
+    simulateFirstVisit();
+    const markup = renderBuilderPanel({
+      builderConfig: aurelianConfig,
+      selectedPerfumes,
+      showRecommendationLenses: true,
+      onOpenRecommendationPerfumeDetails: () => {},
+    });
+    const lanes = laneSections(markup);
+
+    expect(lanes).toHaveLength(2);
+    expect(lanes[1]).toContain(`aria-label="Ver notas y detalles de ${affinityPick.perfume.name}"`);
+    lanes.forEach((lane) => {
+      const trigger = lane.match(/<button type="button" class="recommendation-title-group recommendation-detail-trigger"[^>]*>[\s\S]*?<\/button>/)[0];
+
+      expect(lane.match(/recommendation-detail-trigger/g)).toHaveLength(1);
+      // the label names the very perfume this lane is showing
+      const shownName = trigger.match(/<strong>([^<]+)<\/strong>/)[1];
+      expect(trigger).toContain(`aria-label="Ver notas y detalles de ${shownName}"`);
+      expect(trigger).toContain('aria-haspopup="dialog"');
+      // thumbnail and text share this one tab stop: no other interactive element inside it
+      expect(trigger.match(/<button/g)).toHaveLength(1);
+      expect(trigger).toContain('alt=""');
+    });
+  });
+
+  it("renders no trigger at all without a host handler, so the card is exactly what it always was", () => {
+    simulateFirstVisit();
+    const markup = renderBuilderPanel({ selectedPerfumes });
+
+    expect(markup).not.toContain("recommendation-detail-trigger");
+    expect(markup).toContain('class="recommendation-title-group"');
+    expect(markup).toContain(" bottle\"");
+  });
+
+  it("Versatilidad: activating the perfume opens that perfume, scoped to the lane's own picks in carousel order", () => {
+    const opened = [];
+    const lane = recommendations.toBalanceYourBox;
+    const opener = createRecommendationDetailsOpener((id, orderedIds) => opened.push([id, orderedIds]), lane);
+    const [trigger] = findElements(cardFor(versatilityPick, { onOpenDetails: opener }), isTrigger);
+
+    trigger.props.onClick();
+
+    expect(opened).toEqual([[versatilityPick.perfume.id, lane.map((item) => item.perfume.id)]]);
+  });
+
+  it("Afinidad: activating the perfume opens that perfume, scoped to the affinity picks", () => {
+    const opened = [];
+    const lane = recommendations.basedOnYourPicks;
+    const opener = createRecommendationDetailsOpener((id, orderedIds) => opened.push([id, orderedIds]), lane);
+    const [trigger] = findElements(cardFor(affinityPick, { onOpenDetails: opener }), isTrigger);
+
+    trigger.props.onClick();
+
+    expect(opened).toEqual([[affinityPick.perfume.id, lane.map((item) => item.perfume.id)]]);
+    // the two lanes are different perfumes, so "the correct one opens" is not vacuous
+    expect(affinityPick.perfume.id).not.toBe(versatilityPick.perfume.id);
+  });
+
+  it("the Add button only adds: it is not inside the details button and has its own handler", () => {
+    const opened = [];
+    const added = [];
+    const card = cardFor(affinityPick, {
+      onOpenDetails: (perfume) => opened.push(perfume.id),
+      onAddPerfume: (perfume) => added.push(perfume.id),
+    });
+    const [trigger] = findElements(card, isTrigger);
+    const addButtons = findElements(card, (element) => element.type === "button" && !isTrigger(element));
+
+    expect(addButtons).toHaveLength(1);
+    expect(findElements(trigger, (element) => element.type === "button" && element !== trigger)).toEqual([]);
+    addButtons[0].props.onClick();
+
+    expect(added).toEqual([affinityPick.perfume.id]);
+    expect(opened).toEqual([]);
+  });
+
+  it("keeps Add's existing states: added and box-full still disable it, and neither disables the details button", () => {
+    [{ isAdded: true }, { isBoxFull: true }].forEach((state) => {
+      const card = cardFor(affinityPick, state);
+      const [trigger] = findElements(card, isTrigger);
+      const [add] = findElements(card, (element) => element.type === "button" && !isTrigger(element));
+
+      expect(add.props.disabled).toBe(true);
+      expect(trigger.props.disabled).toBeUndefined();
+    });
+  });
+
+  it("the carousel controls are outside the card and never open details", () => {
+    simulateFirstVisit();
+    const lanes = laneSections(
+      renderBuilderPanel({
+        builderConfig: aurelianConfig,
+        selectedPerfumes,
+        showRecommendationLenses: true,
+        onOpenRecommendationPerfumeDetails: () => {},
+      })
+    );
+
+    lanes.forEach((lane) => {
+      const controls = lane.match(/<div class="recommendation-carousel-controls"[\s\S]*?<\/div>/)[0];
+      expect(controls).not.toContain("recommendation-detail-trigger");
+      expect(lane.indexOf("recommendation-carousel-controls")).toBeLessThan(lane.indexOf("recommendation-detail-trigger"));
+    });
+    // and the handlers are the existing previous / next ones
+    expect(normalizedPanelSource).toContain("onClick={goToPrevious}");
+    expect(normalizedPanelSource).toContain("onClick={goToNext}");
+  });
+
+  it("the trigger is keyboard-native: a real <button type=button> (Enter and Space), one tab stop, with a focus-visible state left to the host's ring", () => {
+    const [trigger] = findElements(cardFor(affinityPick), isTrigger);
+
+    expect(trigger.type).toBe("button");
+    expect(trigger.props.type).toBe("button");
+    expect(trigger.props.tabIndex).toBeUndefined();
+    expect(trigger.props.style).toMatchObject({ border: 0, background: "none", cursor: "pointer", textAlign: "left" });
+    expect(trigger.props.style).not.toHaveProperty("outline");
+  });
+
+  it("Previous / Next in the details walk the lane's picks (wrapping), never the whole catalog", () => {
+    const lane = recommendations.basedOnYourPicks;
+    const ids = lane.map((item) => item.perfume.id);
+    const scoped = resolveDetailNavigationPerfumes({ scopedPerfumeIds: ids, catalog: perfumes, fallbackPerfumes: perfumes });
+
+    expect(scoped.map((item) => item.id)).toEqual(ids);
+    const { previous, next } = getDetailNavigation(scoped[0], scoped);
+    expect(next.id).toBe(ids[1]);
+    expect(previous.id).toBe(ids[ids.length - 1]);
+  });
+
+  it("is plumbed through the one existing details path: openPerfumeDetails, tagged with a neutral 'recommendation' source", () => {
+    const runtime = readFileSync(new URL("../BuilderRuntime.jsx", import.meta.url), "utf8");
+
+    expect(runtime).toContain('openPerfumeDetails(perfume, "recommendation", orderedPerfumeIds);');
+    expect(runtime).toContain("onOpenRecommendationPerfumeDetails={openRecommendationPerfumeDetails}");
+    expect(normalizedPanelSource).toContain("onOpenPerfumeDetails={onOpenRecommendationPerfumeDetails}");
+    // no second modal, no second focus mechanism
+    expect(normalizedPanelSource).not.toMatch(/PerfumeDetailsModal|detailTriggerRef|createPortal\([^)]*recommendation/i);
+  });
+
+  it("changes no scoring, reason or ordering code", () => {
+    const read = (path) => readFileSync(new URL(path, import.meta.url), "utf8");
+    [
+      "../builder/internal/recommendations/buildAffinityRecommendations.js",
+      "../builder/internal/recommendations/buildComposerRecommendations.js",
+      "../builder/presentation/affinityReasonLabels.js",
+      "../builder/presentation/recommendationExplanationLabels.js",
+    ].forEach((path) => expect(read(path), path).not.toMatch(/onOpenDetails|detail-trigger|recommendation\.viewDetailsFor/));
   });
 });

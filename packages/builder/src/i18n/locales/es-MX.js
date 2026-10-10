@@ -241,6 +241,7 @@ export const esMX = {
   "recommendation.lens.versatility.hint": "Amplía tu caja",
   "recommendation.lens.affinity.label": "AFINIDAD",
   "recommendation.lens.affinity.hint": "Sigue tu línea",
+  "recommendation.viewDetailsFor": "Ver notas y detalles de {name}",
   "recommendation.affinity.and": "y",
   "recommendation.affinity.closestPick": "Muy cercana a {name}, de tu caja",
   "recommendation.affinity.sharedNotes": "Comparte notas clave con tu caja: {notes}",

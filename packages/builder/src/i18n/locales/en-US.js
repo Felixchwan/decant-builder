@@ -241,6 +241,7 @@ export const enUS = {
   "recommendation.lens.versatility.hint": "Broaden your box",
   "recommendation.lens.affinity.label": "AFFINITY",
   "recommendation.lens.affinity.hint": "Follow your thread",
+  "recommendation.viewDetailsFor": "View notes & details for {name}",
   "recommendation.affinity.and": "and",
   "recommendation.affinity.closestPick": "Very close to {name} in your box",
   "recommendation.affinity.sharedNotes": "Shares key notes with your box: {notes}",

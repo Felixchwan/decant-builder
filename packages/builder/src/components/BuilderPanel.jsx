@@ -28,6 +28,7 @@ import {
   sortNoteExplorerMatchesByProminence,
 } from "../builder/internal/intelligence/buildNoteExplorerViewModel.js";
 import { isCuratorBonusUnlocked as deriveCuratorBonusUnlocked } from "../builder/internal/curatorBonus/isCuratorBonusUnlocked.js";
+import { createRecommendationDetailsOpener } from "../builder/internal/recommendations/createRecommendationDetailsOpener.js";
 import { isCuratorBonusUnlockTransition } from "../builder/internal/curatorBonus/isCuratorBonusUnlockTransition.js";
 import { buildBuilderThemeStyle, hasCustomBuilderTheme } from "../builder/theme/builderTheme.js";
 import {
@@ -172,6 +173,7 @@ const BuilderPanel = forwardRef(function BuilderPanel({
   analytics = noopAnalytics,
   finalizationAdapter,
   stickySummaryPortalTarget = null,
+  onOpenRecommendationPerfumeDetails,
   showRecommendationLenses = false,
   dockShareActions = false,
 }, ref) {
@@ -1138,6 +1140,7 @@ const BuilderPanel = forwardRef(function BuilderPanel({
       sectionRef={balanceLaneRef}
       isEmphasized={isBalanceLaneEmphasized}
       lens={showRecommendationLenses ? "versatility" : undefined}
+      onOpenPerfumeDetails={onOpenRecommendationPerfumeDetails}
       translator={translator}
     />
 
@@ -1148,6 +1151,7 @@ const BuilderPanel = forwardRef(function BuilderPanel({
       isBoxFull={totalSlots >= maxSelectableSlots}
       onAddPerfume={onAddPerfume}
       lens={showRecommendationLenses ? "affinity" : undefined}
+      onOpenPerfumeDetails={onOpenRecommendationPerfumeDetails}
       translator={translator}
     />
     </div>
@@ -5009,6 +5013,7 @@ function NextImprovementSection({
   sectionRef,
   isEmphasized = false,
   lens,
+  onOpenPerfumeDetails,
   translator,
 }) {
   if (!result || result.recommendations.length === 0) {
@@ -5037,6 +5042,7 @@ function NextImprovementSection({
         onAddPerfume={onAddPerfume}
         objectiveKey={result.objectiveKey}
         lens={lens}
+        onOpenPerfumeDetails={onOpenPerfumeDetails}
         translator={translator}
       />
     </section>
@@ -5056,6 +5062,22 @@ const RECOMMENDATION_LENS_COPY = {
     label: "recommendation.lens.affinity.label",
     hint: "recommendation.lens.affinity.hint",
   },
+};
+
+// The details button reuses the summary group's own grid class, so it only has to shed the browser's
+// button chrome. Inline (not shared CSS, which is frozen) so every host gets the same neutral reset.
+const RECOMMENDATION_DETAIL_TRIGGER_STYLE = {
+  width: "100%",
+  margin: 0,
+  padding: 0,
+  border: 0,
+  borderRadius: 10,
+  background: "none",
+  color: "inherit",
+  font: "inherit",
+  textAlign: "left",
+  cursor: "pointer",
+  appearance: "none",
 };
 
 function RecommendationLane(props) {
@@ -5082,6 +5104,7 @@ function RecommendationLaneContent({
   isEmphasized = false,
   objectiveKey,
   lens,
+  onOpenPerfumeDetails,
   translator,
 }) {
   const [activeIndex, setActiveIndex] = useState(0);
@@ -5172,6 +5195,8 @@ function RecommendationLaneContent({
           onAddPerfume={onAddPerfume}
           isFocusable
           objectiveKey={objectiveKey}
+          // Details navigate within this lane: its recommendations, in the order the carousel walks them.
+          onOpenDetails={createRecommendationDetailsOpener(onOpenPerfumeDetails, recommendations)}
           translator={translator}
         />
       </div>
@@ -5179,13 +5204,14 @@ function RecommendationLaneContent({
   );
 }
 
-function RecommendationCard({
+export function RecommendationCard({
   recommendation,
   isAdded,
   isBoxFull,
   onAddPerfume,
   isFocusable = false,
   objectiveKey,
+  onOpenDetails,
   translator,
 }) {
   const { perfume } = recommendation;
@@ -5200,28 +5226,54 @@ function RecommendationCard({
       ? translator?.t?.("general.boxFull") || "Box full"
       : translator?.t?.("general.addToBox") || "Add to Box";
 
+  // The thumbnail is decorative once the whole summary is the details button (its name comes from the
+  // button's label); otherwise it keeps its own alt text, exactly as before.
+  const recommendationSummary = (
+    <>
+      <div className="recommendation-image">
+        <img
+          src={perfume.image || imageFallback}
+          alt={onOpenDetails ? "" : `${perfume.name} bottle`}
+          onError={(event) => {
+            event.currentTarget.onerror = null;
+            event.currentTarget.src = imageFallback;
+          }}
+        />
+      </div>
+
+      <div>
+        <strong>{perfume.name}</strong>
+        <span>
+          {perfume.brand} · {perfume.points} pt
+        </span>
+      </div>
+    </>
+  );
+
   return (
     <article className="recommendation-card" tabIndex={isFocusable ? -1 : undefined}>
       <div className="recommendation-card-header">
-        <div className="recommendation-title-group">
-          <div className="recommendation-image">
-            <img
-              src={perfume.image || imageFallback}
-              alt={`${perfume.name} bottle`}
-              onError={(event) => {
-                event.currentTarget.onerror = null;
-                event.currentTarget.src = imageFallback;
-              }}
-            />
-          </div>
-
-          <div>
-            <strong>{perfume.name}</strong>
-            <span>
-              {perfume.brand} · {perfume.points} pt
-            </span>
-          </div>
-        </div>
+        {onOpenDetails ? (
+          // The perfume itself -- thumbnail and name/brand -- is the one way into its details: one native
+          // button, so one tab stop, Enter/Space and a visible focus ring come for free. The Add button and
+          // the lane's carousel controls are siblings of this button, never descendants, so neither can
+          // open the details (and this cannot trigger them).
+          <button
+            type="button"
+            className="recommendation-title-group recommendation-detail-trigger"
+            style={RECOMMENDATION_DETAIL_TRIGGER_STYLE}
+            aria-label={
+              translator?.t?.("recommendation.viewDetailsFor", { name: perfume.name }) ||
+              `View notes & details for ${perfume.name}`
+            }
+            aria-haspopup="dialog"
+            onClick={() => onOpenDetails(perfume)}
+          >
+            {recommendationSummary}
+          </button>
+        ) : (
+          <div className="recommendation-title-group">{recommendationSummary}</div>
+        )}
       </div>
 
       <div className="recommendation-intelligence">

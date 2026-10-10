@@ -6,7 +6,7 @@
    BuilderExperience asks for it.
 
    The Builder shows two individual perfume recommendations side by side, and they answer different
-   questions. Each now carries a compact lens, readable before any reason bullet is:
+   questions. Each carries a compact lens, readable before any reason bullet is:
 
      VERSATILIDAD   "Amplía tu caja"    the opportunity pick: what would make the box broader
                                          brass -- expansion, progress, opportunity
@@ -14,28 +14,46 @@
                                          burgundy -- continuity, the user's own line
 
    The words carry the meaning; colour only reinforces it. Both stay on the dark editorial base:
-   the accent is a pill, a hairline rim, a faint glow and the carousel controls, never a card fill,
-   and never green (green stays reserved for tools such as "Explorar por nota").
+   the accent is a pill, a hairline rim and the carousel controls, never a card fill, and never green
+   (green stays reserved for tools such as "Explorar por nota").
+
+   ---- Intensity: the perfume card's hover is the ceiling ------------------------------------------
+   A catalog perfume card is quiet at rest (a burgundy hairline at 10%) and gets "oxblood illumination"
+   on hover: a rim of rgba(150, 58, 80, 0.55) (see .perfume-card:hover in builder-zoning.css) with a
+   dark drop shadow. A recommendation is a perfume card too, so it must never look more "selected"
+   than that. Three tiers, each matched by PERCEIVED brightness (relative luminance on the near-black
+   ground), because burgundy is a much darker hue than brass and the same alpha would not look the same:
+
+                         brass (alpha)      burgundy (alpha)     relative luminance
+     rest hairline       12%                28%                  ~0.012 / ~0.012
+     rest top rim        20%                45%                  ~0.023 / ~0.022
+     hover / focus       26%                55% (the card's own) 0.0336 / 0.0350  <= 0.0350 ceiling
+
+   So the lenses differ in HUE and label, never in brightness. Rest is a quiet hairline with a faint
+   top rim and no glow. The rise to the ceiling happens only when the perfume itself (the details
+   button) is hovered or keyboard-focused, which is also what tells the user it can be explored.
 
    Burgundy never carries text except the one interactive token (see globals.css), so the AFINIDAD
-   pill is a burgundy wash and rim with ivory text, and only the small carousel glyphs use the
-   readable interactive burgundy. Brass text is #c8a665 on near-black (>= 8:1). Confidence badges
-   (ALTA / MEDIA) are deliberately untouched: their colour encodes level, not lens. */
+   pill is a burgundy wash and rim with ivory text, and only the small carousel glyphs use the readable
+   interactive burgundy. Brass text is #c8a665 on near-black (>= 8:1). Confidence badges (ALTA / MEDIA)
+   are deliberately untouched: their colour encodes level, not lens. */
 
 .builder-page .recommendation-lane--versatility {
-  --lens-hair: rgba(200, 166, 101, 0.26);
-  --lens-rim: rgba(200, 166, 101, 0.62);
+  --lens-hair: rgba(200, 166, 101, 0.12);
+  --lens-top: rgba(200, 166, 101, 0.2);
+  --lens-hover: rgba(200, 166, 101, 0.26);
+  --lens-control-hair: rgba(200, 166, 101, 0.26);
   --lens-wash: rgba(200, 166, 101, 0.09);
-  --lens-glow: rgba(200, 166, 101, 0.1);
   --lens-label-text: var(--gold);
   --lens-control-text: var(--gold);
 }
 
 .builder-page .recommendation-lane--affinity {
-  --lens-hair: rgba(138, 52, 74, 0.46);
-  --lens-rim: var(--aur-burgundy-lift);
+  --lens-hair: rgba(138, 52, 74, 0.28);
+  --lens-top: rgba(138, 52, 74, 0.45);
+  --lens-hover: rgba(150, 58, 80, 0.55);
+  --lens-control-hair: rgba(150, 58, 80, 0.55);
   --lens-wash: var(--aur-burgundy-wash);
-  --lens-glow: var(--aur-burgundy-glow);
   --lens-label-text: var(--aur-ivory);
   --lens-control-text: var(--aur-burgundy-text-interactive);
 }
@@ -54,7 +72,7 @@
 .builder-page .recommendation-lens-label {
   flex: 0 0 auto;
   padding: 2px 9px 1px;
-  border: 1px solid var(--lens-rim);
+  border: 1px solid var(--lens-hover);
   border-radius: 999px;
   background: var(--lens-wash);
   color: var(--lens-label-text);
@@ -77,13 +95,34 @@
   white-space: nowrap;
 }
 
-/* ---- The card: a hairline rim and a faint glow, no fill ----------------------------------- */
+/* ---- The card: a quiet hairline and a faint top rim; no glow, no fill -------------------------- */
 .builder-page .recommendation-lane--versatility .recommendation-card,
 .builder-page .recommendation-lane--affinity .recommendation-card {
   border-color: var(--lens-hair);
+  box-shadow: inset 0 1px 0 var(--lens-top);
+  transition:
+    border-color 180ms ease,
+    box-shadow 180ms ease;
+}
+
+/* ---- Hover / keyboard focus on the perfume: up to the perfume-card hover, no further ---------
+   The details button is the card's only way in, so the card answers it: the rim rises to the
+   catalog card's hover level in the lens hue, with a soft dark shadow (smaller than the catalog
+   card's 0 18px 48px) and no movement, so the Add button never shifts under the pointer. */
+.builder-page .recommendation-lane--versatility .recommendation-card:has(.recommendation-detail-trigger:is(:hover, :focus-visible)),
+.builder-page .recommendation-lane--affinity .recommendation-card:has(.recommendation-detail-trigger:is(:hover, :focus-visible)) {
+  border-color: var(--lens-hover);
   box-shadow:
-    inset 0 1px 0 var(--lens-rim),
-    0 0 22px var(--lens-glow);
+    inset 0 1px 0 var(--lens-hover),
+    0 10px 28px rgba(0, 0, 0, 0.22);
+}
+
+.builder-page .recommendation-lane--versatility .recommendation-detail-trigger:is(:hover, :focus-visible) strong,
+.builder-page .recommendation-lane--affinity .recommendation-detail-trigger:is(:hover, :focus-visible) strong {
+  text-decoration: underline;
+  text-decoration-color: var(--lens-hover);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
 }
 
 /* ---- The carousel controls take the lens ---------------------------------------------------
@@ -91,7 +130,7 @@
    only the rim, the glyph colour and the hover wash change, and they stay quieter than the card. */
 .builder-page .recommendation-lane--versatility .recommendation-carousel-controls button,
 .builder-page .recommendation-lane--affinity .recommendation-carousel-controls button {
-  border-color: var(--lens-hair);
+  border-color: var(--lens-control-hair);
   background: rgba(8, 7, 6, 0.72);
   color: var(--lens-control-text);
 }
@@ -100,7 +139,13 @@
 .builder-page .recommendation-lane--affinity .recommendation-carousel-controls button:not(:disabled):hover,
 .builder-page .recommendation-lane--versatility .recommendation-carousel-controls button:not(:disabled):focus-visible,
 .builder-page .recommendation-lane--affinity .recommendation-carousel-controls button:not(:disabled):focus-visible {
-  border-color: var(--lens-rim);
+  border-color: var(--lens-hover);
   background: var(--lens-wash);
-  box-shadow: 0 0 12px var(--lens-glow);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .builder-page .recommendation-lane--versatility .recommendation-card,
+  .builder-page .recommendation-lane--affinity .recommendation-card {
+    transition: none;
+  }
 }

@@ -714,6 +714,18 @@ const isComposerProposalStale = isComposerBoxProposalStale(
     }
   }
 
+  // Same scoped-navigation contract again, for the two individual recommendation lanes: the ids are the
+  // lane's own recommendations, in carousel order, so Previous / Next walks that lane (never the whole
+  // catalog, which would be arbitrary here) and the modal, its focus handling and its Add action are the
+  // existing ones.
+  function openRecommendationPerfumeDetails(perfumeId, orderedPerfumeIds) {
+    const perfume = perfumes.find((item) => item.id === perfumeId);
+
+    if (perfume) {
+      openPerfumeDetails(perfume, "recommendation", orderedPerfumeIds);
+    }
+  }
+
   function handleComposerSettingChange(field, value) {
     const nextValue =
       field === "budget" && value !== "" && Number(value) < 0 ? "0" : value;
@@ -1178,6 +1190,7 @@ const confirmAddPerfume = () => {
       minimumComposerBudget={minimumComposerBudget}
       composerProposal={composerProposal}
       onOpenComposerProposalPerfumeDetails={openComposerProposalPerfumeDetails}
+      onOpenRecommendationPerfumeDetails={openRecommendationPerfumeDetails}
       isComposerGenerating={isComposerGenerating}
       composerStatusMessage={composerStatusMessage}
       isComposerProposalStale={isComposerProposalStale}
