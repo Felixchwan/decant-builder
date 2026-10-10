@@ -23,7 +23,9 @@ const rowRules = rules.filter(({ selector, index }) => index < mediaIndex && sel
 const railRules = rules.filter(({ selector }) => selector.includes(".builder-panel-summary-accessory"));
 const GUTTER = ".builder-page .builder-panel-collapsible-row::before";
 const GUTTER_COLLAPSED = ".builder-page .layout--panel-collapsed .builder-panel-collapsible-row::before";
-const gutterRules = rules.filter(({ selector }) => selector === GUTTER || selector === GUTTER_COLLAPSED);
+const GUTTER_CARD_COLLAPSED =
+  ":root:has(#aurelian-builder-summary-slot .builder-panel-sticky-summary-card.is-docked.is-collapsed) .builder-page .builder-panel-collapsible-row::before";
+const gutterRules = rules.filter(({ selector }) => [GUTTER, GUTTER_COLLAPSED, GUTTER_CARD_COLLAPSED].includes(selector));
 const panelRules = rules.filter(
   ({ selector, index }) => index > mediaIndex && selector.startsWith(".builder-page ") && !gutterRules.some((gutter) => gutter.selector === selector)
 );
@@ -124,7 +126,9 @@ describe("Collection Card actions: desktop rail beside the docked box (host-owne
   describe("top spacing above the Composer, by state", () => {
     const COLLAPSED =
       ":root:has(#aurelian-builder-summary-slot .builder-panel-sticky-summary-card.is-docked.is-collapsed) .builder-page .builder-panel";
-    const collapsedRules = rules.filter(({ selector }) => selector.startsWith(":root:has(#aurelian-builder-summary-slot .builder-panel-sticky-summary-card"));
+    const collapsedRules = rules.filter(
+      ({ selector }) => selector.startsWith(":root:has(#aurelian-builder-summary-slot .builder-panel-sticky-summary-card") && selector !== GUTTER_CARD_COLLAPSED
+    );
 
     it("tightens the collapsed desktop state only: panel padding 18px -> 14px and the stale 14px Composer lead removed", () => {
       expect(collapsedRules.map(({ selector }) => selector)).toEqual([
@@ -245,7 +249,7 @@ describe("Side-control gutter: a solid near-black strip behind the rail (host-ow
   const strip = () => withoutComments.slice(withoutComments.indexOf(GUTTER));
 
   it("is one pseudo-element on the collapsible row, inside the single desktop media block, and nowhere else", () => {
-    expect(gutterRules.map(({ selector }) => selector)).toEqual([GUTTER, GUTTER_COLLAPSED]);
+    expect(gutterRules.map(({ selector }) => selector)).toEqual([GUTTER, GUTTER_COLLAPSED, GUTTER_CARD_COLLAPSED]);
     gutterRules.forEach(({ index }) => expect(index).toBeGreaterThan(mediaIndex));
     expect(withoutComments.match(/@media/g)).toHaveLength(1);
     // nothing in the <=980px layers mentions it
@@ -282,6 +286,28 @@ describe("Side-control gutter: a solid near-black strip behind the rail (host-ow
 
   it("draws nothing when the right panel is collapsed, so no orphan strip is left", () => {
     expect(body(GUTTER_COLLAPSED)).toBe("display: none;");
+  });
+
+  it("draws nothing when the docked card is collapsed: with no accessory and no clearance, all it would be is an 18px stub under the header", () => {
+    // read from the card's own existing state class; the card is in the header slot, outside .builder-page, so it keys on :root
+    expect(body(GUTTER_CARD_COLLAPSED)).toBe("display: none;");
+    expect(GUTTER_CARD_COLLAPSED).toContain(".builder-panel-sticky-summary-card.is-docked.is-collapsed");
+    expect(panelSource).toContain(`isDockedAndCollapsed ? " is-collapsed" : ""`);
+    // desktop block only, and no script is involved: it is one CSS rule on an existing class
+    expect(rules.find(({ selector }) => selector === GUTTER_CARD_COLLAPSED).index).toBeGreaterThan(mediaIndex);
+  });
+
+  it("is present only for the expanded docked card: the base rule stays unconditional and the two suppressions are the only exceptions", () => {
+    const withGutter = rules.filter(({ selector }) => selector.endsWith(".builder-panel-collapsible-row::before"));
+    expect(withGutter.map(({ selector }) => selector)).toEqual([GUTTER, GUTTER_COLLAPSED, GUTTER_CARD_COLLAPSED]);
+    // the base rule carries no state condition, so an expanded docked card (and a panel that is open) keeps it as approved
+    expect(GUTTER).not.toMatch(/is-collapsed|panel-collapsed|:has|:not/);
+  });
+
+  it("leaves the expanded gutter geometry exactly as approved", () => {
+    expect(gutter()).toBe(
+      'content: ""; position: absolute; z-index: -1; top: calc(-1 * (var(--builder-docked-summary-overflow) + 18px)); left: 0; width: 30px; height: calc(var(--builder-docked-summary-overflow) + 18px); background: var(--bg); pointer-events: none;'
+    );
   });
 
   it("leaves the shared package stylesheet alone, and Discovery Decants never loads it", () => {

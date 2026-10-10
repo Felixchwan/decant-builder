@@ -217,7 +217,8 @@
      (--builder-docked-summary-overflow), plus the 18px between the header and the layout, so it meets
      the header line exactly whatever the card's height. It adds no layout width (absolutely
      positioned, outside the flow) and never takes a pointer event. Nothing is drawn when the panel is
-     collapsed: the rail is elsewhere and the docked card has no accessory beside it. */
+     collapsed (the rail is elsewhere) or when the docked card is collapsed (it has no accessory beside
+     it, so there is nothing for the strip to back). */
   .builder-page .builder-panel-collapsible-row::before {
     content: "";
     position: absolute;
@@ -231,6 +232,14 @@
   }
 
   .builder-page .layout--panel-collapsed .builder-panel-collapsible-row::before {
+    display: none;
+  }
+
+  /* A collapsed docked card has no accessory rail beside it and no clearance below it (the live
+     overflow is 0), so all the strip would be is an 18px stub under the header. Hide it with the same
+     hook the collapsed-card spacing above uses: the card lives in the header slot, outside .builder-page,
+     so the state is read from :root. */
+  :root:has(#aurelian-builder-summary-slot .builder-panel-sticky-summary-card.is-docked.is-collapsed) .builder-page .builder-panel-collapsible-row::before {
     display: none;
   }
 }
