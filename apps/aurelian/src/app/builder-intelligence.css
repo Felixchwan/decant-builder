@@ -1226,11 +1226,24 @@
 
 /* ---- The Curator Pick: a reserved gift ------------------------------------------------------------
    The card is a dark lacquer with a brass rim and a faint oxblood-and-brass atmosphere low on the right.
-   Unlocked, its text keeps to the left and the lower right is left clear on purpose: artwork (a lacquered
-   box, a wax seal, a brass medallion) can be set into --aur-curator-pick-art without reworking the card;
-   it is masked to fade into the text side. With no artwork set, nothing is painted there. */
+   Unlocked, its text keeps to the left and the lower right is left clear on purpose: the keepsake still-life
+   (a lacquered chest, aged brass, oxblood velvet, a wax-sealed envelope) sits in that space, set through
+   --aur-curator-pick-art and masked to emerge from the dark toward the text.
+
+   The artwork is decorative CSS background only: no element, no alt text, no accessibility-tree entry. The
+   variable is set on the UNLOCKED card alone, so a locked card never requests an image (a background is only
+   fetched for an element that uses it). Two transparent-background assets share one language:
+
+     portrait  1122 x 1402   the 292px-wide side panel (1440 and 1024) and narrow phones (375)
+     wide      2000 x 740    the full-width card of the tablet layout (about 560-980px), where the clean
+                             region is a strip of about 2.7:1 instead of a tall column
+
+   Both are positioned bottom-right, height-driven (the card's height is set by its text, never by the
+   image), and bleed a few pixels past the edge so the flat cut of the drape never shows. */
 .builder-page .curator-bonus-section .curator-pick-slot {
   --aur-curator-pick-art: none;
+  --aur-curator-pick-art-opacity: 0.8;
+  --aur-curator-pick-art-fade-end: 72%; /* how far the picture takes to reach full strength, from the text side */
   position: relative;
   isolation: isolate;
   overflow: hidden;
@@ -1247,16 +1260,29 @@
   inset: 0 0 0 46%;
   z-index: -1;
   pointer-events: none;
-  background: var(--aur-curator-pick-art) right bottom / auto 100% no-repeat;
-  -webkit-mask-image: linear-gradient(90deg, transparent, var(--aur-intel-brass) 38%);
-  mask-image: linear-gradient(90deg, transparent, var(--aur-intel-brass) 38%);
+  background: var(--aur-curator-pick-art) right -4px bottom -4px / auto 100% no-repeat;
+  -webkit-mask-image: linear-gradient(90deg, transparent 8%, var(--aur-intel-brass) var(--aur-curator-pick-art-fade-end));
+  mask-image: linear-gradient(90deg, transparent 8%, var(--aur-intel-brass) var(--aur-curator-pick-art-fade-end));
+  opacity: var(--aur-curator-pick-art-opacity);
 }
 
 .builder-page .curator-bonus-section .curator-pick-slot.active {
+  --aur-curator-pick-art: url("/media/curator-pick/curator-pick-keepsake-portrait.webp");
   min-height: 8.25rem;
   padding: 0.95rem;
   border-color: var(--aur-intel-rim);
   box-shadow: inset 0 1px 0 var(--aur-intel-hair);
+}
+
+/* The still-life arrives with the unlock instead of popping in: it fades up from the dark. */
+.builder-page .curator-bonus-section .curator-pick-slot.active::after {
+  animation: aurelianCuratorArtIn 900ms ease-out 120ms backwards;
+}
+
+@keyframes aurelianCuratorArtIn {
+  from {
+    opacity: 0;
+  }
 }
 
 .builder-page .curator-bonus-section .curator-pick-slot span {
@@ -1282,6 +1308,15 @@
 /* The explanatory lines keep clear of the lower right, where the artwork will sit. */
 .builder-page .curator-bonus-section .curator-pick-slot.active p {
   max-width: 68%;
+}
+
+/* The tablet layout: the card spans the page, so its clean region is a wide strip (about 2.7:1) and the wide
+   still-life fits it; a portrait picture there would leave most of the strip empty. Only the picture changes. */
+@media (min-width: 560px) and (max-width: 980px) {
+  .builder-page .curator-bonus-section .curator-pick-slot.active {
+    --aur-curator-pick-art: url("/media/curator-pick/curator-pick-keepsake-wide.webp");
+    --aur-curator-pick-art-fade-end: 54%;
+  }
 }
 
 /* =========================================================================================================
@@ -1329,10 +1364,17 @@
   .builder-page .curator-bonus-section .curator-pick-slot.active p {
     max-width: 62%;
   }
+
+  /* Phone: the card is taller than it is wide and the copy is tight, so the picture fades back instead of
+     moving the text. */
+  .builder-page .curator-bonus-section .curator-pick-slot {
+    --aur-curator-pick-art-opacity: 0.68;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .builder-page .accord-evidence {
+  .builder-page .accord-evidence,
+  .builder-page .curator-bonus-section .curator-pick-slot.active::after {
     animation: none;
   }
 }

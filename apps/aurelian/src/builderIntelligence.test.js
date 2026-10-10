@@ -52,7 +52,7 @@ describe("Collection Intelligence: Aurelian host paint (builder-intelligence.css
   });
 
   it("never reaches the shared package or Discovery Decants: no file there knows these names", () => {
-    ["aur-intel", "accord-evidence", "seasonal-gap-icon", "aurelianIntelCardIn"].forEach((name) => {
+    ["aur-intel", "accord-evidence", "seasonal-gap-icon", "aurelianIntelCardIn", "aurelianCuratorArtIn", "curator-pick-keepsake", "aur-curator-pick-art"].forEach((name) => {
       expect(sharedCss, name).not.toContain(name);
     });
 
@@ -72,7 +72,7 @@ describe("Collection Intelligence: Aurelian host paint (builder-intelligence.css
     discoveryDecantsSources.forEach((path) => {
       const source = read(path);
 
-      expect(source, path).not.toMatch(/aur-intel|builder-intelligence|showAccordEvidence|accord-evidence/);
+      expect(source, path).not.toMatch(/aur-intel|builder-intelligence|showAccordEvidence|accord-evidence|curator-pick-keepsake|aur-curator-pick-art/);
     });
   });
 
@@ -211,7 +211,7 @@ describe("Collection Intelligence: Aurelian host paint (builder-intelligence.css
 
   it("respects reduced motion for the card's entrance", () => {
     expect(withoutComments).toMatch(
-      /@media \(prefers-reduced-motion: reduce\)\s*\{\s*\.builder-page \.accord-evidence\s*\{\s*animation: none;/
+      /@media \(prefers-reduced-motion: reduce\)\s*\{\s*\.builder-page \.accord-evidence,[^{]*\{\s*animation: none;/
     );
   });
 
@@ -248,17 +248,70 @@ describe("Collection Intelligence: Aurelian host paint (builder-intelligence.css
     ).toContain("font-size: 0");
   });
 
-  it("leaves a deliberate, empty home for Curator Pick artwork: a variable, no placeholder image or box", () => {
+  it("sets the Curator Pick artwork on the UNLOCKED card only, as a decorative CSS background", () => {
     const slot = bodyOf(".builder-page .curator-bonus-section .curator-pick-slot");
+    const active = bodyOf(".builder-page .curator-bonus-section .curator-pick-slot.active");
     const art = bodyOf(".builder-page .curator-bonus-section .curator-pick-slot::after");
 
+    // locked (the default) names no image at all, so nothing is requested
     expect(slot).toContain("--aur-curator-pick-art: none");
+    expect(slot).not.toMatch(/url\(/);
+    // unlocked names the portrait still-life
+    expect(active).toContain('--aur-curator-pick-art: url("/media/curator-pick/curator-pick-keepsake-portrait.webp")');
+    // the picture is the pseudo-element's background: no element, no alt text, never in the way of the copy
     expect(art).toContain("var(--aur-curator-pick-art)");
     expect(art).toContain("mask-image: linear-gradient");
     expect(art).toContain("pointer-events: none");
-    expect(css).not.toMatch(/url\(/);
-    // while locked the text keeps the full width; unlocked, the lines leave the lower right clear
+    expect(art).toContain("z-index: -1");
+    expect(art).toContain("opacity: var(--aur-curator-pick-art-opacity)");
+    // the only rules that carry a url() are the unlocked card's, and there are exactly two (portrait, wide)
+    const withUrl = componentRules.filter(({ body }) => /url\(/.test(body));
+
+    expect(withUrl).toHaveLength(2);
+    withUrl.forEach(({ selector }) => expect(selector).toBe(".builder-page .curator-bonus-section .curator-pick-slot.active"));
+    // the lines of copy still leave the lower right clear
     expect(bodyOf(".builder-page .curator-bonus-section .curator-pick-slot.active p")).toMatch(/max-width: \d+%/);
+  });
+
+  it("uses the portrait picture by default and the wide one only in the tablet layout", () => {
+    const wide = withoutComments.match(
+      /@media \(min-width: 560px\) and \(max-width: 980px\)\s*\{\s*\.builder-page \.curator-bonus-section \.curator-pick-slot\.active\s*\{([^}]*)\}/
+    );
+
+    expect(wide, "tablet media rule").not.toBeNull();
+    expect(wide[1]).toContain('--aur-curator-pick-art: url("/media/curator-pick/curator-pick-keepsake-wide.webp")');
+    // one breakpoint pair for the swap, not a ladder of them
+    expect((withoutComments.match(/curator-pick-keepsake-wide/g) || []).length).toBe(1);
+    expect((withoutComments.match(/curator-pick-keepsake-portrait/g) || []).length).toBe(1);
+  });
+
+  it("ships exactly the two artwork files it names, unmodified-format WebP with transparency, in the host's own public folder", () => {
+    ["curator-pick-keepsake-portrait.webp", "curator-pick-keepsake-wide.webp"].forEach((name) => {
+      const path = join(APP_ROOT, "public", "media", "curator-pick", name);
+      const bytes = readFileSync(path);
+
+      expect(statSync(path).size, name).toBeGreaterThan(50 * 1024);
+      expect(statSync(path).size, name).toBeLessThan(400 * 1024);
+      expect(bytes.subarray(0, 4).toString("latin1"), name).toBe("RIFF");
+      expect(bytes.subarray(8, 12).toString("latin1"), name).toBe("WEBP");
+    });
+    expect(readdirSync(join(APP_ROOT, "public", "media", "curator-pick")).sort()).toEqual([
+      "curator-pick-keepsake-portrait.webp",
+      "curator-pick-keepsake-wide.webp",
+    ]);
+  });
+
+  it("fades the picture in with the unlock, softer on phones, and not at all under reduced motion", () => {
+    expect(bodyOf(".builder-page .curator-bonus-section .curator-pick-slot.active::after")).toContain(
+      "animation: aurelianCuratorArtIn"
+    );
+    expect(withoutComments).toMatch(/@keyframes aurelianCuratorArtIn\s*\{\s*from\s*\{\s*opacity: 0;/);
+    expect(withoutComments).toMatch(
+      /@media \(max-width: 480px\)\s*\{[\s\S]*?\.curator-pick-slot\s*\{\s*--aur-curator-pick-art-opacity: 0\.\d+;/
+    );
+    expect(withoutComments).toMatch(
+      /@media \(prefers-reduced-motion: reduce\)\s*\{[\s\S]*?\.curator-pick-slot\.active::after\s*\{\s*animation: none;/
+    );
   });
 
   it("uses !important only where the shared package or the markup forces it, and says why", () => {
