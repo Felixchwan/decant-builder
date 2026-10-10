@@ -24,6 +24,7 @@ import { validateBuilderConfig } from "./config/index.js";
  * @param {boolean} [props.enablePanelCollapse] Optional, opt-in desktop capability: renders a full-height collapse rail at the left edge of the box panel column, letting a user hide it so the catalog can reclaim that width. Defaults to false, which renders the box panel column exactly as it always has -- no rail, no extra DOM, no grid-track changes. Purely a local, non-persisted layout preference; the Builder never derives this from config or storage.
  * @param {boolean} [props.dockShareActions] Optional, opt-in presentation capability: when true AND the box summary is docked into the host's stickySummaryPortalTarget and expanded, the Collection Card share actions (the same block, handlers and status the panel always renders) are rendered inside the docked summary card behind a stable, unstyled anchor, `.builder-panel-summary-accessory`, instead of in the panel flow, so a host can position them beside the box. Defaults to false, which renders them in the panel flow exactly as they always were. Below the docking breakpoint, or while the dock is collapsed, they stay in the panel flow either way. The package gives the anchor no visual treatment; placement, icons and responsive behavior belong to the host.
  * @param {boolean} [props.showAddedState] Optional, opt-in presentation capability: when true, a catalog card whose fragrance is already in the box renders its add button in an added state (an `is-added` class and the localized "Added" label instead of "Add to box"), so a host can style it. Defaults to false, which renders every card's add button exactly as it always has. Presentation only: the add handler, duplicate protection and full-box disabling are the same either way.
+ * @param {boolean} [props.showRecommendationLenses] Optional, opt-in presentation capability: when true, the two individual recommendation lanes (the opportunity pick and "based on your picks") each render a compact lens label with a short hint and a `recommendation-lane--versatility` / `recommendation-lane--affinity` class, so a host can tell them apart and style them. Defaults to false, which renders both lanes exactly as they always have (no extra DOM, no extra class). Presentation only: scoring, candidates, reasons, order, carousels and add handlers are the same either way.
  * @param {() => void} [props.onCatalogInfoRequest] Optional, opt-in presentation hook: when supplied, renders a compact accessible info button at the end of the catalog heading row and calls this handler on click. Absent by default, which renders the row exactly as it always has -- no button, no extra DOM. The Builder never interprets what the click should do; a host wires this to whatever local presentation concern it owns (e.g. restoring a dismissed intro block).
  */
 export default function DiscoveryBoxBuilder({
@@ -44,6 +45,7 @@ export default function DiscoveryBoxBuilder({
   enablePanelCollapse = false,
   dockShareActions = false,
   showAddedState = false,
+  showRecommendationLenses = false,
   onCatalogInfoRequest,
 }) {
   if (!config) {
@@ -108,6 +110,7 @@ export default function DiscoveryBoxBuilder({
       enablePanelCollapse={enablePanelCollapse}
       dockShareActions={dockShareActions}
       showAddedState={showAddedState}
+      showRecommendationLenses={showRecommendationLenses}
       onCatalogInfoRequest={onCatalogInfoRequest}
     />
   );

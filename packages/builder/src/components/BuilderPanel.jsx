@@ -172,6 +172,7 @@ const BuilderPanel = forwardRef(function BuilderPanel({
   analytics = noopAnalytics,
   finalizationAdapter,
   stickySummaryPortalTarget = null,
+  showRecommendationLenses = false,
   dockShareActions = false,
 }, ref) {
     const translator = useMemo(
@@ -378,8 +379,11 @@ const BuilderPanel = forwardRef(function BuilderPanel({
     );
     const basedOnYourPicks = recommendations?.basedOnYourPicks || EMPTY_RECOMMENDATIONS;
     const toBalanceYourBox = recommendations?.toBalanceYourBox || EMPTY_RECOMMENDATIONS;
+    // The Curator Bonus "similar" preference keeps drawing from the Composer's own signature lane, not from
+    // the similarity-only "based on your picks" surface, so the hidden picks do not move with that lane.
+    const curatorSimilarPicks = recommendations?.curatorSimilarPicks || EMPTY_RECOMMENDATIONS;
     const curatorBonusLane =
-      curatorBonusPreference === "similar" ? basedOnYourPicks : toBalanceYourBox;
+      curatorBonusPreference === "similar" ? curatorSimilarPicks : toBalanceYourBox;
     const hiddenCuratorPicks = useMemo(
       () => buildHiddenCuratorPicks(curatorBonusLane, selectedPerfumeIds),
       [curatorBonusLane, selectedPerfumeIds]
@@ -1123,15 +1127,9 @@ const BuilderPanel = forwardRef(function BuilderPanel({
 
     {(basedOnYourPicks.length > 0 || toBalanceYourBox.length > 0) && (
     <div className="recommendations">
-    <RecommendationLane
-      title={t("collectionIntelligence.basedOnYourPicks")}
-      recommendations={basedOnYourPicks}
-      selectedPerfumeIds={selectedPerfumeIds}
-      isBoxFull={totalSlots >= maxSelectableSlots}
-      onAddPerfume={onAddPerfume}
-      translator={translator}
-    />
-
+    {/* Reading order: the opportunity copy and its recommendation first, then the similarity lane right
+        after it, so the two individual perfume recommendations sit next to each other instead of being
+        split by the opportunity text. They stay separate systems with separate purposes. */}
     <NextImprovementSection
       result={nextImprovementResult}
       selectedPerfumeIds={selectedPerfumeIds}
@@ -1139,6 +1137,17 @@ const BuilderPanel = forwardRef(function BuilderPanel({
       onAddPerfume={onAddPerfume}
       sectionRef={balanceLaneRef}
       isEmphasized={isBalanceLaneEmphasized}
+      lens={showRecommendationLenses ? "versatility" : undefined}
+      translator={translator}
+    />
+
+    <RecommendationLane
+      title={t("collectionIntelligence.basedOnYourPicks")}
+      recommendations={basedOnYourPicks}
+      selectedPerfumeIds={selectedPerfumeIds}
+      isBoxFull={totalSlots >= maxSelectableSlots}
+      onAddPerfume={onAddPerfume}
+      lens={showRecommendationLenses ? "affinity" : undefined}
       translator={translator}
     />
     </div>
@@ -4999,6 +5008,7 @@ function NextImprovementSection({
   onAddPerfume,
   sectionRef,
   isEmphasized = false,
+  lens,
   translator,
 }) {
   if (!result || result.recommendations.length === 0) {
@@ -5026,11 +5036,27 @@ function NextImprovementSection({
         isBoxFull={isBoxFull}
         onAddPerfume={onAddPerfume}
         objectiveKey={result.objectiveKey}
+        lens={lens}
         translator={translator}
       />
     </section>
   );
 }
+
+// The two individual recommendation lanes answer different questions, and an opted-in host (see
+// showRecommendationLenses) labels each so the difference is readable before any reason is: the
+// opportunity pick broadens the box (versatility), "based on your picks" stays on the user's own
+// taste thread (affinity). Presentation only; nothing here touches how either lane is chosen.
+const RECOMMENDATION_LENS_COPY = {
+  versatility: {
+    label: "recommendation.lens.versatility.label",
+    hint: "recommendation.lens.versatility.hint",
+  },
+  affinity: {
+    label: "recommendation.lens.affinity.label",
+    hint: "recommendation.lens.affinity.hint",
+  },
+};
 
 function RecommendationLane(props) {
   const { recommendations, objectiveKey } = props;
@@ -5055,6 +5081,7 @@ function RecommendationLaneContent({
   sectionRef,
   isEmphasized = false,
   objectiveKey,
+  lens,
   translator,
 }) {
   const [activeIndex, setActiveIndex] = useState(0);
@@ -5079,8 +5106,22 @@ function RecommendationLaneContent({
   return (
     <section
       ref={sectionRef}
-      className={`recommendation-lane ${isEmphasized ? "is-emphasized" : ""}`}
+      className={
+        lens
+          ? `recommendation-lane recommendation-lane--${lens} ${isEmphasized ? "is-emphasized" : ""}`
+          : `recommendation-lane ${isEmphasized ? "is-emphasized" : ""}`
+      }
     >
+      {lens && RECOMMENDATION_LENS_COPY[lens] ? (
+        <div className="recommendation-lens">
+          <span className="recommendation-lens-label">
+            {translator?.t?.(RECOMMENDATION_LENS_COPY[lens].label)}
+          </span>
+          <span className="recommendation-lens-hint">
+            {translator?.t?.(RECOMMENDATION_LENS_COPY[lens].hint)}
+          </span>
+        </div>
+      ) : null}
       <div className="recommendation-lane-header">
         <h4 tabIndex={-1}>{title}</h4>
 

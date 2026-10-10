@@ -2855,3 +2855,192 @@ describe("Curator Bonus unlock celebration: restored-unlocked box vs a real unlo
     ).not.toContain("isCuratorBonusUnlockTransition");
   });
 });
+
+describe("Builder recommendations: reading order", () => {
+  // opportunity copy -> opportunity recommendation -> similarity recommendation, with the two individual
+  // perfume recommendations next to each other rather than split by the opportunity text
+  const boxes = {
+    "en-US": {
+      config: discoveryDecantsConfig,
+      next: "Recommended Next Pick",
+      similarity: "Based On Your Picks",
+    },
+    "es-MX": {
+      config: aurelianConfig,
+      next: "Siguiente selección recomendada",
+      similarity: "Según tus selecciones",
+    },
+  };
+
+  Object.entries(boxes).forEach(([locale, { config, next, similarity }]) => {
+    it(`${locale}: text, then the opportunity pick, then "based on your picks"`, () => {
+      simulateFirstVisit();
+      const selectedPerfumes = perfumes.slice(0, 3);
+      const markup = renderBuilderPanel({ builderConfig: config, selectedPerfumes });
+      const section = markup.indexOf('class="next-improvement-section');
+      const copy = markup.indexOf('class="next-improvement-copy"');
+      const nextPick = markup.indexOf(`>${next}<`);
+      const similarityLane = markup.indexOf(`>${similarity}<`);
+
+      expect(section).toBeGreaterThan(-1);
+      expect(copy).toBeGreaterThan(section);
+      expect(nextPick).toBeGreaterThan(copy);
+      expect(similarityLane).toBeGreaterThan(nextPick);
+      // one `.recommendations` container holds exactly these two siblings, in this order
+      expect(markup.indexOf('class="recommendations"')).toBeLessThan(section);
+    });
+
+    it(`${locale}: the two recommendation surfaces are adjacent siblings with nothing between them`, () => {
+      simulateFirstVisit();
+      const markup = renderBuilderPanel({ builderConfig: config, selectedPerfumes: perfumes.slice(0, 3) });
+
+      expect(markup).toMatch(/<\/section><section class="recommendation-lane[^"]*"/);
+      const afterOpportunity = markup.indexOf("</section><section class=\"recommendation-lane", markup.indexOf('class="next-improvement-section'));
+      const between = markup.slice(markup.indexOf(`>${next}<`), afterOpportunity);
+      // no explanatory block (heading/paragraph copy of the opportunity section) sits between the two picks
+      expect(between).not.toContain("next-improvement-copy");
+    });
+  });
+
+  it("keeps both carousels, their controls and their add actions", () => {
+    simulateFirstVisit();
+    const markup = renderBuilderPanel({ selectedPerfumes: perfumes.slice(0, 3) });
+
+    expect(markup.match(/class="recommendation-carousel-controls"/g)).toHaveLength(2);
+    expect(markup.match(/class="recommendation-carousel-card"/g)).toHaveLength(2);
+    expect(markup.match(/class="recommendation-actions"/g)).toHaveLength(2);
+  });
+
+  it("source order: the opportunity section renders before the similarity lane, and its scroll/focus ref is untouched", () => {
+    const block = normalizedPanelSource.slice(
+      normalizedPanelSource.indexOf('<div className="recommendations">'),
+      normalizedPanelSource.indexOf('<div className="summary-panel">')
+    );
+
+    expect(block.indexOf("<NextImprovementSection")).toBeGreaterThan(-1);
+    expect(block.indexOf("<NextImprovementSection")).toBeLessThan(block.indexOf("<RecommendationLane"));
+    expect(block).toContain("sectionRef={balanceLaneRef}");
+    expect(block).toContain('title={t("collectionIntelligence.basedOnYourPicks")}');
+  });
+
+  it("Curator Bonus keeps its own feed: 'similar' reads the Composer signature lane, not the similarity lane", () => {
+    expect(normalizedPanelSource).toContain(
+      'const curatorSimilarPicks = recommendations?.curatorSimilarPicks || EMPTY_RECOMMENDATIONS;'
+    );
+    expect(normalizedPanelSource).toContain(
+      'curatorBonusPreference === "similar" ? curatorSimilarPicks : toBalanceYourBox;'
+    );
+  });
+});
+
+describe("Builder recommendation lenses (opt-in presentation)", () => {
+  const selectedPerfumes = perfumes.slice(0, 3);
+  const laneSections = (markup) =>
+    markup
+      .split('<section class="recommendation-lane')
+      .slice(1)
+      .map((chunk) => `<section class="recommendation-lane${chunk}`);
+
+  it("renders nothing extra by default: no lens label and no lens class, so a host that never opts in is unchanged", () => {
+    simulateFirstVisit();
+    const markup = renderBuilderPanel({ selectedPerfumes });
+
+    expect(markup).not.toContain("recommendation-lens");
+    expect(markup).not.toContain("recommendation-lane--");
+    expect(laneSections(markup)).toHaveLength(2);
+  });
+
+  it("es-MX: VERSATILIDAD / Amplía tu caja on the opportunity pick, AFINIDAD / Sigue tu línea on Según tus selecciones", () => {
+    simulateFirstVisit();
+    const markup = renderBuilderPanel({
+      builderConfig: aurelianConfig,
+      selectedPerfumes,
+      showRecommendationLenses: true,
+    });
+    const [opportunity, affinity] = laneSections(markup);
+
+    expect(opportunity).toContain("recommendation-lane--versatility");
+    expect(opportunity).toContain('<span class="recommendation-lens-label">VERSATILIDAD</span>');
+    expect(opportunity).toContain('<span class="recommendation-lens-hint">Amplía tu caja</span>');
+    expect(opportunity).toContain(">Siguiente selección recomendada<");
+
+    expect(affinity).toContain("recommendation-lane--affinity");
+    expect(affinity).toContain('<span class="recommendation-lens-label">AFINIDAD</span>');
+    expect(affinity).toContain('<span class="recommendation-lens-hint">Sigue tu línea</span>');
+    expect(affinity).toContain(">Según tus selecciones<");
+
+    // each lens is exclusive to its own lane
+    expect(opportunity).not.toContain("AFINIDAD");
+    expect(affinity).not.toContain("VERSATILIDAD");
+  });
+
+  it("en-US has the same two lenses", () => {
+    simulateFirstVisit();
+    const [opportunity, affinity] = laneSections(
+      renderBuilderPanel({ selectedPerfumes, showRecommendationLenses: true })
+    );
+
+    expect(opportunity).toContain(">VERSATILITY<");
+    expect(opportunity).toContain(">Broaden your box<");
+    expect(affinity).toContain(">AFFINITY<");
+    expect(affinity).toContain(">Follow your thread<");
+  });
+
+  it("the lens leads each lane, above its existing title, and the approved order is unchanged", () => {
+    simulateFirstVisit();
+    const markup = renderBuilderPanel({
+      builderConfig: aurelianConfig,
+      selectedPerfumes,
+      showRecommendationLenses: true,
+    });
+    const order = [
+      markup.indexOf('class="next-improvement-copy"'),
+      markup.indexOf("VERSATILIDAD"),
+      markup.indexOf(">Siguiente selección recomendada<"),
+      markup.indexOf("AFINIDAD"),
+      markup.indexOf(">Según tus selecciones<"),
+    ];
+
+    expect(order.every((index) => index > -1)).toBe(true);
+    expect([...order].sort((a, b) => a - b)).toEqual(order);
+    // the two surfaces remain adjacent siblings
+    expect(markup).toMatch(/<\/section><\/section><section class="recommendation-lane recommendation-lane--affinity /);
+  });
+
+  it("each lane keeps its own carousel controls, counter and add action (scoped to the right lens)", () => {
+    simulateFirstVisit();
+    const lanes = laneSections(
+      renderBuilderPanel({ builderConfig: aurelianConfig, selectedPerfumes, showRecommendationLenses: true })
+    );
+
+    lanes.forEach((lane) => {
+      expect(lane.match(/class="recommendation-carousel-controls"/g)).toHaveLength(1);
+      expect(lane).toMatch(/\d+ \/ \d+/);
+      expect(lane).toContain('class="recommendation-actions"');
+    });
+    expect(lanes[0]).toContain("recommendation-lane--versatility");
+    expect(lanes[1]).toContain("recommendation-lane--affinity");
+  });
+
+  it("is plumbed as an opt-in capability that defaults to off at every layer", () => {
+    const builder = readFileSync(new URL("../builder/DiscoveryBoxBuilder.jsx", import.meta.url), "utf8");
+    const runtime = readFileSync(new URL("../BuilderRuntime.jsx", import.meta.url), "utf8");
+
+    expect(builder).toContain("showRecommendationLenses = false,");
+    expect(runtime).toContain("showRecommendationLenses = false,");
+    expect(normalizedPanelSource).toContain("showRecommendationLenses = false,");
+    expect(normalizedPanelSource).toContain('lens={showRecommendationLenses ? "versatility" : undefined}');
+    expect(normalizedPanelSource).toContain('lens={showRecommendationLenses ? "affinity" : undefined}');
+  });
+
+  it("changes no scoring, candidate, reason or ordering code: the lens exists only in presentation files", () => {
+    const read = (path) => readFileSync(new URL(path, import.meta.url), "utf8");
+    [
+      "../builder/internal/recommendations/buildAffinityRecommendations.js",
+      "../builder/internal/recommendations/buildComposerRecommendations.js",
+      "../builder/presentation/affinityReasonLabels.js",
+      "../builder/presentation/recommendationExplanationLabels.js",
+      "../builder/internal/intelligence/buildNextImprovement.js",
+    ].forEach((path) => expect(read(path), path).not.toMatch(/lens/i));
+  });
+});

@@ -6,6 +6,7 @@ import "./builder-geometry.css";
 import "./builder-header.css";
 import "./builder-collection-card.css";
 import "./builder-actions.css";
+import "./builder-recommendations.css";
 import "./landing-hero.css";
 import "./site-header.css";
 import "./landing-video.css";

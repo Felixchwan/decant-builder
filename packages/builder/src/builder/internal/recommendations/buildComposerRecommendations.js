@@ -1,4 +1,5 @@
 import { composeCollection } from "../composer/composeCollection.js";
+import { buildAffinityRecommendations } from "./buildAffinityRecommendations.js";
 import { deriveComposerExplanations } from "../composer/deriveComposerExplanations.js";
 import { deriveComposerReasoningFacts } from "../composer/deriveComposerReasoningFacts.js";
 import { requireComposerConfig } from "../composer/requireComposerConfig.js";
@@ -25,7 +26,11 @@ export function buildComposerRecommendations({
     return emptyRecommendations();
   }
 
-  const basedOnYourPicks =
+  // Composer "signature" lane: the Composer's own best completion of the user's seasons / occasions /
+  // vibes. It is NOT the "based on your picks" surface any more (that is pure similarity, below); it is
+  // kept, unchanged, because the Curator Bonus "similar" preference draws from it and because it decides
+  // which perfumes the balance lane steps around, so neither of those moves.
+  const curatorSimilarPicks =
     safeSelectedPerfumes.length > 0
       ? buildComposerRecommendationLane({
           perfumes: safePerfumes,
@@ -41,8 +46,8 @@ export function buildComposerRecommendations({
           excludedPerfumeIds: [],
         })
       : [];
-  const basedOnYourPicksIds = new Set(
-    basedOnYourPicks.map((recommendation) => recommendation.perfume.id)
+  const curatorSimilarPicksIds = new Set(
+    curatorSimilarPicks.map((recommendation) => recommendation.perfume.id)
   );
   const toBalanceYourBox = buildComposerRecommendationLane({
     perfumes: safePerfumes,
@@ -55,12 +60,22 @@ export function buildComposerRecommendations({
     lane: "toBalanceYourBox",
     strategy: "balanced",
     preferences: {},
-    excludedPerfumeIds: [...basedOnYourPicksIds],
+    excludedPerfumeIds: [...curatorSimilarPicksIds],
+  });
+  // "Based on your picks": the perfumes most similar to what is already in the box. It answers a different
+  // question from the balance lane ("what does this box still need?"), so it never borrows its signals; it
+  // only steps around the balance lane's picks so the two adjacent surfaces never show the same perfume.
+  const basedOnYourPicks = buildAffinityRecommendations({
+    perfumes: safePerfumes,
+    selectedPerfumes: safeSelectedPerfumes,
+    limit,
+    excludedPerfumeIds: toBalanceYourBox.map((recommendation) => recommendation.perfume.id),
   });
 
   return {
     basedOnYourPicks,
     toBalanceYourBox,
+    curatorSimilarPicks,
   };
 }
 
@@ -135,7 +150,7 @@ function buildComposerRecommendationLane({
 
 // Host-neutral entry point for a recommendation set driven by an
 // already-resolved preference/strategy hint, rather than derived from the
-// current selection (compare `basedOnYourPicks` above, which derives its
+// current selection (compare `curatorSimilarPicks` above, which derives its
 // preferences from `selectedPerfumes`). Reuses the exact same lane pipeline —
 // no Composer scoring, weighting, or constraint logic is duplicated or
 // changed. `selectedPerfumes` is still honored (locked, and excluded from the
@@ -464,5 +479,6 @@ function emptyRecommendations() {
   return {
     basedOnYourPicks: [],
     toBalanceYourBox: [],
+    curatorSimilarPicks: [],
   };
 }

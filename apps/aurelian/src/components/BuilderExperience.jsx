@@ -168,6 +168,9 @@ export function BuilderExperience({
       // Aurelian shows a catalog card's add button as filled "Agregado" once the fragrance is in
       // the box (builder-card-actions.css); Discovery Decants never passes this.
       showAddedState
+      // Aurelian labels the two individual recommendations with a lens (Versatilidad / Afinidad,
+      // painted in builder-recommendations.css); Discovery Decants never passes this.
+      showRecommendationLenses
     />
   );
 }

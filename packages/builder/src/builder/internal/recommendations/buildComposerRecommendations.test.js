@@ -120,14 +120,16 @@ function build(options = {}) {
 }
 
 describe("buildComposerRecommendations", () => {
-  it("returns the existing two-lane recommendation shape from Composer output", () => {
+  it("returns the similarity lane, the Composer balance lane, and the Composer lane the Curator Bonus keeps using", () => {
     const result = build();
 
-    expect(Object.keys(result)).toEqual(["basedOnYourPicks", "toBalanceYourBox"]);
+    expect(Object.keys(result)).toEqual(["basedOnYourPicks", "toBalanceYourBox", "curatorSimilarPicks"]);
     expect(result.basedOnYourPicks.length).toBeGreaterThan(0);
     expect(result.toBalanceYourBox.length).toBeGreaterThan(0);
+    expect(result.curatorSimilarPicks.length).toBeGreaterThan(0);
 
-    [...result.basedOnYourPicks, ...result.toBalanceYourBox].forEach((recommendation) => {
+    // balance + Curator lanes are still Composer output, exactly as before
+    [...result.toBalanceYourBox, ...result.curatorSimilarPicks].forEach((recommendation) => {
       expect(recommendation).toMatchObject({
         perfume: {
           id: expect.any(Number),
@@ -151,6 +153,21 @@ describe("buildComposerRecommendations", () => {
         severity: expect.any(String),
         evidence: expect.any(Object),
       });
+    });
+
+    // "based on your picks" is pure similarity: same card shape, affinity source, similarity-only reasons
+    result.basedOnYourPicks.forEach((recommendation) => {
+      expect(recommendation).toMatchObject({
+        perfume: { id: expect.any(Number), name: expect.any(String) },
+        score: expect.any(Number),
+        finalScore: expect.any(Number),
+        reasons: [],
+        explanations: expect.any(Array),
+        composer: { lane: "basedOnYourPicks", source: "affinity" },
+      });
+      recommendation.explanations.forEach((explanation) =>
+        expect(explanation.code).toMatch(/^affinity_/)
+      );
     });
   });
 
@@ -224,6 +241,7 @@ describe("buildComposerRecommendations", () => {
     expect(result).toEqual({
       basedOnYourPicks: [],
       toBalanceYourBox: [],
+      curatorSimilarPicks: [],
     });
   });
 

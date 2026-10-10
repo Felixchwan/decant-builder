@@ -1,4 +1,5 @@
 import { getObjectiveCompatibilityScore } from "../internal/intelligence/buildCollectionIntelligenceViewModel.js";
+import { getAffinityDisplayReasons, isAffinityRecommendation } from "./affinityReasonLabels.js";
 import { getObjectiveReasonLabel } from "./collectionIntelligenceLabels.js";
 
 const MAX_RECOMMENDATION_EXPLANATIONS = 3;
@@ -28,6 +29,12 @@ const RECOMMENDATION_REASON_REWRITES = {
 };
 
 export function getRecommendationDisplayReasons({ recommendation, objectiveKey, translator } = {}) {
+  // The "based on your picks" lane explains similarity only, in its own copy. It skips the generic
+  // selection below, whose coverage/range/balance wording and fallbacks describe the opportunity lane.
+  if (isAffinityRecommendation(recommendation)) {
+    return getAffinityDisplayReasons({ recommendation, translator });
+  }
+
   const explanationReasons = Array.isArray(recommendation?.explanations)
     ? recommendation.explanations
         .map((explanation) => createRecommendationExplanationOption(explanation, translator))
