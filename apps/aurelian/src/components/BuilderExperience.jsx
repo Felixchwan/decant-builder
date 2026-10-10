@@ -8,6 +8,7 @@ import { createCatalogAssetResolver, notes } from "@discovery-box/catalog";
 import { aurelianCatalog } from "../merchant/catalog.js";
 import { aurelianConfig } from "../merchant/config.js";
 import { FRAGRANCE_QUERY_PARAM } from "../lib/parseFragranceIntent.js";
+import { useBuilderSummarySlot } from "../lib/builderSummarySlot.js";
 import { resolveBuilderIntentsFromSearch, DETAILS_QUERY_PARAM } from "../lib/parseDetailsIntent.js";
 import { getIntentRecommendationHint } from "../discoveryIntent/intentRecommendationPolicy.js";
 import { explainRecommendation } from "../discoveryIntent/recommendationExplanation.js";
@@ -75,17 +76,17 @@ export function BuilderExperience({
   const { isIntroDismissed, restoreIntro } = useIntroPreference();
   // SiteHeader (a sibling tree, not an ancestor of this component — see
   // app/layout.jsx) reserves this slot in its own right-hand region whenever
-  // the current route is the Builder. Looked up by id, lazily on first
-  // render, rather than threaded through React state/context, because the
-  // two trees don't share a common ancestor closer than the root layout —
-  // the pre-hydration script in build-your-box/page.jsx already establishes
-  // this exact getElementById bridging pattern between them. This component
-  // is itself mounted ssr:false (see BuilderMount.jsx), so by the time it
-  // renders at all, the surrounding page — including SiteHeader's slot —
-  // has already committed to the DOM.
-  const [stickySummaryPortalTarget] = useState(() =>
-    typeof document === "undefined" ? null : document.getElementById("aurelian-builder-summary-slot"),
-  );
+  // the current route is the Builder. The two trees share no ancestor closer
+  // than the root layout, so the slot reaches this component through a small
+  // store the header's slot registers itself in (lib/builderSummarySlot.js).
+  // It is NOT a one-time getElementById at first render: that is only valid
+  // on a direct load. On a client-side navigation to the Builder (once its
+  // chunk is loaded) the header and this component render in the same
+  // commit, the slot is not in the DOM yet while this component renders, and
+  // a one-time read kept null for the whole visit -- the box stayed in the
+  // inline panel on desktop. Subscribing means this renders with null if it
+  // must and is re-rendered with the slot the moment it exists.
+  const stickySummaryPortalTarget = useBuilderSummarySlot();
 
   useEffect(() => {
     // Both intents are one-shot: once consumed (valid or not) they leave the URL,

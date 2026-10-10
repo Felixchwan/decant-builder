@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef } from "react";
+import { registerBuilderSummarySlot } from "../lib/builderSummarySlot.js";
 
 const links = [
   ["/", "Inicio"],
@@ -50,7 +51,7 @@ export function SiteHeader() {
           {links.map(([href, label]) => <Link aria-current={isCurrent(href) ? "page" : undefined} href={href} key={href}>{label}</Link>)}
         </nav>
         {isBuilderRoute ? (
-          <div id="aurelian-builder-summary-slot" className="site-header__builder-slot" />
+          <div id="aurelian-builder-summary-slot" className="site-header__builder-slot" ref={registerBuilderSummarySlot} />
         ) : (
           <Link className="button button--compact desktop-cta" href="/build-your-box">Construye tu caja</Link>
         )}

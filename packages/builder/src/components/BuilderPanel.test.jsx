@@ -175,7 +175,8 @@ describe("Opt-in docked share actions (dockShareActions)", () => {
 
     expect(withOptIn).toBe(withoutOptIn);
     expect(withOptIn).not.toContain("builder-panel-summary-accessory");
-  });
+    // Two full panel renders: well inside the default budget alone, but not under the full suite's parallel load.
+  }, 20000);
 
   it("defaults the prop to false and renders the one block through exactly two mutually exclusive placements", () => {
     expect(normalized).toMatch(/dockShareActions = false,\n\}, ref\) \{/);
@@ -1053,9 +1054,25 @@ describe("Docked-on-desktop-from-mount (post-scroll-docking simplification)", ()
 
   it("determines the initial docked state synchronously from the viewport alone, with no scroll position involved", () => {
     expect(initialDockStateSource).toContain(
-      "useState(\n      () => Boolean(stickySummaryPortalTarget) && isDesktopSummaryViewport()"
+      "useState(() =>\n      getSummaryDockedState({\n        hasTarget: stickySummaryPortalTarget,\n        isDesktop: Boolean(stickySummaryPortalTarget) && isDesktopSummaryViewport(),\n      })\n    );"
     );
     expect(initialDockStateSource).not.toMatch(/sentinelTop|getBoundingClientRect/);
+  });
+
+  // The failure this guards: a host whose portal target is only available AFTER the first render
+  // (Aurelian's header slot, on a client-side navigation to the Builder) passes null, then the
+  // element. The docked state used to be computed from the first render's target alone and then
+  // changed only on a viewport resize, so the summary stayed inline on desktop for the whole visit.
+  it("re-derives the docked state when the host's target arrives (or goes) after the first render, during render, not only on a viewport change", () => {
+    expect(initialDockStateSource).toContain("const [dockedFor, setDockedFor] = useState(stickySummaryPortalTarget);");
+    expect(initialDockStateSource).toContain("if (dockedFor !== stickySummaryPortalTarget) {");
+    expect(initialDockStateSource).toContain("setDockedFor(stickySummaryPortalTarget);");
+    // the same pure function decides it both times, from the live viewport
+    expect(initialDockStateSource.match(/getSummaryDockedState\(\{/g)).toHaveLength(2);
+    // (the viewport is only read when there is a target, so a host with none never touches matchMedia)
+    expect(initialDockStateSource.match(/isDesktop: Boolean\(stickySummaryPortalTarget\) && isDesktopSummaryViewport\(\)/g)).toHaveLength(2);
+    // the docking effect still re-subscribes to the viewport query whenever the target changes
+    expect(dockingEffectSource).toContain("}, [stickySummaryPortalTarget]);");
   });
 
   it("removes every trace of the old scroll/rAF docking loop -- sentinel ref, spacer height, computeSummaryDockState, and the scroll/resize listeners", () => {

@@ -79,6 +79,7 @@ import { metadataAssets } from "@discovery-box/catalog";
 import { acquireBodyScrollLock } from "../builder/internal/portal/bodyScrollLock.js";
 import { renderOwnedPortal } from "../builder/internal/portal/renderOwnedPortal.jsx";
 import { getShareActionsPlacement } from "../builder/internal/summary/shareActionsPlacement.js";
+import { getSummaryDockedState } from "../builder/internal/summary/summaryDocking.js";
 import {
   createCollectionCardExportStage,
   removeCollectionCardExportStage,
@@ -223,9 +224,28 @@ const BuilderPanel = forwardRef(function BuilderPanel({
     function isDesktopSummaryViewport() {
       return typeof window !== "undefined" && window.matchMedia("(min-width: 981px)").matches;
     }
-    const [isSummaryDocked, setIsSummaryDocked] = useState(
-      () => Boolean(stickySummaryPortalTarget) && isDesktopSummaryViewport()
+    const [isSummaryDocked, setIsSummaryDocked] = useState(() =>
+      getSummaryDockedState({
+        hasTarget: stickySummaryPortalTarget,
+        isDesktop: Boolean(stickySummaryPortalTarget) && isDesktopSummaryViewport(),
+      })
     );
+    // The initial value above is only right if the host's target already exists on the first render.
+    // A host whose slot is committed in the same commit as this component (a client-side navigation
+    // to a page whose header renders the slot) passes null first and the element a moment later; the
+    // docked state must follow that change, not stay at its first value until the next viewport
+    // resize. Adjusted during render, so the dock is correct before the browser paints and there is
+    // no inline-then-docked flash.
+    const [dockedFor, setDockedFor] = useState(stickySummaryPortalTarget);
+    if (dockedFor !== stickySummaryPortalTarget) {
+      setDockedFor(stickySummaryPortalTarget);
+      setIsSummaryDocked(
+        getSummaryDockedState({
+          hasTarget: stickySummaryPortalTarget,
+          isDesktop: Boolean(stickySummaryPortalTarget) && isDesktopSummaryViewport(),
+        })
+      );
+    }
     // Local, session-only UI state -- never persisted, never read by any
     // host, and only ever meaningful (and only ever toggleable, since the
     // controls that flip it only render at all) while the summary is
