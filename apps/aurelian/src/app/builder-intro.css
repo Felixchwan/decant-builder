@@ -137,6 +137,24 @@
     );
     --intro-art-underlay: linear-gradient(rgba(8, 7, 7, 0.97), rgba(8, 7, 7, 0.97));
   }
+
+  /* The copy column is the SAME width in both panel states, so the plate wraps its text identically and keeps
+     the same height, and the catalog does not move when the panel is toggled.
+     Why it needs saying: 62% is a share of the plate, and the plate is wider collapsed than expanded. Below
+     ~1440px the expanded plate is narrow (551-936px), so its copy is 62% of that (303-529px, a two-line
+     heading and four to six body lines), while the collapsed plate is wide enough that the 36rem cap alone
+     decided (a one-line heading, three or four body lines): a 88-111px taller plate expanded, so the catalog
+     jumped by that much on every toggle. From ~1440px both states reach the 36rem cap and agree.
+     The collapsed plate is exactly 370px wider than the expanded one at every width (the 406px the expanded
+     intro reserves on the right less the 36px it reserves collapsed, globals.css), and the padding is the
+     same, so the expanded copy column is 62% of (this content width - 370px). Collapsed takes that same width.
+     Above ~1440px that is wider than 36rem and the cap decides, as it always did. The expanded state, its
+     measure and its artwork composition are untouched. */
+  .builder-page:has(.layout--panel-collapsed) #builder-entry-header .eyebrow,
+  .builder-page:has(.layout--panel-collapsed) #builder-entry-header h1,
+  .builder-page:has(.layout--panel-collapsed) #builder-entry-header .lede {
+    max-width: min(calc((100% - 370px) * 0.62), 36rem);
+  }
 }
 
 /* Narrow layouts: readability first. The artwork is cropped to a band along

@@ -91,14 +91,43 @@ describe("Aurelian intro panel styling (host-owned, presentation-only)", () => {
     });
   });
 
-  it("expands the plate, not the copy: the copy keeps one capped editorial measure in both panel states", () => {
-    const copyRules = rules.filter(({ selector }) => selector.includes(".eyebrow") && selector.includes(".lede"));
-    // Set once, for the expanded plate; collapsed does not restate it. 36rem is the width 62% reaches on the
-    // 1010px plate of a 1440px window, so that layout is as it always was, and a wider plate (the shell now
-    // grows with the screen) no longer lengthens the copy or changes the plate's height between the two states.
-    expect(copyRules).toHaveLength(1);
-    expect(copyRules[0].selector).not.toContain(".layout--panel-collapsed");
-    expect(copyRules[0].body).toMatch(/max-width:\s*min\(62%,\s*36rem\);/);
+  it("expands the plate, not the copy: the copy is the same capped editorial measure in both panel states", () => {
+    const copyRule = (collapsed) =>
+      rules.find(
+        ({ selector }) =>
+          selector.includes(".eyebrow") &&
+          selector.includes(".lede") &&
+          selector.includes(".layout--panel-collapsed") === collapsed
+      );
+    // Expanded: 62% of the plate, never more than 36rem (the width 62% reaches on the 1010px plate of a 1440px
+    // window, so that layout is as it always was).
+    expect(copyRule(false).body).toMatch(/max-width:\s*min\(62%,\s*36rem\);/);
+    // Collapsed: the SAME width, not 62% of its own (wider) plate. The collapsed plate is exactly 370px wider, so
+    // the expanded copy is 62% of (this content width - 370px). Below ~1440px that is narrower than 36rem and both
+    // states wrap their text identically (so the plate and the catalog do not move when the panel is toggled);
+    // above it the 36rem cap decides in both.
+    expect(copyRule(true).body).toMatch(/max-width:\s*min\(calc\(\(100% - 370px\) \* 0\.62\),\s*36rem\);/);
+  });
+
+  it("derives the collapsed copy's 370px from the two margins the intro already reserves, and keeps the 62% share in step", () => {
+    const globals = read(APP_ROOT, "src", "app", "globals.css");
+    const expandedReserve = Number(globals.match(/margin-right:max\(418px, calc\(50% - var\(--aur-builder-edge\) \+ (\d+)px\)\)/)[1]);
+    const collapsedReserve = Number(globals.match(/margin-right:max\(48px, calc\(50% - var\(--aur-builder-edge\) \+ (\d+)px\)\)/)[1]);
+    const share = withoutComments.match(/max-width:\s*min\(calc\(\(100% - (\d+)px\) \* (0\.\d+)\),\s*36rem\)/);
+
+    // 406 (the panel row + gap the expanded plate leaves on its right) less 36 (the rail + gap collapsed) = 370
+    expect(expandedReserve - collapsedReserve).toBe(Number(share[1]));
+    expect(Number(share[1])).toBe(370);
+    // the same 62 as the expanded rule
+    expect(Number(share[2])).toBe(0.62);
+    expect(withoutComments).toMatch(/max-width:\s*min\(62%,\s*36rem\);/);
+  });
+
+  it("applies the unified measure only in the desktop layout, so nothing below 981px changes", () => {
+    const at = withoutComments.indexOf("calc((100% - 370px) * 0.62)");
+
+    expect(at).toBeGreaterThan(-1);
+    expect(withoutComments.slice(withoutComments.lastIndexOf("@media", at))).toMatch(/^@media\s*\(min-width:\s*981px\)/);
   });
 
   it("keeps the approved expanded composition as the default and never distorts the artwork", () => {

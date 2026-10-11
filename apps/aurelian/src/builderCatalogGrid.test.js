@@ -94,11 +94,11 @@ describe("Aurelian Builder shell: extra screen width goes to the catalog, in bot
     expect(code).not.toMatch(/360px|\.builder-panel|panel-column/);
   });
 
-  it("keeps the intro's copy at one editorial measure, so the plate does not change height between panel states", () => {
+  it("keeps the intro's copy at one editorial measure in both panel states (see builderIntro.test.js for the collapsed derivation)", () => {
     const intro = read(APP_ROOT, "src", "app", "builder-intro.css").replace(/\/\*[\s\S]*?\*\//g, "");
 
     expect(intro).toMatch(/#builder-entry-header \.lede \{\s*max-width: min\(62%, 36rem\);/);
-    expect(intro).not.toMatch(/layout--panel-collapsed\) #builder-entry-header \.lede/);
+    expect(intro).toMatch(/layout--panel-collapsed\) #builder-entry-header \.lede \{\s*max-width: min\(calc\(\(100% - 370px\) \* 0\.62\), 36rem\);/);
   });
 });
 
