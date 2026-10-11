@@ -1104,44 +1104,6 @@ const BuilderPanel = forwardRef(function BuilderPanel({
 
       <BoxIntelligenceSummary intelligence={boxIntelligence} translator={translator} />
 
-      <div className="coverage-panel">
-    <h3>Box Analysis</h3>
-    <p className="analysis-subtitle">
-    Coverage strengths and collection gaps
-    </p>
-
-    {coverageSummary.strengths.length > 0 ? (
-    coverageSummary.strengths.slice(0, 6).map((item) => (
-        <p key={`${item.category}-${item.label}`} className="coverage-strength">
-        ✓ {item.label}
-        </p>
-    ))
-    ) : (
-    <p>No strong coverage yet</p>
-    )}
-
-    {coverageSummary.strengths.length > 6 && (
-    <p className="coverage-more">
-        +{coverageSummary.strengths.length - 6} more strengths
-    </p>
-    )}
-    </div>
-
-    {coverageSummary.gaps.length > 0 && (
-  <div className="seasonal-gaps">
-    <h4>Seasonal Gaps</h4>
-
-    {coverageSummary.gaps.map((item) => (
-      <p
-    key={`${item.category}-${item.target}`}
-    style={{ color: item.seasonColor }}
-    >
-    {getSeasonIcon(item.target)} {item.label}
-    </p>
-    ))}
-  </div>
-    )}
-
     {(basedOnYourPicks.length > 0 || toBalanceYourBox.length > 0) && (
     <div className="recommendations">
     {/* Reading order: the opportunity copy and its recommendation first, then the similarity lane right
@@ -1172,88 +1134,6 @@ const BuilderPanel = forwardRef(function BuilderPanel({
     </div>
     )}
 
-      <div className="summary-panel">
-        <h3>Box Profile</h3>
-
-        <div>
-          <span>Occasions</span>
-          <div className="summary-tags">
-            {boxSummary.occasions.length > 0 ? (
-              boxSummary.occasions.map((item) => (
-                <span key={item}>{item}</span>
-              ))
-            ) : (
-              <p>No data yet</p>
-            )}
-          </div>
-        </div>
-
-        <div>
-          <span>Seasons</span>
-          <div className="summary-tags">
-            {boxSummary.seasons.length > 0 ? (
-              boxSummary.seasons.map((item) => <span key={item}>{item}</span>)
-            ) : (
-              <p>No data yet</p>
-            )}
-          </div>
-        </div>
-
-        <div>
-          <span>Vibes</span>
-          <div className="summary-tags">
-            {boxSummary.vibes.length > 0 ? (
-              boxSummary.vibes.map((item) => <span key={item}>{item}</span>)
-            ) : (
-              <p>No data yet</p>
-            )}
-          </div>
-        </div>
-
-        <div>
-          <span>Scent Palette</span>
-
-          <div className="summary-tags">
-            {Object.entries(boxSummary.accordMap).length > 0 ? (
-              Object.entries(boxSummary.accordMap).map(
-                ([accord, perfumeNames]) => (
-                  <span className="accord-tooltip" key={accord}>
-                    {accord} ×{perfumeNames.length}
-
-                    <div className="tooltip-box">
-                      <strong>{accord}</strong>
-                      {perfumeNames.map((name) => (
-                        <p key={name}>{name}</p>
-                      ))}
-                    </div>
-                  </span>
-                )
-              )
-            ) : (
-              <p>No data yet</p>
-            )}
-          </div>
-        </div>
-
-        <div>
-  <span>Notes</span>
-
-  {boxSummary.notes.length > 0 ? (
-    <>
-      <p>{boxSummary.notes.length} unique notes covered</p>
-
-      <button
-        className="details-button"
-        onClick={() => setIsNotesModalOpen(true)}
-      >
-        View Details
-      </button>
-    </>
-  ) : (
-    <p>No data yet</p>
-  )}
-</div>
-      </div>
       {isNotesModalOpen && portalRoot && (
         <ScentLibraryModal
           entries={scentLibraryEntries}

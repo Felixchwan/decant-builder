@@ -2977,7 +2977,7 @@ describe("Builder recommendations: reading order", () => {
   it("source order: the opportunity section renders before the similarity lane, and its scroll/focus ref is untouched", () => {
     const block = normalizedPanelSource.slice(
       normalizedPanelSource.indexOf('<div className="recommendations">'),
-      normalizedPanelSource.indexOf('<div className="summary-panel">')
+      normalizedPanelSource.indexOf("{isNotesModalOpen && portalRoot && (")
     );
 
     expect(block.indexOf("<NextImprovementSection")).toBeGreaterThan(-1);
@@ -2993,6 +2993,41 @@ describe("Builder recommendations: reading order", () => {
     expect(normalizedPanelSource).toContain(
       'curatorBonusPreference === "similar" ? curatorSimilarPicks : toBalanceYourBox;'
     );
+  });
+});
+
+// The panel used to render a second, hard-coded English "Box Analysis" / "Seasonal Gaps" / "Box Profile" set as
+// direct children of the panel, hidden by the shared stylesheet in every host. Collection Intelligence
+// (CollectionSnapshot) is the one place those sections exist.
+describe("Collection Intelligence: no duplicate legacy blocks in the panel", () => {
+  const markup = renderBuilderPanel({ selectedPerfumes: perfumes.slice(0, 6) });
+
+  it("renders each analysis block exactly once, inside the collection snapshot", () => {
+    expect(markup.split('class="coverage-panel"')).toHaveLength(2);
+    expect(markup.split('class="summary-panel"')).toHaveLength(2);
+    expect(markup.split('class="seasonal-gaps"').length).toBeLessThanOrEqual(2);
+    expect(markup.indexOf('class="coverage-panel"')).toBeGreaterThan(markup.indexOf('<section class="collection-snapshot'));
+    expect(markup.indexOf('class="summary-panel"')).toBeGreaterThan(markup.indexOf('<section class="collection-snapshot'));
+    expect(markup.indexOf('class="coverage-panel"')).toBeLessThan(markup.indexOf('<section class="box-intelligence"'));
+  });
+
+  it("has no direct-child analysis block of the panel (what the shared stylesheet used to hide)", () => {
+    expect(normalizedPanelSource.match(/<div className="coverage-panel">/g)).toHaveLength(1);
+    expect(normalizedPanelSource.match(/<div className="summary-panel">/g)).toHaveLength(1);
+    expect(normalizedPanelSource.match(/<div className="seasonal-gaps">/g)).toHaveLength(1);
+    // the hard-coded English headings and copy of the removed block are gone; the live ones go through the translator
+    ["<h3>Box Analysis</h3>", "<h3>Box Profile</h3>", "<h4>Seasonal Gaps</h4>", "No strong coverage yet", "<span>Scent Palette</span>"].forEach(
+      (legacyCopy) => expect(normalizedPanelSource, legacyCopy).not.toContain(legacyCopy)
+    );
+  });
+
+  it("keeps the live recommendations block directly after the Box Intelligence summary", () => {
+    const summaryIndex = normalizedPanelSource.indexOf("<BoxIntelligenceSummary intelligence={boxIntelligence} translator={translator} />");
+    const recommendationsIndex = normalizedPanelSource.indexOf('<div className="recommendations">');
+
+    expect(summaryIndex).toBeGreaterThan(-1);
+    expect(recommendationsIndex).toBeGreaterThan(summaryIndex);
+    expect(normalizedPanelSource.slice(summaryIndex, recommendationsIndex)).not.toMatch(/<div|<section|<h\d/);
   });
 });
 
@@ -3306,8 +3341,7 @@ describe("Recommendation cards open the existing Perfume Details", () => {
 // hook on the balance meter, and an aria-hidden wrapper on the seasonal-gap emoji.
 describe("Collection Intelligence: presentation hooks", () => {
   const box = perfumes.slice(0, 6);
-  // The Collection Intelligence section only: the panel also renders a hidden legacy "Scent Palette"
-  // block (display: none in the shared stylesheet) that keeps its own tooltip.
+  // The Collection Intelligence section only (the panel renders other sections after it).
   const snapshotOf = (markup) =>
     markup.slice(markup.indexOf('<section class="collection-snapshot'), markup.indexOf('<section class="box-intelligence"'));
 
