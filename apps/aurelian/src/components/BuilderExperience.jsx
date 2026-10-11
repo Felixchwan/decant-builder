@@ -10,11 +10,8 @@ import { aurelianConfig } from "../merchant/config.js";
 import { FRAGRANCE_QUERY_PARAM } from "../lib/parseFragranceIntent.js";
 import { useBuilderSummarySlot } from "../lib/builderSummarySlot.js";
 import { resolveBuilderIntentsFromSearch, DETAILS_QUERY_PARAM } from "../lib/parseDetailsIntent.js";
-import { getIntentRecommendationHint } from "../discoveryIntent/intentRecommendationPolicy.js";
-import { explainRecommendation } from "../discoveryIntent/recommendationExplanation.js";
 import { createAnalytics, buildAnalyticsContext } from "../analytics/createAnalytics.js";
 import { createDevelopmentAnalytics } from "../analytics/developmentAnalytics.js";
-import { DiscoveryIntentScreen } from "./DiscoveryIntentScreen.jsx";
 import { useIntroPreference } from "./IntroPreferenceProvider.jsx";
 
 const assetResolver = createCatalogAssetResolver({ basePath: "/catalog-assets" });
@@ -22,21 +19,6 @@ const finalizationAdapter = createWhatsAppFinalizationAdapter({
   phoneNumber: aurelianConfig.finalization.whatsappNumber,
 });
 const analyticsCommonContext = buildAnalyticsContext(aurelianConfig);
-
-// Exported so tests can verify this stays in agreement with the pre-hydration
-// header-visibility script in app/build-your-box/page.jsx, which performs
-// the same shallow check ahead of this component ever mounting.
-export function hasPersistedBox() {
-  if (typeof window === "undefined") {
-    return false;
-  }
-
-  try {
-    return window.localStorage.getItem(aurelianConfig.persistence.storageKey) !== null;
-  } catch {
-    return false;
-  }
-}
 
 export function BuilderExperience({
   isDevelopment = false,
@@ -60,12 +42,6 @@ export function BuilderExperience({
       searchParams ? searchParams.toString() : typeof window === "undefined" ? "" : window.location.search,
     ),
   );
-  // A details link skips the intent screen just like an add link: the visitor asked
-  // for one specific perfume, so "what are you looking for today" is not the next step.
-  const [skipsDiscoveryIntent] = useState(
-    () => initialFragranceId !== null || initialDetailFragranceId !== null || hasPersistedBox(),
-  );
-  const [selectedIntentId, setSelectedIntentId] = useState(null);
   // Read directly from the provider wrapping this component's own subtree
   // in app/build-your-box/page.jsx (see BuilderIntroHeader.jsx, the other
   // consumer) rather than threading it through BuilderMount as a prop --
@@ -124,10 +100,6 @@ export function BuilderExperience({
     }),
   });
 
-  if (!skipsDiscoveryIntent && selectedIntentId === null) {
-    return <DiscoveryIntentScreen onSelect={setSelectedIntentId} />;
-  }
-
   return (
     <DiscoveryBoxBuilder
       analytics={analytics}
@@ -137,8 +109,6 @@ export function BuilderExperience({
       isDevelopment={isDevelopment}
       initialFragranceId={initialFragranceId}
       initialDetailFragranceId={initialDetailFragranceId}
-      initialRecommendationHint={getIntentRecommendationHint(selectedIntentId)}
-      explainRecommendation={explainRecommendation}
       finalizationAdapter={finalizationAdapter}
       notes={notes}
       stickySummaryPortalTarget={stickySummaryPortalTarget}

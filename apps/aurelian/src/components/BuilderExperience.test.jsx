@@ -19,48 +19,17 @@ vi.mock("@discovery-box/builder", () => ({
   },
 }));
 
-import { BuilderExperience, hasPersistedBox } from "./BuilderExperience.jsx";
+import { BuilderExperience } from "./BuilderExperience.jsx";
 import { IntroPreferenceContext } from "./IntroPreferenceProvider.jsx";
 import { aurelianConfig } from "../merchant/config.js";
-import { parseFragranceIntent, FRAGRANCE_QUERY_PARAM } from "../lib/parseFragranceIntent.js";
-import { parseDetailsIntent, DETAILS_QUERY_PARAM } from "../lib/parseDetailsIntent.js";
-import { ENTRY_HEADER_VISIBILITY_SCRIPT } from "../app/build-your-box/page.jsx";
 import { ANALYTICS_EVENTS } from "@discovery-box/builder/analytics";
 
 const originalWindow = globalThis.window;
 
-// Executes the literal script text that ships inline in page.jsx — not a
-// re-implementation of it — against a fake window/document, so drift between
-// the pre-hydration hint and BuilderExperience's real gate is caught even if
-// only one side is edited in the future.
-function runEntryHeaderVisibilityScript({ search, storedValue }) {
-  let displayValue = "";
-  const header = {
-    style: {
-      set display(value) {
-        displayValue = value;
-      },
-      get display() {
-        return displayValue;
-      },
-    },
-  };
-  const fakeWindow = {
-    location: { search },
-    localStorage: {
-      getItem: (key) => (key === aurelianConfig.persistence.storageKey ? storedValue : null),
-    },
-  };
-  const fakeDocument = {
-    getElementById: (id) => (id === "builder-entry-header" ? header : null),
-  };
-  const run = new Function("window", "document", "URLSearchParams", ENTRY_HEADER_VISIBILITY_SCRIPT);
-  run(fakeWindow, fakeDocument, URLSearchParams);
-  return displayValue === "none";
-}
-
-function mockWindow({ storedValue = null, search = "" } = {}) {
+function mockWindow({ storedValue = null, search = "", viewportWidth } = {}) {
   globalThis.window = {
+    // a viewport that answers every media query, so a test can prove the width changes nothing
+    ...(viewportWidth === undefined ? {} : { innerWidth: viewportWidth, matchMedia: (query) => ({ matches: /max-width:s*(d+)px/.test(query) ? viewportWidth <= Number(query.match(/max-width:s*(d+)px/)[1]) : false }) }),
     localStorage: {
       getItem: (key) => (key === aurelianConfig.persistence.storageKey ? storedValue : null),
     },
@@ -75,31 +44,44 @@ afterEach(() => {
   routerState.search = null;
 });
 
-describe("BuilderExperience entry routing", () => {
-  it("shows the Discovery Intent screen for a genuine first-time visitor", () => {
+describe("BuilderExperience entry: straight into the Builder, at every width", () => {
+  it("renders the Builder for a genuine first-time visitor, with no chooser", () => {
     mockWindow();
 
     const markup = renderToStaticMarkup(<BuilderExperience />);
 
-    expect(markup).toContain("¿Qué buscas hoy?");
-    expect(markup).toContain("Fresco y cotidiano");
-    expect(markup).toContain("Noche con intención");
-    expect(markup).toContain("Es un regalo");
-    expect(markup).toContain("Quiero explorar todo");
-    expect(builderCalls).toHaveLength(0);
+    expect(markup).not.toContain("¿Qué buscas hoy?");
+    expect(markup).not.toContain("discovery-intent");
+    ["Fresco y cotidiano", "Noche con intención", "Es un regalo", "Quiero explorar todo"].forEach((title) =>
+      expect(markup).not.toContain(title)
+    );
+    expect(builderCalls).toHaveLength(1);
+    expect(builderCalls[0].initialFragranceId).toBeNull();
+    expect(builderCalls[0].initialDetailFragranceId).toBeNull();
   });
 
-  it("skips the Discovery Intent screen and restores silently when a persisted box already exists", () => {
+  it("does the same on a phone, a tablet and a desktop viewport: the width decides nothing", () => {
+    [375, 390, 428, 768, 980, 981, 1100, 1440].forEach((viewportWidth) => {
+      builderCalls.length = 0;
+      mockWindow({ viewportWidth });
+
+      const markup = renderToStaticMarkup(<BuilderExperience />);
+
+      expect(markup, String(viewportWidth)).not.toContain("¿Qué buscas hoy?");
+      expect(builderCalls, String(viewportWidth)).toHaveLength(1);
+    });
+  });
+
+  it("restores silently when a persisted box already exists", () => {
     mockWindow({ storedValue: "{}" });
 
     const markup = renderToStaticMarkup(<BuilderExperience />);
 
     expect(markup).not.toContain("¿Qué buscas hoy?");
     expect(builderCalls).toHaveLength(1);
-    expect(builderCalls[0].initialRecommendationHint).toBeNull();
   });
 
-  it("skips the Discovery Intent screen when a deep-linked fragrance is present, and applies no recommendation hint", () => {
+  it("passes a deep-linked fragrance straight to the Builder", () => {
     mockWindow({ search: "?fragrance=1" });
 
     const markup = renderToStaticMarkup(<BuilderExperience />);
@@ -107,12 +89,31 @@ describe("BuilderExperience entry routing", () => {
     expect(markup).not.toContain("¿Qué buscas hoy?");
     expect(builderCalls).toHaveLength(1);
     expect(builderCalls[0].initialFragranceId).toBe(1);
-    expect(builderCalls[0].initialRecommendationHint).toBeNull();
+  });
+
+  it("no longer feeds the Builder a recommendation hint or an explainer: there is no choice to translate", () => {
+    mockWindow();
+
+    renderToStaticMarkup(<BuilderExperience />);
+
+    expect(builderCalls[0]).not.toHaveProperty("initialRecommendationHint");
+    expect(builderCalls[0]).not.toHaveProperty("explainRecommendation");
+  });
+
+  it("carries no trace of the chooser, its viewport gate or its pre-hydration script", () => {
+    const source = readFileSync(new URL("./BuilderExperience.jsx", import.meta.url), "utf8");
+    const page = readFileSync(new URL("../app/build-your-box/page.jsx", import.meta.url), "utf8");
+    const globals = readFileSync(new URL("../app/globals.css", import.meta.url), "utf8");
+
+    expect(source).not.toMatch(/DiscoveryIntentScreen|discoveryIntent|selectedIntentId|skipsDiscoveryIntent|hasPersistedBox|matchMedia|mobileBuilderViewport/);
+    expect(page).not.toMatch(/dangerouslySetInnerHTML|<script|ENTRY_HEADER_VISIBILITY_SCRIPT|matchMedia|localStorage/);
+    expect(page).toContain("<BuilderIntroHeader /><BuilderMount");
+    expect(globals).not.toContain("discovery-intent");
   });
 });
 
 describe("BuilderExperience details-only deep link (?details=)", () => {
-  it("skips the Discovery Intent screen and hands the Builder the details id, with no add intent", () => {
+  it("hands the Builder the details id, with no add intent", () => {
     mockWindow({ search: "?details=1" });
 
     const markup = renderToStaticMarkup(<BuilderExperience />);
@@ -121,7 +122,6 @@ describe("BuilderExperience details-only deep link (?details=)", () => {
     expect(builderCalls).toHaveLength(1);
     expect(builderCalls[0].initialDetailFragranceId).toBe(1);
     expect(builderCalls[0].initialFragranceId).toBeNull();
-    expect(builderCalls[0].initialRecommendationHint).toBeNull();
   });
 
   it("passes a well-formed id the catalog doesn't contain straight through (the Builder reports it)", () => {
@@ -132,15 +132,16 @@ describe("BuilderExperience details-only deep link (?details=)", () => {
     expect(builderCalls[0].initialDetailFragranceId).toBe(999999);
   });
 
-  it("treats malformed or repeated details values as no intent, so a first-time visitor still gets the intent screen", () => {
+  it("treats malformed or repeated details values as no intent: the Builder opens with nothing requested", () => {
     ["?details=abc", "?details=", "?details=0", "?details=1&details=2"].forEach((search) => {
       mockWindow({ search });
       builderCalls.length = 0;
 
       const markup = renderToStaticMarkup(<BuilderExperience />);
 
-      expect(markup, search).toContain("¿Qué buscas hoy?");
-      expect(builderCalls, search).toHaveLength(0);
+      expect(markup, search).not.toContain("¿Qué buscas hoy?");
+      expect(builderCalls, search).toHaveLength(1);
+      expect(builderCalls[0], search).toMatchObject({ initialFragranceId: null, initialDetailFragranceId: null });
     });
   });
 
@@ -219,12 +220,12 @@ describe("repeat client-side navigation: the intent is read from the router, not
     expect(navigateFromCatalog("details=999999").props.initialDetailFragranceId).toBe(999999);
   });
 
-  it("shows the intent screen for a router query with no valid intent, whatever the stale location says", () => {
+  it("opens the Builder with nothing requested for a router query with no valid intent, whatever the stale location says", () => {
     ["", "details=abc", "fragrance=1&fragrance=2", "other=x"].forEach((search) => {
       const { markup, props } = navigateFromCatalog(search);
 
-      expect(markup, search).toContain("¿Qué buscas hoy?");
-      expect(props, search).toBeUndefined();
+      expect(markup, search).not.toContain("¿Qué buscas hoy?");
+      expect(props, search).toMatchObject({ initialFragranceId: null, initialDetailFragranceId: null });
     });
   });
 
@@ -244,39 +245,6 @@ describe("repeat client-side navigation: the intent is read from the router, not
     expect(source).toContain("[FRAGRANCE_QUERY_PARAM, DETAILS_QUERY_PARAM]");
     expect(source).toContain("window.history.replaceState(window.history.state,");
     expect(source).not.toMatch(/useRouter|router\.(?:replace|push)/);
-  });
-});
-
-describe("entry header pre-hydration visibility script", () => {
-  it("agrees with BuilderExperience's real first-render gate across representative cases", () => {
-    const cases = [
-      { label: "first-time visitor", search: "", storedValue: null },
-      { label: "returning visitor with a persisted box", search: "", storedValue: "{}" },
-      { label: "deep-linked fragrance, no stored box", search: `?${FRAGRANCE_QUERY_PARAM}=1`, storedValue: null },
-      { label: "deep-linked fragrance, with a stored box too", search: `?${FRAGRANCE_QUERY_PARAM}=1`, storedValue: "{}" },
-      { label: "unrelated query param only", search: "?other=x", storedValue: null },
-      { label: "malformed fragrance value", search: `?${FRAGRANCE_QUERY_PARAM}=abc`, storedValue: null },
-      { label: "details link, no stored box", search: `?${DETAILS_QUERY_PARAM}=1`, storedValue: null },
-      { label: "details link, with a stored box too", search: `?${DETAILS_QUERY_PARAM}=1`, storedValue: "{}" },
-      { label: "malformed details value", search: `?${DETAILS_QUERY_PARAM}=abc`, storedValue: null },
-      { label: "repeated details value", search: `?${DETAILS_QUERY_PARAM}=1&${DETAILS_QUERY_PARAM}=2`, storedValue: null },
-      { label: "both links at once", search: `?${FRAGRANCE_QUERY_PARAM}=1&${DETAILS_QUERY_PARAM}=2`, storedValue: null },
-    ];
-
-    cases.forEach(({ label, search, storedValue }) => {
-      const scriptHidesHeader = runEntryHeaderVisibilityScript({ search, storedValue });
-
-      mockWindow({ storedValue, search });
-      const realGateSkipsIntentScreen =
-        parseFragranceIntent(search) !== null || parseDetailsIntent(search) !== null || hasPersistedBox();
-      globalThis.window = originalWindow;
-
-      // The inline script hides the header exactly when BuilderExperience is
-      // about to show the Discovery Intent screen instead of skipping it —
-      // if this ever disagrees, the pre-hydration hint and the real client
-      // gate have drifted apart.
-      expect(scriptHidesHeader, label).toBe(!realGateSkipsIntentScreen);
-    });
   });
 });
 

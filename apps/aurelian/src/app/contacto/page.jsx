@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { SocialFollow } from "../../components/SocialFollow.jsx";
 import { aurelianConfig } from "../../merchant/config.js";
 
@@ -8,8 +7,16 @@ export const metadata = { title: "Contacto y área de servicio", description: "C
 // number the host config owns.
 const WHATSAPP_HREF = `https://wa.me/${aurelianConfig.finalization.whatsappNumber}`;
 
+// The QR opens the very same WhatsApp conversation as the button, so it must always encode WHATSAPP_HREF. It
+// is a static file (public/media/contact/whatsapp-qr.svg) rather than something drawn at runtime, so the page
+// ships no QR code; a test pins the file's recorded URL to the host config's number, so changing the number
+// without regenerating the QR fails the build instead of printing a code that opens the wrong chat.
+const WHATSAPP_QR_SRC = "/media/contact/whatsapp-qr.svg";
+
 // Three facts, then how to reach Aurelian. Every sentence is the approved copy: the
 // page stays short and contact-specific, and leaves the full process to /como-funciona.
+// The Builder already has its own call to action in the site header, so this area is contact only:
+// WhatsApp (number, sentence, button), its QR code, and the social accounts.
 export default function ContactPage() {
   return (
     <section className="page-shell page-intro contact-page">
@@ -29,8 +36,11 @@ export default function ContactPage() {
           <a aria-label="Escribir por WhatsApp (se abre en una pestaña nueva)" className="button" href={WHATSAPP_HREF} rel="noopener noreferrer" target="_blank">Escribir por WhatsApp</a>
         </div>
         <div className="contact-channel__secondary">
-          <Link className="button contact-channel__cta" href="/build-your-box">Preparar mi Discovery Box</Link>
-          <SocialFollow label="También puedes encontrarnos en" />
+          <figure className="contact-qr">
+            <img alt="Código QR para escribir a Aurelian por WhatsApp" className="contact-qr__image" height="176" src={WHATSAPP_QR_SRC} width="176" />
+            <figcaption className="contact-qr__caption">Escanéalo con tu teléfono para abrir WhatsApp.</figcaption>
+          </figure>
+          <SocialFollow />
         </div>
       </div>
     </section>

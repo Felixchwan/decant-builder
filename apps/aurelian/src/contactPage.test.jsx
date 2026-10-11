@@ -90,12 +90,14 @@ describe("/contacto: WhatsApp as the primary channel", () => {
 });
 
 describe("/contacto: social links reuse the host-owned cluster", () => {
-  it("uses SocialFollow and socialLinks.js, with the contact wording, and hardcodes no URL of its own", () => {
+  it("uses SocialFollow and socialLinks.js with its own 'Síguenos en' wording, and hardcodes no URL of its own", () => {
     expect(source).toContain('import { SocialFollow } from "../../components/SocialFollow.jsx";');
-    expect(source).toContain('<SocialFollow label="También puedes encontrarnos en" />');
+    expect(source).toContain("<SocialFollow />");
+    expect(source).not.toMatch(/<SocialFollow\s+label=/);
     expect(source).not.toMatch(/facebook\.com|instagram\.com/);
-    expect(markup).toContain('<span class="landing-follow__label">También puedes encontrarnos en</span>');
-    expect(markup).toContain(renderToStaticMarkup(<SocialFollow label="También puedes encontrarnos en" />));
+    expect(markup).toContain('<span class="landing-follow__label">Síguenos en</span>');
+    expect(markup).not.toContain("También puedes encontrarnos en");
+    expect(markup).toContain(renderToStaticMarkup(<SocialFollow />));
   });
 
   it("links the two approved accounts with accessible names, a new tab and noopener noreferrer", () => {
@@ -117,30 +119,69 @@ describe("/contacto: social links reuse the host-owned cluster", () => {
   });
 });
 
-describe("/contacto: the Discovery Box call to action and the page's order", () => {
-  it("keeps 'Preparar mi Discovery Box' on the Builder route, as the one Builder link", () => {
+describe("/contacto: contact only (the Builder call to action is not repeated here)", () => {
+  it("carries no Builder link or 'Preparar mi Discovery Box' action: the site header owns that", () => {
     const builder = links.filter(({ attrs }) => attr(attrs, "href") === "/build-your-box");
-    expect(builder).toHaveLength(1);
-    expect(builder[0].text).toBe("Preparar mi Discovery Box");
-    expect(builder[0].attrs).toContain("contact-channel__cta");
+
+    expect(builder).toHaveLength(0);
+    expect(markup).not.toContain("Preparar mi Discovery Box");
+    expect(markup).not.toContain("contact-channel__cta");
+    expect(source).not.toContain("next/link");
+    expect(css).not.toContain(".contact-channel__cta");
+    // the only links left are WhatsApp and the two social accounts
+    expect(links.map(({ attrs }) => attr(attrs, "href"))).toEqual([
+      "https://wa.me/528129800010",
+      "https://www.facebook.com/share/19g6gNspA3/",
+      "https://www.instagram.com/aurelianperfumes",
+    ]);
   });
 
-  it("reads: intro, the three facts, WhatsApp, the call to action, then the social links as the closing detail", () => {
+  it("reads: intro, the three facts, WhatsApp, the QR code, then the social links as the closing detail", () => {
     const at = (needle) => markup.indexOf(needle);
-    const sequence = ["<h1>", "data-fact=\"service\"", "data-fact=\"review\"", "data-fact=\"payment\"", "<h2>WhatsApp</h2>", "contact-channel__number", "wa.me", "contact-channel__cta", "landing-follow"].map(at);
+    const sequence = ["<h1>", "data-fact=\"service\"", "data-fact=\"review\"", "data-fact=\"payment\"", "<h2>WhatsApp</h2>", "contact-channel__number", "wa.me", "contact-qr", "landing-follow"].map(at);
     expect(sequence.every((index) => index > -1)).toBe(true);
     expect([...sequence].sort((a, b) => a - b)).toEqual(sequence);
   });
 
-  it("anchors the social cluster to the lower-right of the secondary column on desktop and left-aligns it when stacked", () => {
+  it("shows the WhatsApp QR as a described image with a caption, at a size that scans", () => {
+    const image = markup.match(/<img\b[^>]*contact-qr__image[^>]*>/)?.[0] ?? "";
+
+    expect(image).toContain('src="/media/contact/whatsapp-qr.svg"');
+    expect(image).toContain('alt="Código QR para escribir a Aurelian por WhatsApp"');
+    expect(image).toContain('width="176"');
+    expect(image).toContain('height="176"');
+    expect(markup).toMatch(/<figure class="contact-qr">[\s\S]*<figcaption class="contact-qr__caption">Escanéalo con tu teléfono para abrir WhatsApp\.<\/figcaption><\/figure>/);
+    expect(markup.match(/<figure\b/g)).toHaveLength(1);
+    // never smaller than 10rem (160px) on any screen: a code shown on a phone is scanned by another phone
+    expect(css).toMatch(/\.contact-qr__image\s*\{[^}]*width:\s*clamp\(10rem,\s*14vw,\s*11rem\)/);
+    expect(css).toMatch(/\.contact-qr__image\s*\{\s*width:\s*10rem;/);
+    // its light ground comes from the file itself (a QR needs its quiet zone), framed by a hairline
+    expect(ruleBody(".contact-qr__image")).toMatch(/outline:\s*1px solid/);
+  });
+
+  it("ships a QR file for the same WhatsApp link the page opens, and pins it to the host config's number", () => {
+    const qr = read(APP_ROOT, "public", "media", "contact", "whatsapp-qr.svg");
+    const recorded = qr.match(/^<!-- WhatsApp QR for (https:\/\/wa\.me\/\d+)\./)?.[1];
+
+    expect(qr).toMatch(/<svg\b[^>]*viewBox="0 0 \d+ \d+"/);
+    // an XML comment may not contain a double hyphen, or the browser refuses to draw the image
+    expect(qr.match(/^<!--([\s\S]*?)-->/)[1]).not.toContain("--");
+    // the recorded URL is the page's own link; change the number without regenerating the file and this fails
+    expect(recorded).toBe(`https://wa.me/${aurelianConfig.finalization.whatsappNumber}`);
+    expect(qr).not.toMatch(/<script|<image|href=/i);
+  });
+
+  it("keeps the social cluster under the QR on one left edge, on desktop and when stacked", () => {
     const css = readFileSync(join(APP_ROOT, "src", "app", "contact-page.css"), "utf8").replace(/\/\*[\s\S]*?\*\//g, "");
     const desktop = css.split("@media")[0];
-    const stacked = css.slice(css.indexOf("@media (max-width: 900px)"));
     const follow = (text) => text.match(/\.contact-channel \.landing-follow\s*\{([^}]*)\}/)?.[1] ?? "";
-    expect(follow(desktop)).toMatch(/align-self:\s*flex-end;/);
-    expect(follow(desktop)).toMatch(/justify-content:\s*flex-end;/);
-    expect(follow(stacked)).toMatch(/align-self:\s*flex-start;/);
-    expect(follow(stacked)).toMatch(/justify-content:\s*flex-start;/);
+
+    expect(follow(desktop)).toMatch(/align-self:\s*flex-start;/);
+    expect(follow(desktop)).toMatch(/justify-content:\s*flex-start;/);
+    expect(ruleBody(".contact-channel__secondary")).toMatch(/flex-direction:\s*column/);
+    // stacked: the caption moves beside the code, and on the narrowest phones back under it
+    expect(css).toMatch(/@media \(max-width: 900px\)[\s\S]*\.contact-qr\s*\{\s*grid-template-columns:\s*auto minmax\(0,\s*1fr\)/);
+    expect(css).toMatch(/@media \(max-width: 420px\)\s*\{\s*[\s\S]*\.contact-qr\s*\{\s*grid-template-columns:\s*minmax\(0,\s*1fr\)/);
   });
 });
 

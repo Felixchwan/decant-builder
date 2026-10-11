@@ -2815,6 +2815,67 @@ describe("Shared modal scroll-lock: BuilderPanel wiring", () => {
   });
 });
 
+// Note Explorer dialog focus: the same contract as the Scent Library / Collection DNA dialogs (focus in on
+// open, Tab kept inside, hand-back to the opener on close), built on the shared pure helpers in
+// modalFocus.js. Source-contract checks, the established pattern for these portal-only modals; the live
+// behavior (including the nested fragrance-details hand-offs) is exercised in a browser.
+describe("Note Explorer dialog: focus management wiring", () => {
+  const start = normalizedPanelSource.indexOf("function NoteExplorerModal(");
+  const modalSource = normalizedPanelSource.slice(start, normalizedPanelSource.indexOf("function NoteExplorerNoteButton(", start));
+
+  it("uses the shared modalFocus helpers rather than a private copy of the focus logic", () => {
+    expect(normalizedPanelSource).toMatch(
+      /import \{\s*getFocusableElements,\s*getTabWrapTarget,\s*isRestorableFocusTarget,\s*\} from "\.\.\/builder\/internal\/portal\/modalFocus\.js";/
+    );
+    expect(modalSource).toContain("getTabWrapTarget({");
+    expect(modalSource).toContain("getFocusableElements(dialog)");
+  });
+
+  it("moves focus in on open: the search field, or Close on a touch screen so no keyboard is raised unasked", () => {
+    expect(modalSource).toContain("const dialogRef = useRef(null);");
+    expect(modalSource).toContain("ref={dialogRef}");
+    expect(modalSource).toContain('window.matchMedia("(pointer: coarse)").matches');
+    expect(modalSource).toMatch(
+      /\(!isTouchFirst && dialog\?\.querySelector\("\.note-explorer-search input"\)\) \|\|\s*dialog\?\.querySelector\("\.modal-header button"\)/
+    );
+    expect(modalSource).toContain("target?.focus({ preventScroll: true });");
+  });
+
+  it("remembers the opener at mount and gives focus back to it on unmount, only if it can still take it", () => {
+    expect(modalSource).toMatch(/const opener = document\.activeElement;/);
+    expect(modalSource).toMatch(
+      /return \(\) => \{\s*if \(opener !== document\.body && isRestorableFocusTarget\(opener\)\) \{\s*opener\.focus\(\{ preventScroll: true \}\);/
+    );
+  });
+
+  it("traps Tab and Shift+Tab (also when focus fell to <body>), standing down for details and other dialog layers", () => {
+    expect(modalSource).toContain('event.key !== "Tab" || isDetailOpen || !dialog');
+    expect(modalSource).toContain("if (!hasLostFocus && !dialog.contains(active)) {");
+    expect(modalSource).toContain("active: hasLostFocus ? null : active,");
+    expect(modalSource).toContain("wrapTarget.focus();");
+    expect(modalSource).toMatch(/window\.addEventListener\("keydown", handleKeyDown\);\s*return \(\) => window\.removeEventListener\("keydown", handleKeyDown\);\s*\}, \[isDetailOpen\]\);/);
+  });
+
+  it("keeps Escape layered: this dialog ignores it while a fragrance's details are open on top", () => {
+    expect(modalSource).toContain('if (event.key === "Escape" && !isDetailOpen) {');
+  });
+
+  it("after details close, keeps focus in this dialog: on the control it last had, else the search field / Close", () => {
+    expect(modalSource).toContain("lastFocusedRef.current = event.target;");
+    expect(modalSource).toContain("if (!wasDetailOpen || isDetailOpen) {");
+    expect(modalSource).toContain("(otherLayer && otherLayer !== dialog)");
+    expect(modalSource).toMatch(/remembered && dialog\.contains\(remembered\) && isRestorableFocusTarget\(remembered\) && remembered/);
+  });
+
+  it("keeps focus with the exploration when a selection change unmounts the focused chip, and changes nothing else", () => {
+    expect(modalSource).toContain("if (!dialog || (active && active !== document.body)) {");
+    expect(modalSource).toContain("}, [selectedNoteIds]);");
+    // the selection, search and add behavior are untouched by the focus work
+    expect(modalSource).toContain("setSelectedNoteIds((currentNoteIds) => {");
+    expect(modalSource).toContain("onChange={(event) => setSearchQuery(event.target.value)}");
+  });
+});
+
 describe("Curator Bonus unlock celebration: restored-unlocked box vs a real unlock", () => {
   const start = normalizedPanelSource.indexOf("const previousCuratorBonusUnlockedRef");
   const effectStart = normalizedPanelSource.indexOf("isCuratorBonusUnlockTransition({");

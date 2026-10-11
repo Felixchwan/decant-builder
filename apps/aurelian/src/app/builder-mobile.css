@@ -1,0 +1,100 @@
+/* Aurelian Builder -- the mobile "Mi caja" stack, tightened.
+
+   HOST-OWNED and Builder-route-only: every selector is under .builder-page and the whole file sits inside
+   the Builder's own mobile layout (the 980px switch to the Explorar / Mi caja tabs), so desktop (where the
+   summary is docked into the header), the public site, the shared package and Discovery Decants are
+   untouched. Paint and spacing only: no markup, no behaviour, no hit area made smaller.
+
+   Why: on a phone the top of "Mi caja" spent a lot of the screen on chrome before the rack. Measured at
+   390px: the summary card was 102px tall because below 420px the shared stylesheet drops it to two rows
+   (spaces and points, then the total on a row of its own); the progress bar carried 18px of margin on both
+   sides; the sticky "Revisar mi caja" bar was 108px because its helper line kept a 14px bottom margin (a
+   later shared rule beats the mobile one at equal specificity), and the panel had 22px of padding on every
+   side. Together that was roughly a hundred pixels of flow plus a bar that covered a seventh of the screen.
+
+   What changes, top to bottom:
+     panel         22px -> 16px padding (16px more width for the rack and the cards)
+     header        a little less space under "Mi caja / Vaciar caja / Revisar"
+     summary card  one row of three (Espacios | Puntos | Total) at every phone width: ~51px, not 102px
+     rack, share   the gaps between the rack, the share row and the Composer, 12-14px -> 10px
+     progress bar  a thin 5px brass hairline, 12px margin (it was a 12px gauge with 18px margins)
+     review bar    padding 8 -> 6, helper line tight under the button: ~80px, not 108px
+   The rack's own vials, the buttons' sizes and the review button's 46px target are the package's. */
+
+@media (max-width: 980px) {
+  .builder-page .builder-panel {
+    padding: 16px 16px 18px;
+  }
+
+  .builder-page .builder-panel > .panel-header {
+    margin-bottom: 12px;
+  }
+
+  /* ---- Summary: Espacios | Puntos | Total, on one row ------------------------------------------------ */
+  .builder-page .box-summary-card {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    margin-bottom: 10px;
+    padding: 7px 4px;
+  }
+
+  .builder-page .box-summary-metric {
+    gap: 1px;
+    padding: 0 6px;
+  }
+
+  .builder-page .box-summary-metric + .box-summary-metric {
+    border-left-color: var(--aur-intel-rule);
+  }
+
+  /* The shared <=420px rule moves the total onto its own row; undo that here, and give it back the
+     divider the other two metrics share. */
+  .builder-page .box-summary-total {
+    grid-column: auto;
+    margin-top: 0;
+    padding-top: 0;
+    border-top: 0;
+    border-left: 1px solid var(--aur-intel-rule);
+  }
+
+  /* ---- The stack beneath it --------------------------------------------------------------------------- */
+  .builder-page .box-slot-tray,
+  .builder-page .interactive-box-slot-tray {
+    margin-bottom: 10px;
+  }
+
+  .builder-page .share-box-actions {
+    margin-bottom: 10px;
+  }
+
+  .builder-page .compose-box-panel {
+    margin-top: 10px;
+  }
+
+  .builder-page .slot-bar {
+    height: 5px;
+    margin: 12px 0;
+    border-radius: 3px;
+  }
+
+  .builder-page .curator-bonus-section {
+    margin-bottom: 12px;
+  }
+
+  /* ---- The sticky "Revisar mi caja" bar --------------------------------------------------------------- */
+  .builder-page .review-action {
+    margin-top: 12px;
+    padding: 6px;
+  }
+
+  /* Same ordering problem as the helper line: the shared base `margin: 0 0 16px` beats the shared mobile
+     `margin: 0`, leaving 16px under the button inside the bar. */
+  .builder-page .review-action .review-box-button {
+    margin: 0;
+  }
+
+  .builder-page .review-action p {
+    margin: 4px 4px 0;
+    font-size: 0.75rem;
+    line-height: 1.3;
+  }
+}

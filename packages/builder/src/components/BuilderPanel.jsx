@@ -81,6 +81,11 @@ import { noopAnalytics } from "../analytics/noopAnalytics.js";
 import { metadataAssets } from "@discovery-box/catalog";
 import { acquireBodyScrollLock } from "../builder/internal/portal/bodyScrollLock.js";
 import { renderOwnedPortal } from "../builder/internal/portal/renderOwnedPortal.jsx";
+import {
+  getFocusableElements,
+  getTabWrapTarget,
+  isRestorableFocusTarget,
+} from "../builder/internal/portal/modalFocus.js";
 import { getShareActionsPlacement } from "../builder/internal/summary/shareActionsPlacement.js";
 import { getSummaryDockedState } from "../builder/internal/summary/summaryDocking.js";
 import {
@@ -2103,6 +2108,119 @@ function NoteExplorerModal({
     return () => releaseBodyScrollLock();
   }, []);
 
+  // Focus, the same contract as the Scent Library and Collection DNA dialogs: in on open, kept inside
+  // while this is the top layer, and handed back to whatever opened it when it closes. On open it goes to
+  // the search field, since searching is the first thing anyone does here -- except on a touch screen
+  // (coarse pointer), where focusing a text field would raise the keyboard over the notes before anything
+  // was asked for, so it goes to Close instead.
+  const dialogRef = useRef(null);
+  const lastFocusedRef = useRef(null);
+  const wasDetailOpenRef = useRef(false);
+
+  useEffect(() => {
+    const opener = document.activeElement;
+    const dialog = dialogRef.current;
+    const isTouchFirst = typeof window.matchMedia === "function" && window.matchMedia("(pointer: coarse)").matches;
+    const target =
+      (!isTouchFirst && dialog?.querySelector(".note-explorer-search input")) ||
+      dialog?.querySelector(".modal-header button");
+
+    target?.focus({ preventScroll: true });
+
+    return () => {
+      if (opener !== document.body && isRestorableFocusTarget(opener)) {
+        opener.focus({ preventScroll: true });
+      }
+    };
+  }, []);
+
+  // Tab / Shift+Tab wrap inside the dialog, including when focus was lost to <body> (the control that had it
+  // was just unmounted). It stands down while a fragrance-details dialog is open on top, and whenever focus
+  // sits in some other dialog layer, so that layer's own Tab handling is never overridden.
+  useEffect(() => {
+    function handleKeyDown(event) {
+      const dialog = dialogRef.current;
+
+      if (event.key !== "Tab" || isDetailOpen || !dialog) {
+        return;
+      }
+
+      const active = dialog.ownerDocument.activeElement;
+      const hasLostFocus = !active || active === dialog.ownerDocument.body;
+
+      if (!hasLostFocus && !dialog.contains(active)) {
+        return;
+      }
+
+      const wrapTarget = getTabWrapTarget({
+        container: dialog,
+        focusable: getFocusableElements(dialog),
+        active: hasLostFocus ? null : active,
+        shiftKey: event.shiftKey,
+      });
+
+      if (wrapTarget) {
+        event.preventDefault();
+        wrapTarget.focus();
+      }
+    }
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isDetailOpen]);
+
+  // Closing a fragrance's details returns focus to the "details" button that opened them, which is still
+  // mounted in the results list. If that hand-back could not happen (the browser never focused the button
+  // on click, so there was no opener to remember), focus would be left on the page behind this dialog; put
+  // it back on the control this dialog last had it on, else the search field / Close.
+  useEffect(() => {
+    const wasDetailOpen = wasDetailOpenRef.current;
+
+    wasDetailOpenRef.current = isDetailOpen;
+
+    if (!wasDetailOpen || isDetailOpen) {
+      return undefined;
+    }
+
+    const timer = window.setTimeout(() => {
+      const dialog = dialogRef.current;
+      const active = document.activeElement;
+      const otherLayer = active?.closest?.('[role="dialog"]');
+
+      if (!dialog || dialog.contains(active) || (otherLayer && otherLayer !== dialog)) {
+        return;
+      }
+
+      const remembered = lastFocusedRef.current;
+      const target =
+        (remembered && dialog.contains(remembered) && isRestorableFocusTarget(remembered) && remembered) ||
+        dialog.querySelector(".note-explorer-search input") ||
+        dialog.querySelector(".modal-header button");
+
+      target?.focus({ preventScroll: true });
+    }, 0);
+
+    return () => window.clearTimeout(timer);
+  }, [isDetailOpen]);
+
+  // Changing the selection can unmount the very control that had focus (the related-note chip just chosen, or
+  // a selected chip's remove button). Rather than dropping focus to <body>, keep it with the exploration: the
+  // root note's own button, else the search field.
+  useEffect(() => {
+    const dialog = dialogRef.current;
+    const active = document.activeElement;
+
+    if (!dialog || (active && active !== document.body)) {
+      return;
+    }
+
+    const target =
+      dialog.querySelector('.note-explorer-note-button[aria-pressed="true"]') ||
+      dialog.querySelector(".note-explorer-search input");
+
+    target?.focus({ preventScroll: true });
+  }, [selectedNoteIds]);
+
   // The fragrance-details modal opens on top of this one and closes on
   // Escape itself; this modal must not ALSO close from that same keypress,
   // or the whole exploration (selected notes, search, sort) would be lost
@@ -2251,11 +2369,15 @@ function NoteExplorerModal({
   return renderOwnedPortal(
     <div className="modal-overlay final-summary-overlay" onClick={onClose}>
       <div
+        ref={dialogRef}
         className="final-summary-modal note-explorer-modal"
         role="dialog"
         aria-modal="true"
         aria-labelledby="note-explorer-title"
         onClick={(event) => event.stopPropagation()}
+        onFocus={(event) => {
+          lastFocusedRef.current = event.target;
+        }}
       >
         <div className="modal-header">
           <div>

@@ -209,9 +209,9 @@ describe("Collection Intelligence: Aurelian host paint (builder-intelligence.css
     expect(tokenRule.body).toMatch(/--aur-intel-card: linear-gradient\(180deg, rgb\(\d+, \d+, \d+\), var\(--bg\)\);/);
   });
 
-  it("respects reduced motion for the card's entrance", () => {
+  it("respects reduced motion for the evidence card's entrance", () => {
     expect(withoutComments).toMatch(
-      /@media \(prefers-reduced-motion: reduce\)\s*\{\s*\.builder-page \.accord-evidence,[^{]*\{\s*animation: none;/
+      /@media \(prefers-reduced-motion: reduce\)\s*\{[\s\S]*?\.builder-page \.accord-evidence\s*\{\s*animation: none;/
     );
   });
 
@@ -248,34 +248,51 @@ describe("Collection Intelligence: Aurelian host paint (builder-intelligence.css
     ).toContain("font-size: 0");
   });
 
-  it("sets the Curator Pick artwork on the UNLOCKED card only, as a decorative CSS background", () => {
+  it("carries the Curator Pick artwork in BOTH states, as a decorative CSS background", () => {
     const slot = bodyOf(".builder-page .curator-bonus-section .curator-pick-slot");
     const active = bodyOf(".builder-page .curator-bonus-section .curator-pick-slot.active");
     const art = bodyOf(".builder-page .curator-bonus-section .curator-pick-slot::after");
 
-    // locked (the default) names no image at all, so nothing is requested
-    expect(slot).toContain("--aur-curator-pick-art: none");
-    expect(slot).not.toMatch(/url\(/);
-    // unlocked names the portrait still-life
-    expect(active).toContain('--aur-curator-pick-art: url("/media/curator-pick/curator-pick-keepsake-portrait.webp")');
+    // the card itself (so locked and unlocked alike) names the portrait still-life
+    expect(slot).toContain('--aur-curator-pick-art: url("/media/curator-pick/curator-pick-keepsake-portrait.webp")');
     // the picture is the pseudo-element's background: no element, no alt text, never in the way of the copy
     expect(art).toContain("var(--aur-curator-pick-art)");
     expect(art).toContain("mask-image: linear-gradient");
     expect(art).toContain("pointer-events: none");
     expect(art).toContain("z-index: -1");
     expect(art).toContain("opacity: var(--aur-curator-pick-art-opacity)");
-    // the only rules that carry a url() are the unlocked card's, and there are exactly two (portrait, wide)
+    expect(art).toContain("filter: var(--aur-curator-pick-art-filter)");
+    // the only rules that carry a url() are the card's own, and there are exactly two (portrait, wide)
     const withUrl = componentRules.filter(({ body }) => /url\(/.test(body));
 
     expect(withUrl).toHaveLength(2);
-    withUrl.forEach(({ selector }) => expect(selector).toBe(".builder-page .curator-bonus-section .curator-pick-slot.active"));
+    withUrl.forEach(({ selector }) => expect(selector).toBe(".builder-page .curator-bonus-section .curator-pick-slot"));
+    // unlocked adds no second picture: it only lifts the veil
+    expect(active).not.toMatch(/url\(/);
     // the lines of copy still leave the lower right clear
     expect(bodyOf(".builder-page .curator-bonus-section .curator-pick-slot.active p")).toMatch(/max-width: \d+%/);
   });
 
-  it("uses the portrait picture by default and the wide one only in the tablet layout", () => {
+  it("veils the artwork while locked and lifts the veil on unlock, so the two states stay distinguishable", () => {
+    const slot = bodyOf(".builder-page .curator-bonus-section .curator-pick-slot");
+    const active = bodyOf(".builder-page .curator-bonus-section .curator-pick-slot.active");
+    const locked = Number(slot.match(/--aur-curator-pick-art-opacity: ([\d.]+)/)[1]);
+    const unlocked = Number(active.match(/--aur-curator-pick-art-opacity: ([\d.]+)/)[1]);
+
+    expect(locked).toBeLessThan(unlocked);
+    expect(locked).toBeLessThanOrEqual(0.5);
+    expect(unlocked).toBe(0.8);
+    // locked is mostly desaturated and dimmed; unlocked is the picture as drawn
+    expect(slot).toMatch(/--aur-curator-pick-art-filter: grayscale\(0\.\d+\) brightness\(0\.\d+\)/);
+    expect(active).toContain("--aur-curator-pick-art-filter: none");
+    // the shorter locked card crops the picture in; the unlocked card shows it at its own height
+    expect(slot).toContain("--aur-curator-pick-art-size: auto 125%");
+    expect(active).toContain("--aur-curator-pick-art-size: auto 100%");
+  });
+
+  it("uses the portrait picture by default and the wide one only in the tablet layout, for the card in either state", () => {
     const wide = withoutComments.match(
-      /@media \(min-width: 560px\) and \(max-width: 980px\)\s*\{\s*\.builder-page \.curator-bonus-section \.curator-pick-slot\.active\s*\{([^}]*)\}/
+      /@media \(min-width: 560px\) and \(max-width: 980px\)\s*\{\s*\.builder-page \.curator-bonus-section \.curator-pick-slot\s*\{([^}]*)\}/
     );
 
     expect(wide, "tablet media rule").not.toBeNull();
@@ -285,7 +302,7 @@ describe("Collection Intelligence: Aurelian host paint (builder-intelligence.css
     expect((withoutComments.match(/curator-pick-keepsake-portrait/g) || []).length).toBe(1);
   });
 
-  it("ships exactly the two artwork files it names, unmodified-format WebP with transparency, in the host's own public folder", () => {
+  it("ships exactly the two artwork files it names, WebP, in the host's own public folder", () => {
     ["curator-pick-keepsake-portrait.webp", "curator-pick-keepsake-wide.webp"].forEach((name) => {
       const path = join(APP_ROOT, "public", "media", "curator-pick", name);
       const bytes = readFileSync(path);
@@ -301,17 +318,19 @@ describe("Collection Intelligence: Aurelian host paint (builder-intelligence.css
     ]);
   });
 
-  it("fades the picture in with the unlock, softer on phones, and not at all under reduced motion", () => {
-    expect(bodyOf(".builder-page .curator-bonus-section .curator-pick-slot.active::after")).toContain(
-      "animation: aurelianCuratorArtIn"
+  it("moves between the veiled and the lifted state with a 0.9s transition, softer on phones, and none under reduced motion", () => {
+    expect(bodyOf(".builder-page .curator-bonus-section .curator-pick-slot::after")).toMatch(
+      /transition: opacity 900ms ease-out, filter 900ms ease-out;/
     );
-    expect(withoutComments).toMatch(/@keyframes aurelianCuratorArtIn\s*\{\s*from\s*\{\s*opacity: 0;/);
+    // phones fade it further back in both states
     expect(withoutComments).toMatch(
-      /@media \(max-width: 480px\)\s*\{[\s\S]*?\.curator-pick-slot\s*\{\s*--aur-curator-pick-art-opacity: 0\.\d+;/
+      /@media \(max-width: 480px\)\s*\{[\s\S]*?\.curator-pick-slot\s*\{\s*--aur-curator-pick-art-opacity: 0\.\d+;[\s\S]*?\.curator-pick-slot\.active\s*\{\s*--aur-curator-pick-art-opacity: 0\.\d+;/
     );
     expect(withoutComments).toMatch(
-      /@media \(prefers-reduced-motion: reduce\)\s*\{[\s\S]*?\.curator-pick-slot\.active::after\s*\{\s*animation: none;/
+      /@media \(prefers-reduced-motion: reduce\)\s*\{[\s\S]*?\.curator-pick-slot::after\s*\{\s*transition: none;/
     );
+    // the old one-shot keyframe is gone: a state transition replaces it
+    expect(css).not.toContain("aurelianCuratorArtIn");
   });
 
   it("uses !important only where the shared package or the markup forces it, and says why", () => {

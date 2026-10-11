@@ -10,14 +10,16 @@
    Page, top to bottom: a short opening (the eyebrow, headline and lede keep their
    type; only the space around them is tightened) -> service / review / payment as
    three open columns separated by hairlines, with small brass numbers and serif
-   titles -> one contact area: WhatsApp (number, the approved sentence and one
-   action) beside a secondary column holding the Discovery Box call to action and,
-   anchored lower-right as a quiet closing detail, the social links (the same
-   SocialFollow component the landing uses).
-   No card shells, fills, shadows or icon tiles.
+   titles -> one contact area, and only contact: WhatsApp (number, the approved
+   sentence and one action) beside a secondary column holding the same chat as a QR
+   code (so it can be opened from a phone while this page is on a desktop) and, under
+   it, the social links (the same SocialFollow component the landing uses). The
+   Builder call to action is not repeated here: the site header already carries it.
+   No card shells, fills or icon tiles; the QR is the one object with a surface, because
+   a QR needs its own light ground to scan.
 
    Reading order is the DOM order at every width; narrow screens simply stack the
-   same sequence (01, 02, 03, WhatsApp, call to action, social links). */
+   same sequence (01, 02, 03, WhatsApp, QR, social links). */
 
 .contact-page {
   padding-block: clamp(1.75rem, 3.5vw, 2.75rem) clamp(2.5rem, 5vw, 4rem);
@@ -117,29 +119,42 @@
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  justify-content: space-between;
   gap: 1.75rem;
   padding-left: clamp(2rem, 5vw, 4rem);
   border-left: 1px solid var(--border);
 }
 
-/* The reused follow cluster, as a quiet closing detail: the Discovery Box action
-   sits at the top of its column and the cluster is anchored to the lower-right
-   edge, level with the WhatsApp button's baseline, so it never floats mid-column. */
+/* The QR: the WhatsApp chat as a code. The image is its own light ground (a QR needs the light quiet zone
+   around it to scan), framed by a brass hairline held a few pixels off it, so it reads as a small plaque on
+   the dark page rather than a white square dropped into it. */
+.contact-qr {
+  display: grid;
+  justify-items: start;
+  gap: 1rem;
+  margin: 0;
+}
+
+.contact-qr__image {
+  display: block;
+  width: clamp(10rem, 14vw, 11rem);
+  height: auto;
+  aspect-ratio: 1;
+  border-radius: 4px;
+  outline: 1px solid rgba(200, 166, 101, 0.38);
+  outline-offset: 5px;
+}
+
+.contact-qr__caption {
+  max-width: 15rem;
+  color: var(--secondary);
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+/* The reused follow cluster, as a quiet closing detail under the QR. */
 .contact-channel .landing-follow {
-  align-self: flex-end;
-  justify-content: flex-end;
-}
-
-/* The Discovery Box call to action: an outlined, secondary action so WhatsApp, the
-   page's job, stays the one filled button. */
-.contact-channel__cta {
-  background: transparent;
-  color: var(--gold);
-}
-
-.contact-channel__cta:hover {
-  background: rgba(200, 166, 101, 0.12);
+  align-self: flex-start;
+  justify-content: flex-start;
 }
 
 @media (max-width: 900px) {
@@ -164,9 +179,24 @@
     border-left: 0;
   }
 
-  /* Stacked, the cluster follows the action in the same left-aligned reading line. */
-  .contact-channel .landing-follow {
-    align-self: flex-start;
-    justify-content: flex-start;
+  /* Stacked there is room beside the code, so the caption sits next to it instead of under it, and the
+     column stays short. */
+  .contact-qr {
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    gap: 1.5rem;
+  }
+
+  .contact-qr__image {
+    width: 10rem;
+    margin: 6px;
+  }
+}
+
+@media (max-width: 420px) {
+  /* On the narrowest phones the caption goes back under the code rather than squeezing beside it. */
+  .contact-qr {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1.25rem;
   }
 }

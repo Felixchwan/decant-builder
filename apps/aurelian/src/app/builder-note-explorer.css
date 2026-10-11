@@ -1,0 +1,333 @@
+/* Aurelian "Explorar por nota" -- the Note Explorer dialog in the current Aurelian language.
+
+   HOST-OWNED, paint only. The dialog is portalled to <body>, outside .builder-page, so every selector hangs
+   off `.builder-portal-root .note-explorer-modal`. That scope matters: the shared package builds this dialog
+   from the same base classes as the Review modal (`.final-summary-modal`, `.modal-header`) and the Composer
+   proposal rows (`.composer-proposal-item`), so nothing here may be keyed on those alone. The shared
+   stylesheet is frozen and its selectors have zero specificity, so plain host selectors win; this file
+   needs no !important. Nothing here can reach the public site, the shared package or Discovery Decants,
+   which never load it.
+
+   It reads the tokens builder-intelligence.css defines on `.builder-portal-root` (surfaces, brass
+   hairlines, ivory, muted, radii), so the note cells, chips and buttons are the same objects as the
+   Biblioteca olfativa's and the Collection Intelligence's rather than a third dialect:
+
+     was                                    now
+     bold 900 sans titles, navy "Cerrar"    serif ivory title, quiet brass-rimmed "Cerrar"
+     999px pills for notes, chips, search   5-8px tailored cells and chips, 8px search field
+     green-tinted fills                     warm near-black ground, brass hairlines
+     filled brass pill "Agregar a caja"     brass outline action, same as the catalog's add button
+
+   Behaviour, markup, labels and the layout (the two-column grid on desktop, one stacked scroll on phones)
+   are the package's. */
+
+.builder-portal-root .note-explorer-modal {
+  border: 1px solid var(--aur-intel-rim);
+  border-radius: 10px;
+  background: var(--aur-intel-card);
+  box-shadow:
+    0 28px 90px var(--aur-intel-shadow),
+    inset 0 1px 0 var(--aur-intel-hair);
+  scrollbar-color: var(--aur-intel-rim) transparent;
+  scrollbar-width: thin;
+}
+
+/* ---- Header --------------------------------------------------------------------------------------- */
+.builder-portal-root .note-explorer-modal .modal-header {
+  gap: 1rem;
+  margin-bottom: 0.5rem;
+  padding-bottom: 0.5rem;
+  background: none;
+}
+
+.builder-portal-root .note-explorer-modal .modal-header span {
+  color: var(--aur-intel-label);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.builder-portal-root .note-explorer-modal .modal-header h3 {
+  margin: 0.3rem 0 0;
+  color: var(--aur-intel-ink);
+  font-family: var(--aur-intel-serif);
+  font-size: 1.5rem;
+  font-weight: 400;
+  letter-spacing: 0.01em;
+  line-height: 1.15;
+}
+
+.builder-portal-root .note-explorer-modal .modal-header button {
+  min-height: 2.25rem;
+  padding: 0.4rem 0.85rem;
+  border: 1px solid var(--aur-intel-rim);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--aur-intel-ink);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition:
+    border-color 160ms ease,
+    background-color 160ms ease;
+}
+
+.builder-portal-root .note-explorer-modal .composer-setup-intro {
+  color: var(--aur-intel-ink-muted);
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+/* ---- Search --------------------------------------------------------------------------------------- */
+.builder-portal-root .note-explorer-modal .note-explorer-search input {
+  min-height: 2.5rem;
+  padding: 0.5rem 0.8rem;
+  border: 1px solid var(--aur-intel-rim);
+  border-radius: 8px;
+  background: var(--aur-intel-ground-deep);
+  color: var(--aur-intel-ink);
+  font-size: 0.9375rem;
+}
+
+.builder-portal-root .note-explorer-modal .note-explorer-search input::placeholder {
+  color: var(--aur-intel-ink-muted);
+}
+
+.builder-portal-root .note-explorer-modal .note-explorer-search input:focus {
+  border-color: var(--aur-intel-rim-strong);
+  outline: none;
+}
+
+/* ---- Notes: the same cells as the Biblioteca ------------------------------------------------------- */
+.builder-portal-root .note-explorer-modal .note-explorer-notes-grid {
+  grid-template-columns: repeat(auto-fill, minmax(9.5rem, 1fr));
+  gap: 0.5rem;
+}
+
+.builder-portal-root .note-explorer-modal .note-explorer-note-button {
+  gap: 0.6rem;
+  min-height: 2.75rem;
+  padding: 0.35rem 0.7rem 0.35rem 0.4rem;
+  border-color: var(--aur-intel-hair);
+  border-radius: var(--aur-intel-radius-card);
+  background: var(--aur-intel-ground);
+  color: var(--aur-intel-ink);
+}
+
+.builder-portal-root .note-explorer-modal .note-explorer-note-button:hover,
+.builder-portal-root .note-explorer-modal .note-explorer-note-button:focus-visible,
+.builder-portal-root .note-explorer-modal .scent-library-note-shell.is-selected .note-explorer-note-button {
+  border-color: var(--aur-intel-rim-strong);
+  background: var(--aur-intel-wash);
+  box-shadow: 0 0 14px var(--aur-intel-glow);
+  transform: none;
+}
+
+.builder-portal-root .note-explorer-modal .scent-library-note-name {
+  color: var(--aur-intel-ink);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+/* The count is the quiet half of the cell. */
+.builder-portal-root .note-explorer-modal .scent-library-note-count {
+  color: var(--aur-intel-label);
+  font-size: 0.6875rem;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  opacity: 1;
+}
+
+.builder-portal-root .note-explorer-modal .scent-library-note-image,
+.builder-portal-root .note-explorer-modal .scent-library-note-fallback {
+  border-color: var(--aur-intel-hair);
+  background: var(--aur-intel-ground-deep);
+  box-shadow: none;
+  color: var(--aur-intel-label);
+}
+
+/* ---- The chosen note: its exploration panel, chips and related notes ------------------------------ */
+.builder-portal-root .note-explorer-modal .note-explorer-inline-exploration {
+  padding: 0.8rem 0.9rem;
+  border: 1px solid var(--aur-intel-hair);
+  border-radius: var(--aur-intel-radius-card);
+  background: var(--aur-intel-ground);
+}
+
+.builder-portal-root .note-explorer-modal .note-explorer-selected-chip {
+  gap: 0.4rem;
+  padding: 0.25rem 0.3rem 0.25rem 0.6rem;
+  border-color: var(--aur-intel-rim);
+  border-radius: var(--aur-intel-radius-chip);
+  background: var(--aur-intel-wash);
+  color: var(--aur-intel-ink);
+  font-size: 0.8125rem;
+  font-weight: 500;
+}
+
+.builder-portal-root .note-explorer-modal .note-explorer-selected-chip-remove {
+  width: 1.375rem;
+  height: 1.375rem;
+  border-radius: 3px;
+  background: var(--aur-intel-wash);
+  color: var(--aur-intel-ink-soft);
+  cursor: pointer;
+}
+
+.builder-portal-root .note-explorer-modal .note-explorer-selected-chip-remove:hover,
+.builder-portal-root .note-explorer-modal .note-explorer-selected-chip-remove:focus-visible {
+  background: var(--aur-intel-mark-off);
+  color: var(--aur-intel-ink);
+}
+
+.builder-portal-root .note-explorer-modal .note-explorer-related-notes-label,
+.builder-portal-root .note-explorer-modal .note-explorer-sort span {
+  color: var(--aur-intel-label);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+}
+
+.builder-portal-root .note-explorer-modal .note-explorer-related-chip {
+  min-height: 2rem;
+  gap: 0.35rem;
+  padding: 0.25rem 0.65rem;
+  border-color: var(--aur-intel-hair);
+  border-radius: var(--aur-intel-radius-chip);
+  background: var(--aur-intel-ground);
+  color: var(--aur-intel-ink-soft);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.builder-portal-root .note-explorer-modal .note-explorer-related-chip:hover,
+.builder-portal-root .note-explorer-modal .note-explorer-related-chip:focus-visible {
+  border-color: var(--aur-intel-rim-strong);
+  background: var(--aur-intel-wash);
+  color: var(--aur-intel-ink);
+  transform: none;
+}
+
+.builder-portal-root .note-explorer-modal .note-explorer-related-chip-count {
+  color: var(--aur-intel-label);
+  font-size: 0.6875rem;
+  font-weight: 600;
+}
+
+/* ---- Results ------------------------------------------------------------------------------------- */
+.builder-portal-root .note-explorer-modal .note-explorer-results-heading {
+  color: var(--aur-intel-ink);
+  font-family: var(--aur-intel-serif);
+  font-size: 1.0625rem;
+  font-weight: 400;
+  line-height: 1.25;
+}
+
+.builder-portal-root .note-explorer-modal .note-explorer-sort select {
+  min-height: 2rem;
+  padding: 0.25rem 0.6rem;
+  border: 1px solid var(--aur-intel-rim);
+  border-radius: 6px;
+  background-color: var(--aur-intel-ground-deep);
+  color: var(--aur-intel-ink);
+  font-size: 0.8125rem;
+  font-weight: 500;
+}
+
+.builder-portal-root .note-explorer-modal .note-explorer-empty-message {
+  color: var(--aur-intel-ink-muted);
+}
+
+.builder-portal-root .note-explorer-modal .note-explorer-result-item {
+  gap: 0.75rem;
+  padding: 0.7rem 0.8rem;
+  border-color: var(--aur-intel-hair);
+  border-radius: var(--aur-intel-radius-card);
+  background: var(--aur-intel-ground);
+}
+
+.builder-portal-root .note-explorer-modal .note-explorer-result-item:hover {
+  border-color: var(--aur-intel-rim);
+  background: var(--aur-intel-wash);
+}
+
+.builder-portal-root .note-explorer-modal .note-explorer-result-item strong {
+  color: var(--aur-intel-ink);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.builder-portal-root .note-explorer-modal .note-explorer-result-item div span,
+.builder-portal-root .note-explorer-modal .note-explorer-result-item .note-explorer-prominence-level {
+  color: var(--aur-intel-ink-muted);
+  font-size: 0.75rem;
+}
+
+/* The add action matches the catalog's own "Agregar a la caja": a brass outline, not a filled pill. */
+.builder-portal-root .note-explorer-modal .composer-proposal-add-button {
+  min-height: 2.25rem;
+  padding: 0.4rem 0.85rem;
+  border: 1px solid var(--aur-intel-rim-strong);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--aur-intel-brass);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  letter-spacing: 0.03em;
+  cursor: pointer;
+  transition:
+    border-color 160ms ease,
+    background-color 160ms ease;
+}
+
+.builder-portal-root .note-explorer-modal .composer-proposal-add-button:hover:not(:disabled) {
+  border-color: var(--aur-intel-brass);
+  background: var(--aur-intel-wash);
+}
+
+.builder-portal-root .note-explorer-modal .composer-proposal-add-button:disabled {
+  border-color: var(--aur-intel-hair);
+  color: var(--aur-intel-ink-muted);
+}
+
+/* ---- Focus: the same brass ring as every other Aurelian control ---------------------------------- */
+.builder-portal-root .note-explorer-modal button:focus-visible,
+.builder-portal-root .note-explorer-modal select:focus-visible,
+.builder-portal-root .note-explorer-modal input:focus-visible {
+  outline: 2px solid var(--aur-intel-brass);
+  outline-offset: 2px;
+}
+
+.builder-portal-root .note-explorer-modal .note-explorer-result-detail-trigger:focus-visible {
+  outline-color: var(--aur-intel-brass);
+}
+
+.builder-portal-root .note-explorer-modal .note-explorer-notes-grid,
+.builder-portal-root .note-explorer-modal .note-explorer-results,
+.builder-portal-root .note-explorer-modal .note-explorer-body {
+  scrollbar-color: var(--aur-intel-rim) transparent;
+  scrollbar-width: thin;
+}
+
+@media (pointer: coarse) {
+  .builder-portal-root .note-explorer-modal .composer-proposal-add-button,
+  .builder-portal-root .note-explorer-modal .modal-header button,
+  .builder-portal-root .note-explorer-modal .note-explorer-related-chip {
+    min-height: 2.75rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .builder-portal-root .note-explorer-modal .modal-header h3 {
+    font-size: 1.25rem;
+  }
+
+  .builder-portal-root .note-explorer-modal .note-explorer-notes-grid {
+    grid-template-columns: repeat(auto-fill, minmax(8.5rem, 1fr));
+  }
+}

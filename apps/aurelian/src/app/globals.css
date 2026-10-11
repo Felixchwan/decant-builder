@@ -395,22 +395,6 @@ h1 { max-width:15ch; margin-bottom:1.4rem; font-size:clamp(2.8rem,7vw,6.4rem); }
 .bonus-note { max-width:52rem; margin:1rem 0 3rem; padding:clamp(1.5rem,4vw,3rem); border:1px solid var(--border); background:linear-gradient(135deg,rgba(200,166,101,.1),rgba(17,17,15,.94)); }
 .bonus-note h2 { font-family:Georgia,serif; font-size:clamp(1.7rem,3vw,2.6rem); font-weight:400; }
 .bonus-note > p:last-child { margin-bottom:0; color:var(--secondary); }
-/* When the first-time Discovery Intent screen is active, its own headline is
-   the entry moment — the static page header above it would otherwise repeat
-   that moment. Purely presentational and self-healing: if .discovery-intent
-   is absent (returning visitor, deep link, or after an intent is chosen),
-   the header renders exactly as before.
-   Governs the header from hydration onward only. The gap before hydration
-   (BuilderExperience's chunk hasn't loaded yet, so .discovery-intent can't
-   exist yet for this rule to match) is closed separately by an inline
-   pre-hydration script in app/build-your-box/page.jsx — see the comment
-   there for why both exist. */
-body:has(.discovery-intent) #builder-entry-header { display:none; }
-.discovery-intent__grid { display:grid; grid-template-columns:repeat(2,1fr); gap:.85rem; margin-top:2rem; }
-.discovery-intent__tile { display:flex; flex-direction:column; align-items:flex-start; gap:.4rem; padding:1.5rem; border:1px solid var(--border); background:var(--surface); color:var(--text); text-align:left; cursor:pointer; transition:border-color .2s ease,transform .2s ease; }
-.discovery-intent__tile:hover,.discovery-intent__tile:focus-visible { border-color:var(--gold); transform:translateY(-2px); }
-.discovery-intent__tile-title { font-family:Georgia,"Times New Roman",serif; font-size:1.35rem; font-weight:400; }
-.discovery-intent__tile-description { color:var(--secondary); font-size:.88rem; }
 .builder-page { padding-bottom:5rem; }
 .builder-loading { min-height:30rem; display:grid; place-items:center; color:var(--muted); }
 .builder-page > .builder-theme-root { width:min(1440px,100%); margin-inline:auto; }
@@ -452,7 +436,7 @@ body:has(.discovery-intent) #builder-entry-header { display:none; }
   .aurelian-hero__copy { padding-block:3rem 2.5rem; }
   .section { padding-block:2rem; }
   .final-cta { padding-block:2.5rem; }
-  .feature-grid,.steps,.featured-grid,.catalog-explorer-grid,.discovery-intent__grid { grid-template-columns:1fr; }
+  .feature-grid,.steps,.featured-grid,.catalog-explorer-grid { grid-template-columns:1fr; }
   .steps { gap:2.5rem; }
   .catalog-page .catalog-controls { grid-template-columns:1fr; }
   .catalog-status { align-items:flex-start; flex-direction:column; gap:.35rem; }

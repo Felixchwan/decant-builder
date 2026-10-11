@@ -19,7 +19,7 @@ const ICONS = {
 
 // A quiet closing detail: a short label, then the two accounts. It is a line, not
 // a section: no heading, no band, no second call to action. The landing uses the
-// default "Síguenos en"; the contact page passes its own wording. The links come
+// default "Síguenos en", and so does the contact page. The links come
 // from the one host-owned list in lib/socialLinks.js.
 export function SocialFollow({ label = "Síguenos en" }) {
   return (

@@ -14,13 +14,9 @@ import { useIntroPreference } from "./IntroPreferenceProvider.jsx";
 // row once dismissed (a generic, opt-in presentation hook the Builder
 // exposes), not by this component. This component itself still never
 // touches storage or Builder/domain state directly.
-// Orthogonal to the existing pre-hydration visibility mechanism in
-// app/build-your-box/page.jsx (which hides this same #builder-entry-header
-// element before hydration for genuine first-time visitors, so it doesn't
-// compete with the Discovery Intent screen): that mechanism runs once,
-// synchronously, before this component ever hydrates; this toggle only
-// ever acts afterward, on a user click or the provider's post-mount sync,
-// so the two never race.
+// This header is part of the first paint for every visitor: nothing hides it before hydration (there is no
+// entry screen in front of the Builder any more), so this toggle only ever acts afterward, on a user click or
+// the provider's post-mount sync.
 export function BuilderIntroHeader() {
   const { isIntroDismissed, dismissIntro } = useIntroPreference();
   const measureRef = useRef(null);
