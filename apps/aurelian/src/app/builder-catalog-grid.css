@@ -1,0 +1,46 @@
+/* Aurelian catalog grid: the number of perfume cards per row follows the catalog's own width.
+
+   HOST-OWNED. The shared Builder stylesheet is frozen and pinned by hash, and while the right panel can be
+   collapsed (the layout--panel-collapsible modifier, which only Aurelian opts into) it gives the catalog two
+   different track recipes:
+
+     collapsed   repeat(auto-fit, minmax(220px, 237px))   as many cards as fit
+     expanded    repeat(3, minmax(220px, 237px))          exactly three, whatever the width
+
+   The fixed three had two faults. Too narrow for it (about 1170px viewport and below, where the pane is under
+   ~740px), three 220px cards do not fit, so they spilled over the edges of the catalog card. And wider than
+   three cards need, the spare width went unused as empty gutters, so a bigger screen or a browser zoom-out
+   never added a card.
+
+   Both states now use ONE recipe, taking the count from the width:
+
+     220px  the narrowest the approved card stays healthy (bottle, info mark, brand chip, name, points badge
+            and the "Agregar a la caja" action, with its padding); it is also the floor the shared collapsed
+            recipe has always used
+     1fr    the columns then share the row evenly, so no width is left over as a gutter
+
+   Why one recipe for both: the panel collapses by animating its width while the layout class flips at once, so
+   two recipes that count differently make the count jump the wrong way for a few frames (the collapsed one
+   counted by its 237px maximum, so four columns briefly became three before the pane had grown enough to hold
+   five). With one recipe the count only ever follows the width.
+
+   Why auto-fill and not auto-fit: a column's width is counted from its minimum when its maximum is flexible,
+   which is what lets four 228px cards fit a 972px pane where a 237px cap would only ever fit three. auto-fill
+   keeps the empty columns, so a search that leaves two fragrances shows two card-sized cards instead of two
+   cards stretched across the row (auto-fit would collapse the empty columns and hand their width to those two).
+
+   It is the grid's own width that decides, so it reflows with the panel's width transition, a window resize
+   and browser zoom alike, with no breakpoint and no script. How much width the catalog has to decide with is
+   the Builder shell's (globals.css, --aur-builder-max): the same width, up to 2200px, with the panel open or
+   collapsed, and the panel itself stays its fixed 360px, so a wider screen adds cards, not panel. (The shell
+   was 1440px while the panel was open, which on its own held the expanded catalog to four columns.)
+
+   Same condition as the shared rules it replaces (desktop two-column layout, 981px and up); the tab layout
+   below it is untouched. Each selector is one class above its shared counterpart, so it wins without
+   !important. */
+@media (min-width: 981px) {
+  .builder-page .layout.layout--panel-collapsible:not(.layout--panel-collapsed) .catalog-grid,
+  .builder-page .layout.layout--panel-collapsed .catalog-grid {
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  }
+}

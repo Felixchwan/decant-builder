@@ -78,20 +78,26 @@
 }
 
 /* Wide layouts: the copy keeps to the left ~60% of the plate (the art's own
-   dark negative space) and the artwork owns the right. */
+   dark negative space) and the artwork owns the right. It also keeps an
+   editorial measure: never wider than 36rem, which is the width 62% reaches on
+   the 1010px plate of a 1440px window, so that layout is exactly as it was.
+   The plate itself now keeps growing with the window (the Builder shell is as
+   wide as the screen allows, see globals.css), and without the cap the copy
+   would grow with it: past a readable line length, and a different number of
+   lines (so a different plate height) than the same plate collapsed, which
+   moved the catalog by a line or two every time the panel was toggled. */
 @media (min-width: 981px) {
   .builder-page #builder-entry-header .eyebrow,
   .builder-page #builder-entry-header h1,
   .builder-page #builder-entry-header .lede {
-    max-width: 62%;
+    max-width: min(62%, 36rem);
   }
 
   /* Tooling panel collapsed: globals.css widens the plate to the wider catalog
      (the Builder's own .layout--panel-collapsed hook). The extra width goes to
      the artwork, not the copy:
-       - the copy column keeps an editorial measure (62% of the plate, never
-         more than 36rem -- the same width the expanded plate reaches at its
-         widest);
+       - the copy column keeps the same editorial measure as the expanded
+         plate (62% of it, never more than 36rem: set once, above);
        - the art keeps its approved scale (plate height, so it is never
          stretched or distorted) and is anchored clear of the header's docked
          "Mi caja" card. With the panel collapsed that card (360px, anchored to
@@ -130,12 +136,6 @@
       rgba(8, 7, 7, 0.97) 100%
     );
     --intro-art-underlay: linear-gradient(rgba(8, 7, 7, 0.97), rgba(8, 7, 7, 0.97));
-  }
-
-  .builder-page:has(.layout--panel-collapsed) #builder-entry-header .eyebrow,
-  .builder-page:has(.layout--panel-collapsed) #builder-entry-header h1,
-  .builder-page:has(.layout--panel-collapsed) #builder-entry-header .lede {
-    max-width: min(62%, 36rem);
   }
 }
 

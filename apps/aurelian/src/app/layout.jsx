@@ -3,6 +3,7 @@ import "./globals.css";
 import "./builder-zoning.css";
 import "./builder-intro.css";
 import "./builder-geometry.css";
+import "./builder-catalog-grid.css";
 import "./builder-header.css";
 import "./builder-collection-card.css";
 import "./builder-actions.css";

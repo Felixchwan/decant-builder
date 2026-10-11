@@ -243,44 +243,39 @@ describe("Aurelian application foundation", () => {
     expect(stylesheet).toMatch(/@media \(max-width:900px\) \{[^}]*\.site-header__builder-slot[^}]*display:none/s);
   });
 
-  it("keeps the docked slot's right edge locked to the catalog/panel column's own centered-cap math, not a flat viewport-relative offset", () => {
+  it("keeps the docked slot's right edge locked to the catalog/panel column's own centered-shell math, from one shared variable, not a flat offset", () => {
     const stylesheet = readFileSync(join(APP_ROOT, "src", "app", "globals.css"), "utf8");
-    // .builder-page > .builder-theme-root caps the whole catalog/panel area
-    // at 1440px, centered (margin-inline:auto) -- a real, pre-existing
-    // constraint this app applies on top of the shared package's own .app
-    // container. A plain `right:12px` on the slot only matched the panel's
-    // right edge at the one viewport width where that cap and the raw
-    // viewport happened to coincide; confirmed live it was off by -232px
-    // at 1920px. max(12px, calc(50% - 708px)) reproduces the same
-    // half-the-overflow-past-1440px centering math domain the panel
-    // itself uses, using percentages of the slot's own containing block
-    // (.site-header's real, scrollbar-aware width) rather than 100vw.
+    // .builder-page > .builder-theme-root is the centered shell the catalog and the panel live in. A plain
+    // right:12px on the slot only matched the panel's right edge at the one viewport width where the shell and
+    // the raw viewport happened to coincide. The slot reproduces the shell's own centering math instead: half
+    // the shell's width, less .app's 12px of inline padding, measured from the header's centre line. That
+    // distance is --aur-builder-edge, defined once next to the shell's width and read by the slot and by the
+    // intro header, so no other rule mirrors the cap as a literal.
     const slotMatch = stylesheet.match(/\.site-header__builder-slot\s*\{([^}]*)\}/);
-    expect(slotMatch[1]).toMatch(/right:\s*max\(12px,\s*calc\(50% - 708px\)\)/);
+    expect(slotMatch[1]).toMatch(/right:\s*max\(12px,\s*calc\(50% - var\(--aur-builder-edge\)\)\)/);
+    expect(stylesheet).toMatch(
+      /:root\s*\{\s*--aur-builder-max:2200px;\s*--aur-builder-edge:calc\(var\(--aur-builder-max\) \/ 2 - 12px\);\s*\}/
+    );
     const capMatch = stylesheet.match(/\.builder-page > \.builder-theme-root\s*\{([^}]*)\}/);
-    expect(capMatch[1]).toMatch(/width:\s*min\(1440px,\s*100%\)/);
+    expect(capMatch[1]).toMatch(/width:\s*min\(var\(--aur-builder-max\),\s*100%\)/);
     expect(capMatch[1]).toMatch(/margin-inline:\s*auto/);
   });
 
-  it("widens the builder root's cap only while the panel is collapsed, leaving the expanded cap and its dependents alone", () => {
+  it("gives the Builder shell one width in both panel states, so extra screen width always reaches the catalog and never the panel", () => {
     const stylesheet = readFileSync(join(APP_ROOT, "src", "app", "globals.css"), "utf8");
-    // Collapsing the right panel is a request for more catalog width, but
-    // the base 1440px cap above (not the shared package's own .app) is what
-    // actually binds at wide viewports once the real viewport exceeds it --
-    // confirmed live: 1920px and 2560px collapsed produced the identical
-    // catalog width until this override existed. Scoped with :has() to the
-    // collapsed state specifically, so the base rule asserted above (and
-    // everything keyed to its exact 1440px value -- the docked header slot
-    // and #builder-entry-header width-match, both already documented as
-    // expanded-only) keeps seeing it unchanged.
-    const collapsedCapMatch = stylesheet.match(
-      /\.builder-page > \.builder-theme-root:has\(\.layout--panel-collapsed\)\s*\{([^}]*)\}/
-    );
-    expect(collapsedCapMatch).not.toBeNull();
-    // Reuses .app's own pre-existing 2200px ceiling (packages/builder
-    // styles.css) rather than a new number -- that's the shared package's
-    // own top-level content-width cap, already applied to both hosts.
-    expect(collapsedCapMatch[1]).toMatch(/width:\s*min\(2200px,\s*100%\)/);
+    const code = stylesheet.replace(/\/\*[\s\S]*?\*\//g, "");
+    // The shell used to be capped at 1440px while the panel was open (2200px only while collapsed), so the
+    // catalog stopped gaining room at 1440px with the panel open. There is now one cap, and no state-dependent
+    // override of it.
+    expect(code).not.toMatch(/\.builder-theme-root:has\(\.layout--panel-collapsed\)/);
+    expect(code).not.toMatch(/min\(1440px/);
+    expect(code).not.toMatch(/calc\(50% - (?:708|302|1088|1052)px\)/);
+    // 2200px is the shared package's own top-level content-width ceiling (.app), not a third number.
+    const sharedCss = readFileSync(join(REPOSITORY_ROOT, "packages", "builder", "styles.css"), "utf8");
+    expect(sharedCss).toMatch(/:where\(\.builder-scope\) \.app \{\s*width: min\(2200px, 100%\);\s*padding-inline: 12px;/);
+    // The panel keeps its own fixed column: the slot and the shared layout's second track are both 360px.
+    expect(code).toMatch(/\.site-header__builder-slot\s*\{[^}]*width:360px/);
+    expect(sharedCss).toMatch(/\.layout \{\s*grid-template-columns: minmax\(0, 1fr\) 360px;\s*gap: 16px;/);
   });
 
   it("gives the docked card the same background/blur as the header it visually sits inside, not the shared package's default surface", () => {

@@ -91,16 +91,14 @@ describe("Aurelian intro panel styling (host-owned, presentation-only)", () => {
     });
   });
 
-  it("expands the plate, not the copy: the copy keeps a capped editorial measure when collapsed", () => {
-    const copyRule = (collapsed) =>
-      rules.find(
-        ({ selector }) =>
-          selector.includes(".eyebrow") &&
-          selector.includes(".lede") &&
-          selector.includes(".layout--panel-collapsed") === collapsed
-      );
-    expect(copyRule(false).body).toMatch(/max-width:\s*62%;/);
-    expect(copyRule(true).body).toMatch(/max-width:\s*min\(62%,\s*36rem\);/);
+  it("expands the plate, not the copy: the copy keeps one capped editorial measure in both panel states", () => {
+    const copyRules = rules.filter(({ selector }) => selector.includes(".eyebrow") && selector.includes(".lede"));
+    // Set once, for the expanded plate; collapsed does not restate it. 36rem is the width 62% reaches on the
+    // 1010px plate of a 1440px window, so that layout is as it always was, and a wider plate (the shell now
+    // grows with the screen) no longer lengthens the copy or changes the plate's height between the two states.
+    expect(copyRules).toHaveLength(1);
+    expect(copyRules[0].selector).not.toContain(".layout--panel-collapsed");
+    expect(copyRules[0].body).toMatch(/max-width:\s*min\(62%,\s*36rem\);/);
   });
 
   it("keeps the approved expanded composition as the default and never distorts the artwork", () => {
@@ -145,13 +143,16 @@ describe("Aurelian intro panel styling (host-owned, presentation-only)", () => {
 
     // Measured collapsed geometry: .app padding 12px; rail 20px + gap 16px = 48px on the right.
     const rule = globals.slice(collapsed).match(/\{([^}]*)\}/)[1];
-    expect(rule).toMatch(/margin-left:\s*max\(12px,\s*calc\(50%\s*-\s*1088px\)\)/);
-    expect(rule).toMatch(/margin-right:\s*max\(48px,\s*calc\(50%\s*-\s*1052px\)\)/);
+    // The shell is the same width in both states (one --aur-builder-edge), so only the right edge moves: the
+    // rail and its gap (48px, of which .app's 12px padding is already in the anchor) instead of the whole panel.
+    expect(rule).not.toMatch(/margin-left/);
+    expect(rule).toMatch(/margin-right:\s*max\(48px,\s*calc\(50%\s*-\s*var\(--aur-builder-edge\)\s*\+\s*36px\)\)/);
 
-    // The expanded base rule itself is untouched.
+    // The expanded base rule: left on the shell's content edge, right where the catalog column ends (the panel's
+    // 390px row + the layout's 16px gap = 406px past the anchor, floored at 418px).
     const baseRule = globals.slice(base).match(/\{([^}]*)\}/)[1];
-    expect(baseRule).toMatch(/margin-left:\s*max\(12px,\s*calc\(50%\s*-\s*708px\)\)/);
-    expect(baseRule).toMatch(/margin-right:\s*max\(418px,\s*calc\(50%\s*-\s*302px\)\)/);
+    expect(baseRule).toMatch(/margin-left:\s*max\(12px,\s*calc\(50%\s*-\s*var\(--aur-builder-edge\)\)\)/);
+    expect(baseRule).toMatch(/margin-right:\s*max\(418px,\s*calc\(50%\s*-\s*var\(--aur-builder-edge\)\s*\+\s*406px\)\)/);
   });
 
   it("is absent from the shared Builder package and the Discovery Decants host", () => {
