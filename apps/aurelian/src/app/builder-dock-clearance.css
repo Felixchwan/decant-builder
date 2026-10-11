@@ -1,0 +1,49 @@
+/* Aurelian: the docked "Mi caja" card and the catalog's search + filters, with the right panel collapsed.
+
+   HOST-OWNED, desktop only (981px and up, where the card docks into the header).
+
+   The card hangs from the sticky header: 360px wide, about 318px tall, pinned to the top of the viewport at
+   the shell's right edge. Expanded, the panel column sits right under it and the layout reserves that footprint,
+   so nothing of the catalog is ever beneath it. Collapsing the panel gives that column to the catalog, but the
+   card stays where it is and nothing reserves it any more. Wherever the catalog's search and filters scroll into
+   the top 318px (which is exactly where they rest after the "Catalogo" nav or any scroll to the catalog), the
+   card is on top of them. It is not only paint: the card takes the pointer, so the right end of the search field
+   and the last filter ("Orden") could not be clicked at any width, and at 1280px and below part of the third
+   select too. (At scroll 0 the intro plate sits between, which is why this only shows once the catalog is up.)
+
+   The fix reserves the card's footprint on the two control rows, only while it can be in the way: the panel is
+   collapsed AND the docked card is open (its folded strip lives inside the header's own 69px, so it hangs over
+   nothing). The grid below is not touched: the cards keep the whole widened catalog.
+
+     margin-right = 360px - 36px
+
+   360px   the card's width (the docked slot, globals.css; also the panel column, packages/builder styles.css)
+   36px    what the collapsed catalog already leaves on its right for the rail (20px) and the layout gap (16px),
+           so the card overhangs the catalog section by 360 - 36 = 324px (the same 36px the collapsed intro
+           header's right margin uses in globals.css)
+
+   Taking that overhang as the margin puts the controls' right edge one section inset (the controls' own
+   distance from the section edge, 19px) short of the card's left edge: the same gutter they keep from every
+   other edge, with no number of its own. It is the same at every width, because the card and the catalog both
+   hang from the shell's right edge (--aur-builder-edge), so it needs no breakpoint and no script.
+
+   The panel collapses by animating its column's width over 220ms (ease), and the catalog's right edge moves
+   with it. The margin takes the same 220ms ease, in the same motion-preference condition, so the controls'
+   right edge follows the panel instead of jumping when the layout class flips (expanded -> collapsed would
+   otherwise snap 324px narrower, and back).
+
+   Expanded, nothing here applies: the layout is exactly what it was. */
+@media (min-width: 981px) {
+  :root:has(.layout--panel-collapsed):has(#aurelian-builder-summary-slot .builder-panel-sticky-summary-card.is-docked:not(.is-collapsed))
+    .builder-page
+    .catalog-section
+    > :is(.catalog-controls, .filters) {
+    margin-right: calc(360px - 36px);
+  }
+}
+
+@media (min-width: 981px) and (prefers-reduced-motion: no-preference) {
+  .builder-page .catalog-section > :is(.catalog-controls, .filters) {
+    transition: margin-right 220ms ease;
+  }
+}
