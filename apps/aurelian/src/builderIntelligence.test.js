@@ -72,7 +72,7 @@ describe("Collection Intelligence: Aurelian host paint (builder-intelligence.css
     discoveryDecantsSources.forEach((path) => {
       const source = read(path);
 
-      expect(source, path).not.toMatch(/aur-intel|builder-intelligence|showAccordEvidence|accord-evidence|curator-pick-keepsake|aur-curator-pick-art/);
+      expect(source, path).not.toMatch(/aur-intel|builder-intelligence|showAccordEvidence|accord-evidence|showBalanceHelp|balance-help|curator-pick-keepsake|aur-curator-pick-art/);
     });
   });
 

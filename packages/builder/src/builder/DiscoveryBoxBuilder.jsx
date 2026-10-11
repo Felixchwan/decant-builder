@@ -26,6 +26,7 @@ import { validateBuilderConfig } from "./config/index.js";
  * @param {boolean} [props.showAddedState] Optional, opt-in presentation capability: when true, a catalog card whose fragrance is already in the box renders its add button in an added state (an `is-added` class and the localized "Added" label instead of "Add to box"), so a host can style it. Defaults to false, which renders every card's add button exactly as it always has. Presentation only: the add handler, duplicate protection and full-box disabling are the same either way.
  * @param {boolean} [props.showRecommendationLenses] Optional, opt-in presentation capability: when true, the two individual recommendation lanes (the opportunity pick and "based on your picks") each render a compact lens label with a short hint and a `recommendation-lane--versatility` / `recommendation-lane--affinity` class, so a host can tell them apart and style them. Defaults to false, which renders both lanes exactly as they always have (no extra DOM, no extra class). Presentation only: scoring, candidates, reasons, order, carousels and add handlers are the same either way.
  * @param {boolean} [props.showAccordEvidence] Optional, opt-in presentation capability: when true, the "Dominant Accords" chips in the expanded Collection Intelligence are real buttons that open a compact evidence card (bottle, name and house of each fragrance behind the count) on mouse hover, keyboard focus, or click/tap, instead of the hover-only name tooltip. Defaults to false, which renders the chips and tooltip exactly as they always have. Presentation only: which fragrances count toward an accord is the same either way.
+ * @param {boolean} [props.showBalanceHelp] Optional, opt-in presentation capability: when true, the "Collection Balance" heading in Collection Intelligence gets one small info button that opens a short "how to read this balance" help (what each of the five indicators describes, and that there is no ideal score). Defaults to false, which renders the heading exactly as it always has. Copy only: no metric, level or formula is read or changed.
  * @param {() => void} [props.onCatalogInfoRequest] Optional, opt-in presentation hook: when supplied, renders a compact accessible info button at the end of the catalog heading row and calls this handler on click. Absent by default, which renders the row exactly as it always has -- no button, no extra DOM. The Builder never interprets what the click should do; a host wires this to whatever local presentation concern it owns (e.g. restoring a dismissed intro block).
  */
 export default function DiscoveryBoxBuilder({
@@ -48,6 +49,7 @@ export default function DiscoveryBoxBuilder({
   showAddedState = false,
   showRecommendationLenses = false,
   showAccordEvidence = false,
+  showBalanceHelp = false,
   onCatalogInfoRequest,
 }) {
   if (!config) {
@@ -114,6 +116,7 @@ export default function DiscoveryBoxBuilder({
       showAddedState={showAddedState}
       showRecommendationLenses={showRecommendationLenses}
       showAccordEvidence={showAccordEvidence}
+      showBalanceHelp={showBalanceHelp}
       onCatalogInfoRequest={onCatalogInfoRequest}
     />
   );

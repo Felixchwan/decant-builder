@@ -776,6 +776,15 @@ export const enUS = {
   "collectionIntelligence.balance.freshness": "Freshness",
   "collectionIntelligence.balance.seasonBalance": "Season Balance",
   "collectionIntelligence.balance.signatureCoherence": "Signature Coherence",
+  "collectionIntelligence.balanceHelp.title": "How to read this balance",
+  "collectionIntelligence.balanceHelp.intro": "Each indicator describes one dimension of your selection. Signature Coherence requires at least 3 fragrances.",
+  "collectionIntelligence.balanceHelp.versatility": "Variety of uses, moods and seasons across your box.",
+  "collectionIntelligence.balanceHelp.breadth": "Diversity of accords and notes across your fragrances.",
+  "collectionIntelligence.balanceHelp.freshness": "Presence of fresh, clean, citrus, aquatic or green profiles.",
+  "collectionIntelligence.balanceHelp.seasonBalance": "How even the relative presence of the four seasons is.",
+  "collectionIntelligence.balanceHelp.signatureCoherence":
+    "How similar the overall profile of your fragrances is across notes, accords, moods, occasions and seasons.",
+  "collectionIntelligence.balanceHelp.footer": "There is no ideal score: the balance describes your collection, it doesn’t grade it.",
   "collectionIntelligence.accordEvidence.countOne": "1 fragrance",
   "collectionIntelligence.accordEvidence.countMany": "{count} fragrances",
 

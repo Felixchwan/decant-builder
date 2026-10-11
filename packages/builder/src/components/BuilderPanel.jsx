@@ -53,6 +53,7 @@ import {
   SEASON_AXIS_ORDER,
 } from "../builder/presentation/seasonProfileViewModel.js";
 import {
+  buildBalanceHelpModel,
   getBalanceDimensionLabel,
   getBoxIntelligenceCoverageLabel,
   getBoxIntelligenceProfileLabel,
@@ -75,6 +76,7 @@ import {
 import { buildFinalizationModel } from "../builder/internal/finalization/buildFinalizationModel.js";
 import { getTierData } from "../utils/tierUtils";
 import CollectionCard from "./CollectionCard";
+import BalanceHelp from "./BalanceHelp.jsx";
 import { createTranslator } from "../i18n/createTranslator.js";
 import { ANALYTICS_EVENTS } from "../analytics/events.js";
 import { noopAnalytics } from "../analytics/noopAnalytics.js";
@@ -182,6 +184,7 @@ const BuilderPanel = forwardRef(function BuilderPanel({
   onOpenRecommendationPerfumeDetails,
   showRecommendationLenses = false,
   showAccordEvidence = false,
+  showBalanceHelp = false,
   dockShareActions = false,
 }, ref) {
     const translator = useMemo(
@@ -1087,6 +1090,7 @@ const BuilderPanel = forwardRef(function BuilderPanel({
         portalRoot={portalRoot}
         selectedDnaAccord={selectedDnaAccord}
         showAccordEvidence={showAccordEvidence}
+        showBalanceHelp={showBalanceHelp}
         onToggle={() => setIsCollectionSnapshotOpen((isOpen) => !isOpen)}
         onOpenScentLibrary={() => setIsNotesModalOpen(true)}
         onOpenDnaAccord={setSelectedDnaAccord}
@@ -2736,6 +2740,7 @@ function CollectionSnapshot({
   assetResolver,
   selectedPerfumes,
   showAccordEvidence = false,
+  showBalanceHelp = false,
   boxSummary,
   coverageSummary,
   intelligence,
@@ -2877,7 +2882,14 @@ function CollectionSnapshot({
       )}
 
       <div className="collection-balance-summary">
-        <span>{translator?.t?.("collectionIntelligence.collectionBalance") || "Collection Balance"}</span>
+        {showBalanceHelp ? (
+          <BalanceHelp
+            label={translator?.t?.("collectionIntelligence.collectionBalance") || "Collection Balance"}
+            model={buildBalanceHelpModel({ rows: balanceRows, translator })}
+          />
+        ) : (
+          <span>{translator?.t?.("collectionIntelligence.collectionBalance") || "Collection Balance"}</span>
+        )}
 
         <div className="collection-balance-list">
           {balanceRows.map((row) => {

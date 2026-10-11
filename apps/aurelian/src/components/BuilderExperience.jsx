@@ -145,6 +145,9 @@ export function BuilderExperience({
       // count) on hover, focus or tap (painted in builder-intelligence.css); Discovery Decants never
       // passes this and keeps its hover tooltip.
       showAccordEvidence
+      // Aurelian gives the Collection Balance heading one small info button that explains how to read the five
+      // indicators (painted in builder-balance-help.css); Discovery Decants never passes this.
+      showBalanceHelp
     />
   );
 }

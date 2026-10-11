@@ -91,6 +91,46 @@ export function getBalanceDimensionLabel(label, translator) {
   return key ? translate(translator, key, undefined, label) : label;
 }
 
+// What each Collection Balance dimension means, for the "how to read this balance" help. Keyed by the same
+// English row labels as BALANCE_DIMENSION_KEYS; the English copy is the fallback if a locale lacks a key.
+const BALANCE_HELP_KEYS = {
+  Versatility: ["collectionIntelligence.balanceHelp.versatility", "Variety of uses, moods and seasons across your box."],
+  Breadth: ["collectionIntelligence.balanceHelp.breadth", "Diversity of accords and notes across your fragrances."],
+  Freshness: ["collectionIntelligence.balanceHelp.freshness", "Presence of fresh, clean, citrus, aquatic or green profiles."],
+  "Season Balance": ["collectionIntelligence.balanceHelp.seasonBalance", "How even the relative presence of the four seasons is."],
+  "Signature Coherence": [
+    "collectionIntelligence.balanceHelp.signatureCoherence",
+    "How similar the overall profile of your fragrances is across notes, accords, moods, occasions and seasons.",
+  ],
+};
+
+// Pure view model for the help: copy only, derived from the rows being shown (so it always explains exactly the
+// dimensions on screen, in their order) and never from a score. It describes; it does not grade.
+export function buildBalanceHelpModel({ rows, translator }) {
+  return {
+    title: translate(translator, "collectionIntelligence.balanceHelp.title", undefined, "How to read this balance"),
+    intro: translate(
+      translator,
+      "collectionIntelligence.balanceHelp.intro",
+      undefined,
+      "Each indicator describes one dimension of your selection. Signature Coherence requires at least 3 fragrances."
+    ),
+    items: (Array.isArray(rows) ? rows : [])
+      .filter((row) => BALANCE_HELP_KEYS[row.label])
+      .map((row) => ({
+        label: row.label,
+        name: getBalanceDimensionLabel(row.label, translator),
+        description: translate(translator, BALANCE_HELP_KEYS[row.label][0], undefined, BALANCE_HELP_KEYS[row.label][1]),
+      })),
+    footer: translate(
+      translator,
+      "collectionIntelligence.balanceHelp.footer",
+      undefined,
+      "There is no ideal score: the balance describes your collection, it doesn’t grade it."
+    ),
+  };
+}
+
 const IMPROVEMENT_PHRASE_KEYS = {
   coldWeather: "collectionIntelligence.improvement.coldWeather",
   formal: "collectionIntelligence.improvement.formal",

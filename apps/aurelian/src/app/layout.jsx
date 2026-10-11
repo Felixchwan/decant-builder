@@ -10,6 +10,7 @@ import "./builder-recommendations.css";
 import "./builder-intelligence.css";
 import "./builder-mobile.css";
 import "./builder-note-explorer.css";
+import "./builder-balance-help.css";
 import "./landing-hero.css";
 import "./site-header.css";
 import "./landing-video.css";

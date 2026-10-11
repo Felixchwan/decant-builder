@@ -129,6 +129,7 @@ function App({
   // Generic, opt-in presentation capability: Dominant Accords chips open an evidence card (see
   // DiscoveryBoxBuilder.jsx's doc comment). false/absent renders the chips and tooltip exactly as before.
   showAccordEvidence = false,
+  showBalanceHelp = false,
   // Generic, opt-in presentation hook for the catalog heading row: absent
   // by default, which renders the row exactly as it always has -- no
   // button, no extra DOM. A host that wants a compact affordance there
@@ -1216,6 +1217,7 @@ const confirmAddPerfume = () => {
       dockShareActions={dockShareActions}
       showRecommendationLenses={showRecommendationLenses}
       showAccordEvidence={showAccordEvidence}
+      showBalanceHelp={showBalanceHelp}
     />
   );
 

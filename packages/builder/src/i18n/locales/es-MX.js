@@ -777,6 +777,15 @@ export const esMX = {
   "collectionIntelligence.balance.freshness": "Frescura",
   "collectionIntelligence.balance.seasonBalance": "Balance de temporada",
   "collectionIntelligence.balance.signatureCoherence": "Coherencia de firma",
+  "collectionIntelligence.balanceHelp.title": "Cómo leer este balance",
+  "collectionIntelligence.balanceHelp.intro": "Cada indicador describe una dimensión de tu selección. Coherencia de firma requiere al menos 3 fragancias.",
+  "collectionIntelligence.balanceHelp.versatility": "Variedad de usos, ambientes y temporadas en tu caja.",
+  "collectionIntelligence.balanceHelp.breadth": "Diversidad de acordes y notas entre tus fragancias.",
+  "collectionIntelligence.balanceHelp.freshness": "Presencia de perfiles frescos, limpios, cítricos, acuáticos o verdes.",
+  "collectionIntelligence.balanceHelp.seasonBalance": "Qué tan pareja es la presencia relativa de las cuatro estaciones.",
+  "collectionIntelligence.balanceHelp.signatureCoherence":
+    "Qué tan parecido es el perfil general de tus fragancias considerando notas, acordes, ambientes, ocasiones y temporadas.",
+  "collectionIntelligence.balanceHelp.footer": "No existe una puntuación ideal: el balance describe tu colección, no la califica.",
   "collectionIntelligence.accordEvidence.countOne": "1 fragancia",
   "collectionIntelligence.accordEvidence.countMany": "{count} fragancias",
 
