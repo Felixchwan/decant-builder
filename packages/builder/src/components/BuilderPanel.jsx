@@ -77,6 +77,7 @@ import { buildFinalizationModel } from "../builder/internal/finalization/buildFi
 import { getTierData } from "../utils/tierUtils";
 import CollectionCard from "./CollectionCard";
 import BalanceHelp from "./BalanceHelp.jsx";
+import CollapsibleStrengths from "./CollapsibleStrengths.jsx";
 import { createTranslator } from "../i18n/createTranslator.js";
 import { ANALYTICS_EVENTS } from "../analytics/events.js";
 import { noopAnalytics } from "../analytics/noopAnalytics.js";
@@ -185,6 +186,7 @@ const BuilderPanel = forwardRef(function BuilderPanel({
   showRecommendationLenses = false,
   showAccordEvidence = false,
   showBalanceHelp = false,
+  compactStrengths = false,
   dockShareActions = false,
 }, ref) {
     const translator = useMemo(
@@ -1091,6 +1093,7 @@ const BuilderPanel = forwardRef(function BuilderPanel({
         selectedDnaAccord={selectedDnaAccord}
         showAccordEvidence={showAccordEvidence}
         showBalanceHelp={showBalanceHelp}
+        compactStrengths={compactStrengths}
         onToggle={() => setIsCollectionSnapshotOpen((isOpen) => !isOpen)}
         onOpenScentLibrary={() => setIsNotesModalOpen(true)}
         onOpenDnaAccord={setSelectedDnaAccord}
@@ -2741,6 +2744,7 @@ function CollectionSnapshot({
   selectedPerfumes,
   showAccordEvidence = false,
   showBalanceHelp = false,
+  compactStrengths = false,
   boxSummary,
   coverageSummary,
   intelligence,
@@ -3013,21 +3017,31 @@ function CollectionSnapshot({
           </p>
 
           {hasAnalysisData ? (
-            <>
-              {coverageSummary.strengths.slice(0, 6).map((item) => (
-                <p key={`${item.category}-${item.label}`} className="coverage-strength">
-                  {getCoverageStrengthLabel(item, translator) || item.label}
-                </p>
-              ))}
+            compactStrengths ? (
+              <CollapsibleStrengths
+                translator={translator}
+                items={coverageSummary.strengths.map((item) => ({
+                  key: `${item.category}-${item.label}`,
+                  text: getCoverageStrengthLabel(item, translator) || item.label,
+                }))}
+              />
+            ) : (
+              <>
+                {coverageSummary.strengths.slice(0, 6).map((item) => (
+                  <p key={`${item.category}-${item.label}`} className="coverage-strength">
+                    {getCoverageStrengthLabel(item, translator) || item.label}
+                  </p>
+                ))}
 
-              {coverageSummary.strengths.length > 6 && (
-                <p className="coverage-more">
-                  {translator?.t?.("collectionIntelligence.moreStrengths", {
-                    count: coverageSummary.strengths.length - 6,
-                  }) || `+${coverageSummary.strengths.length - 6} more strengths`}
-                </p>
-              )}
-            </>
+                {coverageSummary.strengths.length > 6 && (
+                  <p className="coverage-more">
+                    {translator?.t?.("collectionIntelligence.moreStrengths", {
+                      count: coverageSummary.strengths.length - 6,
+                    }) || `+${coverageSummary.strengths.length - 6} more strengths`}
+                  </p>
+                )}
+              </>
+            )
           ) : (
             <p className="collection-empty-message">
               {translator?.t?.("collectionIntelligence.selectFragrancesToGenerateInsights") ||

@@ -635,6 +635,75 @@
   transform: rotate(40deg);
 }
 
+/* The strengths fold to the first three behind one quiet disclosure (opt-in markup: compactStrengths). It is
+   text in the label brass with a hairline chevron: no fill, no rim, so it never competes with "Ver detalles"
+   or the recommendation cards. The scroll margins are what keep it in view, clear of the pinned header and box
+   (the host's own live measurements), when the list growing or shrinking moves it. */
+.builder-page .collection-snapshot .coverage-strengths-toggle {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-height: 0;
+  margin: 0.2rem 0 0;
+  padding: 0.3rem 0;
+  border: 0;
+  border-radius: var(--aur-intel-radius-chip);
+  background: transparent;
+  box-shadow: none;
+  color: var(--aur-intel-label);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  line-height: 1.3;
+  text-align: left;
+  scroll-margin: calc(max(var(--site-header-height, 4.25rem), var(--builder-docked-summary-height, 0px)) + 1.5rem) 0 1rem;
+  transition: color 160ms ease;
+}
+
+@media (hover: hover) {
+  .builder-page .collection-snapshot .coverage-strengths-toggle:hover {
+    color: var(--aur-intel-ink);
+  }
+}
+
+.builder-page .collection-snapshot .coverage-strengths-toggle:focus-visible {
+  outline: 2px solid var(--aur-intel-brass);
+  outline-offset: 2px;
+}
+
+.builder-page .collection-snapshot .coverage-strengths-chevron {
+  flex: none;
+  width: 0.4rem;
+  height: 0.4rem;
+  border: solid currentColor;
+  border-width: 0 1px 1px 0;
+  transform: translateY(-0.15em) rotate(45deg);
+  transition: transform 160ms ease;
+}
+
+.builder-page .collection-snapshot .coverage-strengths-toggle[aria-expanded="true"] .coverage-strengths-chevron {
+  transform: translateY(0.1em) rotate(225deg);
+}
+
+/* On a touch screen the 12px line keeps its look and gets a 44px target (an invisible halo). */
+@media (pointer: coarse) {
+  .builder-page .collection-snapshot .coverage-strengths-toggle::before {
+    position: absolute;
+    inset: -0.55rem -0.6rem;
+    content: "";
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .builder-page .collection-snapshot .coverage-strengths-toggle,
+  .builder-page .collection-snapshot .coverage-strengths-chevron {
+    transition: none;
+  }
+}
+
 .builder-page .collection-snapshot .seasonal-gaps h4 {
   color: var(--aur-intel-label);
   font-size: 0.6875rem;

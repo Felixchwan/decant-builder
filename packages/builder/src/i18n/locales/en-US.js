@@ -831,6 +831,7 @@ export const enUS = {
   "collectionIntelligence.boxAnalysis": "Box Analysis",
   "collectionIntelligence.coverageStrengthsAndGaps": "Coverage strengths and collection gaps",
   "collectionIntelligence.moreStrengths": "+{count} more strengths",
+  "collectionIntelligence.showLessStrengths": "Show less",
   "collectionIntelligence.selectFragrancesToGenerateInsights": "Select fragrances to generate collection insights.",
   "collectionIntelligence.seasonalGaps": "Seasonal Gaps",
   "collectionIntelligence.laneRecommendations": "{title} recommendations",

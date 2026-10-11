@@ -148,6 +148,9 @@ export function BuilderExperience({
       // Aurelian gives the Collection Balance heading one small info button that explains how to read the five
       // indicators (painted in builder-balance-help.css); Discovery Decants never passes this.
       showBalanceHelp
+      // Aurelian folds the Box Analysis strengths to the first three behind a quiet "+N fortalezas más" button
+      // (painted in builder-intelligence.css); Discovery Decants never passes this and keeps the full list.
+      compactStrengths
     />
   );
 }

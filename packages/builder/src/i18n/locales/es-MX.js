@@ -832,6 +832,7 @@ export const esMX = {
   "collectionIntelligence.boxAnalysis": "Análisis de la caja",
   "collectionIntelligence.coverageStrengthsAndGaps": "Fortalezas de cobertura y vacíos de la colección",
   "collectionIntelligence.moreStrengths": "+{count} fortalezas más",
+  "collectionIntelligence.showLessStrengths": "Mostrar menos",
   "collectionIntelligence.selectFragrancesToGenerateInsights": "Selecciona fragancias para generar información de la colección.",
   "collectionIntelligence.seasonalGaps": "Vacíos estacionales",
   "collectionIntelligence.laneRecommendations": "Recomendaciones de {title}",

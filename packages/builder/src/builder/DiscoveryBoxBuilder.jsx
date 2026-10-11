@@ -27,6 +27,7 @@ import { validateBuilderConfig } from "./config/index.js";
  * @param {boolean} [props.showRecommendationLenses] Optional, opt-in presentation capability: when true, the two individual recommendation lanes (the opportunity pick and "based on your picks") each render a compact lens label with a short hint and a `recommendation-lane--versatility` / `recommendation-lane--affinity` class, so a host can tell them apart and style them. Defaults to false, which renders both lanes exactly as they always have (no extra DOM, no extra class). Presentation only: scoring, candidates, reasons, order, carousels and add handlers are the same either way.
  * @param {boolean} [props.showAccordEvidence] Optional, opt-in presentation capability: when true, the "Dominant Accords" chips in the expanded Collection Intelligence are real buttons that open a compact evidence card (bottle, name and house of each fragrance behind the count) on mouse hover, keyboard focus, or click/tap, instead of the hover-only name tooltip. Defaults to false, which renders the chips and tooltip exactly as they always have. Presentation only: which fragrances count toward an accord is the same either way.
  * @param {boolean} [props.showBalanceHelp] Optional, opt-in presentation capability: when true, the "Collection Balance" heading in Collection Intelligence gets one small info button that opens a short "how to read this balance" help (what each of the five indicators describes, and that there is no ideal score). Defaults to false, which renders the heading exactly as it always has. Copy only: no metric, level or formula is read or changed.
+ * @param {boolean} [props.compactStrengths] Optional, opt-in presentation capability: when true, the "Box Analysis" strengths in the expanded Collection Intelligence show only the first three, in their existing order, followed by a small disclosure button ("+N more strengths" / "Show less") that expands the rest in place. Defaults to false, which renders the list exactly as it always has. Presentation only: which strengths exist, their order and their labels are the same either way.
  * @param {() => void} [props.onCatalogInfoRequest] Optional, opt-in presentation hook: when supplied, renders a compact accessible info button at the end of the catalog heading row and calls this handler on click. Absent by default, which renders the row exactly as it always has -- no button, no extra DOM. The Builder never interprets what the click should do; a host wires this to whatever local presentation concern it owns (e.g. restoring a dismissed intro block).
  */
 export default function DiscoveryBoxBuilder({
@@ -50,6 +51,7 @@ export default function DiscoveryBoxBuilder({
   showRecommendationLenses = false,
   showAccordEvidence = false,
   showBalanceHelp = false,
+  compactStrengths = false,
   onCatalogInfoRequest,
 }) {
   if (!config) {
@@ -117,6 +119,7 @@ export default function DiscoveryBoxBuilder({
       showRecommendationLenses={showRecommendationLenses}
       showAccordEvidence={showAccordEvidence}
       showBalanceHelp={showBalanceHelp}
+      compactStrengths={compactStrengths}
       onCatalogInfoRequest={onCatalogInfoRequest}
     />
   );
