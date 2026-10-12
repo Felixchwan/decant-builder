@@ -813,8 +813,8 @@
   font-size: 0.875rem;
 }
 
-/* The close controls: a drawn cross on a quiet square (the shared glyph is a typed capital X). */
-.builder-portal-root .scent-library-modal .modal-header button,
+/* The inline note panel's close: a drawn cross on a quiet square (the shared glyph is a typed capital X). The
+   dialog's own close is the word "Cerrar", like every other Aurelian dialog (builder-modals.css). */
 .builder-portal-root .scent-library-detail-header button {
   position: relative;
   flex: 0 0 auto;
@@ -832,8 +832,6 @@
     background-color 160ms ease;
 }
 
-.builder-portal-root .scent-library-modal .modal-header button::before,
-.builder-portal-root .scent-library-modal .modal-header button::after,
 .builder-portal-root .scent-library-detail-header button::before,
 .builder-portal-root .scent-library-detail-header button::after {
   content: "";
@@ -846,13 +844,10 @@
   transform: translate(-50%, -50%) rotate(45deg);
 }
 
-.builder-portal-root .scent-library-modal .modal-header button::after,
 .builder-portal-root .scent-library-detail-header button::after {
   transform: translate(-50%, -50%) rotate(-45deg);
 }
 
-.builder-portal-root .scent-library-modal .modal-header button:hover,
-.builder-portal-root .scent-library-modal .modal-header button:focus-visible,
 .builder-portal-root .scent-library-detail-header button:hover,
 .builder-portal-root .scent-library-detail-header button:focus-visible {
   border-color: var(--aur-intel-rim-strong);

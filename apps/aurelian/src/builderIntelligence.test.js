@@ -233,7 +233,7 @@ describe("Collection Intelligence: Aurelian host paint (builder-intelligence.css
     greenUses.forEach(({ selector }) => expect(selector).toContain(".details-button"));
   });
 
-  it("styles Biblioteca olfativa on the portal root, with a drawn close mark and visible focus", () => {
+  it("styles Biblioteca olfativa on the portal root, with a drawn close mark on its inline note panel and visible focus", () => {
     const modal = bodyOf(".builder-portal-root .scent-library-modal");
 
     expect(modal).toContain("background: var(--aur-intel-card)");
@@ -241,11 +241,9 @@ describe("Collection Intelligence: Aurelian host paint (builder-intelligence.css
     expect(bodyOf(".builder-portal-root .scent-library-modal button:focus-visible")).toContain(
       "outline: 2px solid var(--aur-intel-brass)"
     );
-    expect(
-      bodyOf(
-        ".builder-portal-root .scent-library-modal .modal-header button, .builder-portal-root .scent-library-detail-header button"
-      )
-    ).toContain("font-size: 0");
+    // the dialog's own close is the word "Cerrar" (builder-modals.css); the drawn cross is the inline note panel's close
+    expect(bodyOf(".builder-portal-root .scent-library-detail-header button")).toContain("font-size: 0");
+    expect(rules.some(({ selector }) => /scent-library-modal .modal-header button/.test(selector))).toBe(false);
   });
 
   it("carries the Curator Pick artwork in BOTH states, as a decorative CSS background", () => {

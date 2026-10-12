@@ -1,0 +1,234 @@
+/* Aurelian Builder -- one modal header language: eyebrow, serif title, quiet "Cerrar".
+
+   HOST-OWNED, paint only, scoped to the dialogs the Builder portals to <body> (`.builder-portal-root`, outside
+   .builder-page). The shared stylesheet is frozen and its selectors have zero specificity, so plain host selectors
+   win without !important. Nothing here is loaded by Discovery Decants, and no markup, behaviour, focus handling,
+   Escape handling or copy changes: every control keeps its element, its accessible name and its handler.
+
+   Why: the Note Explorer, the Biblioteca olfativa and the Collection DNA dialog were already in the Aurelian
+   language (builder-note-explorer.css, builder-intelligence.css), while the dialogs the package builds from the
+   same `.modal-header` -- Composer setup, Composer proposal, Review -- and the perfume details kept the package's
+   own: 700-weight Inter titles in white, a pale gradient band behind the header, a navy 800-weight "Cerrar" with a
+   10px pill, a 20px green-washed shell, and (details only) a 34px circular "X". Five dialogs, four dialects.
+
+   The one system, read top to bottom:
+     shell      near-black warm ground (the token `--aur-intel-card`), a brass rim, a 10px radius, the same shadow
+     eyebrow    Inter 11px, 600, tracked caps, brass label tone                  (where the dialog has one)
+     title      Georgia 1.5rem (1.25rem on phones), 400, ivory
+     divider    a brass hairline under the header
+     close      "Cerrar": 13px / 500, a brass-rimmed 6px button, brass wash + the 2px brass ring on hover / focus
+   so Composer, Review and the details now read as the Note Explorer, the reference, which keeps its own file.
+   (The Biblioteca and the DNA dialog are untouched except that the Biblioteca's header close is now this same
+   "Cerrar" instead of a drawn cross, see builder-intelligence.css.)
+
+   The details dialog's close was an icon-only "X" (aria-label "Cerrar detalles de fragancia") and the Biblioteca's
+   header close an "X" too: their glyph is hidden and the word is drawn in its place. The accessible name is the
+   aria-label, as before, so this changes nothing a screen reader hears; the word is the es-MX
+   `general.close` ("Cerrar"), which a test keeps in step. The one remaining icon close is the cross inside the
+   Biblioteca's inline note panel (a secondary, in-dialog "back to the grid"), not a dialog's own close.
+
+   Content is untouched: bodies, metrics, proposal rows, the season bars and every call to action keep the package's
+   typography. The one exception is the Review's large collection name, which was the same 900-weight uppercase
+   sans as a label and is now serif like every other title. */
+
+.builder-portal-root {
+  /* The header's sticky ground: the first stop of --aur-intel-card, flat, so a scrolling body never shows through. */
+  --aur-modal-head-ground: rgb(22, 19, 15);
+}
+
+/* ---- Scrim: the brass haze the Biblioteca and the DNA dialog already use, for the rest ------------------- */
+.builder-portal-root .final-summary-overlay,
+.builder-portal-root .modal-overlay:has(> .perfume-details-modal) {
+  background:
+    radial-gradient(circle at 50% 8%, var(--aur-intel-brass-haze), transparent 36%),
+    var(--aur-intel-scrim);
+}
+
+/* ---- Shell ----------------------------------------------------------------------------------------- */
+.builder-portal-root :is(.composer-setup-modal, .composer-proposal-modal, .discovery-review-modal, .perfume-details-modal) {
+  border: 1px solid var(--aur-intel-rim);
+  border-radius: 10px;
+  background: var(--aur-intel-card);
+  box-shadow:
+    0 28px 90px var(--aur-intel-shadow),
+    inset 0 1px 0 var(--aur-intel-hair);
+  scrollbar-color: var(--aur-intel-rim) transparent;
+  scrollbar-width: thin;
+}
+
+/* ---- Header ---------------------------------------------------------------------------------------- */
+.builder-portal-root :is(.composer-setup-modal, .composer-proposal-modal, .discovery-review-modal, .perfume-details-modal) .modal-header {
+  gap: 1rem;
+  border-bottom: 1px solid var(--aur-intel-hair);
+  background: var(--aur-modal-head-ground);
+}
+
+/* The three dialogs that scroll as a whole keep the package's sticky header. Its 20px margin below is not part of
+   its box, so a scrolled body used to peek through it as a half-cut line of text; the header now paints that
+   margin in its own ground (a shadow, so nothing moves). And the sticky header sat flush against the dialog's top
+   edge once stuck, the close button two pixels from the rim: 0.9rem of top padding, taken back with an equal
+   negative margin, gives the stuck header room to breathe while the unscrolled layout is where it always was. */
+.builder-portal-root :is(.composer-setup-modal, .composer-proposal-modal, .discovery-review-modal) .modal-header {
+  margin-top: -0.9rem;
+  padding-top: 0.9rem;
+  box-shadow: 0 1.25rem 0 var(--aur-modal-head-ground);
+}
+
+.builder-portal-root .note-explorer-modal .modal-header {
+  border-bottom: 1px solid var(--aur-intel-hair);
+}
+
+.builder-portal-root :is(.composer-setup-modal, .composer-proposal-modal, .discovery-review-modal, .perfume-details-modal) .modal-header > div > span {
+  color: var(--aur-intel-label);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.builder-portal-root :is(.composer-setup-modal, .composer-proposal-modal, .discovery-review-modal, .perfume-details-modal) .modal-header h3 {
+  margin: 0;
+  color: var(--aur-intel-ink);
+  font-family: var(--aur-intel-serif);
+  font-size: 1.5rem;
+  font-weight: 400;
+  letter-spacing: 0.01em;
+  line-height: 1.15;
+}
+
+.builder-portal-root :is(.composer-setup-modal, .composer-proposal-modal, .discovery-review-modal) .modal-header span + h3 {
+  margin-top: 0.3rem;
+}
+
+.builder-portal-root .perfume-details-modal .modal-header p:not(.summary-eyebrow) {
+  margin-top: 0.4rem;
+  color: var(--aur-intel-ink-soft);
+  font-size: 0.875rem;
+}
+
+/* ---- Close (and Composer's Volver): the quiet brass-rimmed button the Note Explorer already has --------- */
+.builder-portal-root :is(.composer-setup-modal, .composer-proposal-modal, .discovery-review-modal) .modal-header button,
+.builder-portal-root .perfume-details-modal .perfume-details-close,
+.builder-portal-root .scent-library-modal .modal-header button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: auto;
+  height: auto;
+  min-height: 2.25rem;
+  padding: 0.4rem 0.85rem;
+  border: 1px solid var(--aur-intel-rim);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--aur-intel-ink);
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  line-height: 1.2;
+  cursor: pointer;
+  transition:
+    border-color 160ms ease,
+    background-color 160ms ease;
+}
+
+.builder-portal-root :is(.composer-setup-modal, .composer-proposal-modal, .discovery-review-modal) .modal-header button {
+  font-size: 0.8125rem;
+}
+
+.builder-portal-root :is(.composer-setup-modal, .composer-proposal-modal, .discovery-review-modal) .modal-header button.secondary {
+  border-color: var(--aur-intel-hair);
+  color: var(--aur-intel-ink-soft);
+}
+
+.builder-portal-root :is(.composer-setup-modal, .composer-proposal-modal, .discovery-review-modal) .modal-header button:hover:not(:disabled),
+.builder-portal-root .perfume-details-modal .perfume-details-close:hover,
+.builder-portal-root :is(.composer-setup-modal, .composer-proposal-modal, .discovery-review-modal) .modal-header button:focus-visible,
+.builder-portal-root .perfume-details-modal .perfume-details-close:focus-visible,
+.builder-portal-root .scent-library-modal .modal-header button:hover,
+.builder-portal-root .scent-library-modal .modal-header button:focus-visible {
+  border-color: var(--aur-intel-rim-strong);
+  background: var(--aur-intel-wash);
+  color: var(--aur-intel-ink);
+}
+
+.builder-portal-root :is(.composer-setup-modal, .composer-proposal-modal, .discovery-review-modal) .modal-header button:disabled {
+  border-color: var(--aur-intel-hair);
+  color: var(--aur-intel-ink-muted);
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.builder-portal-root :is(.composer-setup-modal, .composer-proposal-modal, .discovery-review-modal, .perfume-details-modal, .note-explorer-modal) button:focus-visible {
+  outline: 2px solid var(--aur-intel-brass);
+  outline-offset: 2px;
+}
+
+/* The two glyph closes ("X", an icon-only button named by its aria-label) say the word instead. The glyph is
+   hidden (font-size: 0, not display: none: it stays in the tree) and the word is drawn in its place. The word is
+   the only thing this adds: it inherits colour, weight and line-height from its button. Its size is its own
+   (the button's is 0), and so is its tracking: the button's 0.04em is computed against that 0 and would inherit
+   as none. */
+.builder-portal-root .perfume-details-modal .perfume-details-close,
+.builder-portal-root .scent-library-modal .modal-header button {
+  font-size: 0;
+}
+
+.builder-portal-root .perfume-details-modal .perfume-details-close::after,
+.builder-portal-root .scent-library-modal .modal-header button::after {
+  content: "Cerrar";
+  font-size: 0.8125rem;
+  letter-spacing: 0.04em;
+}
+
+/* Details: the close sits where the "X" did, on the title's line, and the title keeps clear of it. */
+.builder-portal-root .perfume-details-modal .modal-header {
+  margin-bottom: 14px;
+  padding-right: 5.5rem;
+  padding-bottom: 0.8rem;
+}
+
+.builder-portal-root .perfume-details-modal .perfume-details-close {
+  top: 1.25rem;
+  right: 1.5rem;
+}
+
+/* A body section that opens right under the header carries its own top rule (the package's section divider): the
+   proposal's first section. Two hairlines 20px apart read as a mistake, so the header's is the only one. Spacing
+   is unchanged: only the rule's colour is. */
+.builder-portal-root :is(.composer-setup-modal, .composer-proposal-modal, .discovery-review-modal) .modal-header + .final-summary-section {
+  border-top-color: transparent;
+}
+
+/* ---- Review: the collection's name, a title like the others (it was a 900-weight uppercase label) ------ */
+.builder-portal-root .discovery-review-modal .review-overview-section .review-section-heading h4 {
+  color: var(--aur-intel-ink);
+  font-family: var(--aur-intel-serif);
+  font-weight: 400;
+  letter-spacing: 0.005em;
+  text-transform: none;
+}
+
+/* ---- Touch and phones --------------------------------------------------------------------------- */
+@media (pointer: coarse) {
+  .builder-portal-root :is(.composer-setup-modal, .composer-proposal-modal, .discovery-review-modal) .modal-header button,
+  .builder-portal-root .perfume-details-modal .perfume-details-close,
+  .builder-portal-root .scent-library-modal .modal-header button {
+    min-height: 2.75rem;
+  }
+}
+
+@media (max-width: 520px) {
+  .builder-portal-root :is(.composer-setup-modal, .composer-proposal-modal, .discovery-review-modal, .perfume-details-modal) .modal-header h3,
+  .builder-portal-root .dna-modal-header h3 {
+    font-size: 1.25rem;
+  }
+
+  .builder-portal-root .perfume-details-modal .modal-header {
+    padding-right: 5rem;
+  }
+
+  .builder-portal-root .perfume-details-modal .perfume-details-close {
+    top: 0.9rem;
+    right: 1rem;
+  }
+}
