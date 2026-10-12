@@ -2825,7 +2825,7 @@ describe("Note Explorer dialog: focus management wiring", () => {
 
   it("uses the shared modalFocus helpers rather than a private copy of the focus logic", () => {
     expect(normalizedPanelSource).toMatch(
-      /import \{\s*getFocusableElements,\s*getTabWrapTarget,\s*isRestorableFocusTarget,\s*\} from "\.\.\/builder\/internal\/portal\/modalFocus\.js";/
+      /import \{\s*getFocusableElements,\s*getOpenerFromEvent,\s*getTabWrapTarget,\s*isRestorableFocusTarget,\s*\} from "\.\.\/builder\/internal\/portal\/modalFocus\.js";/
     );
     expect(modalSource).toContain("getTabWrapTarget({");
     expect(modalSource).toContain("getFocusableElements(dialog)");
@@ -3463,5 +3463,82 @@ describe("Biblioteca olfativa: closing a note's detail keeps focus in the dialog
     expect(normalizedPanelSource).toMatch(
       /function ScentLibraryModal[\s\S]*if \(selectedNoteId\) \{\s*setSelectedNoteId\(null\);\s*return;\s*\}\s*onClose\(\);/
     );
+  });
+});
+
+// Composer setup and Review dialog focus: the same contract as the other dialogs (in on open, Tab kept inside,
+// hand-back to the opener), shared through useModalFocus. Source-contract checks, the established pattern for
+// these portal-only modals; the keyboard behavior itself is exercised live in a browser (both hosts).
+describe("Composer setup and Review dialogs: focus management wiring", () => {
+  const sliceOf = (name, end) => {
+    const start = normalizedPanelSource.indexOf(`function ${name}(`);
+    const stop = normalizedPanelSource.indexOf(end, start);
+
+    return normalizedPanelSource.slice(start, stop === -1 ? undefined : stop);
+  };
+  const setupSource = sliceOf("ComposerSetupModal", "function ComposerProposalModal(");
+  const reviewSource = sliceOf("DiscoveryBoxReviewModal", "\nfunction ");
+  const hookSource = readFileSync(new URL("../builder/internal/portal/useModalFocus.js", import.meta.url), "utf8").replace(/\r\n/g, "\n");
+
+  it("both use the shared hook, hold the dialog in a ref and make it able to hold focus", () => {
+    expect(normalizedPanelSource).toContain('import { useModalFocus } from "../builder/internal/portal/useModalFocus.js";');
+
+    [
+      [setupSource, "composer-setup-modal"],
+      [reviewSource, "discovery-review-modal"],
+    ].forEach(([source, name]) => {
+      expect(source).toContain("const dialogRef = useRef(null);");
+      expect(source).toMatch(/useModalFocus\(\{[\s\S]*?dialogRef,[\s\S]*?openerRef/);
+      expect(source).toContain(`ref={dialogRef}\n        tabIndex={-1}\n        className="final-summary-modal ${name}"`);
+    });
+  });
+
+  it("remembers the control that opened each dialog from the click, never from inside a dialog", () => {
+    expect(normalizedPanelSource).toContain("const composerOpenerRef = useRef(null);");
+    expect(normalizedPanelSource).toContain("const reviewOpenerRef = useRef(null);");
+    expect(normalizedPanelSource).toMatch(
+      /const handleOpenComposerSetup = \(event\) => \{\s*const opener = getOpenerFromEvent\(event\);\s*if \(opener !== undefined\) \{\s*composerOpenerRef\.current = opener;/
+    );
+    expect(normalizedPanelSource).toMatch(
+      /const handleOpenReview = \(event\) => \{\s*const opener = getOpenerFromEvent\(event\);\s*if \(opener !== undefined\) \{\s*reviewOpenerRef\.current = opener;/
+    );
+    expect(normalizedPanelSource).toContain("openerRef={composerOpenerRef}");
+    expect(normalizedPanelSource).toContain("openerRef={reviewOpenerRef}");
+  });
+
+  it("names a stable control to fall back on if the opener is gone, in each dialog's own vocabulary", () => {
+    expect(setupSource).toContain('fallbackSelector: ".compose-box-panel .compose-box-header-actions button:not(.secondary)"');
+    expect(reviewSource).toContain('fallbackSelector: ".review-box-button"');
+  });
+
+  it("keeps Escape and the scroll lock exactly where they were (this change owns focus only)", () => {
+    expect(setupSource).toContain('if (event.key === "Escape" && !isGenerating) {');
+    expect(setupSource).toContain("const releaseBodyScrollLock = acquireBodyScrollLock(document);");
+    expect(reviewSource).toContain('if (event.key === "Escape") {');
+    expect(reviewSource).toContain("const releaseBodyScrollLock = acquireBodyScrollLock(document);");
+    // (comments aside: the hook's own header says where those two live)
+    expect(hookSource.replace(/\/\/.*$/gm, "")).not.toMatch(/Escape|acquireBodyScrollLock/);
+  });
+
+  it("keeps focus with the setup dialog while it generates, instead of dropping it to <body>", () => {
+    expect(setupSource).toContain("isGenerating &&");
+    expect(setupSource).toContain('active.disabled || active.closest?.("[inert]")');
+    expect(setupSource).toContain("dialog.focus({ preventScroll: true });");
+  });
+
+  it("the hook moves focus in without scrolling, traps Tab/Shift+Tab (also from <body>), and hands back unless another dialog took over", () => {
+    expect(hookSource).toContain("(getFocusableElements(dialog)[0] || dialog)?.focus({ preventScroll: true });");
+    expect(hookSource).toContain("getTabWrapTarget({");
+    expect(hookSource).toContain("active: !active || active === dialog.ownerDocument.body ? null : active,");
+    expect(hookSource).toContain("if (otherLayer && otherLayer !== dialog) {");
+    expect(hookSource).toContain("const isHandedOff = Array.from(doc.querySelectorAll('[role=\"dialog\"]')).some((other) => other !== dialog);");
+    expect(hookSource).toContain("resolveFocusRestoreTarget([clickedOpener, mountOpener, fallback], doc.body)");
+    // one listener, on the window, removed on unmount; no timers
+    expect(hookSource).toMatch(/window\.addEventListener\("keydown", handleKeyDown\);\s*return \(\) => window\.removeEventListener\("keydown", handleKeyDown\);/);
+    expect(hookSource).not.toMatch(/setTimeout|requestAnimationFrame/);
+  });
+
+  it("is merchant-neutral: the hook names no host, no brand and no locale", () => {
+    expect(hookSource).not.toMatch(/aurelian|discovery|decant|es-MX|en-US/i);
   });
 });

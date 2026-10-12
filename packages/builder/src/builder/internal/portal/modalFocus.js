@@ -16,14 +16,21 @@ function isRendered(element) {
   return typeof element.getClientRects !== "function" || element.getClientRects().length > 0;
 }
 
+function isInert(element) {
+  return typeof element.closest === "function" && Boolean(element.closest("[inert]"));
+}
+
 // Tabbable descendants of the container, in document order, that are actually
-// laid out (display:none content is skipped).
+// laid out (display:none content is skipped) and not inside an inert subtree
+// (the browser will not give those focus, so a wrap onto one would strand it).
 export function getFocusableElements(container) {
   if (!container || typeof container.querySelectorAll !== "function") {
     return [];
   }
 
-  return Array.from(container.querySelectorAll(FOCUSABLE_SELECTOR)).filter(isRendered);
+  return Array.from(container.querySelectorAll(FOCUSABLE_SELECTOR)).filter(
+    (element) => isRendered(element) && !isInert(element)
+  );
 }
 
 // Where Tab / Shift+Tab should be sent to keep focus inside `container`, or
@@ -72,4 +79,29 @@ export function isRestorableFocusTarget(element) {
   }
 
   return isRendered(element);
+}
+
+// The control that opened a dialog, read from the click that opened it. Safari and Firefox on macOS do not
+// focus a button on click, so document.activeElement at mount can be <body>; the event's currentTarget is the
+// control either way. Returns the element, null when there is no usable one (an open that did not come from a
+// click), or undefined when the click came from inside another dialog (a "back" button that reopens this one):
+// the caller then keeps what it remembered before.
+export function getOpenerFromEvent(event) {
+  const element = event?.currentTarget;
+
+  if (!element || element.nodeType !== 1) {
+    return null;
+  }
+
+  if (typeof element.closest === "function" && element.closest('[role="dialog"]')) {
+    return undefined;
+  }
+
+  return element;
+}
+
+// Where focus goes when a dialog closes: the first candidate that can still take it (never <body>), in the
+// caller's order of preference. Null when none can, so the caller leaves focus alone.
+export function resolveFocusRestoreTarget(candidates, body) {
+  return candidates.find((element) => element && element !== body && isRestorableFocusTarget(element)) || null;
 }

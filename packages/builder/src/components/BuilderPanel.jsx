@@ -86,9 +86,11 @@ import { acquireBodyScrollLock } from "../builder/internal/portal/bodyScrollLock
 import { renderOwnedPortal } from "../builder/internal/portal/renderOwnedPortal.jsx";
 import {
   getFocusableElements,
+  getOpenerFromEvent,
   getTabWrapTarget,
   isRestorableFocusTarget,
 } from "../builder/internal/portal/modalFocus.js";
+import { useModalFocus } from "../builder/internal/portal/useModalFocus.js";
 import { getShareActionsPlacement } from "../builder/internal/summary/shareActionsPlacement.js";
 import { getSummaryDockedState } from "../builder/internal/summary/summaryDocking.js";
 import {
@@ -553,7 +555,17 @@ const BuilderPanel = forwardRef(function BuilderPanel({
       window.setTimeout(focusBalanceLane, 420);
     };
 
-    const handleOpenComposerSetup = () => {
+    // The control that opened each dialog, read from the click, so closing it can hand focus back there.
+    const composerOpenerRef = useRef(null);
+    const reviewOpenerRef = useRef(null);
+
+    const handleOpenComposerSetup = (event) => {
+      const opener = getOpenerFromEvent(event);
+
+      if (opener !== undefined) {
+        composerOpenerRef.current = opener;
+      }
+
       onRefreshComposerBudgetDefault?.();
       analytics.track(ANALYTICS_EVENTS.COMPOSER_OPENED, {
         slotCount: totalSlots,
@@ -583,7 +595,13 @@ const BuilderPanel = forwardRef(function BuilderPanel({
       setIsNoteExplorerOpen(true);
     };
 
-    const handleOpenReview = () => {
+    const handleOpenReview = (event) => {
+      const opener = getOpenerFromEvent(event);
+
+      if (opener !== undefined) {
+        reviewOpenerRef.current = opener;
+      }
+
       analytics.track(ANALYTICS_EVENTS.REVIEW_OPENED, {
         slotCount: totalSlots,
         totalPoints,
@@ -1163,6 +1181,7 @@ const BuilderPanel = forwardRef(function BuilderPanel({
           analytics={analytics}
           finalizationAdapter={finalizationAdapter}
           portalRoot={portalRoot}
+          openerRef={reviewOpenerRef}
         />
       )}
       {composerProposal && portalRoot && (
@@ -1200,6 +1219,7 @@ const BuilderPanel = forwardRef(function BuilderPanel({
           onPreferenceClear={onComposerPreferenceClear}
           onCancel={() => setIsComposerSetupOpen(false)}
           onGenerate={onComposeMyBox}
+          openerRef={composerOpenerRef}
         />
       )}
       {isNoteExplorerOpen && portalRoot && (
@@ -1293,6 +1313,7 @@ function ComposerSetupModal({
   onPreferenceClear,
   onCancel,
   onGenerate,
+  openerRef,
 }) {
   const translator = createTranslator(builderConfig.locale, builderConfig.taxonomyLabels);
   const { t } = translator;
@@ -1340,9 +1361,37 @@ function ComposerSetupModal({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [onCancel, isGenerating]);
 
+  // Focus: in on open, kept inside, and back on the control that opened it (the Composer panel's button, or
+  // wherever else the setup was opened from). See useModalFocus.
+  const dialogRef = useRef(null);
+
+  useModalFocus({
+    dialogRef,
+    openerRef,
+    fallbackSelector: ".compose-box-panel .compose-box-header-actions button:not(.secondary)",
+  });
+
+  // Generating makes the form inert and disables the control that was just pressed (Generate), which takes
+  // focus off it and leaves it on <body>. Keep it with the dialog instead: on the dialog itself, which can
+  // hold focus while nothing in it can, and from where Tab reaches Close again once it is back.
+  useEffect(() => {
+    const dialog = dialogRef.current;
+    const active = document.activeElement;
+
+    if (
+      isGenerating &&
+      dialog &&
+      (!active || active === document.body || active.disabled || active.closest?.("[inert]"))
+    ) {
+      dialog.focus({ preventScroll: true });
+    }
+  }, [isGenerating]);
+
   return renderOwnedPortal(
     <div className="modal-overlay final-summary-overlay" onClick={requestClose}>
       <div
+        ref={dialogRef}
+        tabIndex={-1}
         className="final-summary-modal composer-setup-modal"
         role="dialog"
         aria-modal="true"
@@ -4055,6 +4104,7 @@ function DiscoveryBoxReviewModal({
   analytics = noopAnalytics,
   finalizationAdapter,
   portalRoot,
+  openerRef,
 }) {
   const t = translator?.t || ((key) => key);
   const [finalizeStatus, setFinalizeStatus] = useState("");
@@ -4131,6 +4181,12 @@ function DiscoveryBoxReviewModal({
       window.removeEventListener("keydown", handleKeyDown);
     };
   }, [onClose]);
+
+  // Focus: in on open (Close), kept inside, and back on the control that opened the review: the docked or
+  // in-panel "Review" button, or the phone's "Review my box" bar. See useModalFocus.
+  const dialogRef = useRef(null);
+
+  useModalFocus({ dialogRef, openerRef, fallbackSelector: ".review-box-button" });
 
   function handleCustomerInfoChange(field, value) {
     onCustomerInfoChange((currentInfo) => ({
@@ -4251,6 +4307,8 @@ function DiscoveryBoxReviewModal({
   return renderOwnedPortal(
     <div className="modal-overlay final-summary-overlay" onClick={onClose}>
       <div
+        ref={dialogRef}
+        tabIndex={-1}
         className="final-summary-modal discovery-review-modal"
         role="dialog"
         aria-modal="true"
