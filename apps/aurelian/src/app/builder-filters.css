@@ -1,0 +1,52 @@
+/* Aurelian Builder -- the catalog filter row, given the room its labels need.
+
+   HOST-OWNED and Builder-route-only (every selector is under `.builder-page .catalog-section`): layout only,
+   no markup, no copy, no behaviour, nothing in the shared package or Discovery Decants.
+
+   Why: every filter is a native <select> whose closed text is its selected option, and every option carries its
+   "Category: Value" prefix (FilterBar.jsx), so the closed control reads "Temporadas: Todas" or "Orden: Mejor
+   coincidencia". The shared stylesheet gives the four selects equal tracks (four at >= 981px, two at <= 520px)
+   and ellipsises what does not fit, so the labels were cut to "Temporadas: ...", "Ocasiones: T..." and
+   "Orden: Mejo..." whenever a track was narrower than its text. Measured, the room each default label needs
+   (text, padding and the select arrow) is:
+
+                          Temporadas  Ocasiones  Vibes  Orden: Mejor coincidencia
+       14.76px (>= 1025)      170        157      126      217      = 670 + 3 gaps of 8 = 694px
+       16px (phones)          180        166      133      231
+
+   and the row has roughly (viewport - 469)px with the panel open, so equal tracks cannot hold it below ~1160px,
+   and a phone's half-width track (141-167px) is narrower than three of the four.
+
+   What changes, by width (the shared <= 980px flex-wrap row, 521-980px, already fits and is left alone):
+     1200-1439px four tracks sized to their labels (the needs above, as fractions) instead of four equal ones:
+                 the row holds at least 694px from here on, so every default label fits ("Orden" gets the most,
+                 "Vibes" the least). From 1440px an equal quarter (237px with the panel open) holds the longest
+                 label (217px) with room to spare, so the shared four equal tracks are left exactly as they were
+                 -- and below it (219px at 1366px) an equal quarter would clear it by only 2px, too thin to rely
+                 on across fonts.
+     981-1199px  two by two. Four labels do not fit one row here at any split, so this is the one place the
+                 toolbar grows (one extra row, ~51px); two tracks of 250px+ also hold every *selected* value,
+                 e.g. "Orden: Puntos: menor a mayor".
+     <= 520px    one full-width select per row, for the same reason: a phone's track cannot hold "Temporadas:
+                 Todas" or "Orden: Mejor coincidencia" at a legible size, and a smaller font would trade one
+                 problem for another.
+   The selects keep their size, type, colours, hit areas and ellipsis (it stays the safety net for a long
+   selected value); the dock clearance margin on the row (builder-dock-clearance.css) is untouched. */
+
+@media (min-width: 1200px) and (max-width: 1439px) {
+  .builder-page .catalog-section .filters {
+    grid-template-columns: minmax(0, 170fr) minmax(0, 157fr) minmax(0, 126fr) minmax(0, 217fr);
+  }
+}
+
+@media (min-width: 981px) and (max-width: 1199px) {
+  .builder-page .catalog-section .filters {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 520px) {
+  .builder-page .catalog-section .filters {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

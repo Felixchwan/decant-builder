@@ -71,6 +71,36 @@ describe("Mobile Mi caja stack (builder-mobile.css)", () => {
     expect(css).not.toMatch(/\.box-vial|\.vial-/);
   });
 
+  it("leaves one Review control on a phone: the compact twin in the summary header is hidden, the bar is kept", () => {
+    const hidden = rules.filter(({ body }) => /(?:^|[ ;])display: none;/.test(body));
+
+    // exactly one rule hides anything, and it is the compact button inside the sticky summary card, nothing broader
+    expect(hidden.map(({ selector }) => selector)).toEqual([".builder-page .builder-panel-sticky-summary-card .review-box-button--compact"]);
+    expect(hidden[0].body).toBe("display: none;");
+    // the bar's own button (no --compact) is never targeted by a hiding rule, and no visibility/opacity trick is used
+    expect(withoutComments).not.toMatch(/\.review-action[^{]*\{[^}]*display: none/);
+    expect(withoutComments).not.toMatch(/visibility: hidden|opacity: 0|clip(?:-path)?:|sr-only|position: absolute/);
+
+    // both buttons really are rendered by the shared panel (same handler), which is why one of them can go
+    const panel = read(REPOSITORY_ROOT, "packages", "builder", "src", "components", "BuilderPanel.jsx");
+    expect(panel.match(/review-box-button review-box-button--compact/g)).toHaveLength(2);
+    expect(panel).toContain('className={`review-action ${isBoxReady ? "is-ready" : "is-incomplete"}`}');
+    expect(panel.match(/onClick=\{handleOpenReview\}/g)).toHaveLength(3);
+  });
+
+  it("floats the Review bar only while it can be used: incomplete, it sits in the flow and keeps its reason", () => {
+    const incomplete = bodyOf(".builder-page .review-action.is-incomplete");
+    const sharedCss = read(REPOSITORY_ROOT, "packages", "builder", "styles.css");
+
+    expect(incomplete).toBe("position: static; margin-inline: 0; box-shadow: none;");
+    // nothing here changes the ready bar: it keeps the shared sticky bottom bar (only its padding/margins are tuned above)
+    expect(rules.some(({ selector }) => /is-ready/.test(selector))).toBe(false);
+    expect(bodyOf(".builder-page .review-action")).not.toMatch(/position/);
+    expect(sharedCss).toMatch(/@media \(max-width: 980px\) \{[\s\S]*?:where\(\.builder-scope\) \.review-action \{\s*position: sticky;\s*bottom: 10px;/);
+    // the disabled semantics and the helper text are the package's: this file never touches `disabled`, the text or the button's size
+    expect(withoutComments).not.toMatch(/:disabled|\[disabled\]|\.review-action p \{[^}]*display/);
+  });
+
   it("leaves no trace in the shared package, Discovery Decants or the desktop-only docked summary", () => {
     const sharedCss = read(REPOSITORY_ROOT, "packages", "builder", "styles.css");
 

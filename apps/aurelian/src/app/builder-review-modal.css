@@ -1,0 +1,17 @@
+/* Aurelian Builder -- the Review modal's season bars: a label column wide enough for its labels.
+
+   HOST-OWNED, geometry only, scoped to the dialog the Builder portals to <body> (`.builder-portal-root`,
+   outside `.builder-page`). The season data, the bar values, the labels and the modal's hierarchy are the
+   package's; the modal's header, chrome and typography are not touched here.
+
+   Why: each season row is its own grid of label | track | count, and the Review modal gives the label a fixed
+   54px column (the package's own default is 58px). "Primavera" is wider than that at every width the modal
+   renders (62px at <= 1024px, 69px above, where the label type steps up from 11.84px to 13.32px), so its text
+   ran 1px (phones, tablet) to 9px (desktop) into the bar, and "Invierno" sat 4px from it. The column is now
+   5rem (80px): the widest label plus a gap of at least 11px at either size. It stays a fixed width, not
+   `auto`, so the four tracks begin at the same x in every row -- an `auto` column would size each row to its
+   own label and stagger the bars. The bar gives up the 26px; the count column is unchanged. */
+
+.builder-portal-root .review-overview-section .season-coverage-row {
+  grid-template-columns: 5rem minmax(0, 1fr) 20px;
+}

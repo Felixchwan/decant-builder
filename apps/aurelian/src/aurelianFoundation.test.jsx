@@ -278,7 +278,7 @@ describe("Aurelian application foundation", () => {
     expect(sharedCss).toMatch(/\.layout \{\s*grid-template-columns: minmax\(0, 1fr\) 360px;\s*gap: 16px;/);
   });
 
-  it("gives the docked card the same background/blur as the header it visually sits inside, not the shared package's default surface", () => {
+  it("gives the docked card the header's own colour and blur, not the shared package's default surface -- and makes it opaque, so the scrolling panel never reads through it", () => {
     const stylesheet = readFileSync(join(APP_ROOT, "src", "app", "globals.css"), "utf8");
     const headerMatch = stylesheet.match(/\.site-header\s*\{([^}]*)\}/);
     const cardMatch = stylesheet.match(
@@ -286,8 +286,20 @@ describe("Aurelian application foundation", () => {
     );
     const headerBackground = headerMatch[1].match(/background:\s*([^;]+);/)[1];
     const headerBlur = headerMatch[1].match(/backdrop-filter:\s*([^;]+);/)[1];
-    expect(cardMatch[1]).toContain(`background:${headerBackground};`);
-    expect(cardMatch[1]).toContain(`backdrop-filter:${headerBlur};`);
+    const cardBody = cardMatch[1].replace(/\/\*[\s\S]*?\*\//g, "");
+    const cardBackground = cardBody.match(/background:\s*([^;]+);/)[1];
+
+    // the header is translucent (it overlays the page); the card hangs below it over the scrolling panel, so it is the
+    // header's colour with the alpha removed (it was the header's .88, which let panel text show through, up to 29/255)
+    const headerChannels = headerBackground.match(/rgba\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*([\d.]+)\s*\)/);
+    expect(headerChannels, "the header background is an rgba() colour").not.toBeNull();
+    expect(Number(headerChannels[4])).toBeLessThan(1);
+    expect(cardBackground).toBe(`rgb(${headerChannels[1]},${headerChannels[2]},${headerChannels[3]})`);
+    expect(cardBackground).not.toMatch(/rgba|hsla|transparent|gradient|var\(/);
+    expect(cardBody).toContain(`backdrop-filter:${headerBlur};`);
+    // paint only: the card's size, position and docking geometry are not part of this rule
+    expect(cardBody).toContain("position:absolute; top:0; left:0; right:0;");
+    expect(cardBody).not.toMatch(/(?<![-\w])(?:width|height|padding|margin|transform|border|box-shadow|filter)\s*:/);
   });
 
   it("publishes only the approved WhatsApp contact and enables generic finalization", () => {

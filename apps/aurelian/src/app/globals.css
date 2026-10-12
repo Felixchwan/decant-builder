@@ -133,12 +133,18 @@ button,input,select { font:inherit; }
 .site-header__builder-slot { position:absolute; top:0; right:max(12px, calc(50% - var(--aur-builder-edge))); width:360px; }
 #aurelian-builder-summary-slot .builder-panel-sticky-summary-card {
   position:absolute; top:0; left:0; right:0;
-  /* Matches .site-header's own background/blur exactly (rgba(9,10,9,.88),
-     blur(18px)) rather than the shared package's default dark-green
-     surface gradient -- the docked card visually sits inside the header,
-     so it should read as part of the same surface, not a distinct panel
-     floating on top of it. */
-  background:rgba(9,10,9,.88);
+  /* The header's own colour (rgb(9,10,9), the .site-header background without its
+     .88 alpha) and its blur, rather than the shared package's default dark-green
+     surface gradient -- the docked card visually sits inside the header, so it
+     should read as part of the same surface, not a distinct panel floating on
+     top of it.
+     Opaque on purpose. The card hangs ~250px BELOW the 68px header, where the
+     header's own translucent surface does not reach, so at .88 the scrolling
+     panel content showed through as legible ghost text around the rack and the
+     totals strip (up to 29/255 per channel measured). Over the header band
+     itself the difference is invisible: .88 over the header's .88 already
+     composites to ~.99 there. */
+  background:rgb(9,10,9);
   backdrop-filter:blur(18px);
 }
 .button { display:inline-flex; justify-content:center; align-items:center; min-height:3rem; padding:.75rem 1.25rem; border:1px solid var(--gold); background:var(--gold); color:var(--ink); font-weight:750; letter-spacing:.02em; transition:background .2s ease,transform .2s ease; }

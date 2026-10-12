@@ -97,4 +97,28 @@
     font-size: 0.75rem;
     line-height: 1.3;
   }
+
+  /* ---- One Review control on a phone ------------------------------------------------------------------ */
+  /* The package renders Review twice in the mobile "Mi caja" stack: the small "Revisar" in the summary
+     header (the same button the desktop dock carries) and the bar below. Same handler, same isBoxReady,
+     so on a phone they only duplicated each other. The bar is the one kept: it has the full label, the
+     46px target and, when the box is not ready, the reason ("Falta ... para revisar"), which the compact
+     button never had. `display: none` also takes the hidden twin out of the tab order and the
+     accessibility tree, so there is exactly one Review button to reach. The desktop dock lives in the
+     header slot, outside .builder-page, and is not touched. */
+  .builder-page .builder-panel-sticky-summary-card .review-box-button--compact {
+    display: none;
+  }
+
+  /* The bar floats (sticky, bottom: 10px) only while it can be used. A disabled Review button that follows
+     the thumb down the whole tab is ~83px of chrome pinned over the vial rack and the cards with nothing
+     to press; it was the thing covering the rack on first view. Until the box is ready the bar sits in
+     the flow where it always was (after Curator Bonus), still disabled and still saying what is missing.
+     Once the box is ready it floats again, as before. Static, it drops the floating bar's pull-out
+     margins and upward shadow so it reads as a quiet panel, not a detached slab. */
+  .builder-page .review-action.is-incomplete {
+    position: static;
+    margin-inline: 0;
+    box-shadow: none;
+  }
 }
