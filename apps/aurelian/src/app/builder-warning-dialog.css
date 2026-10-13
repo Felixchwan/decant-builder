@@ -1,0 +1,153 @@
+/* Aurelian Builder -- the rare-selection warning: a caution in the house language.
+
+   HOST-OWNED, paint only, scoped to the dialog the Builder portals to <body> (`.builder-portal-root`, outside
+   .builder-page). The shared stylesheet is frozen and its selectors have zero specificity, so plain host selectors
+   win without !important. Nothing here is loaded by Discovery Decants, and no markup, copy, behaviour, focus or
+   Escape handling changes: it is the same dialog, with the same two buttons in the same order.
+
+   What it is: the confirmation that opens when a fragrance carrying a warning ("Selección especial" > the
+   fragrance > its note > "Procede con precaución" > Agregar a caja / Cancelar) is added. Today only Squid has one.
+   It has no header and no close of its own (Cancelar and Escape are its way out), so it is NOT given the standard
+   dialog header; it takes the family's shell, type and buttons and keeps a caution of its own.
+
+     was                                      now
+     purple + cyan radial gradients           the warm near-black ground every other dialog has
+     22px corners, soft purple rim            10px, a burgundy rim (the caution) and the brass inset hairline
+     a 120px squid and skull watermark        none (decoration, and an emoji)
+     white 500 sans title, violet name        brass tracked-caps eyebrow, the name in Georgia ivory
+     white body, cyan 800 caution line        ivory-soft body, a quiet caution line under a hairline
+     green outlined Cancelar, 10px buttons    ivory outlined Cancelar, 8px buttons, Agregar in brass as ever
+
+   Burgundy is the caution and nothing else: the rim, the haze behind the dialog, the mark beside the caution
+   line. It never carries text (see globals.css: the base is 1.3:1 on black), and it is not put on a button:
+   neither action is destructive, so they keep the approved roles -- brass for the one that goes ahead, ivory
+   structure for the one that does not. */
+
+/* ---- Scrim: the family's haze, burgundy instead of brass ------------------------------------------- */
+.builder-portal-root .modal-overlay:has(> .warning-modal) {
+  background:
+    radial-gradient(circle at 50% 8%, var(--aur-burgundy-glow), transparent 38%),
+    var(--aur-intel-scrim);
+}
+
+/* ---- Shell ----------------------------------------------------------------------------------------- */
+.builder-portal-root .warning-modal {
+  padding: 1.75rem 1.75rem 1.5rem;
+  border: 1px solid var(--aur-burgundy-rim);
+  border-radius: 10px;
+  background: var(--aur-intel-card);
+  box-shadow:
+    0 28px 90px var(--aur-intel-shadow),
+    inset 0 1px 0 var(--aur-intel-hair);
+  text-align: left;
+}
+
+/* The squid and the skull watermarks were 120px emoji at 6-7% opacity: decoration, and off the palette. */
+.builder-portal-root .warning-modal::before,
+.builder-portal-root .warning-modal::after {
+  content: none;
+}
+
+/* ---- Type ------------------------------------------------------------------------------------------ */
+/* "Selección especial": the label of the dialog, so the family's eyebrow. */
+.builder-portal-root .warning-modal h2 {
+  margin: 0 0 0.5rem;
+  color: var(--aur-intel-label);
+  font-family: inherit;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+/* The fragrance: the subject, so the family's title. */
+.builder-portal-root .warning-modal h3 {
+  margin: 0 0 0.9rem;
+  color: var(--aur-intel-ink);
+  font-family: var(--aur-intel-serif);
+  font-size: 1.5rem;
+  font-weight: 400;
+  letter-spacing: 0.01em;
+  line-height: 1.15;
+}
+
+.builder-portal-root .warning-modal p {
+  color: var(--aur-intel-ink-soft);
+  font-size: 0.9375rem;
+  line-height: 1.55;
+}
+
+/* "Procede con precaución.": the caution, set off by a hairline rather than by colour or weight. */
+.builder-portal-root .warning-modal p.warning-footer {
+  margin: 1.1rem 0 0;
+  padding-top: 0.9rem;
+  border-top: 1px solid var(--aur-burgundy-line);
+  color: var(--aur-intel-ink);
+  font-size: 0.875rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+
+/* The skull is decorative (aria-hidden): in the burgundy of the rim, as a text glyph, not an emoji colour. */
+.builder-portal-root .warning-modal .warning-footer > span {
+  margin-right: 0.15rem;
+  color: var(--aur-burgundy-lift);
+  font-family: var(--aur-intel-serif);
+  font-variant-emoji: text;
+}
+
+/* ---- Actions: the family's buttons, the same two roles as before ---------------------------------- */
+.builder-portal-root .warning-modal .modal-actions {
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+}
+
+.builder-portal-root .warning-modal .modal-actions button {
+  min-height: 2.75rem;
+  padding: 0.6rem 1rem;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  transition:
+    background-color 160ms ease,
+    border-color 160ms ease;
+}
+
+/* Agregar a caja: the action that goes ahead, brass, as the catalog's own buttons. */
+.builder-portal-root .warning-modal .modal-actions button:first-child {
+  border: 1px solid var(--gold);
+  background: var(--gold);
+  color: var(--ink);
+}
+
+.builder-portal-root .warning-modal .modal-actions button:first-child:hover {
+  background: #d6b778;
+}
+
+/* Cancelar: the way back, ivory structure (green is the tooling colour, not a "no"). */
+.builder-portal-root .warning-modal .modal-actions button:last-child {
+  border: 1px solid var(--aur-intel-rim);
+  background: transparent;
+  color: var(--aur-intel-ink);
+}
+
+.builder-portal-root .warning-modal .modal-actions button:last-child:hover {
+  border-color: var(--aur-intel-rim-strong);
+  background: var(--aur-intel-wash);
+}
+
+.builder-portal-root .warning-modal .modal-actions button:focus-visible {
+  outline: 2px solid var(--aur-intel-brass);
+  outline-offset: 2px;
+}
+
+@media (max-width: 520px) {
+  .builder-portal-root .warning-modal {
+    padding: 1.4rem 1.25rem 1.25rem;
+  }
+
+  .builder-portal-root .warning-modal h3 {
+    font-size: 1.25rem;
+  }
+}
