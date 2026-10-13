@@ -42,8 +42,8 @@ describe("Rare-selection warning dialog (builder-warning-dialog.css)", () => {
     expect(code).not.toContain("!important");
     expect(code).not.toMatch(/\.builder-page|#aurelian-builder-summary-slot|\.site-header/);
     expect(code).not.toMatch(/visibility:|display: none|inert|tabindex|@keyframes|animation/);
-    // the one thing that opts out of pointing is the crest, which must never catch a click
-    expect(rules.filter(({ body: ruleBody }) => /pointer-events/.test(ruleBody)).map(({ selector }) => selector)).toEqual([`${SHELL}::before`]);
+    // the only things that opt out of pointing are the two ornament layers (frame and crest), which must never catch a click
+    expect(rules.filter(({ body: ruleBody }) => /pointer-events/.test(ruleBody)).map(({ selector }) => selector).sort()).toEqual([`${SHELL}::after`, `${SHELL}::before`]);
     // the scrim is the one rule that reaches the overlay, and only the overlay that holds this dialog
     expect(selectors.filter((selector) => !selector.startsWith(".builder-portal-root .warning-modal"))).toEqual([".builder-portal-root .modal-overlay:has(> .warning-modal)"]);
   });
@@ -56,9 +56,9 @@ describe("Rare-selection warning dialog (builder-warning-dialog.css)", () => {
 
     expect(code).not.toMatch(/168,\s*85,\s*247|34,\s*211,\s*238|167,\s*139,\s*250|103,\s*232,\s*249|#a78bfa|#67e8f9|#06100c|#b7f7d3|#6ee7b7/i);
     expect(code).not.toMatch(/(?<![\d.])(?:22|20)px|999px/);
-    expect(body(`${SHELL}::after`)).toBe("content: none;");
-    // the squid is gone; the ::before it used to occupy now carries the crest (see the crest describe below)
+    // the squid and skull are gone; their two pseudo-elements now carry the frame and the crest (see below)
     expect(code).not.toMatch(/🦑|☠/u);
+    [`${SHELL}::before`, `${SHELL}::after`].forEach((selector) => expect(body(selector), selector).not.toMatch(/font-size|rotate|content: "[^"]/));
   });
 
   it("gives the shell the family's ground, hairline, radius and shadow, with the caution as a burgundy rim", () => {
@@ -66,7 +66,8 @@ describe("Rare-selection warning dialog (builder-warning-dialog.css)", () => {
 
     expect(shell).toContain("border: 1px solid var(--aur-burgundy-rim)");
     expect(shell).toContain("border-radius: 10px");
-    expect(shell).toContain("background: var(--aur-intel-card)");
+    // the family's ground, under a burgundy haze behind the crest
+    expect(shell).toMatch(/background: radial-gradient\([^;]*var\(--aur-burgundy-wash\)[^;]*\), var\(--aur-intel-card\);/);
     expect(shell).toContain("0 28px 90px var(--aur-intel-shadow)");
     expect(shell).toContain("inset 0 1px 0 var(--aur-intel-hair)");
     // the same recipe the standard dialogs have (builder-modals.css), differing only in the rim colour
@@ -84,15 +85,18 @@ describe("Rare-selection warning dialog (builder-warning-dialog.css)", () => {
     expect(body(`${SHELL} h3`)).toContain("font-weight: 400");
     expect(body(`${SHELL} h3`)).toContain("color: var(--aur-intel-ink)");
     expect(body(`${SHELL} p`)).toContain("color: var(--aur-intel-ink-soft)");
-    expect(body(`${SHELL} p.warning-footer`)).toContain("border-top: 1px solid var(--aur-burgundy-line)");
+    // the caution: set off by a brass hairline carrying one diamond, drawn on its own pseudo-elements (no border, no element)
+    expect(body(`${SHELL} p.warning-footer`)).not.toContain("border-top");
+    expect(body(`${SHELL} p.warning-footer::before`)).toContain("var(--aur-intel-rim)");
+    expect(body(`${SHELL} p.warning-footer::after`)).toContain("rotate(45deg)");
     expect(code).not.toMatch(/font-weight:\s*(?:[89]\d\d|bold)/);
   });
 
   it("keeps burgundy off text and off the buttons: it is the rim, the haze, the hairline and the decorative mark", () => {
     const burgundyRules = rules.filter(({ body: ruleBody }) => /--aur-burgundy/.test(ruleBody));
 
-    expect(burgundyRules.map(({ selector }) => selector).sort()).toEqual(
-      [".builder-portal-root .modal-overlay:has(> .warning-modal)", SHELL, `${SHELL} p.warning-footer`, `${SHELL} .warning-footer > span`].sort()
+    expect([...new Set(burgundyRules.map(({ selector }) => selector))].sort()).toEqual(
+      [".builder-portal-root .modal-overlay:has(> .warning-modal)", SHELL, `${SHELL} .warning-footer > span`].sort()
     );
     // as a colour it appears once: the aria-hidden mark. Never the small text, never a button.
     const asColor = rules.filter(({ body: ruleBody }) => /(?:^|[ ;])color: var\(--aur-burgundy/.test(ruleBody));
@@ -117,9 +121,11 @@ describe("Rare-selection warning dialog (builder-warning-dialog.css)", () => {
   });
 });
 
-describe("Rare-selection warning dialog: the kraken crest", () => {
+describe("Rare-selection warning dialog: the heraldic composition (frame, crest, two zones)", () => {
   const CREST = "/media/warning/kraken-crest.webp";
-  const crest = body(`${SHELL}::before`);
+  const frame = body(`${SHELL}::before`);
+  const crest = body(`${SHELL}::after`);
+  const phone = (selector) => rules.filter((rule) => rule.selector === selector).at(-1)?.body;
 
   it("is Aurelian's own optimized asset, a real WebP in the host's public media, light enough to load with the dialog", () => {
     const bytes = readFileSync(join(APP_ROOT, "public", "media", "warning", "kraken-crest.webp"));
@@ -127,60 +133,90 @@ describe("Rare-selection warning dialog: the kraken crest", () => {
     expect(bytes.subarray(0, 4).toString("ascii")).toBe("RIFF");
     expect(bytes.subarray(8, 12).toString("ascii")).toBe("WEBP");
     expect(bytes.length).toBeLessThan(120 * 1024);
-    // the one picture this file references
+    // the one picture this file references: every other ornament is a gradient
     expect([...code.matchAll(/url\(\s*["']?([^"')]+)["']?\s*\)/g)].map((match) => match[1])).toEqual([CREST]);
   });
 
-  it("is a CSS background on the shell's ::before, like the Curator Pick artwork: no element, no alt text, nothing to focus", () => {
+  it("is a CSS background on the shell's ::after, like the Curator Pick artwork: no element, no alt text, nothing to focus", () => {
     expect(crest).toContain('content: ""');
     expect(crest).toContain(`background: url("${CREST}") center / contain no-repeat`);
     expect(crest).toContain("pointer-events: none");
-    // same device as the Curator Pick card: a background-image pseudo-element, never an <img>
     expect(read(APP_ROOT, "src", "app", "builder-intelligence.css")).toMatch(/curator-pick-slot::after \{[^}]*pointer-events: none;/);
     // and the shared markup gains no element for it: the dialog still opens straight onto the eyebrow
     expect(runtime).toMatch(/aria-labelledby="rare-selection-title"\s+onClick=\{\(event\) => event\.stopPropagation\(\)\}\s*>\s*<h2>/);
     expect(runtime).not.toMatch(/kraken|crest/i);
   });
 
-  it("is blended into the shell, not pasted on it: masked to a soft circle, softened, saturation held back", () => {
-    expect(crest).toContain("mask-image: radial-gradient(closest-side, #000 80%, transparent 100%)");
-    expect(crest).toContain("-webkit-mask-image: radial-gradient(closest-side, #000 80%, transparent 100%)");
-    const opacity = Number(crest.match(/opacity: ([\d.]+)/)[1]);
-
-    expect(opacity).toBeGreaterThan(0.6);
-    expect(opacity).toBeLessThan(1);
-    expect(crest).toContain("filter: saturate(");
+  it("is blended into the shell, not pasted on it: masked to a soft circle with its flourishes kept, set in a burgundy haze", () => {
+    expect(crest).toContain("mask-image: radial-gradient(closest-side, #000 84%, transparent 100%)");
+    expect(crest).toContain("-webkit-mask-image: radial-gradient(closest-side, #000 84%, transparent 100%)");
+    expect(Number(crest.match(/opacity: ([\d.]+)/)[1])).toBeGreaterThan(0.85);
+    // the haze and a faint brass glow are the shell's own background layers, under the crest
+    expect(body(SHELL)).toMatch(/radial-gradient\(circle 9rem at 84% 50%, var\(--aur-intel-wash\), transparent\)/);
+    expect(body(SHELL)).toMatch(/radial-gradient\(ellipse 50% 90% at 84% 50%, var\(--aur-burgundy-wash\), transparent 78%\)/);
   });
 
-  it("is an upright grid item beside the eyebrow and the name, undoing the shared watermark's absolute, rotated placement", () => {
-    expect(sharedCss).toMatch(/\.warning-modal::before \{[^}]*position: absolute;[^}]*transform: rotate\(-18deg\);/);
+  it("is an upright grid item in a right-hand chamber, centred on the dialog's height, undoing the shared watermark's placement", () => {
+    expect(sharedCss).toMatch(/\.warning-modal::after \{[^}]*position: absolute;[^}]*left: -6px;/);
+    expect(sharedCss).toMatch(/\.warning-modal::before \{[^}]*transform: rotate\(-18deg\);/);
     expect(crest).toContain("position: static");
-    expect(crest).toContain("transform: none");
     expect(crest).toContain("grid-column: 2");
-    expect(crest).toContain("grid-row: 1 / span 2");
+    expect(crest).toContain("grid-row: 1 / -1");
+    expect(crest).toContain("align-self: center");
+    expect(frame).toContain("transform: none");
+    expect(frame).toContain("opacity: 1");
     expect(body(SHELL)).toContain("display: grid");
-    expect(body(SHELL)).toContain("grid-template-columns: minmax(0, 1fr) auto");
+    expect(body(SHELL)).toContain("grid-template-columns: minmax(0, 1fr) var(--aur-warning-crest)");
   });
 
-  it("keeps the copy left-aligned and full-width below the header band, so the crest can never sit under a line of text", () => {
+  it("sizes the crest fluidly: about 216px at 1440, 192 at 1280, 154 at 1024, never under 152, 104px on a phone", () => {
+    const clamp = code.match(/--aur-warning-crest: clamp\(([\d.]+)rem, ([\d.]+)vw, ([\d.]+)rem\)/);
+    const px = (viewport) => Math.min(Number(clamp[3]) * 16, Math.max(Number(clamp[1]) * 16, (Number(clamp[2]) / 100) * viewport));
+
+    expect(Math.round(px(1440))).toBeGreaterThanOrEqual(180);
+    expect(Math.round(px(1440))).toBeLessThanOrEqual(230);
+    expect(px(1280)).toBeGreaterThanOrEqual(180);
+    expect(px(1024)).toBeGreaterThanOrEqual(150);
+    expect(px(1024)).toBeLessThanOrEqual(190);
+    expect(px(768)).toBeGreaterThanOrEqual(150);
+    const small = Number(code.match(/@media \(max-width: 700px\) \{[^@]*--aur-warning-crest: ([\d.]+)rem/)[1]) * 16;
+
+    expect(small).toBeGreaterThanOrEqual(96);
+    expect(small).toBeLessThanOrEqual(120);
+  });
+
+  it("widens the warning, and only the warning, enough for a real text column beside the crest", () => {
+    expect(body(SHELL)).toMatch(/width: min\(40rem, 100%\)/);
+    // 640px wide, 32px padding each side, the widest crest (216px) and a 24px gap leave a 304-334px copy column at 1440
+    expect(640 - 64 - 216 - 24).toBeGreaterThanOrEqual(300);
+    // never wider than the package's own 92% ceiling on a small screen, which the host does not override
+    expect(sharedCss).toMatch(/\.warning-modal \{[^}]*max-width: 92%;/);
+    rules.forEach(({ selector, body: ruleBody }) => expect(ruleBody, selector).not.toMatch(/max-width|min-width/));
+  });
+
+  it("keeps the copy left-aligned in the left column, on the full width only below 700px, so the crest can never sit under text", () => {
     expect(body(SHELL)).toContain("text-align: left");
-    expect(body(`${SHELL} h2`)).toContain("grid-column: 1");
-    expect(body(`${SHELL} h3`)).toContain("grid-column: 1");
-    expect(body(`${SHELL} p, ${SHELL} .modal-actions`)).toBe("grid-column: 1 / -1;");
+    expect(body(`${SHELL} h2, ${SHELL} h3, ${SHELL} p, ${SHELL} .modal-actions`)).toBe("grid-column: 1;");
     expect(code).not.toMatch(/text-align:\s*(?:center|right)/);
-    // the crest's height is what sets the header band's, through row 2 (1fr) absorbing it
-    expect(body(SHELL)).toContain("grid-template-rows: auto 1fr auto auto auto");
+    // phones: the crest steps back into the header band and the copy below it spans both columns
+    expect(code).toMatch(/@media \(max-width: 700px\) \{/);
+    expect(phone(`${SHELL}::after`)).toContain("grid-row: 1 / span 2");
+    expect(phone(`${SHELL} p, ${SHELL} .modal-actions`)).toBe("grid-column: 1 / -1;");
+    expect(phone(SHELL)).toContain("grid-template-rows: auto 1fr auto auto auto");
   });
 
-  it("scales down on phones and shifts less into the corner, still a stamp and still clear of the copy", () => {
-    const desktop = Number(code.match(/--aur-warning-crest-size: ([\d.]+)rem/)[1]);
-    const phone = Number(code.match(/@media \(max-width: 520px\) \{[^@]*--aur-warning-crest-size: ([\d.]+)rem/)[1]);
-
-    expect(desktop).toBeGreaterThanOrEqual(7);
-    expect(phone).toBeGreaterThanOrEqual(4.5);
-    expect(phone).toBeLessThan(desktop);
-    // 460px wide dialog: the crest is a quarter of it at most
-    expect((desktop * 16) / 460).toBeLessThan(0.3);
+  it("frames the dialog with restraint: an inner hairline, eight bracket strokes, a seam between the zones; thinned on phones", () => {
+    expect(frame).toContain("inset: 0.5rem");
+    expect(frame).toContain("z-index: -1");
+    expect(frame).toContain("border: 1px solid var(--aur-intel-hair)");
+    expect(frame.match(/no-repeat/g)).toHaveLength(9);
+    expect(frame).toContain("pointer-events: none");
+    expect(body(SHELL)).toContain("isolation: isolate");
+    // eyebrow hairline and the caution divider are gradients on pseudo-elements, not images or icons
+    expect(body(`${SHELL} h2::after`)).toContain("linear-gradient(90deg, var(--aur-intel-rim), transparent)");
+    expect(body(`${SHELL} p.warning-footer::before`)).toContain("linear-gradient(90deg, transparent, var(--aur-intel-rim) 12%");
+    expect(phone(`${SHELL}::before`)).toBe("background: none;");
+    expect(code).not.toMatch(/data:|<svg|content: "[^"]/);
   });
 });
 
