@@ -10,14 +10,15 @@
    It has no header and no close of its own (Cancelar and Escape are its way out), so it is NOT given the standard
    dialog header; it takes the family's shell, type and buttons and keeps a caution of its own.
 
-   Composition, on a desktop: two zones. LEFT, the copy and the actions, left-aligned in a column that keeps a
-   comfortable measure. RIGHT, a chamber for the kraken crest (public/media/warning/kraken-crest.webp), set in a
-   burgundy haze and centred on the dialog's height, so the dialog reads as a seal beside a statement rather than a
-   notice with a sticker. On a phone the crest steps back into the header band beside the eyebrow and the name, and
+   Composition, on a desktop: one plaque. The copy and the actions take the left, left-aligned in a column that keeps
+   a comfortable measure; the kraken crest (public/media/warning/kraken-crest.webp) takes the upper right. Between
+   them there is no line and no box, only space and one continuous atmosphere: a burgundy haze that gathers
+   behind the crest and drifts toward the copy, with a faint brass glow at its heart. The inner frame is what holds
+   the whole together, so the dialog reads as a single engraved piece rather than two panels. On a phone the crest steps back into the header band beside the eyebrow and the name, and
    the copy takes the full width below it.
 
    The ornament is CSS only, and kept to what is felt on a second look: a fine inner brass frame with brackets at
-   its corners, a hairline after the eyebrow, a hairline with one diamond above the caution. No second image, no
+   its corners, a hairline after the eyebrow, a hairline with one diamond above the caution. Nothing runs vertically. No second image, no
    icon font, no emoji.
 
      ::before   the inner frame and its corner brackets (behind the copy, never over it)
@@ -39,17 +40,20 @@
 
 /* ---- Shell ----------------------------------------------------------------------------------------- */
 .builder-portal-root .warning-modal {
-  /* 15vw: 216px at 1440, 192 at 1280, 154 at 1024, 152 (the floor) at 768 */
-  --aur-warning-crest: clamp(9.5rem, 15vw, 13.5rem);
+  /* 16vw: 224px (the cap) at 1440, 205 at 1280, 164 at 1024, 160 (the floor) at 768 */
+  --aur-warning-crest: clamp(10rem, 16vw, 14rem);
   /* wider than the package's 460px so the copy keeps a real column beside the crest; max-width: 92% still holds */
   width: min(40rem, 100%);
   padding: 2rem 2rem 1.75rem;
   border: 1px solid var(--aur-burgundy-rim);
   border-radius: 10px;
-  /* the burgundy haze behind the crest, over the family's warm ground */
+  /* One atmosphere over the family's warm ground, centred on the crest (82% across, 40% down): a faint brass glow
+     at its heart, the burgundy haze around it, and a wider, fainter burgundy that carries it toward the copy, so
+     the artwork and the text sit in the same air and no edge is ever drawn between them. */
   background:
-    radial-gradient(circle 9rem at 84% 50%, var(--aur-intel-wash), transparent),
-    radial-gradient(ellipse 50% 90% at 84% 50%, var(--aur-burgundy-wash), transparent 78%),
+    radial-gradient(circle 11rem at 82% 40%, var(--aur-intel-wash), transparent),
+    radial-gradient(ellipse 58% 100% at 82% 40%, var(--aur-burgundy-wash), transparent 82%),
+    radial-gradient(ellipse 90% 80% at 66% 46%, var(--aur-burgundy-glow), transparent 78%),
     var(--aur-intel-card);
   box-shadow:
     0 28px 90px var(--aur-intel-shadow),
@@ -61,12 +65,12 @@
   display: grid;
   grid-template-columns: minmax(0, 1fr) var(--aur-warning-crest);
   grid-template-rows: repeat(5, auto);
-  column-gap: 1.5rem;
+  column-gap: 1.25rem;
   align-content: start;
 }
 
-/* The inner frame: a hairline a few pixels inside the rim, with a brass bracket at each corner, and the seam
-   between the copy and the crest. */
+/* The inner frame: a hairline a few pixels inside the rim, with a brass bracket at each corner. It is the one
+   line that goes all the way round: the copy and the crest both sit inside it. */
 .builder-portal-root .warning-modal::before {
   content: "";
   position: absolute;
@@ -84,10 +88,7 @@
     linear-gradient(var(--aur-intel-rim-strong), var(--aur-intel-rim-strong)) bottom left / 1rem 1px no-repeat,
     linear-gradient(var(--aur-intel-rim-strong), var(--aur-intel-rim-strong)) bottom left / 1px 1rem no-repeat,
     linear-gradient(var(--aur-intel-rim-strong), var(--aur-intel-rim-strong)) bottom right / 1rem 1px no-repeat,
-    linear-gradient(var(--aur-intel-rim-strong), var(--aur-intel-rim-strong)) bottom right / 1px 1rem no-repeat,
-    /* the seam between the two zones: a hairline that fades out at both ends, in the middle of the column gap */
-    linear-gradient(180deg, transparent, var(--aur-intel-hair) 22%, var(--aur-intel-hair) 78%, transparent)
-      right calc(1.35rem + var(--aur-warning-crest)) top 12% / 1px 76% no-repeat;
+    linear-gradient(var(--aur-intel-rim-strong), var(--aur-intel-rim-strong)) bottom right / 1px 1rem no-repeat;
   pointer-events: none;
 }
 
@@ -95,17 +96,18 @@
    the same device as the Curator Pick's artwork (builder-intelligence.css): no element, no alt text, no pointer
    events, nothing for a screen reader or the keyboard to meet. The picture is a square on its own dark red
    ground, so the mask fades that square into the haze and leaves the crest, its outer flourishes included.
-   Centred on the dialog's height, a little into the padding so it sits close to the edge like a seal. */
+   Set high and to the right, a little into the padding, close to the corner like a seal: the upper right is
+   where the eye lands after the title, and the space under it is left to the haze. */
 .builder-portal-root .warning-modal::after {
   content: "";
   /* the shared watermark is absolute, offset and faint: it becomes an upright item in the grid */
   position: static;
   grid-column: 2;
   grid-row: 1 / -1;
-  align-self: center;
+  align-self: start;
   width: var(--aur-warning-crest);
   height: var(--aur-warning-crest);
-  margin: 0 -0.9rem 0 0;
+  margin: 0.75rem -1.2rem 0 0;
   background: url("/media/warning/kraken-crest.webp") center / contain no-repeat;
   -webkit-mask-image: radial-gradient(closest-side, #000 84%, transparent 100%);
   mask-image: radial-gradient(closest-side, #000 84%, transparent 100%);
@@ -258,7 +260,8 @@
     column-gap: 1rem;
     grid-template-rows: auto 1fr auto auto auto;
     background:
-      radial-gradient(ellipse 60% 38% at 86% 14%, var(--aur-burgundy-wash), transparent 78%),
+      radial-gradient(ellipse 70% 42% at 84% 16%, var(--aur-burgundy-wash), transparent 80%),
+      radial-gradient(ellipse 100% 60% at 62% 30%, var(--aur-burgundy-glow), transparent 78%),
       var(--aur-intel-card);
   }
 

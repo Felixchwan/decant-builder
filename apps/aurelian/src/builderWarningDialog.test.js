@@ -151,31 +151,34 @@ describe("Rare-selection warning dialog: the heraldic composition (frame, crest,
     expect(crest).toContain("mask-image: radial-gradient(closest-side, #000 84%, transparent 100%)");
     expect(crest).toContain("-webkit-mask-image: radial-gradient(closest-side, #000 84%, transparent 100%)");
     expect(Number(crest.match(/opacity: ([\d.]+)/)[1])).toBeGreaterThan(0.85);
-    // the haze and a faint brass glow are the shell's own background layers, under the crest
-    expect(body(SHELL)).toMatch(/radial-gradient\(circle 9rem at 84% 50%, var\(--aur-intel-wash\), transparent\)/);
-    expect(body(SHELL)).toMatch(/radial-gradient\(ellipse 50% 90% at 84% 50%, var\(--aur-burgundy-wash\), transparent 78%\)/);
+    // one atmosphere, the shell's own background layers: a brass glow and a burgundy haze centred on the crest, and a
+    // wider, fainter burgundy centred toward the copy, so the two share the same air
+    expect(body(SHELL)).toMatch(/radial-gradient\(circle 11rem at 82% 40%, var\(--aur-intel-wash\), transparent\)/);
+    expect(body(SHELL)).toMatch(/radial-gradient\(ellipse 58% 100% at 82% 40%, var\(--aur-burgundy-wash\), transparent 82%\)/);
+    expect(body(SHELL)).toMatch(/radial-gradient\(ellipse 90% 80% at 66% 46%, var\(--aur-burgundy-glow\), transparent 78%\)/);
   });
 
-  it("is an upright grid item in a right-hand chamber, centred on the dialog's height, undoing the shared watermark's placement", () => {
+  it("is an upright grid item at the upper right, high and close to the corner, undoing the shared watermark's placement", () => {
     expect(sharedCss).toMatch(/\.warning-modal::after \{[^}]*position: absolute;[^}]*left: -6px;/);
     expect(sharedCss).toMatch(/\.warning-modal::before \{[^}]*transform: rotate\(-18deg\);/);
     expect(crest).toContain("position: static");
     expect(crest).toContain("grid-column: 2");
     expect(crest).toContain("grid-row: 1 / -1");
-    expect(crest).toContain("align-self: center");
+    expect(crest).toContain("align-self: start");
+    expect(crest).toContain("margin: 0.75rem -1.2rem 0 0");
     expect(frame).toContain("transform: none");
     expect(frame).toContain("opacity: 1");
     expect(body(SHELL)).toContain("display: grid");
     expect(body(SHELL)).toContain("grid-template-columns: minmax(0, 1fr) var(--aur-warning-crest)");
   });
 
-  it("sizes the crest fluidly: about 216px at 1440, 192 at 1280, 154 at 1024, never under 152, 104px on a phone", () => {
+  it("sizes the crest fluidly: 224px at 1440, about 205 at 1280, 164 at 1024, never under 160, 104px on a phone", () => {
     const clamp = code.match(/--aur-warning-crest: clamp\(([\d.]+)rem, ([\d.]+)vw, ([\d.]+)rem\)/);
     const px = (viewport) => Math.min(Number(clamp[3]) * 16, Math.max(Number(clamp[1]) * 16, (Number(clamp[2]) / 100) * viewport));
 
-    expect(Math.round(px(1440))).toBeGreaterThanOrEqual(180);
+    expect(Math.round(px(1440))).toBeGreaterThanOrEqual(220);
     expect(Math.round(px(1440))).toBeLessThanOrEqual(230);
-    expect(px(1280)).toBeGreaterThanOrEqual(180);
+    expect(px(1280)).toBeGreaterThanOrEqual(190);
     expect(px(1024)).toBeGreaterThanOrEqual(150);
     expect(px(1024)).toBeLessThanOrEqual(190);
     expect(px(768)).toBeGreaterThanOrEqual(150);
@@ -187,8 +190,8 @@ describe("Rare-selection warning dialog: the heraldic composition (frame, crest,
 
   it("widens the warning, and only the warning, enough for a real text column beside the crest", () => {
     expect(body(SHELL)).toMatch(/width: min\(40rem, 100%\)/);
-    // 640px wide, 32px padding each side, the widest crest (216px) and a 24px gap leave a 304-334px copy column at 1440
-    expect(640 - 64 - 216 - 24).toBeGreaterThanOrEqual(300);
+    // 640px wide, 32px padding each side, the widest crest (224px) and a 20px gap leave a 330px copy column at 1440
+    expect(640 - 64 - 224 - 20).toBeGreaterThanOrEqual(320);
     // never wider than the package's own 92% ceiling on a small screen, which the host does not override
     expect(sharedCss).toMatch(/\.warning-modal \{[^}]*max-width: 92%;/);
     rules.forEach(({ selector, body: ruleBody }) => expect(ruleBody, selector).not.toMatch(/max-width|min-width/));
@@ -205,11 +208,14 @@ describe("Rare-selection warning dialog: the heraldic composition (frame, crest,
     expect(phone(SHELL)).toContain("grid-template-rows: auto 1fr auto auto auto");
   });
 
-  it("frames the dialog with restraint: an inner hairline, eight bracket strokes, a seam between the zones; thinned on phones", () => {
+  it("frames the dialog with restraint: an inner hairline and eight bracket strokes, and NO line between copy and crest; thinned on phones", () => {
     expect(frame).toContain("inset: 0.5rem");
     expect(frame).toContain("z-index: -1");
     expect(frame).toContain("border: 1px solid var(--aur-intel-hair)");
-    expect(frame.match(/no-repeat/g)).toHaveLength(9);
+    expect(frame.match(/no-repeat/g)).toHaveLength(8);
+    // nothing runs vertically between the zones: no tall gradient strip, no seam, no side border
+    expect(code).not.toMatch(/linear-gradient\(180deg|\/ 1px 76%|seam/);
+    expect(code).not.toMatch(/border-(?:left|right)\s*:/);
     expect(frame).toContain("pointer-events: none");
     expect(body(SHELL)).toContain("isolation: isolate");
     // eyebrow hairline and the caution divider are gradients on pseudo-elements, not images or icons
