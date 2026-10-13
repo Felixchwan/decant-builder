@@ -11,18 +11,20 @@
    dialog header; it takes the family's shell, type and buttons and keeps a caution of its own.
 
    Composition, on a desktop: one plaque. The copy and the actions take the left, left-aligned in a column that keeps
-   a comfortable measure; the kraken crest (public/media/warning/kraken-crest.webp) takes the upper right. Between
-   them there is no line and no box, only space and one continuous atmosphere: a burgundy haze that gathers
-   behind the crest and drifts toward the copy, with a faint brass glow at its heart. The inner frame is what holds
-   the whole together, so the dialog reads as a single engraved piece rather than two panels. On a phone the crest steps back into the header band beside the eyebrow and the name, and
-   the copy takes the full width below it.
+   a comfortable measure; the Squid medallion (public/media/warning/squid-medallion.webp: an engraved portrait in an
+   oval baroque brass frame) hangs in the upper right like a portrait in a plaque. Between them there is no line
+   and no box, only space and one continuous atmosphere. The medallion carries its own burgundy air and ornament,
+   so the host adds only a light haze to meet it to the shell, and keeps its own frame quieter than the medallion's:
+   the dialog's frame is the architecture, the medallion's frame is the focal point. On a phone the medallion
+   steps back into the header band beside the eyebrow and the name, and the copy takes the full width below it.
 
-   The ornament is CSS only, and kept to what is felt on a second look: a fine inner brass frame with brackets at
-   its corners, a hairline after the eyebrow, a hairline with one diamond above the caution. Nothing runs vertically. No second image, no
-   icon font, no emoji.
+   The host's own ornament is CSS only, and kept to what is felt on a second look: a fine inner brass frame with
+   brackets at its corners, a hairline after the eyebrow, a hairline with one diamond above the caution. Nothing
+   runs vertically. No second image, no icon font, no emoji.
 
      ::before   the inner frame and its corner brackets (behind the copy, never over it)
-     ::after    the crest, an upright grid item in the right-hand column
+     ::after    the medallion, an upright grid item in the right-hand column (the custom property is still called
+                --aur-warning-crest: it is the artwork's size)
 
    Both pseudo-elements replace the shared stylesheet's squid and skull watermarks (absolute, rotated, 120px emoji at
    6-7%), whose position, offsets, rotation and opacity are therefore all reset here.
@@ -40,20 +42,21 @@
 
 /* ---- Shell ----------------------------------------------------------------------------------------- */
 .builder-portal-root .warning-modal {
-  /* 16vw: 224px (the cap) at 1440, 205 at 1280, 164 at 1024, 160 (the floor) at 768 */
-  --aur-warning-crest: clamp(10rem, 16vw, 14rem);
-  /* wider than the package's 460px so the copy keeps a real column beside the crest; max-width: 92% still holds */
-  width: min(40rem, 100%);
+  /* 18vw: 260px (the cap) at 1440, 230 at 1280, 184 at 1024 and 768 (the floor). The portrait has fine engraving
+     and a full oval frame, so it gets room: the largest of any artwork in the dialogs. */
+  --aur-warning-crest: clamp(11.5rem, 18vw, 16.25rem);
+  /* wider than the package's 460px so the copy keeps a real column (about 360px at 1440) beside the portrait;
+     max-width: 92% still holds */
+  width: min(44rem, 100%);
   padding: 2rem 2rem 1.75rem;
   border: 1px solid var(--aur-burgundy-rim);
   border-radius: 10px;
-  /* One atmosphere over the family's warm ground, centred on the crest (82% across, 40% down): a faint brass glow
-     at its heart, the burgundy haze around it, and a wider, fainter burgundy that carries it toward the copy, so
-     the artwork and the text sit in the same air and no edge is ever drawn between them. */
+  /* One atmosphere over the family's warm ground. The medallion brings its own burgundy and brass, so the host
+     adds only what blends it in: a soft burgundy centred on the portrait (82% across, 38% down) and a wider, fainter
+     one that carries it toward the copy. No glow of its own behind the artwork: the picture is already lit. */
   background:
-    radial-gradient(circle 11rem at 82% 40%, var(--aur-intel-wash), transparent),
-    radial-gradient(ellipse 58% 100% at 82% 40%, var(--aur-burgundy-wash), transparent 82%),
-    radial-gradient(ellipse 90% 80% at 66% 46%, var(--aur-burgundy-glow), transparent 78%),
+    radial-gradient(ellipse 56% 100% at 82% 38%, var(--aur-burgundy-glow), transparent 80%),
+    radial-gradient(ellipse 90% 80% at 62% 46%, var(--aur-burgundy-glow), transparent 76%),
     var(--aur-intel-card);
   box-shadow:
     0 28px 90px var(--aur-intel-shadow),
@@ -92,12 +95,15 @@
   pointer-events: none;
 }
 
-/* The kraken crest: Aurelian's own insignia, the supplied crest at 512px. A CSS background on a pseudo-element,
-   the same device as the Curator Pick's artwork (builder-intelligence.css): no element, no alt text, no pointer
-   events, nothing for a screen reader or the keyboard to meet. The picture is a square on its own dark red
-   ground, so the mask fades that square into the haze and leaves the crest, its outer flourishes included.
-   Set high and to the right, a little into the padding, close to the corner like a seal: the upper right is
-   where the eye lands after the title, and the space under it is left to the haze. */
+/* The Squid medallion: the supplied portrait at 576px. A CSS background on a pseudo-element, the same device as
+   the Curator Pick's artwork (builder-intelligence.css): no element, no alt text, no pointer events, nothing for
+   a screen reader or the keyboard to meet. The picture is a square whose corners are near-black and whose oval
+   frame, with its finials and stars, runs almost to the edges, so it is NOT circle-masked (that would cut the
+   frame). Its red clouds do reach the left and right edges, though, which would draw a hard rectangle against the
+   shell: so the sides are feathered over 8% (where there is only cloud; the frame itself starts further in) and
+   the top and bottom, already near-black, over 1.5%, which leaves the finials whole; and a wide elliptical fade
+   that is full over the whole oval and only closes toward the four corners, where there is nothing but cloud.
+   Set high and to the right, a little into the padding. */
 .builder-portal-root .warning-modal::after {
   content: "";
   /* the shared watermark is absolute, offset and faint: it becomes an upright item in the grid */
@@ -107,11 +113,20 @@
   align-self: start;
   width: var(--aur-warning-crest);
   height: var(--aur-warning-crest);
-  margin: 0.75rem -1.2rem 0 0;
-  background: url("/media/warning/kraken-crest.webp") center / contain no-repeat;
-  -webkit-mask-image: radial-gradient(closest-side, #000 84%, transparent 100%);
-  mask-image: radial-gradient(closest-side, #000 84%, transparent 100%);
-  opacity: 0.96;
+  margin: 0.25rem -1rem 0 0;
+  background: url("/media/warning/squid-medallion.webp") center / contain no-repeat;
+  -webkit-mask-image:
+    linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent),
+    linear-gradient(180deg, transparent, #000 1.5%, #000 98.5%, transparent),
+    radial-gradient(ellipse 62% 62% at 50% 50%, #000 80%, transparent 100%);
+  -webkit-mask-composite: source-in;
+  mask-image:
+    linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent),
+    linear-gradient(180deg, transparent, #000 1.5%, #000 98.5%, transparent),
+    radial-gradient(ellipse 62% 62% at 50% 50%, #000 80%, transparent 100%);
+  mask-composite: intersect;
+  /* the shared watermark rule is 6% opaque: the portrait is shown as it is */
+  opacity: 1;
   pointer-events: none;
 }
 
@@ -255,13 +270,13 @@
    actions take the full width underneath. The brackets go: the ornament thins as the room does. */
 @media (max-width: 700px) {
   .builder-portal-root .warning-modal {
-    --aur-warning-crest: 6.5rem;
+    /* 112px at 375, 117 at 390, 120 (the cap) from 400 up */
+    --aur-warning-crest: clamp(7rem, 30vw, 7.5rem);
     padding: 1.4rem 1.25rem 1.25rem;
     column-gap: 1rem;
     grid-template-rows: auto 1fr auto auto auto;
     background:
-      radial-gradient(ellipse 70% 42% at 84% 16%, var(--aur-burgundy-wash), transparent 80%),
-      radial-gradient(ellipse 100% 60% at 62% 30%, var(--aur-burgundy-glow), transparent 78%),
+      radial-gradient(ellipse 70% 42% at 84% 16%, var(--aur-burgundy-glow), transparent 80%),
       var(--aur-intel-card);
   }
 
@@ -272,7 +287,7 @@
   .builder-portal-root .warning-modal::after {
     grid-row: 1 / span 2;
     align-self: start;
-    margin: -0.5rem -0.5rem 0 0;
+    margin: -0.6rem -0.6rem 0 0;
   }
 
   .builder-portal-root .warning-modal p,
@@ -282,5 +297,19 @@
 
   .builder-portal-root .warning-modal h3 {
     font-size: 1.5rem;
+  }
+
+  /* the header band's column is narrow beside the portrait: the eyebrow is tightened to stay on one line */
+  .builder-portal-root .warning-modal h2 {
+    gap: 0.5rem;
+    letter-spacing: 0.12em;
+    white-space: nowrap;
+  }
+}
+
+/* Under 340px (small, old phones) there is no room for the eyebrow on one line beside the portrait: it may wrap. */
+@media (max-width: 340px) {
+  .builder-portal-root .warning-modal h2 {
+    white-space: normal;
   }
 }

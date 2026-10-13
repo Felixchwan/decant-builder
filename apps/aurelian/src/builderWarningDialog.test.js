@@ -66,8 +66,8 @@ describe("Rare-selection warning dialog (builder-warning-dialog.css)", () => {
 
     expect(shell).toContain("border: 1px solid var(--aur-burgundy-rim)");
     expect(shell).toContain("border-radius: 10px");
-    // the family's ground, under a burgundy haze behind the crest
-    expect(shell).toMatch(/background: radial-gradient\([^;]*var\(--aur-burgundy-wash\)[^;]*\), var\(--aur-intel-card\);/);
+    // the family's ground, under a light burgundy haze around the portrait
+    expect(shell).toMatch(/background: radial-gradient\([^;]*var\(--aur-burgundy-glow\)[^;]*\), var\(--aur-intel-card\);/);
     expect(shell).toContain("0 28px 90px var(--aur-intel-shadow)");
     expect(shell).toContain("inset 0 1px 0 var(--aur-intel-hair)");
     // the same recipe the standard dialogs have (builder-modals.css), differing only in the rim colour
@@ -121,18 +121,21 @@ describe("Rare-selection warning dialog (builder-warning-dialog.css)", () => {
   });
 });
 
-describe("Rare-selection warning dialog: the heraldic composition (frame, crest, two zones)", () => {
-  const CREST = "/media/warning/kraken-crest.webp";
+describe("Rare-selection warning dialog: the Squid medallion composition (frame, portrait, one plaque)", () => {
+  const CREST = "/media/warning/squid-medallion.webp";
   const frame = body(`${SHELL}::before`);
   const crest = body(`${SHELL}::after`);
   const phone = (selector) => rules.filter((rule) => rule.selector === selector).at(-1)?.body;
 
   it("is Aurelian's own optimized asset, a real WebP in the host's public media, light enough to load with the dialog", () => {
-    const bytes = readFileSync(join(APP_ROOT, "public", "media", "warning", "kraken-crest.webp"));
+    const bytes = readFileSync(join(APP_ROOT, "public", "media", "warning", "squid-medallion.webp"));
 
     expect(bytes.subarray(0, 4).toString("ascii")).toBe("RIFF");
     expect(bytes.subarray(8, 12).toString("ascii")).toBe("WEBP");
     expect(bytes.length).toBeLessThan(120 * 1024);
+    // the superseded kraken crest is gone from the host's media and from the stylesheet
+    expect(readdirSync(join(APP_ROOT, "public", "media", "warning"))).toEqual(["squid-medallion.webp"]);
+    expect(css).not.toContain("kraken");
     // the one picture this file references: every other ornament is a gradient
     expect([...code.matchAll(/url\(\s*["']?([^"')]+)["']?\s*\)/g)].map((match) => match[1])).toEqual([CREST]);
   });
@@ -144,18 +147,35 @@ describe("Rare-selection warning dialog: the heraldic composition (frame, crest,
     expect(read(APP_ROOT, "src", "app", "builder-intelligence.css")).toMatch(/curator-pick-slot::after \{[^}]*pointer-events: none;/);
     // and the shared markup gains no element for it: the dialog still opens straight onto the eyebrow
     expect(runtime).toMatch(/aria-labelledby="rare-selection-title"\s+onClick=\{\(event\) => event\.stopPropagation\(\)\}\s*>\s*<h2>/);
-    expect(runtime).not.toMatch(/kraken|crest/i);
+    expect(runtime).not.toMatch(/kraken|crest|medallion/i);
   });
 
-  it("is blended into the shell, not pasted on it: masked to a soft circle with its flourishes kept, set in a burgundy haze", () => {
-    expect(crest).toContain("mask-image: radial-gradient(closest-side, #000 84%, transparent 100%)");
-    expect(crest).toContain("-webkit-mask-image: radial-gradient(closest-side, #000 84%, transparent 100%)");
-    expect(Number(crest.match(/opacity: ([\d.]+)/)[1])).toBeGreaterThan(0.85);
-    // one atmosphere, the shell's own background layers: a brass glow and a burgundy haze centred on the crest, and a
-    // wider, fainter burgundy centred toward the copy, so the two share the same air
-    expect(body(SHELL)).toMatch(/radial-gradient\(circle 11rem at 82% 40%, var\(--aur-intel-wash\), transparent\)/);
-    expect(body(SHELL)).toMatch(/radial-gradient\(ellipse 58% 100% at 82% 40%, var\(--aur-burgundy-wash\), transparent 82%\)/);
-    expect(body(SHELL)).toMatch(/radial-gradient\(ellipse 90% 80% at 66% 46%, var\(--aur-burgundy-glow\), transparent 78%\)/);
+  it("keeps its whole oval frame: not circle-masked, only the cloud-filled sides and the corners are feathered", () => {
+    // sides over 8%, top and bottom over 1.5% (the finials reach the edges), and an ellipse that is full over the oval
+    const layers = [
+      "linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent)",
+      "linear-gradient(180deg, transparent, #000 1.5%, #000 98.5%, transparent)",
+      "radial-gradient(ellipse 62% 62% at 50% 50%, #000 80%, transparent 100%)",
+    ].join(", ");
+
+    expect(crest).toContain(`mask-image: ${layers}`);
+    expect(crest).toContain(`-webkit-mask-image: ${layers}`);
+    expect(crest).toContain("mask-composite: intersect");
+    expect(crest).toContain("-webkit-mask-composite: source-in");
+    expect(crest).not.toMatch(/closest-side|radial-gradient\(circle/);
+    // shown as it is: the shared watermark's 6% opacity is overridden, and nothing filters or blends it
+    expect(crest).toContain("opacity: 1");
+    expect(crest).not.toMatch(/filter:|mix-blend-mode/);
+  });
+
+  it("adds only a light haze: the portrait carries its own burgundy, so the host has no glow of its own behind it", () => {
+    const shell = body(SHELL);
+
+    expect(shell).toMatch(/radial-gradient\(ellipse 56% 100% at 82% 38%, var\(--aur-burgundy-glow\), transparent 80%\)/);
+    expect(shell).toMatch(/radial-gradient\(ellipse 90% 80% at 62% 46%, var\(--aur-burgundy-glow\), transparent 76%\)/);
+    // the stronger wash and the brass glow used behind the previous artwork are not stacked on this one
+    expect(shell).not.toContain("--aur-burgundy-wash), transparent 82%");
+    expect(shell).not.toContain("var(--aur-intel-wash), transparent)");
   });
 
   it("is an upright grid item at the upper right, high and close to the corner, undoing the shared watermark's placement", () => {
@@ -165,33 +185,35 @@ describe("Rare-selection warning dialog: the heraldic composition (frame, crest,
     expect(crest).toContain("grid-column: 2");
     expect(crest).toContain("grid-row: 1 / -1");
     expect(crest).toContain("align-self: start");
-    expect(crest).toContain("margin: 0.75rem -1.2rem 0 0");
+    expect(crest).toContain("margin: 0.25rem -1rem 0 0");
     expect(frame).toContain("transform: none");
     expect(frame).toContain("opacity: 1");
     expect(body(SHELL)).toContain("display: grid");
     expect(body(SHELL)).toContain("grid-template-columns: minmax(0, 1fr) var(--aur-warning-crest)");
   });
 
-  it("sizes the crest fluidly: 224px at 1440, about 205 at 1280, 164 at 1024, never under 160, 104px on a phone", () => {
+  it("sizes the portrait fluidly: 260px at 1440, about 230 at 1280, 184 at 1024 and 768, 113-120px on a phone", () => {
     const clamp = code.match(/--aur-warning-crest: clamp\(([\d.]+)rem, ([\d.]+)vw, ([\d.]+)rem\)/);
     const px = (viewport) => Math.min(Number(clamp[3]) * 16, Math.max(Number(clamp[1]) * 16, (Number(clamp[2]) / 100) * viewport));
 
     expect(Math.round(px(1440))).toBeGreaterThanOrEqual(220);
-    expect(Math.round(px(1440))).toBeLessThanOrEqual(230);
-    expect(px(1280)).toBeGreaterThanOrEqual(190);
-    expect(px(1024)).toBeGreaterThanOrEqual(150);
-    expect(px(1024)).toBeLessThanOrEqual(190);
-    expect(px(768)).toBeGreaterThanOrEqual(150);
-    const small = Number(code.match(/@media \(max-width: 700px\) \{[^@]*--aur-warning-crest: ([\d.]+)rem/)[1]) * 16;
+    expect(Math.round(px(1440))).toBeLessThanOrEqual(280);
+    expect(px(1280)).toBeGreaterThanOrEqual(220);
+    expect(px(1024)).toBeGreaterThanOrEqual(170);
+    expect(px(1024)).toBeLessThanOrEqual(220);
+    expect(px(768)).toBeGreaterThanOrEqual(170);
+    // phones: clamp(7rem, 30vw, 7.5rem) is 113px at 375, 117 at 390 and 120 from 400 up
+    const small = code.match(/@media \(max-width: 700px\) \{[^@]*--aur-warning-crest: clamp\(([\d.]+)rem, ([\d.]+)vw, ([\d.]+)rem\)/);
+    const phonePx = (viewport) => Math.min(Number(small[3]) * 16, Math.max(Number(small[1]) * 16, (Number(small[2]) / 100) * viewport));
 
-    expect(small).toBeGreaterThanOrEqual(96);
-    expect(small).toBeLessThanOrEqual(120);
+    expect(phonePx(375)).toBeGreaterThanOrEqual(105);
+    expect(phonePx(428)).toBeLessThanOrEqual(135);
   });
 
   it("widens the warning, and only the warning, enough for a real text column beside the crest", () => {
-    expect(body(SHELL)).toMatch(/width: min\(40rem, 100%\)/);
-    // 640px wide, 32px padding each side, the widest crest (224px) and a 20px gap leave a 330px copy column at 1440
-    expect(640 - 64 - 224 - 20).toBeGreaterThanOrEqual(320);
+    expect(body(SHELL)).toMatch(/width: min\(44rem, 100%\)/);
+    // 704px wide, 32px padding each side, the widest portrait (260px) and a 20px gap leave a 360px copy column at 1440
+    expect(704 - 64 - 260 - 20).toBeGreaterThanOrEqual(350);
     // never wider than the package's own 92% ceiling on a small screen, which the host does not override
     expect(sharedCss).toMatch(/\.warning-modal \{[^}]*max-width: 92%;/);
     rules.forEach(({ selector, body: ruleBody }) => expect(ruleBody, selector).not.toMatch(/max-width|min-width/));
@@ -214,7 +236,7 @@ describe("Rare-selection warning dialog: the heraldic composition (frame, crest,
     expect(frame).toContain("border: 1px solid var(--aur-intel-hair)");
     expect(frame.match(/no-repeat/g)).toHaveLength(8);
     // nothing runs vertically between the zones: no tall gradient strip, no seam, no side border
-    expect(code).not.toMatch(/linear-gradient\(180deg|\/ 1px 76%|seam/);
+    expect(code).not.toMatch(/background:[^;]*linear-gradient\(180deg|\/ 1px 76%|seam/);
     expect(code).not.toMatch(/border-(?:left|right)\s*:/);
     expect(frame).toContain("pointer-events: none");
     expect(body(SHELL)).toContain("isolation: isolate");
@@ -222,6 +244,8 @@ describe("Rare-selection warning dialog: the heraldic composition (frame, crest,
     expect(body(`${SHELL} h2::after`)).toContain("linear-gradient(90deg, var(--aur-intel-rim), transparent)");
     expect(body(`${SHELL} p.warning-footer::before`)).toContain("linear-gradient(90deg, transparent, var(--aur-intel-rim) 12%");
     expect(phone(`${SHELL}::before`)).toBe("background: none;");
+    // below 340px the eyebrow may wrap; above it, it is held to one line beside the portrait
+    expect(phone(`${SHELL} h2`)).toBe("white-space: normal;");
     expect(code).not.toMatch(/data:|<svg|content: "[^"]/);
   });
 });
