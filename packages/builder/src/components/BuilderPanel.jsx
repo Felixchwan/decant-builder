@@ -1198,8 +1198,10 @@ const BuilderPanel = forwardRef(function BuilderPanel({
           isDetailOpen={isPerfumeDetailsOpen}
           selectedPerfumeIds={selectedPerfumeIds}
           isBoxFull={totalSlots >= maxSelectableSlots}
-          onBack={() => {
-            handleOpenComposerSetup();
+          openerRef={composerOpenerRef}
+          onBack={(event) => {
+            // The click is on Back, inside this dialog: it keeps the control that opened the Composer.
+            handleOpenComposerSetup(event);
             onCancelComposerProposal();
           }}
         />
@@ -1657,6 +1659,7 @@ function ComposerProposalModal({
   selectedPerfumeIds,
   isBoxFull,
   onBack,
+  openerRef,
 }) {
   const translator = createTranslator(builderConfig.locale, builderConfig.taxonomyLabels);
   const { t } = translator;
@@ -1685,6 +1688,19 @@ function ComposerProposalModal({
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [onCancel, isDetailOpen]);
+
+  // Focus: in on open (Close, not Back: it is the way out, as in the setup and the review), kept inside, and on
+  // close back on the control that opened the Composer -- the same one the setup remembered, since the proposal
+  // is reached through it. While a fragrance's details are open on top, they own Tab. See useModalFocus.
+  const dialogRef = useRef(null);
+
+  useModalFocus({
+    dialogRef,
+    openerRef,
+    fallbackSelector: ".compose-box-panel .compose-box-header-actions button:not(.secondary)",
+    initialFocusSelector: ".modal-header button:not(.secondary):not([disabled])",
+    suspended: isDetailOpen,
+  });
 
   const statusLabel = getLocalizedComposerProposalStatusLabel(proposal.status, translator);
   const isProposalAvailable = Boolean(proposal.proposalAvailable);
@@ -1737,6 +1753,8 @@ function ComposerProposalModal({
   return renderOwnedPortal(
     <div className="modal-overlay final-summary-overlay" onClick={onCancel}>
       <div
+        ref={dialogRef}
+        tabIndex={-1}
         className="final-summary-modal composer-proposal-modal"
         role="dialog"
         aria-modal="true"

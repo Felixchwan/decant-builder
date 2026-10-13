@@ -3527,18 +3527,72 @@ describe("Composer setup and Review dialogs: focus management wiring", () => {
   });
 
   it("the hook moves focus in without scrolling, traps Tab/Shift+Tab (also from <body>), and hands back unless another dialog took over", () => {
-    expect(hookSource).toContain("(getFocusableElements(dialog)[0] || dialog)?.focus({ preventScroll: true });");
+    expect(hookSource).toContain("(named || getFocusableElements(dialog)[0] || dialog)?.focus({ preventScroll: true });");
     expect(hookSource).toContain("getTabWrapTarget({");
     expect(hookSource).toContain("active: !active || active === dialog.ownerDocument.body ? null : active,");
     expect(hookSource).toContain("if (otherLayer && otherLayer !== dialog) {");
     expect(hookSource).toContain("const isHandedOff = Array.from(doc.querySelectorAll('[role=\"dialog\"]')).some((other) => other !== dialog);");
     expect(hookSource).toContain("resolveFocusRestoreTarget([clickedOpener, mountOpener, fallback], doc.body)");
-    // one listener, on the window, removed on unmount; no timers
+    // one listener, on the window, removed on unmount
     expect(hookSource).toMatch(/window\.addEventListener\("keydown", handleKeyDown\);\s*return \(\) => window\.removeEventListener\("keydown", handleKeyDown\);/);
-    expect(hookSource).not.toMatch(/setTimeout|requestAnimationFrame/);
+    // the one timer: the single zero-delay hand-back after a layer on top closes (the Note Explorer's own pattern)
+    expect(hookSource.match(/setTimeout/g)).toHaveLength(1);
+    expect(hookSource).toMatch(/\}, 0\);\s*return \(\) => window\.clearTimeout\(timer\);/);
+    expect(hookSource).not.toMatch(/requestAnimationFrame/);
   });
 
   it("is merchant-neutral: the hook names no host, no brand and no locale", () => {
     expect(hookSource).not.toMatch(/aurelian|discovery|decant|es-MX|en-US/i);
+  });
+});
+
+// Composer proposal dialog: the same contract, reached by the setup's hand-off. Source-contract checks, as above;
+// the lifecycle itself (original opener -> setup -> proposal -> Escape / Close / Back -> setup -> opener, with the
+// nested fragrance details, in the full and the empty state, on both hosts) is exercised live in a browser.
+describe("Composer proposal dialog: focus management wiring", () => {
+  const start = normalizedPanelSource.indexOf("function ComposerProposalModal(");
+  const proposalSource = normalizedPanelSource.slice(start, normalizedPanelSource.indexOf("\nfunction ", start + 10));
+  const setupStart = normalizedPanelSource.indexOf("function ComposerSetupModal(");
+  const setupSource = normalizedPanelSource.slice(setupStart, normalizedPanelSource.indexOf("function ComposerProposalModal(", setupStart));
+  const hookSource = readFileSync(new URL("../builder/internal/portal/useModalFocus.js", import.meta.url), "utf8").replace(/\r\n/g, "\n");
+
+  it("uses the same hook as the setup and the review, on a dialog that can hold focus", () => {
+    expect(proposalSource).toContain("const dialogRef = useRef(null);");
+    expect(proposalSource).toMatch(/useModalFocus\(\{[\s\S]*?dialogRef,[\s\S]*?openerRef,/);
+    expect(proposalSource).toContain('ref={dialogRef}\n        tabIndex={-1}\n        className="final-summary-modal composer-proposal-modal"');
+    // no private Tab handling next to the shared hook
+    expect(proposalSource).not.toContain('"Tab"');
+  });
+
+  it("opens on Close, not on Back: the way out, as in the setup and the review, and never a text field", () => {
+    expect(proposalSource).toContain('initialFocusSelector: ".modal-header button:not(.secondary):not([disabled])"');
+    expect(proposalSource).toContain('<button type="button" className="secondary" onClick={onBack}>');
+    expect(proposalSource).toContain('<button type="button" onClick={onCancel}>{t("general.close")}</button>');
+  });
+
+  it("restores to the control that opened the Composer: the proposal gets the setup's remembered opener", () => {
+    expect(normalizedPanelSource).toMatch(/<ComposerProposalModal[\s\S]*?openerRef=\{composerOpenerRef\}/);
+    expect(proposalSource).toContain('fallbackSelector: ".compose-box-panel .compose-box-header-actions button:not(.secondary)"');
+    expect(setupSource).toContain("openerRef,");
+  });
+
+  it("Back reopens the setup without replacing that opener: the click is inside this dialog, so getOpenerFromEvent keeps it", () => {
+    expect(normalizedPanelSource).toMatch(
+      /onBack=\{\(event\) => \{[^}]*handleOpenComposerSetup\(event\);\s*onCancelComposerProposal\(\);\s*\}\}/
+    );
+    expect(hookSource).toContain("const isHandedOff = Array.from(doc.querySelectorAll('[role=\"dialog\"]')).some((other) => other !== dialog);");
+  });
+
+  it("stands the trap down while fragrance details are open on top, and keeps its Escape rule", () => {
+    expect(proposalSource).toContain("suspended: isDetailOpen,");
+    expect(proposalSource).toContain('if (event.key === "Escape" && !isDetailOpen) {');
+    expect(hookSource).toContain("if (suspended) {");
+    expect(hookSource).toContain("[dialogRef, suspended]");
+  });
+
+  it("keeps the scroll lock and the rest of the dialog as they were", () => {
+    expect(proposalSource).toContain("const releaseBodyScrollLock = acquireBodyScrollLock(document);");
+    expect(proposalSource).toContain('<div className="modal-overlay final-summary-overlay" onClick={onCancel}>');
+    expect(proposalSource).toContain('aria-labelledby="composer-proposal-title"');
   });
 });
