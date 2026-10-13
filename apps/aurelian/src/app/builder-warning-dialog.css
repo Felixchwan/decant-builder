@@ -13,7 +13,7 @@
      was                                      now
      purple + cyan radial gradients           the warm near-black ground every other dialog has
      22px corners, soft purple rim            10px, a burgundy rim (the caution) and the brass inset hairline
-     a 120px squid and skull watermark        none (decoration, and an emoji)
+     a 120px squid and skull emoji watermark  a kraken crest stamped in the upper right corner
      white 500 sans title, violet name        brass tracked-caps eyebrow, the name in Georgia ivory
      white body, cyan 800 caution line        ivory-soft body, a quiet caution line under a hairline
      green outlined Cancelar, 10px buttons    ivory outlined Cancelar, 8px buttons, Agregar in brass as ever
@@ -40,12 +40,66 @@
     0 28px 90px var(--aur-intel-shadow),
     inset 0 1px 0 var(--aur-intel-hair);
   text-align: left;
+  /* A two-column grid so the crest is a real grid item beside the eyebrow and the name: the header band is as
+     tall as the crest, and the body, the caution line and the actions (full width, below) can never run under it
+     whatever the length of the name. Row 2 absorbs the crest's extra height. */
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-rows: auto 1fr auto auto auto;
+  align-content: start;
 }
 
-/* The squid and the skull watermarks were 120px emoji at 6-7% opacity: decoration, and off the palette. */
-.builder-portal-root .warning-modal::before,
+/* The kraken crest: Aurelian's own insignia (public/media/warning/kraken-crest.webp, the supplied crest at 512px),
+   stamped in the upper right like a seal. It replaces the squid and skull emoji watermarks (120px, 6-7% opacity,
+   off the palette). Same device as the Curator Pick's artwork (builder-intelligence.css): a CSS background on
+   a pseudo-element, masked into the shell, never in the way of the copy -- no element, no alt text, no pointer
+   events, nothing for a screen reader or the keyboard to meet. The picture is a square on its own dark red
+   ground, so the mask fades that square out into the dialog's near-black and leaves the crest; softened with a
+   little opacity and desaturation so it reads as an emblem, not a poster. It sits in the header band: the
+   eyebrow and the name keep clear of it (padding below) and the body starts underneath it. */
+.builder-portal-root .warning-modal {
+  --aur-warning-crest-size: 7.5rem;
+}
+
+.builder-portal-root .warning-modal::before {
+  content: "";
+  /* the shared stylesheet's watermark rule positions this pseudo-element absolutely, offset and rotated 18deg:
+     all of that is undone so the crest is an upright grid item in the flow */
+  position: static;
+  transform: none;
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  /* nudged toward the corner, still inside the padding: the stamp sits in the corner, not in the text's column */
+  width: var(--aur-warning-crest-size);
+  height: var(--aur-warning-crest-size);
+  margin: -0.6rem -0.75rem 0 0.75rem;
+  background: url("/media/warning/kraken-crest.webp") center / contain no-repeat;
+  -webkit-mask-image: radial-gradient(closest-side, #000 80%, transparent 100%);
+  mask-image: radial-gradient(closest-side, #000 80%, transparent 100%);
+  opacity: 0.85;
+  filter: saturate(0.9);
+  pointer-events: none;
+}
+
 .builder-portal-root .warning-modal::after {
   content: none;
+}
+
+/* Everything below the header band spans the full width; the eyebrow and the name sit in the first column. */
+.builder-portal-root .warning-modal h2 {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+.builder-portal-root .warning-modal h3 {
+  grid-column: 1;
+  grid-row: 2;
+  align-self: start;
+}
+
+.builder-portal-root .warning-modal p,
+.builder-portal-root .warning-modal .modal-actions {
+  grid-column: 1 / -1;
 }
 
 /* ---- Type ------------------------------------------------------------------------------------------ */
@@ -72,6 +126,7 @@
 }
 
 .builder-portal-root .warning-modal p {
+  margin: 0; /* grid items do not collapse margins: the caution line and the actions carry the spacing */
   color: var(--aur-intel-ink-soft);
   font-size: 0.9375rem;
   line-height: 1.55;
@@ -144,7 +199,12 @@
 
 @media (max-width: 520px) {
   .builder-portal-root .warning-modal {
+    --aur-warning-crest-size: 5.25rem;
     padding: 1.4rem 1.25rem 1.25rem;
+  }
+
+  .builder-portal-root .warning-modal::before {
+    margin: -0.4rem -0.6rem 0 0.5rem;
   }
 
   .builder-portal-root .warning-modal h3 {
