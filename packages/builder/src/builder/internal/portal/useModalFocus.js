@@ -1,7 +1,9 @@
 import { useEffect, useRef } from "react";
 import {
+  getDialogBeneath,
   getFocusableElements,
   getTabWrapTarget,
+  hasDialogTakenOver,
   resolveFocusRestoreTarget,
 } from "./modalFocus.js";
 
@@ -12,7 +14,10 @@ import {
 //
 //   dialogRef            ref to the dialog element (give it tabIndex={-1}, so it can hold focus when nothing in it can)
 //   openerRef            optional ref to the control that opened it, read from the click (see getOpenerFromEvent)
-//   fallbackSelector     optional selector of a stable control to land on if the opener is gone
+//   fallbackSelector     optional selector (or an ordered list of them, tried in that order) of a stable control to
+//                        land on if the opener is gone: the first match that is laid out and enabled. Over another
+//                        dialog it is not used: focus goes to that dialog's first control instead, since a page
+//                        control is behind that layer
 //   initialFocusSelector optional selector of the control to focus on open; the first control when absent
 //   suspended            true while another dialog is open on top of this one (fragrance details opened from a
 //                        row): the Tab trap stands down so it never pulls focus out from under that layer, and
@@ -21,28 +26,46 @@ import {
 // Merchant-neutral: it knows no class names of any host, only the ones its caller passes.
 export function useModalFocus({ dialogRef, openerRef, fallbackSelector, initialFocusSelector, suspended = false }) {
   // In on open, to the control the caller names or else the first one (the header's Close: it never raises a
-  // touch keyboard and never scrolls the page), and back to the opener on close, unless another dialog is
-  // already open (a hand-off, as from the Composer's setup to its proposal, or from its proposal back to the
-  // setup) -- that dialog owns focus now.
+  // touch keyboard and never scrolls the page), and back to the opener on close, unless another dialog has
+  // taken over (a hand-off, as from the Composer's setup to its proposal, or from its proposal back to the
+  // setup) -- that dialog owns focus now. A dialog that was already open underneath is not a successor: a
+  // rare-selection confirmation closing over fragrance details hands focus back into those details.
   useEffect(() => {
     const dialog = dialogRef.current;
     const doc = dialog?.ownerDocument || document;
     const clickedOpener = openerRef?.current;
     const mountOpener = doc.activeElement;
+    const dialogsBelow = new Set(Array.from(doc.querySelectorAll('[role="dialog"]')).filter((other) => other !== dialog));
     const named = initialFocusSelector ? dialog?.querySelector(initialFocusSelector) : null;
 
     (named || getFocusableElements(dialog)[0] || dialog)?.focus({ preventScroll: true });
 
     return () => {
-      const isHandedOff = Array.from(doc.querySelectorAll('[role="dialog"]')).some((other) => other !== dialog);
-
-      if (isHandedOff) {
+      // React's development-only strict-mode check runs this cleanup against a dialog that is still on the page,
+      // just before it mounts again: that is not a close, and handing focus back to the opener underneath for
+      // that instant would flash focus behind the dialog. A dialog that has really closed is no longer connected.
+      if (dialog?.isConnected) {
         return;
       }
 
-      const fallback = fallbackSelector ? doc.querySelector(fallbackSelector) : null;
+      const openDialogs = Array.from(doc.querySelectorAll('[role="dialog"]'));
 
-      resolveFocusRestoreTarget([clickedOpener, mountOpener, fallback], doc.body)?.focus({
+      if (hasDialogTakenOver({ dialog, openDialogs, dialogsBelow })) {
+        return;
+      }
+
+      // The fallback is a control on the page, so it only applies when the page is what is left behind this dialog.
+      // Over another dialog (details, Note Explorer, the Composer proposal under a rare-selection confirmation) a
+      // page control is behind that layer, so the last resort is that dialog's own first control (its Close, the
+      // same one a dialog takes focus on when it opens) rather than <body>.
+      // Every match of the fallback selector is a candidate, so a selector that names one control per layout (a
+      // desktop panel button and a phone tab) lands on whichever of them is actually laid out.
+      const beneath = getDialogBeneath({ dialog, openDialogs });
+      const fallbacks = beneath
+        ? [getFocusableElements(beneath)[0]]
+        : [].concat(fallbackSelector || []).flatMap((selector) => Array.from(doc.querySelectorAll(selector)));
+
+      resolveFocusRestoreTarget([clickedOpener, mountOpener, ...fallbacks], doc.body)?.focus({
         preventScroll: true,
       });
     };

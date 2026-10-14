@@ -160,6 +160,7 @@ const BuilderPanel = forwardRef(function BuilderPanel({
   onAddPerfume,
   onOpenPerfumeDetails,
   isPerfumeDetailsOpen = false,
+  isRareSelectionOpen = false,
   composerSettings,
   composerOptions,
   minimumComposerBudget,
@@ -393,6 +394,10 @@ const BuilderPanel = forwardRef(function BuilderPanel({
       () => new Set(selectedPerfumes.map((perfume) => perfume.id)),
       [selectedPerfumes]
     );
+    // A layer is open on top of this panel's dialogs: fragrance details, or the rare-selection confirmation
+    // (which the Add controls inside the Composer proposal, Note Explorer and Collection DNA can open). While
+    // one is, that layer alone owns Escape and Tab, so one Escape closes one layer.
+    const isLayerAboveOpen = isPerfumeDetailsOpen || isRareSelectionOpen;
     const basedOnYourPicks = recommendations?.basedOnYourPicks || EMPTY_RECOMMENDATIONS;
     const toBalanceYourBox = recommendations?.toBalanceYourBox || EMPTY_RECOMMENDATIONS;
     // The Curator Bonus "similar" preference keeps drawing from the Composer's own signature lane, not from
@@ -1116,6 +1121,7 @@ const BuilderPanel = forwardRef(function BuilderPanel({
         onOpenScentLibrary={() => setIsNotesModalOpen(true)}
         onOpenDnaAccord={setSelectedDnaAccord}
         onCloseDnaAccord={() => setSelectedDnaAccord(null)}
+        isLayerAboveOpen={isLayerAboveOpen}
         onAddPerfume={onAddPerfume}
         onRemovePerfume={onRemovePerfume}
       />
@@ -1195,7 +1201,7 @@ const BuilderPanel = forwardRef(function BuilderPanel({
           onCancel={onCancelComposerProposal}
           onAddPerfume={onAddPerfume}
           onOpenPerfumeDetails={onOpenComposerProposalPerfumeDetails}
-          isDetailOpen={isPerfumeDetailsOpen}
+          isDetailOpen={isLayerAboveOpen}
           selectedPerfumeIds={selectedPerfumeIds}
           isBoxFull={totalSlots >= maxSelectableSlots}
           openerRef={composerOpenerRef}
@@ -1233,7 +1239,7 @@ const BuilderPanel = forwardRef(function BuilderPanel({
           isBoxFull={totalSlots >= maxSelectableSlots}
           onAddPerfume={onAddPerfume}
           onOpenPerfumeDetails={onOpenPerfumeDetails}
-          isDetailOpen={isPerfumeDetailsOpen}
+          isDetailOpen={isLayerAboveOpen}
           portalRoot={portalRoot}
           onClose={() => setIsNoteExplorerOpen(false)}
         />
@@ -1927,7 +1933,7 @@ function ComposerProposalModal({
                         <button
                           type="button"
                           className="composer-proposal-add-button"
-                          onClick={() => onAddPerfume(perfume)}
+                          onClick={(event) => onAddPerfume(perfume, "manual", event?.currentTarget)}
                           disabled={isAlreadyAdded || isBoxFull}
                         >
                           {addButtonLabel}
@@ -2590,7 +2596,7 @@ function NoteExplorerResultRow({ perfume, translator, isAlreadyAdded, isBoxFull,
         className="composer-proposal-add-button"
         onClick={(event) => {
           event.stopPropagation();
-          onAddPerfume(perfume);
+          onAddPerfume(perfume, "manual", event?.currentTarget);
         }}
         disabled={isAlreadyAdded || isBoxFull}
       >
@@ -2704,6 +2710,7 @@ function CollectionSnapshot({
   onOpenScentLibrary,
   onOpenDnaAccord,
   onCloseDnaAccord,
+  isLayerAboveOpen = false,
   onAddPerfume,
   onRemovePerfume,
 }) {
@@ -2827,6 +2834,7 @@ function CollectionSnapshot({
           portalRoot={portalRoot}
           onSelectAccord={handleSelectDnaAccord}
           onClose={handleCloseDnaAccord}
+          isLayerAboveOpen={isLayerAboveOpen}
           onAddPerfume={onAddPerfume}
           onRemovePerfume={onRemovePerfume}
         />
@@ -3026,6 +3034,7 @@ function CollectionDnaPanel({
   portalRoot,
   onSelectAccord,
   onClose,
+  isLayerAboveOpen = false,
   onAddPerfume,
   onRemovePerfume,
 }) {
@@ -3096,7 +3105,8 @@ function CollectionDnaPanel({
 
   useEffect(() => {
     function handleKeyDown(event) {
-      if (event.key === "Escape") {
+      // The rare-selection confirmation (opened by a row's Add) stacks above this dialog: Escape is its alone.
+      if (event.key === "Escape" && !isLayerAboveOpen) {
         if (visibleQuickDetailId) {
           setActiveQuickDetailId(null);
           setActiveQuickDetailSource(null);
@@ -3110,7 +3120,7 @@ function CollectionDnaPanel({
     window.addEventListener("keydown", handleKeyDown);
 
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [onClose, visibleQuickDetailId]);
+  }, [onClose, visibleQuickDetailId, isLayerAboveOpen]);
 
   const handleOverlayClick = (event) => {
     if (event.target === event.currentTarget) {
@@ -3290,7 +3300,7 @@ function CollectionDnaPanel({
                     visibleQuickDetailSource === "row"
                   }
                   onToggleDetail={() => handleSetActiveQuickDetailId(perfume.id, "row")}
-                  onAction={() => onAddPerfume(perfume)}
+                  onAction={(event) => onAddPerfume(perfume, "manual", event?.currentTarget)}
                   isActionDisabled={isBoxFull}
                 />
               ))}
@@ -5487,7 +5497,7 @@ export function RecommendationCard({
       <div className="recommendation-actions">
         <button
           type="button"
-          onClick={() => onAddPerfume(perfume)}
+          onClick={(event) => onAddPerfume(perfume, "manual", event?.currentTarget)}
           disabled={isAddDisabled}
         >
           {addButtonLabel}

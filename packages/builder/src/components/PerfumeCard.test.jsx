@@ -154,3 +154,49 @@ describe("PerfumeCard", () => {
     });
   });
 });
+
+// The Add button hands its click event to onAddToBox, so a caller that opens a dialog from it (the rare-selection
+// confirmation) can give focus back to exactly this control. PerfumeCard has no hooks, so it can be called as a
+// function and its element tree walked without a DOM.
+describe("PerfumeCard add control", () => {
+  function findAddButton(node) {
+    if (!node || typeof node !== "object") {
+      return null;
+    }
+
+    if (Array.isArray(node)) {
+      return node.map(findAddButton).find(Boolean) || null;
+    }
+
+    if (node.type === "button" && String(node.props?.className || "").includes("perfume-card-add-button")) {
+      return node;
+    }
+
+    return findAddButton(node.props?.children);
+  }
+
+  const perfume = { id: 7, name: "Squid", brand: "Zoologist", points: 5, accords: [] };
+
+  function buildCard(onAddToBox, isInBox = false) {
+    return PerfumeCard({
+      perfume,
+      tierData,
+      assetResolver: (assetKey) => `/images/${assetKey}`,
+      onAddToBox,
+      onOpenDetails: () => {},
+      isDisabled: false,
+      isInBox,
+    });
+  }
+
+  it("passes the perfume and the click event to onAddToBox", () => {
+    const calls = [];
+    const button = findAddButton(buildCard((...args) => calls.push(args), true));
+    const event = { currentTarget: { name: "the Add button" } };
+
+    button.props.onClick(event);
+
+    expect(calls).toEqual([[perfume, event]]);
+    expect(calls[0][1].currentTarget.name).toBe("the Add button");
+  });
+});

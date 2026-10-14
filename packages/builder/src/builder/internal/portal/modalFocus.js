@@ -100,6 +100,22 @@ export function getOpenerFromEvent(event) {
   return element;
 }
 
+// Whether another dialog has taken over from `dialog` as it closes (a hand-off, as from the Composer's setup to
+// its proposal), in which case that dialog owns focus and this one must not move it. A dialog that was already
+// open underneath when `dialog` opened (`dialogsBelow`, a Set read at mount) has not taken over anything: it is
+// where the user was, so focus goes back there (a rare-selection confirmation closing over fragrance details).
+export function hasDialogTakenOver({ dialog, openDialogs, dialogsBelow }) {
+  return openDialogs.some((other) => other !== dialog && !dialogsBelow.has(other));
+}
+
+// The dialog that is left on top once `dialog` closes: the last (topmost, since layers are mounted in stacking
+// order) of the other open dialogs, or null when the page itself is what is left behind.
+export function getDialogBeneath({ dialog, openDialogs }) {
+  const others = openDialogs.filter((other) => other !== dialog);
+
+  return others.length > 0 ? others[others.length - 1] : null;
+}
+
 // Where focus goes when a dialog closes: the first candidate that can still take it (never <body>), in the
 // caller's order of preference. Null when none can, so the caller leaves focus alone.
 export function resolveFocusRestoreTarget(candidates, body) {

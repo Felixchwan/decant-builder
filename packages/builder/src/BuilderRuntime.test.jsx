@@ -483,7 +483,7 @@ describe("Composer proposal -> fragrance details wiring", () => {
 // header comment), so these are source-contract checks, the established
 // pattern here for exactly this reason.
 describe("Rare-selection confirmation: stacking, Escape, and add flow", () => {
-  const addStart = runtimeSource.indexOf('const addPerfume = (perfume, source = "manual") => {');
+  const addStart = runtimeSource.indexOf('const addPerfume = (perfume, source = "manual", opener = null) => {');
   const confirmStart = runtimeSource.indexOf("const confirmAddPerfume = () => {");
   const cancelStart = runtimeSource.indexOf("const cancelAddPerfume = () => {");
   const navStart = runtimeSource.indexOf("const navigateDetailPerfume = useCallback(");
@@ -539,17 +539,24 @@ describe("Rare-selection confirmation: stacking, Escape, and add flow", () => {
   });
 
   it("backdrop click, Cancel, and Escape all route through the same cancelAddPerfume -- one close path, not several", () => {
-    // Two call sites: the backdrop overlay and the Cancel button. The inner
-    // dialog stops propagation, so clicking inside it never reaches the
-    // backdrop's own cancelAddPerfume handler.
-    expect(pendingModalSource.match(/onClick=\{cancelAddPerfume\}/g)).toHaveLength(2);
-    expect(pendingModalSource).toContain('<div className="modal-overlay" onClick={cancelAddPerfume}>');
-    expect(pendingModalSource).toContain("onClick={(event) => event.stopPropagation()}");
+    // The dialog is handed ONE cancel handler (cancelAddPerfume) and uses it at two call sites: the backdrop
+    // overlay and the Cancel button. The inner dialog stops propagation, so clicking inside it never reaches the
+    // backdrop's own handler.
+    const warningStart = runtimeSource.indexOf("function RareSelectionWarning(");
+    const warningSource = runtimeSource.slice(warningStart, runtimeSource.indexOf("\nfunction ", warningStart + 10));
+
+    expect(pendingModalSource).toContain("onCancel={cancelAddPerfume}");
+    expect(pendingModalSource).toContain("onConfirm={confirmAddPerfume}");
+    expect(pendingModalSource.match(/cancelAddPerfume/g)).toHaveLength(1);
+    expect(warningSource.match(/onClick=\{onCancel\}/g)).toHaveLength(2);
+    expect(warningSource).toContain('<div className="modal-overlay" onClick={onCancel}>');
+    expect(warningSource).toContain("onClick={(event) => event.stopPropagation()}");
   });
 
   it("Cancel (and Escape) clear only the pending-selection state, leaving selectedPerfumes/composer/note-explorer state untouched", () => {
     expect(cancelSource).toContain("setPendingPerfume(null);");
     expect(cancelSource).toContain('pendingPerfumeSourceRef.current = "manual";');
+    expect(cancelSource).toContain("pendingOpenerRef.current = null;");
     expect(cancelSource).not.toMatch(
       /setSelectedPerfumes|setComposerProposal|setComposerSettings|setIsComposerGenerating|setIsNoteExplorerOpen|setSelectedNoteIds|setIsComposerSetupOpen/
     );
@@ -570,6 +577,73 @@ describe("Rare-selection confirmation: stacking, Escape, and add flow", () => {
     expect(wholeFlow).not.toMatch(
       /setComposerProposal|setComposerSettings|setIsComposerGenerating|setIsNoteExplorerOpen|setSelectedNoteIds|setIsComposerSetupOpen|setSortOrder|setSearchText/
     );
+  });
+});
+
+// Rare-selection confirmation focus management. The dialog is a component that uses the Builder's one shared
+// focus hook (useModalFocus) -- no second system, no warning-specific keydown logic -- and App hands it the
+// control that opened it. Real behaviour (focus in on Cancel, Tab/Shift+Tab wrap, exact opener restoration,
+// Product Info staying open and standing its trap down) is exercised in a browser; there is no DOM in this
+// package's unit tests, so these pin the wiring that behaviour depends on (and the pure decisions are covered in
+// modalFocus.test.js).
+describe("Rare-selection confirmation: focus management wiring", () => {
+  const warningStart = runtimeSource.indexOf("function RareSelectionWarning(");
+  const warningSource = runtimeSource.slice(warningStart, runtimeSource.indexOf("\nfunction ", warningStart + 10));
+  const addStart = runtimeSource.indexOf('const addPerfume = (perfume, source = "manual", opener = null) => {');
+  const addSource = runtimeSource.slice(addStart, runtimeSource.indexOf("const confirmAddPerfume = () => {"));
+  const detailsStart = runtimeSource.indexOf("function PerfumeDetailsModal(");
+  const detailsSource = runtimeSource.slice(detailsStart, runtimeSource.indexOf("function DetailTagGroup("));
+
+  it("uses the shared useModalFocus hook, with the Cancel button as the explicit initial-focus target", () => {
+    expect(runtimeSource).toContain('import { useModalFocus } from "./builder/internal/portal/useModalFocus.js";');
+    expect(warningSource).toMatch(
+      /useModalFocus\(\{\s*dialogRef,\s*openerRef,\s*fallbackSelector: \[\s*"\.review-box-button",\s*'\[aria-controls="my-box-panel"\]',\s*"\.compose-box-panel \.compose-box-header-actions button:not\(\.secondary\)",\s*\],\s*initialFocusSelector: "\[data-warning-initial-focus\]",\s*\}\);/
+    );
+    // an explicit marker on the safe action, never the DOM order: Cancel is the second button
+    expect(warningSource.match(/<button[^>]*data-warning-initial-focus[^>]*>/g)).toHaveLength(1);
+    expect(warningSource).toMatch(/<button type="button" data-warning-initial-focus onClick=\{onCancel\}>/);
+    expect(warningSource).not.toMatch(/<button type="button" onClick=\{onConfirm\}[^>]*data-warning-initial-focus/);
+    // the hook owns the dialog's ref, and the dialog can hold focus when nothing in it can
+    expect(warningSource).toContain("const dialogRef = useRef(null);");
+    expect(warningSource).toContain("ref={dialogRef}");
+    expect(warningSource).toContain("tabIndex={-1}");
+  });
+
+  it("adds no warning-specific focus or keydown logic: Tab, wrap and restore are the hook's, Escape and scroll lock stay in App", () => {
+    expect(warningSource).not.toMatch(/addEventListener|onKeyDown|getTabWrapTarget|getFocusableElements|\.focus\(/);
+    expect(runtimeSource.match(/useModalFocus\(/g)).toHaveLength(1);
+  });
+
+  it("is mounted per open, so the hook's open/close are the dialog's: rendered only while a fragrance is pending", () => {
+    expect(runtimeSource).toMatch(/\{pendingPerfume &&\s*renderOwnedPortal\(\s*(?:\/\/[^\n]*\n\s*)*<RareSelectionWarning/);
+    expect(runtimeSource).toContain("openerRef={pendingOpenerRef}");
+    expect(runtimeSource).toContain("const pendingOpenerRef = useRef(null);");
+  });
+
+  it("remembers the exact opener the click came from, only element nodes, only for the warning path, and clears it on close", () => {
+    expect(addSource).toContain("pendingOpenerRef.current = opener?.nodeType === 1 ? opener : null;");
+    // set inside the warningMessage branch, before the dialog opens, and nowhere else in addPerfume
+    expect(addSource.match(/pendingOpenerRef\.current =/g)).toHaveLength(1);
+    expect(addSource.indexOf("pendingOpenerRef.current =")).toBeGreaterThan(addSource.indexOf("if (perfume.warningMessage) {"));
+    expect(addSource.indexOf("pendingOpenerRef.current =")).toBeLessThan(addSource.indexOf("setPendingPerfume(perfume);"));
+    expect(runtimeSource.match(/pendingOpenerRef\.current = null;/g)).toHaveLength(2);
+  });
+
+  it("takes the opener from event.currentTarget at both entry points: the catalog card's Add and the Add inside Product Info", () => {
+    expect(runtimeSource).toContain('onAddToBox={(perfume, event) => addPerfume(perfume, "manual", event?.currentTarget)}');
+    expect(detailsSource).toContain("function handleAddToBox(event) {");
+    expect(detailsSource).toContain('onAddToBox(perfume, "manual", event?.currentTarget);');
+    expect(detailsSource).toContain("onClick={handleAddToBox}");
+    // the details dialog is still handed the plain addPerfume (perfume, source, opener) path
+    expect(runtimeSource).toContain("onAddToBox={addPerfume}");
+  });
+
+  it("keeps Product Info's own trap standing down while the warning is above it, and giving focus back in when it goes", () => {
+    expect(runtimeSource).toContain("isFocusContained={!pendingPerfume}");
+    expect(detailsSource).toContain('if (event.key !== "Tab" || !isFocusContained) {');
+    expect(detailsSource).toContain("}, [isFocusContained]);");
+    // one Escape closes one layer: Product Info ignores keys while the confirmation is pending
+    expect(runtimeSource).toContain("if (pendingPerfume) {\n        return;\n      }");
   });
 });
 

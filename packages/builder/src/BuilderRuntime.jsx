@@ -52,6 +52,7 @@ import {
   getTabWrapTarget,
   isRestorableFocusTarget,
 } from "./builder/internal/portal/modalFocus.js";
+import { useModalFocus } from "./builder/internal/portal/useModalFocus.js";
 import {
   addSelectedPerfume,
   applyInitialFragranceIntent,
@@ -307,6 +308,9 @@ function App({
   const hasTrackedAppLoadRef = useRef(false);
   const hasTrackedCuratorBonusUnlockedRef = useRef(false);
   const pendingPerfumeSourceRef = useRef(pendingPerfume ? "initial-intent" : "manual");
+  // The control that opened the rare-selection confirmation, read from its click, so closing it can hand focus
+  // back to exactly that control (the catalog card's Add, or the Add inside fragrance details).
+  const pendingOpenerRef = useRef(null);
 
   const collectionSummary = useMemo(
     () =>
@@ -942,7 +946,10 @@ const isComposerProposalStale = isComposerBoxProposalStale(
     });
   }
 
-  const addPerfume = (perfume, source = "manual") => {
+  // `opener` is the control that was clicked (the click's currentTarget); only the rare-selection confirmation
+  // uses it, to give focus back there. Callers without a click leave it out and the dialog falls back to the
+  // control that had focus when it opened.
+  const addPerfume = (perfume, source = "manual", opener = null) => {
   const eligibility = canAddPerfume({
     selectedPerfumes,
     perfume,
@@ -955,6 +962,7 @@ const isComposerProposalStale = isComposerBoxProposalStale(
 
   if (perfume.warningMessage) {
     pendingPerfumeSourceRef.current = source;
+    pendingOpenerRef.current = opener?.nodeType === 1 ? opener : null;
     setPendingPerfume(perfume);
     return;
   }
@@ -995,11 +1003,13 @@ const confirmAddPerfume = () => {
 
   setPendingPerfume(null);
   pendingPerfumeSourceRef.current = "manual";
+  pendingOpenerRef.current = null;
 };
 
   const cancelAddPerfume = () => {
   setPendingPerfume(null);
   pendingPerfumeSourceRef.current = "manual";
+  pendingOpenerRef.current = null;
 };
 
 
@@ -1149,7 +1159,7 @@ const confirmAddPerfume = () => {
         perfume={perfume}
         assetResolver={assetResolver}
         tierData={tierData}
-        onAddToBox={addPerfume}
+        onAddToBox={(perfume, event) => addPerfume(perfume, "manual", event?.currentTarget)}
         onOpenDetails={(perfume) => openPerfumeDetails(perfume, "manual")}
         isDisabled={totalSlots >= MAX_SELECTABLE_SLOTS}
         isInBox={isPerfumeInBox(perfume)}
@@ -1190,6 +1200,7 @@ const confirmAddPerfume = () => {
       onAddPerfume={addPerfume}
       onOpenPerfumeDetails={openNoteExplorerPerfumeDetails}
       isPerfumeDetailsOpen={Boolean(detailPerfume)}
+      isRareSelectionOpen={Boolean(pendingPerfume)}
       composerSettings={composerSettings}
       composerOptions={filterOptions}
       minimumComposerBudget={minimumComposerBudget}
@@ -1333,7 +1344,7 @@ const confirmAddPerfume = () => {
                         assetResolver={assetResolver}
                         tierData={tierData}
                         reason={explainRecommendation?.(recommendation)}
-                        onAddToBox={(addedPerfume) => addPerfume(addedPerfume, "intent_recommendation")}
+                        onAddToBox={(addedPerfume, event) => addPerfume(addedPerfume, "intent_recommendation", event?.currentTarget)}
                         onOpenDetails={(perfume) => openPerfumeDetails(perfume, "intent_recommendation")}
                         isDisabled={totalSlots >= MAX_SELECTABLE_SLOTS}
                         isInBox={isPerfumeInBox(perfume)}
@@ -1455,45 +1466,82 @@ const confirmAddPerfume = () => {
         // their shared portal root, the same mechanism that already stacks
         // PerfumeDetailsModal above Note Explorer/Composer. No bespoke
         // z-index is introduced.
-        <div className="modal-overlay" onClick={cancelAddPerfume}>
-          <div
-            className="warning-modal"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="rare-selection-title"
-            onClick={(event) => event.stopPropagation()}
-          >
-            <h2>{t("rareSelection.title")}</h2>
-
-            <h3 id="rare-selection-title">{pendingPerfume.name}</h3>
-
-            {/* Per-fragrance warning copy lives in the catalog (only Squid
-                carries one today, but the field is generic to any
-                fragrance). It is localized through the same taxonomy-label
-                override mechanism every other catalog-driven string already
-                uses -- keyed by the fragrance's own id, falling back to the
-                catalog's own (English) text when no locale override exists
-                -- rather than a second, fragrance-warning-specific content
-                system. */}
-            <p>{translator.label("fragranceWarning", pendingPerfume.id, pendingPerfume.warningMessage)}</p>
-
-            <p className="warning-footer">
-              <span aria-hidden="true">☠</span> {t("rareSelection.caution")}
-            </p>
-
-            <div className="modal-actions">
-              <button type="button" onClick={confirmAddPerfume}>
-                {t("general.addToBox")}
-              </button>
-
-              <button type="button" onClick={cancelAddPerfume}>
-                {t("general.cancel")}
-              </button>
-            </div>
-          </div>
-        </div>,
+        <RareSelectionWarning
+          perfume={pendingPerfume}
+          translator={translator}
+          openerRef={pendingOpenerRef}
+          onConfirm={confirmAddPerfume}
+          onCancel={cancelAddPerfume}
+        />,
         portalRoot
       )}
+    </div>
+  );
+}
+
+// The rare-selection confirmation. It is a component (not inline JSX in App) so that it mounts and unmounts
+// with the dialog, which is what useModalFocus keys on: focus goes in to Cancel (the safe action, not the one
+// that adds), Tab and Shift+Tab stay inside, and on close focus returns to the control that opened it -- the
+// catalog card's Add, or the Add inside fragrance details, which stays open underneath (its own Tab trap
+// stands down while this is open: isFocusContained). Escape and the body scroll lock stay in App.
+function RareSelectionWarning({ perfume, translator, openerRef, onConfirm, onCancel }) {
+  const t = translator?.t || ((key) => key);
+  const dialogRef = useRef(null);
+
+  // Where focus lands if the opener is gone when this closes (adding can fill the box, which disables every
+  // card's Add, and a recommendation card is replaced by the next one). Always the box, never another Add:
+  // Review when the box is ready for it (also the Review dialog's own fallback), the "My box" tab on a phone,
+  // where Review is on the tab not showing, else the Composer's button (also the Composer dialogs' fallback).
+  useModalFocus({
+    dialogRef,
+    openerRef,
+    fallbackSelector: [
+      ".review-box-button",
+      '[aria-controls="my-box-panel"]',
+      ".compose-box-panel .compose-box-header-actions button:not(.secondary)",
+    ],
+    initialFocusSelector: "[data-warning-initial-focus]",
+  });
+
+  return (
+    <div className="modal-overlay" onClick={onCancel}>
+      <div
+        ref={dialogRef}
+        className="warning-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="rare-selection-title"
+        tabIndex={-1}
+        onClick={(event) => event.stopPropagation()}
+      >
+        <h2>{t("rareSelection.title")}</h2>
+
+        <h3 id="rare-selection-title">{perfume.name}</h3>
+
+        {/* Per-fragrance warning copy lives in the catalog (only Squid
+            carries one today, but the field is generic to any
+            fragrance). It is localized through the same taxonomy-label
+            override mechanism every other catalog-driven string already
+            uses -- keyed by the fragrance's own id, falling back to the
+            catalog's own (English) text when no locale override exists
+            -- rather than a second, fragrance-warning-specific content
+            system. */}
+        <p>{translator.label("fragranceWarning", perfume.id, perfume.warningMessage)}</p>
+
+        <p className="warning-footer">
+          <span aria-hidden="true">☠</span> {t("rareSelection.caution")}
+        </p>
+
+        <div className="modal-actions">
+          <button type="button" onClick={onConfirm}>
+            {t("general.addToBox")}
+          </button>
+
+          <button type="button" data-warning-initial-focus onClick={onCancel}>
+            {t("general.cancel")}
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
@@ -1846,12 +1894,14 @@ function PerfumeDetailsModal({
     onPrevious();
   }
 
-  function handleAddToBox() {
+  function handleAddToBox(event) {
     if (isAddDisabled) {
       return;
     }
 
-    onAddToBox(perfume);
+    // The clicked control rides along so a rare-selection confirmation opened from here can give focus back to
+    // exactly this button (see addPerfume).
+    onAddToBox(perfume, "manual", event?.currentTarget);
 
     if (perfume.warningMessage) {
       return;

@@ -1446,7 +1446,7 @@ describe("Composer proposal: individual suggestion Add action", () => {
   });
 
   it("calls onAddPerfume with the suggested perfume -- the exact same sanctioned mutation path used by every other in-panel Add action (DNA modal picks, RecommendationCard, hidden curator picks)", () => {
-    expect(modalSource).toContain("onClick={() => onAddPerfume(perfume)}");
+    expect(modalSource).toContain('onClick={(event) => onAddPerfume(perfume, "manual", event?.currentTarget)}');
   });
 
   it("disables the Add button once already added or once the box is full, and never on any other condition", () => {
@@ -1526,7 +1526,7 @@ describe("Composer Phase 2A: Note Explorer", () => {
   it("calls onAddPerfume with the matched perfume and disables only for already-added/box-full, matching the Composer Phase 1 Add-button contract exactly", () => {
     const rowStart = normalizedPanelSource.indexOf("function NoteExplorerResultRow(");
     const rowSource = normalizedPanelSource.slice(rowStart, rowStart + 2600);
-    expect(rowSource).toContain("onAddPerfume(perfume);");
+    expect(rowSource).toContain('onAddPerfume(perfume, "manual", event?.currentTarget);');
     expect(rowSource).toContain("disabled={isAlreadyAdded || isBoxFull}");
     expect(rowSource).toContain('t("general.added")');
     expect(rowSource).toContain('t("general.boxFull")');
@@ -2471,7 +2471,7 @@ describe("Note Explorer result -> fragrance details wiring", () => {
     const callStart = normalizedPanelSource.indexOf("<NoteExplorerModal");
     const callSource = normalizedPanelSource.slice(callStart, callStart + 900);
     expect(callSource).toContain("onOpenPerfumeDetails={onOpenPerfumeDetails}");
-    expect(callSource).toContain("isDetailOpen={isPerfumeDetailsOpen}");
+    expect(callSource).toContain("isDetailOpen={isLayerAboveOpen}");
     expect(normalizedPanelSource).not.toMatch(/function NoteExplorerDetail/);
   });
 
@@ -2498,7 +2498,7 @@ describe("Note Explorer result -> fragrance details wiring", () => {
   });
 
   it("keeps Add to box independent: a sibling button that stops propagation before adding, with no DOM-target checks", () => {
-    expect(rowSource).toContain("event.stopPropagation();\n          onAddPerfume(perfume);");
+    expect(rowSource).toContain('event.stopPropagation();\n          onAddPerfume(perfume, "manual", event?.currentTarget);');
     expect(rowSource).not.toMatch(/event\.target|closest\(|contains\(/);
     const triggerEnd = rowSource.indexOf("</button>");
     expect(rowSource.slice(triggerEnd)).toContain('className="composer-proposal-add-button"');
@@ -2688,7 +2688,7 @@ describe("Composer proposal rows: details wiring", () => {
     const addStart = rowSource.indexOf('className="composer-proposal-add-button"');
     const addButton = rowSource.slice(addStart, addStart + 200);
 
-    expect(addButton).toContain("onClick={() => onAddPerfume(perfume)}");
+    expect(addButton).toContain('onClick={(event) => onAddPerfume(perfume, "manual", event?.currentTarget)}');
     expect(addButton).not.toContain("handleOpenDetails");
   });
 
@@ -2722,7 +2722,7 @@ describe("Composer proposal rows: details wiring", () => {
     const callSource = normalizedPanelSource.slice(callStart, callStart + 900);
 
     expect(callSource).toContain("onOpenPerfumeDetails={onOpenComposerProposalPerfumeDetails}");
-    expect(callSource).toContain("isDetailOpen={isPerfumeDetailsOpen}");
+    expect(callSource).toContain("isDetailOpen={isLayerAboveOpen}");
   });
 
   it("styles both triggers with a visible focus ring and keeps the thumbnail small", () => {
@@ -3247,19 +3247,28 @@ describe("Recommendation cards open the existing Perfume Details", () => {
   it("the Add button only adds: it is not inside the details button and has its own handler", () => {
     const opened = [];
     const added = [];
+    const openers = [];
+    const adds = [];
     const card = cardFor(affinityPick, {
       onOpenDetails: (perfume) => opened.push(perfume.id),
-      onAddPerfume: (perfume) => added.push(perfume.id),
+      onAddPerfume: (perfume, source, opener) => {
+        added.push(perfume.id);
+        adds.push([source]);
+        openers.push(opener);
+      },
     });
     const [trigger] = findElements(card, isTrigger);
     const addButtons = findElements(card, (element) => element.type === "button" && !isTrigger(element));
 
     expect(addButtons).toHaveLength(1);
     expect(findElements(trigger, (element) => element.type === "button" && element !== trigger)).toEqual([]);
-    addButtons[0].props.onClick();
+    addButtons[0].props.onClick({ currentTarget: "the Add button" });
 
     expect(added).toEqual([affinityPick.perfume.id]);
     expect(opened).toEqual([]);
+    // the clicked control rides along as the opener, so the rare-selection confirmation can give focus back to it
+    expect(openers).toEqual(["the Add button"]);
+    expect(adds).toEqual([["manual"]]);
   });
 
   it("keeps Add's existing states: added and box-full still disable it, and neither disables the details button", () => {
@@ -3531,8 +3540,17 @@ describe("Composer setup and Review dialogs: focus management wiring", () => {
     expect(hookSource).toContain("getTabWrapTarget({");
     expect(hookSource).toContain("active: !active || active === dialog.ownerDocument.body ? null : active,");
     expect(hookSource).toContain("if (otherLayer && otherLayer !== dialog) {");
-    expect(hookSource).toContain("const isHandedOff = Array.from(doc.querySelectorAll('[role=\"dialog\"]')).some((other) => other !== dialog);");
-    expect(hookSource).toContain("resolveFocusRestoreTarget([clickedOpener, mountOpener, fallback], doc.body)");
+    // a hand-off is another dialog that was NOT already open underneath when this one opened
+    expect(hookSource).toContain("const dialogsBelow = new Set(Array.from(doc.querySelectorAll('[role=\"dialog\"]')).filter((other) => other !== dialog));");
+    expect(hookSource).toContain("hasDialogTakenOver({ dialog, openDialogs, dialogsBelow })");
+    // over another dialog the landing is that dialog's own first control, never a page control behind it; on the
+    // page, every match of the fallback selector is a candidate and the first one laid out wins
+    expect(hookSource).toContain("const beneath = getDialogBeneath({ dialog, openDialogs });");
+    expect(hookSource).toContain("? [getFocusableElements(beneath)[0]]");
+    expect(hookSource).toContain(": [].concat(fallbackSelector || []).flatMap((selector) => Array.from(doc.querySelectorAll(selector)));");
+    // a dialog that is still connected at cleanup is React's dev-only strict-mode check, not a close: no focus flash behind it
+    expect(hookSource).toContain("if (dialog?.isConnected) {\n        return;\n      }");
+    expect(hookSource).toContain("resolveFocusRestoreTarget([clickedOpener, mountOpener, ...fallbacks], doc.body)");
     // one listener, on the window, removed on unmount
     expect(hookSource).toMatch(/window\.addEventListener\("keydown", handleKeyDown\);\s*return \(\) => window\.removeEventListener\("keydown", handleKeyDown\);/);
     // the one timer: the single zero-delay hand-back after a layer on top closes (the Note Explorer's own pattern)
@@ -3580,7 +3598,16 @@ describe("Composer proposal dialog: focus management wiring", () => {
     expect(normalizedPanelSource).toMatch(
       /onBack=\{\(event\) => \{[^}]*handleOpenComposerSetup\(event\);\s*onCancelComposerProposal\(\);\s*\}\}/
     );
-    expect(hookSource).toContain("const isHandedOff = Array.from(doc.querySelectorAll('[role=\"dialog\"]')).some((other) => other !== dialog);");
+    // a hand-off is another dialog that was NOT already open underneath when this one opened
+    expect(hookSource).toContain("const dialogsBelow = new Set(Array.from(doc.querySelectorAll('[role=\"dialog\"]')).filter((other) => other !== dialog));");
+    expect(hookSource).toContain("hasDialogTakenOver({ dialog, openDialogs, dialogsBelow })");
+    // over another dialog the landing is that dialog's own first control, never a page control behind it; on the
+    // page, every match of the fallback selector is a candidate and the first one laid out wins
+    expect(hookSource).toContain("const beneath = getDialogBeneath({ dialog, openDialogs });");
+    expect(hookSource).toContain("? [getFocusableElements(beneath)[0]]");
+    expect(hookSource).toContain(": [].concat(fallbackSelector || []).flatMap((selector) => Array.from(doc.querySelectorAll(selector)));");
+    // a dialog that is still connected at cleanup is React's dev-only strict-mode check, not a close: no focus flash behind it
+    expect(hookSource).toContain("if (dialog?.isConnected) {\n        return;\n      }");
   });
 
   it("stands the trap down while fragrance details are open on top, and keeps its Escape rule", () => {

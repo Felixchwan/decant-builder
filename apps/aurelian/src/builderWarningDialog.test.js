@@ -117,7 +117,7 @@ describe("Rare-selection warning dialog (builder-warning-dialog.css)", () => {
     expect(body(`${BUTTONS}:last-child`)).not.toMatch(/--aur-green|burgundy|--gold/);
     expect(body(`${BUTTONS}:focus-visible`)).toBe("outline: 2px solid var(--aur-intel-brass); outline-offset: 2px;");
     // order and meaning are the runtime's: confirm first, cancel second, each on its own handler
-    expect(runtime).toMatch(/<div className="modal-actions">\s*<button type="button" onClick=\{confirmAddPerfume\}>[\s\S]*?<button type="button" onClick=\{cancelAddPerfume\}>/);
+    expect(runtime).toMatch(/<div className="modal-actions">\s*<button type="button" onClick=\{onConfirm\}>[\s\S]*?<button type="button" data-warning-initial-focus onClick=\{onCancel\}>/);
   });
 });
 
@@ -146,7 +146,7 @@ describe("Rare-selection warning dialog: the Squid medallion composition (frame,
     expect(crest).toContain("pointer-events: none");
     expect(read(APP_ROOT, "src", "app", "builder-intelligence.css")).toMatch(/curator-pick-slot::after \{[^}]*pointer-events: none;/);
     // and the shared markup gains no element for it: the dialog still opens straight onto the eyebrow
-    expect(runtime).toMatch(/aria-labelledby="rare-selection-title"\s+onClick=\{\(event\) => event\.stopPropagation\(\)\}\s*>\s*<h2>/);
+    expect(runtime).toMatch(/aria-labelledby="rare-selection-title"\s+tabIndex=\{-1\}\s+onClick=\{\(event\) => event\.stopPropagation\(\)\}\s*>\s*<h2>/);
     expect(runtime).not.toMatch(/kraken|crest|medallion/i);
   });
 
@@ -255,15 +255,24 @@ describe("Rare-selection warning dialog: behaviour, markup and the other hosts a
     expect(runtime).toContain('className="warning-modal"');
     expect(runtime).toContain('aria-labelledby="rare-selection-title"');
     expect(runtime).toContain('<h2>{t("rareSelection.title")}</h2>');
-    expect(runtime).toContain('<h3 id="rare-selection-title">{pendingPerfume.name}</h3>');
+    expect(runtime).toContain('<h3 id="rare-selection-title">{perfume.name}</h3>');
     expect(runtime).toContain('<p className="warning-footer">');
     expect(runtime).toMatch(/if \(event\.key === "Escape"\) \{[^}]*cancelAddPerfume\(\);/);
     expect(runtime).toContain("const releaseBodyScrollLock = acquireBodyScrollLock(document);");
-    // this pass adds no focus handling to the warning: no ref, no tabIndex, no hook
-    const start = runtime.indexOf('className="warning-modal"');
-    const markup = runtime.slice(start - 200, runtime.indexOf("</div>\n        </div>,", start));
+  });
 
-    expect(markup).not.toMatch(/ref=|tabIndex|useModalFocus/);
+  it("gained focus management and nothing visual: a ref, tabIndex -1 and one data attribute, no new class, style or element", () => {
+    const start = runtime.indexOf("function RareSelectionWarning(");
+    const component = runtime.slice(start, runtime.indexOf("\nfunction ", start + 10));
+    const dialogOpen = component.slice(component.indexOf('<div\n        ref={dialogRef}'), component.indexOf("<h2>"));
+
+    expect(dialogOpen).toMatch(/ref=\{dialogRef\}\s+className="warning-modal"\s+role="dialog"\s+aria-modal="true"\s+aria-labelledby="rare-selection-title"\s+tabIndex=\{-1\}/);
+    // the only classes in the component are the ones the stylesheets already style
+    expect([...component.matchAll(/className="([^"]+)"/g)].map((match) => match[1])).toEqual(["modal-overlay", "warning-modal", "warning-footer", "modal-actions"]);
+    expect(component).not.toMatch(/style=\{/);
+    expect(component.match(/<button[^>]*data-warning-initial-focus/g)).toHaveLength(1);
+    // the one attribute is on the safe action, which is the second button
+    expect(component).toMatch(/<button type="button" data-warning-initial-focus onClick=\{onCancel\}>\s*\{t\("general\.cancel"\)\}/);
   });
 
   it("leaves the shared stylesheet and Discovery Decants alone: the warning there keeps its own look", () => {

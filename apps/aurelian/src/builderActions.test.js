@@ -139,7 +139,9 @@ describe("Catalog card add button: the package side stays opt-in and merchant-ne
   });
 
   it("leaves the add handler, the full-box disabling and the duplicate guard exactly where they were", () => {
-    expect(card).toContain("onClick={() => onAddToBox(perfume)}");
+    // the click event now rides along (so a dialog opened from here can give focus back to this exact button); the
+    // perfume it adds, and the guards around it, are unchanged
+    expect(card).toContain("onClick={(event) => onAddToBox(perfume, event)}");
     expect(card).toContain("disabled={isDisabled}");
     expect(runtime).toContain("isDisabled={totalSlots >= MAX_SELECTABLE_SLOTS}");
     expect(runtime).toMatch(/const eligibility = canAddPerfume\(\{/);

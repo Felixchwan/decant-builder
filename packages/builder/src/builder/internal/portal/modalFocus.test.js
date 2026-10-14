@@ -1,8 +1,10 @@
 import { describe, expect, it } from "vitest";
 import {
+  getDialogBeneath,
   getFocusableElements,
   getOpenerFromEvent,
   getTabWrapTarget,
+  hasDialogTakenOver,
   isRestorableFocusTarget,
   resolveFocusRestoreTarget,
 } from "./modalFocus.js";
@@ -149,5 +151,90 @@ describe("resolveFocusRestoreTarget", () => {
   it("never picks <body>, and is null (leave focus alone) when nothing qualifies", () => {
     expect(resolveFocusRestoreTarget([body, null, undefined], body)).toBeNull();
     expect(resolveFocusRestoreTarget([], body)).toBeNull();
+  });
+});
+
+describe("hasDialogTakenOver", () => {
+  const dialog = { name: "warning" };
+  const details = { name: "fragrance details" };
+  const proposal = { name: "composer proposal" };
+
+  it("is a hand-off when a dialog that was not open at mount is open at close (the Composer's setup handing to its proposal)", () => {
+    expect(hasDialogTakenOver({ dialog, openDialogs: [dialog, proposal], dialogsBelow: new Set() })).toBe(true);
+  });
+
+  it("is not a hand-off when the only other dialog was already open underneath at mount: a rare-selection confirmation over fragrance details gives focus back into them", () => {
+    expect(hasDialogTakenOver({ dialog, openDialogs: [details, dialog], dialogsBelow: new Set([details]) })).toBe(false);
+  });
+
+  it("is still a hand-off when a new dialog opens while one stays underneath", () => {
+    expect(hasDialogTakenOver({ dialog, openDialogs: [details, dialog, proposal], dialogsBelow: new Set([details]) })).toBe(true);
+  });
+
+  it("is not a hand-off when this dialog is the only one left, or when it is already gone from the document", () => {
+    expect(hasDialogTakenOver({ dialog, openDialogs: [dialog], dialogsBelow: new Set() })).toBe(false);
+    expect(hasDialogTakenOver({ dialog, openDialogs: [], dialogsBelow: new Set([details]) })).toBe(false);
+  });
+});
+
+describe("getDialogBeneath", () => {
+  const dialog = { name: "warning" };
+  const noteExplorer = { name: "note explorer" };
+  const details = { name: "fragrance details" };
+
+  it("is the topmost dialog still open once this one closes (layers are mounted in stacking order)", () => {
+    expect(getDialogBeneath({ dialog, openDialogs: [noteExplorer, details, dialog] })).toBe(details);
+    expect(getDialogBeneath({ dialog, openDialogs: [noteExplorer, dialog] })).toBe(noteExplorer);
+  });
+
+  it("is null when the page itself is what is left behind", () => {
+    expect(getDialogBeneath({ dialog, openDialogs: [dialog] })).toBeNull();
+    expect(getDialogBeneath({ dialog, openDialogs: [] })).toBeNull();
+  });
+});
+
+// The decision the rare-selection confirmation's close makes, end to end over the pure helpers: is another dialog a
+// successor or the layer it sat on, and where does focus go when its opener cannot take it.
+describe("closing a dialog that sat on top of another", () => {
+  const body = { name: "body" };
+  const control = (name, over = {}) => ({ name, focus() {}, isConnected: true, disabled: false, closest: () => null, getClientRects: () => [{}], ...over });
+  const warning = { name: "warning" };
+  const underneath = { name: "note explorer", querySelectorAll: () => [close, row], contains: () => true };
+  const close = control("Close");
+  const row = control("row Add");
+
+  const landing = ({ openDialogs, dialogsBelow, opener, mountOpener = null }) => {
+    if (hasDialogTakenOver({ dialog: warning, openDialogs, dialogsBelow })) {
+      return "left alone: another dialog owns focus";
+    }
+
+    const beneath = getDialogBeneath({ dialog: warning, openDialogs });
+    const fallbacks = beneath ? [getFocusableElements(beneath)[0]] : [];
+
+    return resolveFocusRestoreTarget([opener, mountOpener, ...fallbacks], body)?.name ?? "nothing: focus left alone";
+  };
+
+  it("a dialog that existed underneath is not a successor: focus goes back to the exact opener inside it", () => {
+    expect(landing({ openDialogs: [underneath, warning], dialogsBelow: new Set([underneath]), opener: row })).toBe("row Add");
+  });
+
+  it("a dialog that took over from the closing one is a successor: the closing one leaves focus alone", () => {
+    const successor = { name: "composer proposal" };
+
+    expect(landing({ openDialogs: [successor, warning], dialogsBelow: new Set(), opener: row })).toBe("left alone: another dialog owns focus");
+  });
+
+  it("with no other dialog the opener is restored, and with nothing restorable focus is left alone, never sent to <body>", () => {
+    expect(landing({ openDialogs: [warning], dialogsBelow: new Set(), opener: row })).toBe("row Add");
+    expect(landing({ openDialogs: [warning], dialogsBelow: new Set(), opener: null, mountOpener: body })).toBe("nothing: focus left alone");
+  });
+
+  it("when the opener is gone (disabled, or unmounted by what the confirmation did) the dialog underneath gets focus, on its first control", () => {
+    const disabledRow = control("row Add", { disabled: true });
+    const unmountedRow = control("row Add", { isConnected: false });
+
+    expect(landing({ openDialogs: [underneath, warning], dialogsBelow: new Set([underneath]), opener: disabledRow })).toBe("Close");
+    expect(landing({ openDialogs: [underneath, warning], dialogsBelow: new Set([underneath]), opener: unmountedRow })).toBe("Close");
+    expect(landing({ openDialogs: [underneath, warning], dialogsBelow: new Set([underneath]), opener: null })).toBe("Close");
   });
 });

@@ -101,7 +101,7 @@ function PerfumeCard({
 
         <button
           className={isInBox ? "perfume-card-add-button is-added" : undefined}
-          onClick={() => onAddToBox(perfume)}
+          onClick={(event) => onAddToBox(perfume, event)}
           disabled={isDisabled}
         >
           <span className="perfume-card-add-label-full">{isInBox ? addedLabel : addToBoxLabel}</span>
