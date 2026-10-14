@@ -59,7 +59,6 @@ const CARDAMOM_FAMILY = {
   31: 5,
   34: undefined,
   100: undefined,
-  109: undefined,
   113: 7,
   118: 9,
   206: undefined,

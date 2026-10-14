@@ -225,4 +225,5 @@ export const aurelianTaxonomyLabels = {
   "taxonomy.cedarEssence": "Esencia de Cedro",
   "taxonomy.calabrianBergamot": "Bergamota Calabresa",
   "taxonomy.grapefruitBlossom": "Flor de Toronja",
+  "taxonomy.sicilianLemon": "Limón Siciliano",
 };

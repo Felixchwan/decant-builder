@@ -1150,9 +1150,9 @@ baseNotes: ["caramel", "musk"],
   points: 1.5,
   imageAssetKey: "perfumes/silver/k-edp-intense.png",
   accords: ["woody", "leather", "aromatic", "spicy", "amber"],
-  topNotes: ["bloodOrange", "juniper", "cardamom"],
-  middleNotes: ["clarySage", "fig", "geranium"],
-  baseNotes: ["leather", "patchouli", "vetiver", "cedarwood"],
+  topNotes: ["bloodOrange", "sicilianLemon"],
+  middleNotes: ["fig", "saffron"],
+  baseNotes: ["leather", "woodyNotes"],
   generalNotes: [],
   seasons: ["spring", "fall", "winter"],
   occasions: ["daily", "office", "date", "night"],
@@ -4323,7 +4323,7 @@ export const NOTE_PROMINENCE_BY_ID = {
   106: { blackVanilla: 7, anise: 6 }, // 212 VIP Black
   107: { passionFruit: 6, frangipani: 5 }, // Birds of Paradise for Him
   108: { truffle: 7, plum: 5 }, // Bad Boy Cobalt Parfum Electrique
-  109: { leather: 6, patchouli: 5, fig: 4 }, // K EDP Intense
+  109: { leather: 6, fig: 4 }, // K EDP Intense
   110: { orange: 8, mint: 6, patchouli: 5, bitterOrange: 5, basil: 8 }, // Concentré d'Orange Verte
   111: { orange: 8, vetiver: 8, grapefruit: 7, cedar: 6, pepper: 4, patchouli: 5 }, // Terre d'Hermès EDT
   112: { coconut: 9, pineapple: 6, tonkaBean: 5 }, // Le Beau Le Parfum

@@ -94,7 +94,6 @@ const PATCHOULI_FAMILY = {
   33: 5,
   101: 4,
   103: undefined,
-  109: 5,
   110: 5,
   111: 5,
   115: undefined,

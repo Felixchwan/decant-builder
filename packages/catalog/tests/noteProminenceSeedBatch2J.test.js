@@ -90,7 +90,7 @@ const PHASE_2G_BATCH = {
   24: { bloodOrange: 6, cardamom: 5, tonkaBean: 4, grapefruit: 5 }, // Phase 3D: added grapefruit (horizontal calibration)
   25: { leather: 7, haitianVetiver: 6, akigalawood: 5, patchouli: 4 },
   105: { greenTea: 7, whiteLotus: 5, mineralNotes: 4 },
-  109: { leather: 6, patchouli: 5, fig: 4 },
+  109: { leather: 6, fig: 4 },
   112: { coconut: 9, pineapple: 6, tonkaBean: 5 },
   116: { vanilla: 5, tonkaBean: 5, pinkPepper: 4 },
   117: { ginger: 6, basil: 5, tonkaBean: 5, cedar: 4 },

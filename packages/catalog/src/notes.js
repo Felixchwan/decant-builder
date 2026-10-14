@@ -676,4 +676,11 @@ calabrianBergamot: { name: "Calabrian Bergamot", family: "citrus", noteImageAsse
 // closest-match convention already used by orris/iris. Added for Dior
 // Homme Cologne 2022.
 grapefruitBlossom: { name: "Grapefruit Blossom", family: "floral", noteImageAssetKey: "notes/grapefruit.jpg" },
+
+// Sicilian Lemon is a geographic-origin-qualified variant of the existing
+// generic "lemon" above -- same established pattern as sicilianMandarin/
+// calabrianBergamot (distinct identity, not collapsed into the base note,
+// reuses lemon.jpg rather than a new photo). Added for K by Dolce & Gabbana
+// EDP Intense, whose source lists Sicilian Lemon.
+sicilianLemon: { name: "Sicilian Lemon", family: "citrus", noteImageAssetKey: "notes/lemon.jpg" },
 };

@@ -2185,7 +2185,7 @@ describe("Note Explorer qualitative prominence level display", () => {
     const withAnnotation = realDisplayedMatches("cedarwood", "prominence");
 
     expect(withAnnotation.map((match) => match.id)).toEqual(withoutAnnotation.map((match) => match.id));
-    expect(withAnnotation.map((match) => match.id)).toEqual([18, 302, 34, 109, 406]);
+    expect(withAnnotation.map((match) => match.id)).toEqual([18, 302, 34, 406]);
   });
 });
 

@@ -265,7 +265,6 @@ const CEDAR_FAMILY = {
 const CEDARWOOD_FAMILY = {
   18: 4,
   34: undefined,
-  109: undefined,
   302: 4,
   406: undefined,
 };

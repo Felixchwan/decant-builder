@@ -66,7 +66,6 @@ const SEA_NOTES_FAMILY = {
 
 const JUNIPER_FAMILY = {
   24: undefined,
-  109: undefined,
   119: undefined,
   204: undefined,
   213: undefined,

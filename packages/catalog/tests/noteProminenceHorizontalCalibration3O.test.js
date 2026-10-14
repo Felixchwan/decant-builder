@@ -48,6 +48,7 @@ const WOODY_NOTES_FAMILY = {
   12: undefined,
   23: undefined,
   26: undefined,
+  109: undefined,
   112: undefined,
   113: undefined,
   201: undefined,
