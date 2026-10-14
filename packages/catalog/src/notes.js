@@ -289,10 +289,18 @@ greenMandarin: {
   noteImageAssetKey: "notes/mandarinOrange.jpg",
 },
 
+// Blood Orange has its own dedicated image: orange.jpg is shared by orange/
+// bitterOrange/citrus/citruses and its flesh is ordinary orange, which read as
+// the wrong fruit for this note. bloodOrange.jpg is NOT a photograph of a
+// blood orange: it is a recoloured derivative of orange.jpg (same framing and
+// lighting, so it sits with its neighbours) with only the cut flesh recoloured
+// to blood-orange ruby and a light blush added to the rind; the shared
+// orange.jpg is untouched. It is kept because it reads more clearly than the
+// real photographs tried at the 26-28px note-thumbnail size the UI uses.
 bloodOrange: {
   name: "Blood Orange",
   family: "citrus",
-  noteImageAssetKey: "notes/orange.jpg",
+  noteImageAssetKey: "notes/bloodOrange.jpg",
 },
 
 spearmint: {
