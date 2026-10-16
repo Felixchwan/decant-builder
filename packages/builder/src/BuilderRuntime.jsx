@@ -120,6 +120,9 @@ function App({
   // instead of in the panel flow. false/absent keeps them exactly where they
   // always were (see DiscoveryBoxBuilder.jsx's doc comment).
   dockShareActions = false,
+  // Generic, opt-in presentation capability: a Preview action beside Download/Share when those are docked
+  // (see DiscoveryBoxBuilder.jsx's doc comment). false/absent renders none.
+  showCollectionCardPreview = false,
   // Generic, opt-in presentation capability: catalog cards whose fragrance is already in the
   // box render their add button in an added state (see DiscoveryBoxBuilder.jsx's doc comment).
   // false/absent renders every card exactly as it always has.
@@ -1227,6 +1230,7 @@ const confirmAddPerfume = () => {
       onMobileTabChange={setActiveMobileTab}
       stickySummaryPortalTarget={stickySummaryPortalTarget}
       dockShareActions={dockShareActions}
+      showCollectionCardPreview={showCollectionCardPreview}
       showRecommendationLenses={showRecommendationLenses}
       showAccordEvidence={showAccordEvidence}
       showBalanceHelp={showBalanceHelp}

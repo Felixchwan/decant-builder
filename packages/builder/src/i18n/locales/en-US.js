@@ -218,6 +218,7 @@ export const enUS = {
   "collectionCard.boxAria": "Rendered Discovery Box",
   "collectionCard.download": "Download PNG",
   "collectionCard.share": "Share Card",
+  "collectionCard.preview": "Preview",
   "collectionCard.generating": "Generating...",
   "collectionCard.downloaded": "Collection Card downloaded.",
   "collectionCard.shared": "Collection Card shared.",

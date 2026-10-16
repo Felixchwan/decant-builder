@@ -21,8 +21,11 @@ const runtime = read(REPOSITORY_ROOT, "packages", "builder", "src", "BuilderRunt
 const sharedCss = read(REPOSITORY_ROOT, "packages", "builder", "styles.css");
 const intelligence = read(APP_ROOT, "src", "app", "builder-intelligence.css");
 
-const FOUR = ".composer-setup-modal, .composer-proposal-modal, .discovery-review-modal, .perfume-details-modal";
-const THREE = ".composer-setup-modal, .composer-proposal-modal, .discovery-review-modal";
+// The Collection Card preview dialog (an opt-in capability only Aurelian passes) joins the family: same shell, header and "Cerrar".
+const PREVIEW = ".collection-card-preview-modal";
+const LEGACY_FOUR = ".composer-setup-modal, .composer-proposal-modal, .discovery-review-modal, .perfume-details-modal";
+const FOUR = `${LEGACY_FOUR}, ${PREVIEW}`;
+const THREE = `.composer-setup-modal, .composer-proposal-modal, .discovery-review-modal, ${PREVIEW}`;
 
 describe("Aurelian modal chrome (builder-modals.css)", () => {
   it("is loaded by Aurelian's layout, after the shared stylesheet and every dialog stylesheet it builds on", () => {
@@ -49,6 +52,7 @@ describe("Aurelian modal chrome (builder-modals.css)", () => {
     ["composer-setup-modal", "composer-proposal-modal", "discovery-review-modal"].forEach((name) => {
       expect(panel).toMatch(new RegExp(`className="final-summary-modal ${name}"\\s+role="dialog"`));
     });
+    expect(panel).toMatch(/className="collection-card-preview-modal"\s+role="dialog"/);
     expect(runtime).toMatch(/className=\{`perfume-details-modal \$\{[\s\S]*?role="dialog"/);
     expect(runtime).toContain('className="perfume-details-close"');
   });
@@ -106,7 +110,7 @@ describe("Aurelian modal chrome (builder-modals.css)", () => {
     expect(rule(`.builder-portal-root :is(${THREE}) .modal-header button`)).toBe("font-size: 0.8125rem;");
     // the Note Explorer's own close is the reference
     expect(read(APP_ROOT, "src", "app", "builder-note-explorer.css")).toMatch(/\.modal-header button \{\s*min-height: 2\.25rem;\s*padding: 0\.4rem 0\.85rem;\s*border: 1px solid var\(--aur-intel-rim\);\s*border-radius: 6px;/);
-    expect(rule(`.builder-portal-root :is(${FOUR}, .note-explorer-modal) button:focus-visible`)).toBe("outline: 2px solid var(--aur-intel-brass); outline-offset: 2px;");
+    expect(rule(`.builder-portal-root :is(${LEGACY_FOUR}, .note-explorer-modal, ${PREVIEW}) button:focus-visible`)).toBe("outline: 2px solid var(--aur-intel-brass); outline-offset: 2px;");
     expect(code).toMatch(/@media \(pointer: coarse\) \{[^@]*min-height: 2\.75rem;/);
     // the Composer's "Volver" is the same button, one step quieter
     expect(rule(`.builder-portal-root :is(${THREE}) .modal-header button.secondary`)).toContain("border-color: var(--aur-intel-hair)");
@@ -162,10 +166,21 @@ describe("Aurelian modal chrome (builder-modals.css)", () => {
     expect(rule(".builder-portal-root .discovery-review-modal .review-overview-section .review-section-heading h4")).toBe(
       "color: var(--aur-intel-ink); font-family: var(--aur-intel-serif); font-weight: 400; letter-spacing: 0.005em; text-transform: none;"
     );
-    // the only body selectors in the file: that heading, and the section rule under the header
+    // the only body selectors in the file: the Collection Card preview dialog's own structure (an opt-in capability
+    // the package gives no visual treatment), and that heading
     const body = allSelectors.filter((selector) => !/\.modal-header|\.perfume-details-close|:is\(|final-summary-overlay|modal-overlay|^\.builder-portal-root$|dna-modal-header/.test(selector));
 
-    expect(body).toEqual([".builder-portal-root .discovery-review-modal .review-overview-section .review-section-heading h4"]);
+    expect(body).toEqual([
+      ".builder-portal-root .collection-card-preview-modal",
+      ".builder-portal-root .collection-card-preview-header",
+      ".builder-portal-root .discovery-review-modal .review-overview-section .review-section-heading h4",
+    ]);
+    expect(rule(".builder-portal-root .collection-card-preview-modal")).toBe(
+      "width: min(760px, 94vw); max-height: min(880px, 90vh); overflow-y: auto; padding: 24px;"
+    );
+    expect(rule(".builder-portal-root .collection-card-preview-header")).toBe(
+      "position: sticky; top: -24px; z-index: 2; align-items: flex-start; margin-bottom: 18px; padding-bottom: 16px;"
+    );
     ["season-coverage", "composer-proposal-item", "summary-grid", "perfume-details-meta", "perfume-image", "note-explorer-search", "note-explorer-note", "note-explorer-result"].forEach((name) => expect(code).not.toContain(name));
   });
 });

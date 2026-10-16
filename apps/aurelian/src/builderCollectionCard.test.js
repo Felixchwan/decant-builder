@@ -201,9 +201,14 @@ describe("Collection Card actions: desktop rail beside the docked box (host-owne
     // font-size 0 hides the glyphs but leaves the text in the accessibility tree; display/visibility would not
     expect(button).toMatch(/font-size: 0;/);
     expect(button).not.toMatch(/display:|visibility:|clip|text-indent/);
-    // two distinct icons, painted as a mask so they follow the text color
-    expect(rail(" .share-box-buttons button:first-child")).toMatch(/--aur-rail-icon: url\("data:image\/svg\+xml/);
-    expect(rail(" .share-box-buttons button:not(:first-child)")).toMatch(/--aur-rail-icon: url\("data:image\/svg\+xml/);
+    // three distinct icons (Preview, Download, Share), each keyed to its ACTION and not to its position -- Preview comes
+    // first now, so a :first-child rule would hand Download's icon to Preview -- painted as a mask so they follow the
+    // text color
+    const icon = (action) => rail(` .share-box-buttons button[data-share-action="${action}"]`);
+    ["preview", "download", "share"].forEach((action) => expect(icon(action), action).toMatch(/--aur-rail-icon: url\("data:image\/svg\+xml/));
+    expect(new Set(["preview", "download", "share"].map(icon)).size).toBe(3);
+    expect(rail(" .share-box-buttons button:first-child")).toBeUndefined();
+    expect(rail(" .share-box-buttons button:not(:first-child)")).toBeUndefined();
     expect(rail(" .share-box-buttons button::before")).toMatch(/mask: var\(--aur-rail-icon\)/);
     // the package gives the docked placement a native hover title from the same labels
     expect(panelSource).toContain("title={shareActionTitle(");

@@ -191,6 +191,7 @@ const BuilderPanel = forwardRef(function BuilderPanel({
   showBalanceHelp = false,
   compactStrengths = false,
   dockShareActions = false,
+  showCollectionCardPreview = false,
 }, ref) {
     const translator = useMemo(
       () => createTranslator(builderConfig.locale, builderConfig.taxonomyLabels),
@@ -211,6 +212,10 @@ const BuilderPanel = forwardRef(function BuilderPanel({
     const [isNotesModalOpen, setIsNotesModalOpen] = useState(false);
     const [isFinalSummaryOpen, setIsFinalSummaryOpen] = useState(false);
     const [isComposerSetupOpen, setIsComposerSetupOpen] = useState(false);
+    const [isCollectionCardPreviewOpen, setIsCollectionCardPreviewOpen] = useState(false);
+    // The rail control that opened the Collection Card preview, read from its click, so closing the dialog hands
+    // focus back to exactly that control.
+    const collectionCardPreviewOpenerRef = useRef(null);
     const wasComposerGeneratingRef = useRef(isComposerGenerating);
     const [isNoteExplorerOpen, setIsNoteExplorerOpen] = useState(false);
     const [isCollectionSnapshotOpen, setIsCollectionSnapshotOpen] = useState(false);
@@ -662,6 +667,13 @@ const BuilderPanel = forwardRef(function BuilderPanel({
     const createShareImageBlob = () =>
       renderCollectionCardPng(collectionCardExportProps, portalRoot);
 
+    const handleOpenCollectionCardPreview = (event) => {
+      const opener = event?.currentTarget;
+
+      collectionCardPreviewOpenerRef.current = opener?.nodeType === 1 ? opener : null;
+      setIsCollectionCardPreviewOpen(true);
+    };
+
     const handleDownloadShareImage = async () => {
       if (isShareGenerating) {
         return;
@@ -828,8 +840,21 @@ const BuilderPanel = forwardRef(function BuilderPanel({
       </div>
 
       <div className="share-box-buttons" aria-busy={isShareGenerating}>
+        {showCollectionCardPreview && shareActionsPlacement === "summary" && (
+          <button
+            type="button"
+            data-share-action="preview"
+            title={shareActionTitle(false, builderConfig.collectionCard.previewLabel)}
+            aria-haspopup="dialog"
+            onClick={handleOpenCollectionCardPreview}
+            disabled={isShareGenerating}
+          >
+            {builderConfig.collectionCard.previewLabel}
+          </button>
+        )}
         <button
           type="button"
+          data-share-action="download"
           title={shareActionTitle(activeShareAction === "download", builderConfig.collectionCard.downloadLabel)}
           onClick={handleDownloadShareImage}
           disabled={isShareGenerating}
@@ -839,6 +864,7 @@ const BuilderPanel = forwardRef(function BuilderPanel({
         {canNativeShareCard && (
           <button
             type="button"
+            data-share-action="share"
             title={shareActionTitle(activeShareAction === "share", builderConfig.collectionCard.shareLabel)}
             onClick={handleNativeShareCard}
             disabled={isShareGenerating}
@@ -1244,9 +1270,78 @@ const BuilderPanel = forwardRef(function BuilderPanel({
           onClose={() => setIsNoteExplorerOpen(false)}
         />
       )}
+      {isCollectionCardPreviewOpen && portalRoot && (
+        <CollectionCardPreviewModal
+          cardProps={collectionCardViewModel.cardProps}
+          portalRoot={portalRoot}
+          openerRef={collectionCardPreviewOpenerRef}
+          t={t}
+          onClose={() => setIsCollectionCardPreviewOpen(false)}
+        />
+      )}
     </aside>
   );
 });
+
+// The Collection Card, as the Download and Share actions export it, shown in a dialog. It is the same
+// CollectionCard and the same view-model props those actions render, so what is previewed is what is exported.
+// Focus, Escape and the body scroll lock follow the Builder's other dialogs: in on open, kept inside, and back on
+// the rail control that opened it (see useModalFocus).
+function CollectionCardPreviewModal({ cardProps, portalRoot, openerRef, t, onClose }) {
+  const dialogRef = useRef(null);
+
+  useModalFocus({
+    dialogRef,
+    openerRef,
+    fallbackSelector: ['[data-share-action="preview"]', '[data-share-action="download"]'],
+    initialFocusSelector: ".collection-card-preview-header button",
+  });
+
+  // Held for the dialog's whole mounted lifetime, in its own effect so Escape's re-subscription never releases it.
+  useEffect(() => {
+    const releaseBodyScrollLock = acquireBodyScrollLock(document);
+
+    return () => releaseBodyScrollLock();
+  }, []);
+
+  useEffect(() => {
+    function handleKeyDown(event) {
+      if (event.key === "Escape") {
+        onClose();
+      }
+    }
+
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [onClose]);
+
+  return renderOwnedPortal(
+    <div className="modal-overlay final-summary-overlay" onClick={onClose}>
+      <div
+        ref={dialogRef}
+        className="collection-card-preview-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="collection-card-preview-title"
+        tabIndex={-1}
+        onClick={(event) => event.stopPropagation()}
+      >
+        <div className="modal-header collection-card-preview-header">
+          <div>
+            <span>{t("collectionCard.preview")}</span>
+            <h3 id="collection-card-preview-title">{t("collectionCard.label")}</h3>
+          </div>
+
+          <button type="button" onClick={onClose}>{t("general.close")}</button>
+        </div>
+
+        <CollectionCard {...cardProps} />
+      </div>
+    </div>,
+    portalRoot
+  );
+}
 
 const COMPOSER_STRATEGY_OPTIONS = [
   { value: "balanced", labelKey: "composer.strategy.balanced" },

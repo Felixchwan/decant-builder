@@ -73,6 +73,7 @@ export function buildLocalizedConfigOverrides(locale) {
       boxAriaLabel: t("collectionCard.boxAria"),
       downloadLabel: t("collectionCard.download"),
       shareLabel: t("collectionCard.share"),
+      previewLabel: t("collectionCard.preview"),
       generatingLabel: t("collectionCard.generating"),
       downloadedStatus: t("collectionCard.downloaded"),
       sharedStatus: t("collectionCard.shared"),

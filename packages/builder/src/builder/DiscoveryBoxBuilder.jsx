@@ -22,6 +22,7 @@ import { validateBuilderConfig } from "./config/index.js";
  * @param {number|null} [props.composerMinimumPoints] Optional, opt-in lower bound on total points the "Compose my box" action must reach before its result counts as a completed proposal. Absent/null by default, which preserves today's Composer behavior exactly (any valid box within budget is a success). The Builder never derives this from its own config — a host that wants "my box isn't done until it hits N points" (e.g. a merchant with a fixed minimum-order requirement) computes N itself and passes it here.
  * @param {boolean} [props.showBuilderHero] Generic host capability for the Builder's own shared hero section (the title + description above the catalog). Defaults to true, which renders it exactly as it always has. A host with its own intro presentation above the Builder passes false to suppress this section entirely; the Builder holds no preference state of its own here and never reads storage for it.
  * @param {boolean} [props.enablePanelCollapse] Optional, opt-in desktop capability: renders a full-height collapse rail at the left edge of the box panel column, letting a user hide it so the catalog can reclaim that width. Defaults to false, which renders the box panel column exactly as it always has -- no rail, no extra DOM, no grid-track changes. Purely a local, non-persisted layout preference; the Builder never derives this from config or storage.
+ * @param {boolean} [props.showCollectionCardPreview] Optional, opt-in presentation capability: when true AND the Collection Card share actions are docked beside the box (see dockShareActions), a "Preview" action is added as the first of them, opening the same Collection Card the Download and Share actions export, in a dialog. Defaults to false, which renders no Preview action at all. It never appears outside the docked placement, and it adds no state of its own beyond the dialog being open.
  * @param {boolean} [props.dockShareActions] Optional, opt-in presentation capability: when true AND the box summary is docked into the host's stickySummaryPortalTarget and expanded, the Collection Card share actions (the same block, handlers and status the panel always renders) are rendered inside the docked summary card behind a stable, unstyled anchor, `.builder-panel-summary-accessory`, instead of in the panel flow, so a host can position them beside the box. Defaults to false, which renders them in the panel flow exactly as they always were. Below the docking breakpoint, or while the dock is collapsed, they stay in the panel flow either way. The package gives the anchor no visual treatment; placement, icons and responsive behavior belong to the host.
  * @param {boolean} [props.showAddedState] Optional, opt-in presentation capability: when true, a catalog card whose fragrance is already in the box renders its add button in an added state (an `is-added` class and the localized "Added" label instead of "Add to box"), so a host can style it. Defaults to false, which renders every card's add button exactly as it always has. Presentation only: the add handler, duplicate protection and full-box disabling are the same either way.
  * @param {boolean} [props.showRecommendationLenses] Optional, opt-in presentation capability: when true, the two individual recommendation lanes (the opportunity pick and "based on your picks") each render a compact lens label with a short hint and a `recommendation-lane--versatility` / `recommendation-lane--affinity` class, so a host can tell them apart and style them. Defaults to false, which renders both lanes exactly as they always have (no extra DOM, no extra class). Presentation only: scoring, candidates, reasons, order, carousels and add handlers are the same either way.
@@ -47,6 +48,7 @@ export default function DiscoveryBoxBuilder({
   showBuilderHero = true,
   enablePanelCollapse = false,
   dockShareActions = false,
+  showCollectionCardPreview = false,
   showAddedState = false,
   showRecommendationLenses = false,
   showAccordEvidence = false,
@@ -115,6 +117,7 @@ export default function DiscoveryBoxBuilder({
       showBuilderHero={showBuilderHero}
       enablePanelCollapse={enablePanelCollapse}
       dockShareActions={dockShareActions}
+      showCollectionCardPreview={showCollectionCardPreview}
       showAddedState={showAddedState}
       showRecommendationLenses={showRecommendationLenses}
       showAccordEvidence={showAccordEvidence}

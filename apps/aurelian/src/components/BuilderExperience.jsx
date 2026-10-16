@@ -135,6 +135,9 @@ export function BuilderExperience({
       // docked box (builder-collection-card.css); the package only provides
       // the anchor. Discovery Decants never passes this.
       dockShareActions
+      // Aurelian adds a Preview of that same Collection Card as the first action of that rail
+      // (an eye icon, named "Vista previa"); Discovery Decants never passes this.
+      showCollectionCardPreview
       // Aurelian shows a catalog card's add button as filled "Agregado" once the fragrance is in
       // the box (builder-card-actions.css); Discovery Decants never passes this.
       showAddedState

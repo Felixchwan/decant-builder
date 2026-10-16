@@ -17,6 +17,8 @@ import { aurelianConfig } from "../../../../apps/aurelian/src/merchant/config.js
 import { fragrances as perfumes, notes } from "@discovery-box/catalog";
 import { createTranslator } from "../i18n/createTranslator.js";
 import { esMX } from "../i18n/locales/es-MX.js";
+import { enUS } from "../i18n/locales/en-US.js";
+import { defaultBuilderConfig } from "../builder/config/defaultBuilderConfig.js";
 import { buildScentDna } from "../utils/buildScentDna.js";
 import { getShareActionsPlacement } from "../builder/internal/summary/shareActionsPlacement.js";
 import BuilderPanel, {
@@ -130,32 +132,111 @@ afterEach(() => {
   globalThis.window = originalWindow;
 });
 
-// Regression guard for the removed "Vista previa" / Preview Card action:
-// BuilderPanel no longer accepts an isDevelopment prop at all (it had
-// exactly one consumer, this dev-only preview button, and both are gone
-// together), and the Collection Card action row now has exactly the two
-// real actions.
-describe("Collection Card actions (Vista previa removed)", () => {
-  it("never renders a development-only preview action, and drops the prop that only ever fed it", () => {
+// The Collection Card Preview. It was once a dev-only "Preview Card" button (gated by isDevelopment, in a dialog titled
+// "Development Preview") that was deleted; it is now an opt-in, customer-facing capability. A host passes
+// showCollectionCardPreview, and the action then appears as the FIRST of the docked share actions -- above Download and
+// Share -- opening the same Collection Card those two export. No host passes it by default, no merchant is named, and
+// nothing is gated on development.
+describe("Collection Card Preview (showCollectionCardPreview)", () => {
+  const normalized = builderPanelSource.replace(/\r\n/g, "\n");
+  const shareButtonsSource = normalized.slice(
+    normalized.indexOf('<div className="share-box-buttons"'),
+    normalized.indexOf("{shareStatus &&"),
+  );
+  const dialogStart = normalized.indexOf("function CollectionCardPreviewModal(");
+  const dialogSource = normalized.slice(dialogStart, normalized.indexOf("\nconst COMPOSER_STRATEGY_OPTIONS", dialogStart));
+
+  it("is opt-in and off by default: no Preview in the markup, and nothing is gated on development any more", () => {
     const markup = renderBuilderPanel();
+
+    expect(normalized).toMatch(/showCollectionCardPreview = false,\n\}, ref\) \{/);
+    expect(markup).not.toContain('data-share-action="preview"');
     expect(markup).not.toContain("Preview Card");
+    // the dev-only gate stays gone: BuilderPanel does not know what "development" is
     expect(builderPanelSource).not.toMatch(/isDevelopment/);
-    expect(builderPanelSource).not.toContain("isCollectionCardPreviewOpen");
-    expect(builderPanelSource).not.toContain("CollectionCardPreviewModal");
-    expect(builderPanelSource).not.toContain("previewLabel");
-    expect(appCss).not.toMatch(/\.collection-card-preview/);
-    expect(discoveryDecantsConfig.collectionCard.previewLabel).toBeUndefined();
-    expect(esMX["collectionCard.preview"]).toBeUndefined();
+    // and an opt-in alone adds nothing while the summary is not docked (the panel-flow row stays Download + Share)
+    expect(renderBuilderPanel({ showCollectionCardPreview: true })).not.toContain('data-share-action="preview"');
   });
 
-  it("keeps exactly the download and (when available) native-share actions in the share-box-buttons row", () => {
-    const shareButtonsSource = builderPanelSource.slice(
-      builderPanelSource.indexOf('<div className="share-box-buttons"'),
-      builderPanelSource.indexOf('{shareStatus &&'),
-    );
-    expect(shareButtonsSource).toContain("handleDownloadShareImage");
-    expect(shareButtonsSource).toContain("handleNativeShareCard");
-    expect(shareButtonsSource.match(/<button/g)).toHaveLength(2);
+  it("appears only in the docked placement, as the first action, above Download and Share", () => {
+    expect(shareButtonsSource).toContain('{showCollectionCardPreview && shareActionsPlacement === "summary" && (');
+    const preview = shareButtonsSource.indexOf('data-share-action="preview"');
+    const download = shareButtonsSource.indexOf('data-share-action="download"');
+    const share = shareButtonsSource.indexOf('data-share-action="share"');
+
+    expect(preview).toBeGreaterThan(-1);
+    expect(preview).toBeLessThan(download);
+    expect(download).toBeLessThan(share);
+    // three buttons in the row now, each one named for what it does
+    expect(shareButtonsSource.match(/<button/g)).toHaveLength(3);
+  });
+
+  it("is named from the existing label and carries the same native title as the other docked actions", () => {
+    expect(shareButtonsSource).toContain("{builderConfig.collectionCard.previewLabel}");
+    expect(shareButtonsSource).toContain("title={shareActionTitle(false, builderConfig.collectionCard.previewLabel)}");
+    expect(shareButtonsSource).toContain('aria-haspopup="dialog"');
+    expect(esMX["collectionCard.preview"]).toBe("Vista previa");
+    expect(discoveryDecantsConfig.collectionCard.previewLabel).toBeDefined();
+  });
+
+  it("carries no internal or debug wording in any label a customer could see, in any locale or config", () => {
+    const labels = {
+      "es-MX locale": esMX["collectionCard.preview"],
+      "en-US locale": enUS["collectionCard.preview"],
+      "default config": defaultBuilderConfig.collectionCard.previewLabel,
+      "Aurelian config": aurelianConfig.collectionCard.previewLabel,
+      "Discovery Decants config": discoveryDecantsConfig.collectionCard.previewLabel,
+    };
+
+    Object.entries(labels).forEach(([name, label]) => expect(label, name).not.toMatch(/development|debug|dev-only|internal|preview card/i));
+    // the customer-facing names, exactly
+    expect(esMX["collectionCard.preview"]).toBe("Vista previa");
+    expect(aurelianConfig.collectionCard.previewLabel).toBe("Vista previa");
+    expect(enUS["collectionCard.preview"]).toBe("Preview");
+    // and the dialog's own strings are all localized keys, none of them literal wording
+    expect(dialogSource).not.toMatch(/>\s*(?:Development|Preview Card|Close)\b/);
+  });
+
+  it("opens the Collection Card the export uses: the same view-model props, the same CollectionCard component", () => {
+    expect(normalized).toContain("const collectionCardExportProps = collectionCardViewModel.cardProps;");
+    expect(normalized).toMatch(/<CollectionCardPreviewModal\s+cardProps=\{collectionCardViewModel\.cardProps\}/);
+    expect(dialogSource).toContain("<CollectionCard {...cardProps} />");
+    // one handler, which remembers the clicked control so closing can give focus back to exactly it
+    expect(shareButtonsSource).toContain("onClick={handleOpenCollectionCardPreview}");
+    expect(normalized).toContain("collectionCardPreviewOpenerRef.current = opener?.nodeType === 1 ? opener : null;");
+  });
+
+  it("is a dialog like the Builder's others: named, modal, focus in / kept in / handed back by useModalFocus, Escape, scroll lock", () => {
+    expect(dialogSource).toContain('role="dialog"');
+    expect(dialogSource).toContain('aria-modal="true"');
+    expect(dialogSource).toContain('aria-labelledby="collection-card-preview-title"');
+    expect(dialogSource).toContain("tabIndex={-1}");
+    expect(dialogSource).toMatch(/useModalFocus\(\{\s*dialogRef,\s*openerRef,/);
+    // if the clicked control is gone, the docked actions are where focus lands, Preview first
+    expect(dialogSource).toContain('fallbackSelector: [\'[data-share-action="preview"]\', \'[data-share-action="download"]\']');
+    expect(dialogSource).toContain('if (event.key === "Escape") {');
+    expect(dialogSource).toContain("acquireBodyScrollLock(document)");
+    // every visible string is localized: the eyebrow and button reuse the action's and the dialog's own keys
+    expect(dialogSource).toContain('t("collectionCard.preview")');
+    expect(dialogSource).toContain('t("collectionCard.label")');
+    expect(dialogSource).toContain('t("general.close")');
+    expect(dialogSource).not.toContain("Development Preview");
+  });
+
+  it("keeps the existing Download and native-share actions, with their handlers, untouched", () => {
+    expect(shareButtonsSource).toContain("onClick={handleDownloadShareImage}");
+    expect(shareButtonsSource).toContain("onClick={handleNativeShareCard}");
+    expect(shareButtonsSource).toContain("{canNativeShareCard && (");
+    expect(shareButtonsSource.match(/onClick=\{handleDownloadShareImage\}/g)).toHaveLength(1);
+  });
+
+  it("is a host decision: Aurelian opts in beside dockShareActions, Discovery Decants never passes it", () => {
+    const aurelian = readFileSync(new URL("../../../../apps/aurelian/src/components/BuilderExperience.jsx", import.meta.url), "utf8");
+    const discoveryDecants = readFileSync(new URL("../../../../src/app/DiscoveryDecantsApp.jsx", import.meta.url), "utf8");
+
+    expect(aurelian).toMatch(/\n\s+showCollectionCardPreview\n/);
+    expect(discoveryDecants).not.toContain("showCollectionCardPreview");
+    expect(discoveryDecants).not.toContain("dockShareActions");
   });
 });
 
@@ -181,7 +262,7 @@ describe("Opt-in docked share actions (dockShareActions)", () => {
   }, 20000);
 
   it("defaults the prop to false and renders the one block through exactly two mutually exclusive placements", () => {
-    expect(normalized).toMatch(/dockShareActions = false,\n\}, ref\) \{/);
+    expect(normalized).toMatch(/dockShareActions = false,\n {2}showCollectionCardPreview = false,\n\}, ref\) \{/);
     expect(normalized).toContain('{shareActionsPlacement === "panel" && shareActionsBlock}');
     expect(normalized).toContain('{shareActionsPlacement === "summary" && (');
     expect(normalized.match(/\{shareActionsBlock\}/g)).toHaveLength(1);
@@ -193,7 +274,7 @@ describe("Opt-in docked share actions (dockShareActions)", () => {
   it("reuses the existing handlers and state rather than a second implementation", () => {
     expect(normalized.match(/onClick=\{handleDownloadShareImage\}/g)).toHaveLength(1);
     expect(normalized.match(/onClick=\{handleNativeShareCard\}/g)).toHaveLength(1);
-    expect(normalized.match(/disabled=\{isShareGenerating\}/g)).toHaveLength(2);
+    expect(normalized.match(/disabled=\{isShareGenerating\}/g)).toHaveLength(3); // Preview, Download, Share
   });
 
   it("gives the docked placement alone a native title per action, from the same labels, so icon-only hosts keep a hover name", () => {

@@ -45,7 +45,7 @@
 }
 
 /* ---- Shell ----------------------------------------------------------------------------------------- */
-.builder-portal-root :is(.composer-setup-modal, .composer-proposal-modal, .discovery-review-modal, .perfume-details-modal) {
+.builder-portal-root :is(.composer-setup-modal, .composer-proposal-modal, .discovery-review-modal, .perfume-details-modal, .collection-card-preview-modal) {
   border: 1px solid var(--aur-intel-rim);
   border-radius: 10px;
   background: var(--aur-intel-card);
@@ -56,8 +56,31 @@
   scrollbar-width: thin;
 }
 
+/* ---- Collection Card preview: structure ------------------------------------------------------------------
+   The Collection Card preview is an opt-in capability (`showCollectionCardPreview`, which only Aurelian passes);
+   the package gives its dialog no visual treatment, the way it gives the docked share rail none. What the dialog
+   needs to be a dialog -- a width, a height it scrolls inside, room around its content -- is here; its shell, header
+   and close are the same shared rules as the dialogs above. */
+.builder-portal-root .collection-card-preview-modal {
+  width: min(760px, 94vw);
+  max-height: min(880px, 90vh);
+  overflow-y: auto;
+  padding: 24px;
+}
+
+/* The same header behaviour the package gives the dialogs built on .final-summary-modal: it sticks while the body
+   scrolls, its content starts at the top edge, and it keeps 16px below the title before its hairline. */
+.builder-portal-root .collection-card-preview-header {
+  position: sticky;
+  top: -24px;
+  z-index: 2;
+  align-items: flex-start;
+  margin-bottom: 18px;
+  padding-bottom: 16px;
+}
+
 /* ---- Header ---------------------------------------------------------------------------------------- */
-.builder-portal-root :is(.composer-setup-modal, .composer-proposal-modal, .discovery-review-modal, .perfume-details-modal) .modal-header {
+.builder-portal-root :is(.composer-setup-modal, .composer-proposal-modal, .discovery-review-modal, .perfume-details-modal, .collection-card-preview-modal) .modal-header {
   gap: 1rem;
   border-bottom: 1px solid var(--aur-intel-hair);
   background: var(--aur-modal-head-ground);
@@ -68,7 +91,7 @@
    margin in its own ground (a shadow, so nothing moves). And the sticky header sat flush against the dialog's top
    edge once stuck, the close button two pixels from the rim: 0.9rem of top padding, taken back with an equal
    negative margin, gives the stuck header room to breathe while the unscrolled layout is where it always was. */
-.builder-portal-root :is(.composer-setup-modal, .composer-proposal-modal, .discovery-review-modal) .modal-header {
+.builder-portal-root :is(.composer-setup-modal, .composer-proposal-modal, .discovery-review-modal, .collection-card-preview-modal) .modal-header {
   margin-top: -0.9rem;
   padding-top: 0.9rem;
   box-shadow: 0 1.25rem 0 var(--aur-modal-head-ground);
@@ -78,7 +101,7 @@
   border-bottom: 1px solid var(--aur-intel-hair);
 }
 
-.builder-portal-root :is(.composer-setup-modal, .composer-proposal-modal, .discovery-review-modal, .perfume-details-modal) .modal-header > div > span {
+.builder-portal-root :is(.composer-setup-modal, .composer-proposal-modal, .discovery-review-modal, .perfume-details-modal, .collection-card-preview-modal) .modal-header > div > span {
   color: var(--aur-intel-label);
   font-size: 0.6875rem;
   font-weight: 600;
@@ -86,7 +109,7 @@
   text-transform: uppercase;
 }
 
-.builder-portal-root :is(.composer-setup-modal, .composer-proposal-modal, .discovery-review-modal, .perfume-details-modal) .modal-header h3 {
+.builder-portal-root :is(.composer-setup-modal, .composer-proposal-modal, .discovery-review-modal, .perfume-details-modal, .collection-card-preview-modal) .modal-header h3 {
   margin: 0;
   color: var(--aur-intel-ink);
   font-family: var(--aur-intel-serif);
@@ -96,7 +119,7 @@
   line-height: 1.15;
 }
 
-.builder-portal-root :is(.composer-setup-modal, .composer-proposal-modal, .discovery-review-modal) .modal-header span + h3 {
+.builder-portal-root :is(.composer-setup-modal, .composer-proposal-modal, .discovery-review-modal, .collection-card-preview-modal) .modal-header span + h3 {
   margin-top: 0.3rem;
 }
 
@@ -107,7 +130,7 @@
 }
 
 /* ---- Close (and Composer's Volver): the quiet brass-rimmed button the Note Explorer already has --------- */
-.builder-portal-root :is(.composer-setup-modal, .composer-proposal-modal, .discovery-review-modal) .modal-header button,
+.builder-portal-root :is(.composer-setup-modal, .composer-proposal-modal, .discovery-review-modal, .collection-card-preview-modal) .modal-header button,
 .builder-portal-root .perfume-details-modal .perfume-details-close,
 .builder-portal-root .scent-library-modal .modal-header button {
   display: inline-flex;
@@ -131,18 +154,18 @@
     background-color 160ms ease;
 }
 
-.builder-portal-root :is(.composer-setup-modal, .composer-proposal-modal, .discovery-review-modal) .modal-header button {
+.builder-portal-root :is(.composer-setup-modal, .composer-proposal-modal, .discovery-review-modal, .collection-card-preview-modal) .modal-header button {
   font-size: 0.8125rem;
 }
 
-.builder-portal-root :is(.composer-setup-modal, .composer-proposal-modal, .discovery-review-modal) .modal-header button.secondary {
+.builder-portal-root :is(.composer-setup-modal, .composer-proposal-modal, .discovery-review-modal, .collection-card-preview-modal) .modal-header button.secondary {
   border-color: var(--aur-intel-hair);
   color: var(--aur-intel-ink-soft);
 }
 
-.builder-portal-root :is(.composer-setup-modal, .composer-proposal-modal, .discovery-review-modal) .modal-header button:hover:not(:disabled),
+.builder-portal-root :is(.composer-setup-modal, .composer-proposal-modal, .discovery-review-modal, .collection-card-preview-modal) .modal-header button:hover:not(:disabled),
 .builder-portal-root .perfume-details-modal .perfume-details-close:hover,
-.builder-portal-root :is(.composer-setup-modal, .composer-proposal-modal, .discovery-review-modal) .modal-header button:focus-visible,
+.builder-portal-root :is(.composer-setup-modal, .composer-proposal-modal, .discovery-review-modal, .collection-card-preview-modal) .modal-header button:focus-visible,
 .builder-portal-root .perfume-details-modal .perfume-details-close:focus-visible,
 .builder-portal-root .scent-library-modal .modal-header button:hover,
 .builder-portal-root .scent-library-modal .modal-header button:focus-visible {
@@ -151,14 +174,14 @@
   color: var(--aur-intel-ink);
 }
 
-.builder-portal-root :is(.composer-setup-modal, .composer-proposal-modal, .discovery-review-modal) .modal-header button:disabled {
+.builder-portal-root :is(.composer-setup-modal, .composer-proposal-modal, .discovery-review-modal, .collection-card-preview-modal) .modal-header button:disabled {
   border-color: var(--aur-intel-hair);
   color: var(--aur-intel-ink-muted);
   cursor: not-allowed;
   opacity: 0.6;
 }
 
-.builder-portal-root :is(.composer-setup-modal, .composer-proposal-modal, .discovery-review-modal, .perfume-details-modal, .note-explorer-modal) button:focus-visible {
+.builder-portal-root :is(.composer-setup-modal, .composer-proposal-modal, .discovery-review-modal, .perfume-details-modal, .note-explorer-modal, .collection-card-preview-modal) button:focus-visible {
   outline: 2px solid var(--aur-intel-brass);
   outline-offset: 2px;
 }
@@ -195,7 +218,7 @@
 /* A body section that opens right under the header carries its own top rule (the package's section divider): the
    proposal's first section. Two hairlines 20px apart read as a mistake, so the header's is the only one. Spacing
    is unchanged: only the rule's colour is. */
-.builder-portal-root :is(.composer-setup-modal, .composer-proposal-modal, .discovery-review-modal) .modal-header + .final-summary-section {
+.builder-portal-root :is(.composer-setup-modal, .composer-proposal-modal, .discovery-review-modal, .collection-card-preview-modal) .modal-header + .final-summary-section {
   border-top-color: transparent;
 }
 
@@ -210,7 +233,7 @@
 
 /* ---- Touch and phones --------------------------------------------------------------------------- */
 @media (pointer: coarse) {
-  .builder-portal-root :is(.composer-setup-modal, .composer-proposal-modal, .discovery-review-modal) .modal-header button,
+  .builder-portal-root :is(.composer-setup-modal, .composer-proposal-modal, .discovery-review-modal, .collection-card-preview-modal) .modal-header button,
   .builder-portal-root .perfume-details-modal .perfume-details-close,
   .builder-portal-root .scent-library-modal .modal-header button {
     min-height: 2.75rem;
@@ -218,7 +241,7 @@
 }
 
 @media (max-width: 520px) {
-  .builder-portal-root :is(.composer-setup-modal, .composer-proposal-modal, .discovery-review-modal, .perfume-details-modal) .modal-header h3,
+  .builder-portal-root :is(.composer-setup-modal, .composer-proposal-modal, .discovery-review-modal, .perfume-details-modal, .collection-card-preview-modal) .modal-header h3,
   .builder-portal-root .dna-modal-header h3 {
     font-size: 1.25rem;
   }
