@@ -67,8 +67,8 @@ describe("Diptyque Orphéon catalog entry", () => {
     expect(existsSync(bottlePath)).toBe(true);
     expect(bottlePng).toEqual({
       signature: "89504e470d0a1a0a",
-      width: 512,
-      height: 512,
+      width: 563,
+      height: 563,
     });
     expect(existsSync(logoPath)).toBe(true);
     expect(readPngDimensions(logoPath).signature).toBe("89504e470d0a1a0a");

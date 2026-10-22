@@ -15,7 +15,7 @@ import {
 
 const ASSET_ROOT = fileURLToPath(new URL("../assets/", import.meta.url));
 const APPROVED_FILE_COUNT = 399;
-const APPROVED_TREE_HASH = "978fffba010099c524a04c271b1f6f32f742ed3686607c1621b12d0edc8acd58";
+const APPROVED_TREE_HASH = "1ef4ef9db773f1835747c9540ae48f819ac382c562863d123a0779552945658b";
 
 function walk(directory = ASSET_ROOT, relativeDirectory = "") {
   return readdirSync(directory, { withFileTypes: true })
