@@ -130,6 +130,7 @@ const MINT_FAMILY = {
   110: 6,
   216: undefined,
   408: 9,
+  411: undefined,
 };
 
 const SPEARMINT_FAMILY = {
@@ -211,8 +212,8 @@ describe("Composer Phase 3B taxonomy audit", () => {
 describe("Composer Phase 3B horizontal calibration -- apple and mint canonical-key families", () => {
   const perfumesById = new Map(perfumes.map((perfume) => [perfume.id, perfume]));
 
-  it("has exactly 92 catalog fragrances to search for exhaustive family membership", () => {
-    expect(perfumes).toHaveLength(92);
+  it("has exactly 93 catalog fragrances to search for exhaustive family membership", () => {
+    expect(perfumes).toHaveLength(93);
   });
 
   for (const [noteId, family] of Object.entries(ALL_FAMILIES)) {

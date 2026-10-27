@@ -127,8 +127,8 @@ describe("Composer Phase 3O canonical-data sanity audit", () => {
 describe("Composer Phase 3O horizontal calibration -- the collective woodyNotes canonical key", () => {
   const perfumesById = new Map(perfumes.map((perfume) => [perfume.id, perfume]));
 
-  it("has exactly 92 catalog fragrances to search for exhaustive family membership", () => {
-    expect(perfumes).toHaveLength(92);
+  it("has exactly 93 catalog fragrances to search for exhaustive family membership", () => {
+    expect(perfumes).toHaveLength(93);
   });
 
   it("woodyNotes membership is exhaustive against the live catalog", () => {

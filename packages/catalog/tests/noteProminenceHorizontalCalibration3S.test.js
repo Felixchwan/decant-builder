@@ -60,6 +60,7 @@ const PETITGRAIN_FAMILY = {
   101: undefined,
   103: 5,
   401: undefined,
+  411: undefined,
 };
 
 const ALL_FAMILIES = {
@@ -132,8 +133,8 @@ describe("Composer Phase 3S canonical-data sanity audit", () => {
 describe("Composer Phase 3S horizontal calibration -- neroli, orangeBlossom, and petitgrain", () => {
   const perfumesById = new Map(perfumes.map((perfume) => [perfume.id, perfume]));
 
-  it("has exactly 92 catalog fragrances to search for exhaustive family membership", () => {
-    expect(perfumes).toHaveLength(92);
+  it("has exactly 93 catalog fragrances to search for exhaustive family membership", () => {
+    expect(perfumes).toHaveLength(93);
   });
 
   for (const [noteId, family] of Object.entries(ALL_FAMILIES)) {

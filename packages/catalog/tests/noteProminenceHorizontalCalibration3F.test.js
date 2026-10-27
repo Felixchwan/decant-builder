@@ -105,6 +105,7 @@ const AMBER_FAMILY = {
   402: undefined,
   405: undefined,
   410: undefined,
+  411: undefined,
 };
 
 const ALL_FAMILIES = {
@@ -217,8 +218,8 @@ describe("Composer Phase 3F canonical-data sanity audit", () => {
 describe("Composer Phase 3F horizontal calibration -- vetiver and amber canonical-key families", () => {
   const perfumesById = new Map(perfumes.map((perfume) => [perfume.id, perfume]));
 
-  it("has exactly 92 catalog fragrances to search for exhaustive family membership", () => {
-    expect(perfumes).toHaveLength(92);
+  it("has exactly 93 catalog fragrances to search for exhaustive family membership", () => {
+    expect(perfumes).toHaveLength(93);
   });
 
   for (const [noteId, family] of Object.entries(ALL_FAMILIES)) {

@@ -333,10 +333,13 @@ describe("Composer Phase 2J note-prominence seed batch (final vertical-pass batc
     // Cologne 2022 (218) were added later still, from merchant note
     // pyramids only, with no approved editorial prominence data -- same
     // deliberate exception, also asserted unscored below.
-    const postVerticalPassAdditionIds = new Set([120, 121, 215, 216, 217, 218]);
+    // Xerjoff Renaissance (411) joins them: added from its approved note
+    // pyramid and main accords only, with no per-note prominence evidence --
+    // honestly empty rather than an invented score.
+    const postVerticalPassAdditionIds = new Set([120, 121, 215, 216, 217, 218, 411]);
     const originallyReviewedPerfumes = perfumes.filter((perfume) => !postVerticalPassAdditionIds.has(perfume.id));
 
-    expect(perfumes).toHaveLength(92);
+    expect(perfumes).toHaveLength(93);
     expect(originallyReviewedPerfumes).toHaveLength(86);
     // 86 originally-reviewed fragrances + Patchouli Ink (217), later scored.
     expect(Object.keys(NOTE_PROMINENCE_BY_ID)).toHaveLength(87);
@@ -356,7 +359,10 @@ describe("Composer Phase 2J note-prominence seed batch (final vertical-pass batc
     // with no perceptual-prominence review evidence yet. An empty
     // noteProminence object is the valid, honest state for them -- never
     // replaced with an invented score to force this test green.
-    const postVerticalPassAdditionIds = new Set([120, 121, 215, 216, 217, 218]);
+    // Xerjoff Renaissance (411) joins them: added from its approved note
+    // pyramid and main accords only, with no per-note prominence evidence --
+    // honestly empty rather than an invented score.
+    const postVerticalPassAdditionIds = new Set([120, 121, 215, 216, 217, 218, 411]);
 
     for (const perfume of perfumes) {
       if (postVerticalPassAdditionIds.has(perfume.id)) {

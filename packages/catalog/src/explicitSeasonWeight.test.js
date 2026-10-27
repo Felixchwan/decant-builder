@@ -54,6 +54,6 @@ describe("getExplicitSeasonWeight", () => {
 
   it("is not part of the merged fragrance data: the catalog shape is unchanged", () => {
     expect(Object.keys(fragrances[0]).sort()).not.toContain("explicitSeasonWeights");
-    expect(fragrances).toHaveLength(92);
+    expect(fragrances).toHaveLength(93);
   });
 });

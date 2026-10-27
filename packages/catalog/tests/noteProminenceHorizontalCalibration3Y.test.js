@@ -104,8 +104,8 @@ describe("Composer Phase 3Y canonical-data sanity audit", () => {
 describe("Composer Phase 3Y horizontal calibration -- coumarin", () => {
   const perfumesById = new Map(perfumes.map((perfume) => [perfume.id, perfume]));
 
-  it("has exactly 92 catalog fragrances to search for exhaustive family membership", () => {
-    expect(perfumes).toHaveLength(92);
+  it("has exactly 93 catalog fragrances to search for exhaustive family membership", () => {
+    expect(perfumes).toHaveLength(93);
   });
 
   it("coumarin membership is exhaustive against the live catalog", () => {

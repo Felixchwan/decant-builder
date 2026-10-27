@@ -691,4 +691,11 @@ grapefruitBlossom: { name: "Grapefruit Blossom", family: "floral", noteImageAsse
 // reuses lemon.jpg rather than a new photo). Added for K by Dolce & Gabbana
 // EDP Intense, whose source lists Sicilian Lemon.
 sicilianLemon: { name: "Sicilian Lemon", family: "citrus", noteImageAssetKey: "notes/lemon.jpg" },
+
+// Amalfi Lemon is a geographic-origin-qualified variant of the existing
+// generic "lemon" above -- same established pattern as sicilianLemon/
+// sicilianMandarin/calabrianBergamot (distinct identity, not collapsed into
+// the base note, reuses lemon.jpg rather than a new photo). Added for
+// Xerjoff Renaissance, whose approved pyramid names Amalfi Lemon.
+amalfiLemon: { name: "Amalfi Lemon", family: "citrus", noteImageAssetKey: "notes/lemon.jpg" },
 };

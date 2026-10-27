@@ -128,6 +128,7 @@ const BERGAMOT_FAMILY = {
   405: undefined,
   406: undefined,
   410: undefined,
+  411: undefined,
   501: undefined,
 };
 
@@ -204,7 +205,7 @@ const BLOOD_ORANGE_FAMILY = {
   109: undefined,
 };
 
-const TANGERINE_FAMILY = { 15: undefined };
+const TANGERINE_FAMILY = { 15: undefined, 411: undefined };
 
 const FINGER_LIME_FAMILY = { 18: 6 };
 
@@ -246,6 +247,7 @@ const MUSK_FAMILY = {
   401: 5,
   405: undefined,
   408: undefined,
+  411: undefined,
   500: undefined,
 };
 
@@ -372,8 +374,8 @@ describe("Composer Phase 3D canonical-data sanity audit", () => {
 describe("Composer Phase 3D horizontal calibration -- citrus/orange and musk canonical-key families", () => {
   const perfumesById = new Map(perfumes.map((perfume) => [perfume.id, perfume]));
 
-  it("has exactly 92 catalog fragrances to search for exhaustive family membership", () => {
-    expect(perfumes).toHaveLength(92);
+  it("has exactly 93 catalog fragrances to search for exhaustive family membership", () => {
+    expect(perfumes).toHaveLength(93);
   });
 
   for (const [noteId, family] of Object.entries(ALL_FAMILIES)) {
@@ -466,14 +468,14 @@ describe("Composer Phase 3D horizontal calibration -- citrus/orange and musk can
     });
   });
 
-  it("bergamot (40 members) and musk (22 members) stay overwhelmingly unscored -- common presence was never treated as evidence of genuine prominence", () => {
+  it("bergamot (41 members) and musk (23 members) stay overwhelmingly unscored -- common presence was never treated as evidence of genuine prominence", () => {
     const bergamotScoredCount = Object.values(BERGAMOT_FAMILY).filter((score) => score !== undefined).length;
     const muskScoredCount = Object.values(MUSK_FAMILY).filter((score) => score !== undefined).length;
 
-    expect(Object.keys(BERGAMOT_FAMILY)).toHaveLength(40);
+    expect(Object.keys(BERGAMOT_FAMILY)).toHaveLength(41);
     expect(bergamotScoredCount).toBe(6);
 
-    expect(Object.keys(MUSK_FAMILY)).toHaveLength(22);
+    expect(Object.keys(MUSK_FAMILY)).toHaveLength(23);
     expect(muskScoredCount).toBe(3);
   });
 
