@@ -1,5 +1,6 @@
 import { brandAssets } from "@discovery-box/catalog";
 import { DEFAULT_CUSTOMER_PRICING } from "../utils/customerPricing.js";
+import { titleRevealHandlers } from "../utils/titleReveal.js";
 
 function PerfumeCard({
   perfume,
@@ -16,6 +17,10 @@ function PerfumeCard({
   // How the tier chip words the fragrance's value (see utils/customerPricing.js). Absent keeps
   // the original "1.5 pt" chip, so a host that never opts in renders the card unchanged.
   pricing = DEFAULT_CUSTOMER_PRICING,
+  // Opt-in (features.singleLineCardTitles): the name stays on ONE line, cut with an ellipsis when it does not
+  // fit, and slides to show its full text when the card is hovered or keyboard-focused. Absent keeps the
+  // original wrapping title -- same markup, no extra class, no handlers.
+  titleReveal = false,
   labels = {},
 }) {
   const imageFallback = perfume.imageFallback;
@@ -27,7 +32,10 @@ function PerfumeCard({
   const viewDetailsLabel = labels.viewDetails || "View notes & details";
 
   return (
-    <article className="perfume-card">
+    <article
+      className={titleReveal ? "perfume-card perfume-card--single-line-title" : "perfume-card"}
+      {...(titleReveal ? titleRevealHandlers : undefined)}
+    >
       <button
         type="button"
         className="perfume-card-details-trigger"
@@ -60,7 +68,7 @@ function PerfumeCard({
         <div className="perfume-info">
           <div className="perfume-info-heading">
             <div className="perfume-info-copy">
-              <h3>{perfume.name}</h3>
+              <h3 className={titleReveal ? "perfume-card-name" : undefined}>{perfume.name}</h3>
               {perfume.subtitle && (
                 <p
                   className={`perfume-subtitle ${

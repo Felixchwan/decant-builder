@@ -102,5 +102,5 @@ export const aurelianConfig = createBuilderConfig({
     },
   },
   persistence: { storageKey: "aurelian-builder-v1" },
-  features: { whatsappFinalization: true, discoveryCoachmark: false },
+  features: { whatsappFinalization: true, discoveryCoachmark: false, singleLineCardTitles: true },
 });

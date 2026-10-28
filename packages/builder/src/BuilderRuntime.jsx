@@ -1170,6 +1170,7 @@ const confirmAddPerfume = () => {
         isDisabled={totalSlots >= MAX_SELECTABLE_SLOTS}
         isInBox={isPerfumeInBox(perfume)}
         pricing={customerPricing}
+        titleReveal={builderConfig.features?.singleLineCardTitles === true}
         labels={{
           add: t("general.add"),
           addToBox: t("general.addToTheBox"),
@@ -1358,6 +1359,7 @@ const confirmAddPerfume = () => {
                         isDisabled={totalSlots >= MAX_SELECTABLE_SLOTS}
                         isInBox={isPerfumeInBox(perfume)}
                         pricing={customerPricing}
+                        titleReveal={builderConfig.features?.singleLineCardTitles === true}
                         labels={{
                           add: t("general.add"),
                           addToBox: t("general.addToTheBox"),

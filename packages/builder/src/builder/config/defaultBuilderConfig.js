@@ -158,6 +158,9 @@ export const defaultBuilderConfig = {
     restoreMessage: "Your previous box has been restored.",
   },
   features: {
+    // Fragrance names on catalog cards stay on one line (ellipsis) and reveal their full text on hover/focus.
+    // Off by default: a host that never opts in keeps the original wrapping title.
+    singleLineCardTitles: false,
     recommendations: true,
     collectionIntelligence: true,
     collectionDna: true,

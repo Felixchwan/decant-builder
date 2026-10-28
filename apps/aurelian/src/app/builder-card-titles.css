@@ -1,0 +1,39 @@
+/* Aurelian catalog cards: the fragrance name is ONE line.
+
+   HOST-OWNED and Builder-route-only (every selector sits under .builder-page), presentation-only. The shared
+   stylesheet is frozen, so this file adds nothing to it: it only styles the opt-in markup the shared card
+   renders when the host sets features.singleLineCardTitles (Aurelian does; Discovery Decants does not, so its
+   wrapping titles are untouched).
+
+   Why: a long name ("Bad Boy Cobalt Parfum Electrique") wrapped to two or three lines, so its card grew taller
+   than its neighbours and the brand, price and Agregar rows no longer lined up across a row of cards. Now the
+   name never wraps: it is cut with an ellipsis when it does not fit (the cut falls wherever the card's width
+   puts it, never at a character count), and the title box is exactly one line tall, so image, name, brand,
+   price and button sit at the same height on every card.
+
+   The full name is revealed by the shared card's title-reveal behaviour (utils/titleReveal.js): on card hover or
+   keyboard focus it slides the text, then returns it. While it moves the ellipsis is switched off, because a
+   moving line cannot keep an ellipsis pinned to its edge. The text itself is always complete in the DOM, so
+   screen readers read the full name, never the visual truncation.
+
+   The title box is sized from its own line-height (1.25 x the unchanged font size), not a magic pixel value, and
+   the three wrappers above it may shrink below their content width: without that, a long nowrap name would
+   widen its grid column instead of being cut. */
+.builder-page .perfume-card--single-line-title .perfume-info,
+.builder-page .perfume-card--single-line-title .perfume-info-heading,
+.builder-page .perfume-card--single-line-title .perfume-info-copy {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.builder-page .perfume-card--single-line-title .perfume-card-name {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  line-height: 1.25;
+  height: 1.25em;
+}
+
+.builder-page .perfume-card--single-line-title .perfume-card-name--revealing {
+  text-overflow: clip;
+}
