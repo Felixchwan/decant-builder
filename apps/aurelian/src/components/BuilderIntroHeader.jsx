@@ -74,8 +74,9 @@ export function BuilderIntroHeader() {
       <p className="eyebrow">Tu Discovery Box</p>
       <h1>Elige 6–14 fragancias.</h1>
       <p className="lede">
-        Explora el catálogo con calma: no hay una lista de más vendidos, solo lo que quieras
-        comparar. Alcanza un mínimo de 12 puntos y solicita por WhatsApp una revisión de
+        Cada fragancia es un decant de 5 ml. Elige entre 6 y 14 y alcanza un mínimo de $1,200
+        MXN; cada una muestra su precio y tu total se actualiza al instante.
+        Explora con calma, sin listas de más vendidos, y solicita por WhatsApp una revisión de
         disponibilidad. Aurelian confirmará antes de compartir instrucciones de pago.
       </p>
       <Link className="text-link" href="/como-funciona">

@@ -35,6 +35,10 @@ export const defaultBuilderConfig = {
     locale: "en-US",
     currencySymbol: "$",
     pointValue: 100,
+    // How a fragrance's value is worded to the customer: "points" ("1.5 pt", the
+    // default) or "price" (points x pointValue as an amount, "$150"). Display only --
+    // selection, totals, Curator Bonus and Composer keep working in points either way.
+    priceDisplay: "points",
     totalLabel: "Order Total",
   },
   recovery: {

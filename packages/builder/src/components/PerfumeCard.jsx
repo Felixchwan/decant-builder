@@ -1,4 +1,5 @@
 import { brandAssets } from "@discovery-box/catalog";
+import { DEFAULT_CUSTOMER_PRICING } from "../utils/customerPricing.js";
 
 function PerfumeCard({
   perfume,
@@ -12,6 +13,9 @@ function PerfumeCard({
   // card whose fragrance is already in the box AND whose host asked to see that. Absent/false
   // renders the card exactly as it always has -- same label, same markup, no extra class.
   isInBox = false,
+  // How the tier chip words the fragrance's value (see utils/customerPricing.js). Absent keeps
+  // the original "1.5 pt" chip, so a host that never opts in renders the card unchanged.
+  pricing = DEFAULT_CUSTOMER_PRICING,
   labels = {},
 }) {
   const imageFallback = perfume.imageFallback;
@@ -93,10 +97,10 @@ function PerfumeCard({
             backgroundColor: tierData.background,
             color: tierData.color,
           }}
-          aria-label={`${perfume.points} pt`}
+          aria-label={pricing.formatPointsForAssistiveTech(perfume.points)}
         >
           <span aria-hidden="true">{tierData.emoji}</span>
-          <span>{perfume.points} pt</span>
+          <span>{pricing.formatPoints(perfume.points)}</span>
         </div>
 
         <button

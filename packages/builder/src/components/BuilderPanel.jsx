@@ -75,6 +75,8 @@ import {
 } from "../builder/presentation/onboardingPathSelection.js";
 import { buildFinalizationModel } from "../builder/internal/finalization/buildFinalizationModel.js";
 import { getTierData } from "../utils/tierUtils";
+import { DEFAULT_CUSTOMER_PRICING, createCustomerPricing } from "../utils/customerPricing.js";
+import { useCustomerPricing } from "../utils/customerPricingContext.js";
 import CollectionCard from "./CollectionCard";
 import BalanceHelp from "./BalanceHelp.jsx";
 import CollapsibleStrengths from "./CollapsibleStrengths.jsx";
@@ -198,6 +200,7 @@ const BuilderPanel = forwardRef(function BuilderPanel({
       [builderConfig.locale, builderConfig.taxonomyLabels]
     );
     const { t } = translator;
+    const pricing = useMemo(() => createCustomerPricing(builderConfig), [builderConfig]);
     const [hasSeenDiscoveryIntro, setHasSeenDiscoveryIntro] = useState(() => {
       if (typeof window === "undefined") {
         return true;
@@ -496,10 +499,12 @@ const BuilderPanel = forwardRef(function BuilderPanel({
           })
         : null,
       missingPoints > 0
-        ? t("builder.morePoints", {
-            count: missingPoints.toFixed(1),
-            plural: missingPoints === 1 ? "" : "s",
-          })
+        ? pricing.isPriceDisplay
+          ? pricing.formatAmount(pricing.pointsToAmount(missingPoints))
+          : t("builder.morePoints", {
+              count: missingPoints.toFixed(1),
+              plural: missingPoints === 1 ? "" : "s",
+            })
         : null,
     ].filter(Boolean);
     const reviewRequirementText =
@@ -1001,13 +1006,15 @@ const BuilderPanel = forwardRef(function BuilderPanel({
                 <span>{t("general.slots")}</span>
               </div>
 
-              <div className="box-summary-metric">
-                <strong>{totalPoints.toFixed(1)}</strong>
-                <span>{t("general.points")}</span>
-              </div>
+              {!pricing.isPriceDisplay && (
+                <div className="box-summary-metric">
+                  <strong>{totalPoints.toFixed(1)}</strong>
+                  <span>{t("general.points")}</span>
+                </div>
+              )}
 
               <div className="box-summary-metric box-summary-total">
-                <strong>${estimatedValue.toFixed(0)}</strong>
+                <strong>{pricing.isPriceDisplay ? pricing.formatAmount(estimatedValue) : `$${estimatedValue.toFixed(0)}`}</strong>
                 <span>{t("general.orderTotalCompact")}</span>
               </div>
             </div>
@@ -1764,6 +1771,7 @@ function ComposerProposalModal({
 }) {
   const translator = createTranslator(builderConfig.locale, builderConfig.taxonomyLabels);
   const { t } = translator;
+  const pricing = createCustomerPricing(builderConfig);
 
   // Shared, reference-counted body scroll lock (see bodyScrollLock.js), held
   // for this modal's whole mounted lifetime. Kept in its own effect with an
@@ -1894,8 +1902,13 @@ function ComposerProposalModal({
               <h4>{t("composer.proposalSummary")}</h4>
               <div className="summary-grid">
                 <SummaryStat label={t("general.slots")} value={`${proposal.collection.length} / ${proposal.targetSlots}`} />
-                <SummaryStat label={t("general.points")} value={proposal.totalPoints.toFixed(1)} />
-                <SummaryStat label={builderConfig.commerce.totalLabel} value={`$${proposal.orderTotal.toFixed(0)}`} />
+                {!pricing.isPriceDisplay && (
+                  <SummaryStat label={t("general.points")} value={proposal.totalPoints.toFixed(1)} />
+                )}
+                <SummaryStat
+                  label={builderConfig.commerce.totalLabel}
+                  value={pricing.isPriceDisplay ? pricing.formatAmount(proposal.orderTotal) : `$${proposal.orderTotal.toFixed(0)}`}
+                />
                 <SummaryStat label={t("composer.newPicks")} value={proposal.addedPerfumes.length} />
                 <SummaryStat label={builderConfig.curatorBonus.label} value={proposalBonusStatus.value} />
               </div>
@@ -2102,6 +2115,7 @@ export function ComposerProposalThumbnail({ perfume, label, onOpen }) {
 }
 
 export function ComposerProposalDetailTrigger({ perfume, label, onOpen }) {
+  const pricing = useCustomerPricing();
   return (
     <button
       type="button"
@@ -2111,7 +2125,7 @@ export function ComposerProposalDetailTrigger({ perfume, label, onOpen }) {
       onClick={onOpen}
     >
       <strong>{perfume.name}</strong>
-      <span>{perfume.brand} - {perfume.points} pt</span>
+      <span>{perfume.brand} - {pricing.formatPoints(perfume.points)}</span>
     </button>
   );
 }
@@ -2653,6 +2667,7 @@ function NoteExplorerRelatedChip({ facet, translator, onSelect }) {
 
 function NoteExplorerResultRow({ perfume, translator, isAlreadyAdded, isBoxFull, onAddPerfume, onOpenDetails }) {
   const { t } = translator;
+  const pricing = useCustomerPricing();
   const addButtonLabel = isAlreadyAdded
     ? t("general.added")
     : isBoxFull
@@ -2674,7 +2689,7 @@ function NoteExplorerResultRow({ perfume, translator, isAlreadyAdded, isBoxFull,
         <button type="button" className="note-explorer-result-detail-trigger" aria-haspopup="dialog">
           <strong>{perfume.name}</strong>
           <span>
-            {perfume.brand} - {perfume.points} pt
+            {perfume.brand} - {pricing.formatPoints(perfume.points)}
             {perfume.noteProminenceLevel ? (
               <>
                 {" - "}
@@ -3425,6 +3440,7 @@ function DnaPerfumeRow({
   isActionDisabled = false,
 }) {
   const tierData = getTierData(perfume.id);
+  const pricing = useCustomerPricing();
   const detailId = `dna-detail-${perfume.id}`;
 
   return (
@@ -3468,7 +3484,7 @@ function DnaPerfumeRow({
         )}
         <span>{perfume.brand}</span>
         <p>
-          {tierData.name} · {perfume.points} pt
+          {tierData.name} · {pricing.formatPoints(perfume.points)}
           {supportingAccords.length > 0
             ? ` · ${supportingAccords.map(formatIntelligenceLabel).join(", ")}`
             : ""}
@@ -4033,6 +4049,7 @@ const CuratorBonusModule = forwardRef(function CuratorBonusModule(
   ref
 ) {
   const { t } = createTranslator(builderConfig.locale, builderConfig.taxonomyLabels);
+  const pricing = createCustomerPricing(builderConfig);
   const DISCOVERY_BONUS_TARGET_POINTS = builderConfig.curatorBonus.targetPoints;
   const CURATOR_BONUS_PREFERENCES = builderConfig.curatorBonus.preferences;
   const preferenceData = CURATOR_BONUS_PREFERENCES[preference];
@@ -4048,10 +4065,12 @@ const CuratorBonusModule = forwardRef(function CuratorBonusModule(
   const hasRequiredPoints = totalPoints >= DISCOVERY_BONUS_TARGET_POINTS;
   const hasRequiredFragrances = totalSlots >= minSlots;
   const lockedMessage = !hasRequiredPoints
-    ? t("curator.pointsAway", {
-        count: pointsAway.toFixed(1),
-        plural: pointsAway === 1 ? "" : "s",
-      })
+    ? pricing.isPriceDisplay
+      ? t("curator.amountAway", { amount: pricing.formatAmount(pricing.pointsToAmount(pointsAway)) })
+      : t("curator.pointsAway", {
+          count: pointsAway.toFixed(1),
+          plural: pointsAway === 1 ? "" : "s",
+        })
     : t("curator.fragrancesAway", {
         count: fragrancesAway,
         plural: fragrancesAway === 1 ? "" : "s",
@@ -4082,7 +4101,11 @@ const CuratorBonusModule = forwardRef(function CuratorBonusModule(
       <div className="discovery-requirements">
         <RequirementLine
           isMet={hasRequiredPoints}
-          value={`${progressValue.toFixed(1)} / ${DISCOVERY_BONUS_TARGET_POINTS} ${t("general.points")}`}
+          value={
+            pricing.isPriceDisplay
+              ? `${pricing.formatAmount(pricing.pointsToAmount(progressValue))} / ${pricing.formatAmountWithCurrency(pricing.pointsToAmount(DISCOVERY_BONUS_TARGET_POINTS))}`
+              : `${progressValue.toFixed(1)} / ${DISCOVERY_BONUS_TARGET_POINTS} ${t("general.points")}`
+          }
         />
         <RequirementLine
           isMet={hasRequiredFragrances}
@@ -4230,6 +4253,7 @@ function DiscoveryBoxReviewModal({
   openerRef,
 }) {
   const t = translator?.t || ((key) => key);
+  const pricing = createCustomerPricing(builderConfig);
   const [finalizeStatus, setFinalizeStatus] = useState("");
   const [fallbackWhatsAppUrl, setFallbackWhatsAppUrl] = useState("");
   const [isFinalizing, setIsFinalizing] = useState(false);
@@ -4540,13 +4564,19 @@ function DiscoveryBoxReviewModal({
 
           <section className="final-summary-stats review-order-stats">
             <SummaryStat label={t("general.fragrances")} value={finalizationModel.order.totalSlots} />
-            <SummaryStat
-              label={t("review.totalPoints")}
-              value={finalizationModel.order.totalPoints.toFixed(1)}
-            />
+            {!pricing.isPriceDisplay && (
+              <SummaryStat
+                label={t("review.totalPoints")}
+                value={finalizationModel.order.totalPoints.toFixed(1)}
+              />
+            )}
             <SummaryStat
               label={builderConfig.commerce.totalLabel}
-              value={`$${finalizationModel.order.monetaryTotal.toFixed(0)}`}
+              value={
+                pricing.isPriceDisplay
+                  ? pricing.formatAmount(finalizationModel.order.monetaryTotal)
+                  : `$${finalizationModel.order.monetaryTotal.toFixed(0)}`
+              }
             />
             <SummaryStat
               label={builderConfig.curatorBonus.label}
@@ -5401,6 +5431,7 @@ function RecommendationLaneContent({
   onOpenPerfumeDetails,
   translator,
 }) {
+  const pricing = useCustomerPricing();
   const [activeIndex, setActiveIndex] = useState(0);
 
   if (recommendations.length === 0) {
@@ -5492,6 +5523,7 @@ function RecommendationLaneContent({
           // Details navigate within this lane: its recommendations, in the order the carousel walks them.
           onOpenDetails={createRecommendationDetailsOpener(onOpenPerfumeDetails, recommendations)}
           translator={translator}
+          pricing={pricing}
         />
       </div>
     </section>
@@ -5507,6 +5539,7 @@ export function RecommendationCard({
   objectiveKey,
   onOpenDetails,
   translator,
+  pricing = DEFAULT_CUSTOMER_PRICING,
 }) {
   const { perfume } = recommendation;
   const explanations = getRecommendationDisplayReasons({ recommendation, objectiveKey, translator });
@@ -5538,7 +5571,7 @@ export function RecommendationCard({
       <div>
         <strong>{perfume.name}</strong>
         <span>
-          {perfume.brand} · {perfume.points} pt
+          {perfume.brand} · {pricing.formatPoints(perfume.points)}
         </span>
       </div>
     </>

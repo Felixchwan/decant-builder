@@ -1,3 +1,5 @@
+import { createCustomerPricing } from "../../../utils/customerPricing.js";
+
 const EMPTY_CUSTOMER_INFO = {
   name: "",
   city: "",
@@ -112,9 +114,11 @@ function buildOrderModel({
 
 function buildFinalizationMessage({ customer, order, config }) {
   const labels = config.finalization.messageLabels || {};
+  // A host that speaks money to customers (commerce.priceDisplay: "price") sends amounts, not points.
+  const pricing = createCustomerPricing(config);
   const perfumeLines = order.items.map(
     (perfume, index) =>
-      `${index + 1}. ${perfume.name} - ${perfume.brand} (${perfume.points} pt)`
+      `${index + 1}. ${perfume.name} - ${perfume.brand} (${pricing.formatPoints(perfume.points)})`
   );
   const curatorStatus = order.curatorBonus.isUnlocked
     ? [
@@ -136,8 +140,10 @@ function buildFinalizationMessage({ customer, order, config }) {
     ...perfumeLines,
     "",
     `${labels.totalSlots || "Total slots"}: ${order.totalSlots}`,
-    `${labels.totalPoints || "Total points"}: ${order.totalPoints.toFixed(1)}`,
-    `${labels.orderTotal || "Order total"}: $${order.monetaryTotal.toFixed(0)}`,
+    pricing.isPriceDisplay ? "" : `${labels.totalPoints || "Total points"}: ${order.totalPoints.toFixed(1)}`,
+    `${labels.orderTotal || "Order total"}: ${
+      pricing.isPriceDisplay ? pricing.formatAmountWithCurrency(order.monetaryTotal) : `$${order.monetaryTotal.toFixed(0)}`
+    }`,
     curatorStatus,
     "",
     config.finalization.whatsapp.closing,

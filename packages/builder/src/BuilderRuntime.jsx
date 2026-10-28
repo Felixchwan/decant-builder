@@ -37,6 +37,8 @@ import {
   metadataAssets,
 } from "@discovery-box/catalog";
 import { createTranslator } from "./i18n/createTranslator.js";
+import { createCustomerPricing } from "./utils/customerPricing.js";
+import { CustomerPricingProvider } from "./utils/CustomerPricingProvider.jsx";
 import { ANALYTICS_EVENTS } from "./analytics/events.js";
 import { noopAnalytics } from "./analytics/noopAnalytics.js";
 import { isCuratorBonusUnlocked } from "./builder/internal/curatorBonus/isCuratorBonusUnlocked.js";
@@ -144,6 +146,7 @@ function App({
   onCatalogInfoRequest,
 }) {
   const builderConfig = config;
+  const customerPricing = useMemo(() => createCustomerPricing(builderConfig), [builderConfig]);
   const builderThemeStyle = useMemo(
     () => buildBuilderThemeStyle(builderConfig.theme),
     [builderConfig.theme]
@@ -1166,6 +1169,7 @@ const confirmAddPerfume = () => {
         onOpenDetails={(perfume) => openPerfumeDetails(perfume, "manual")}
         isDisabled={totalSlots >= MAX_SELECTABLE_SLOTS}
         isInBox={isPerfumeInBox(perfume)}
+        pricing={customerPricing}
         labels={{
           add: t("general.add"),
           addToBox: t("general.addToTheBox"),
@@ -1239,6 +1243,7 @@ const confirmAddPerfume = () => {
   );
 
   return (
+    <CustomerPricingProvider config={builderConfig}>
     <div
       ref={builderRootRef}
       className={builderThemeClassName}
@@ -1352,6 +1357,7 @@ const confirmAddPerfume = () => {
                         onOpenDetails={(perfume) => openPerfumeDetails(perfume, "intent_recommendation")}
                         isDisabled={totalSlots >= MAX_SELECTABLE_SLOTS}
                         isInBox={isPerfumeInBox(perfume)}
+                        pricing={customerPricing}
                         labels={{
                           add: t("general.add"),
                           addToBox: t("general.addToTheBox"),
@@ -1480,6 +1486,7 @@ const confirmAddPerfume = () => {
         portalRoot
       )}
     </div>
+    </CustomerPricingProvider>
   );
 }
 
@@ -1704,6 +1711,7 @@ function PerfumeDetailsModal({
   onClose,
 }) {
   const t = translator?.t || ((key) => key);
+  const pricing = createCustomerPricing(builderConfig);
   const dialogRef = useRef(null);
   const titleId = useId();
   const touchStartRef = useRef(null);
@@ -1983,7 +1991,7 @@ function PerfumeDetailsModal({
             {tierData.name}
           </div>
 
-          <strong>{perfume.points} pt</strong>
+          <strong>{pricing.formatPoints(perfume.points)}</strong>
 
           <button
             className="perfume-details-meta-add"

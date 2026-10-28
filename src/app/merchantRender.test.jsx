@@ -24,6 +24,9 @@ describe("merchant-localized Builder render", () => {
     expect(markup).toContain("My Box");
     expect(markup).toContain("Compose My Box");
     expect(markup).toContain("Points");
+    // Discovery Decants keeps the points presentation on its tier chips
+    expect(markup).toContain("<span>1 pt</span>");
+    expect(markup).not.toContain("<span>$100</span>");
     expect(markup).not.toContain("Aurelian");
   });
 
@@ -33,7 +36,16 @@ describe("merchant-localized Builder render", () => {
     expect(markup).toContain("Catálogo");
     expect(markup).toContain("Mi caja");
     expect(markup).toContain("Armar mi caja");
-    expect(markup).toContain("Puntos");
+    // Aurelian speaks money to customers: the box summary reads Fragancias / Total MXN with no
+    // Puntos panel, and the old Espacios label is gone.
+    expect(markup).toContain("Fragancias");
+    expect(markup).toContain("Total MXN");
+    expect(markup).not.toContain("Puntos");
+    expect(markup).not.toContain("Espacios");
+    // ...and its tier chips show the MXN price, never points
+    expect(markup).toContain("<span>$100</span>");
+    expect(markup).toContain("<span>$400</span>");
+    expect(markup).not.toMatch(/<span>[\d.]+ pt<\/span>/);
     expect(markup).not.toContain("Discovery Decants");
   });
 

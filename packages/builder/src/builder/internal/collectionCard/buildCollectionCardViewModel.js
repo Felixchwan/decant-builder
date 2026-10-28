@@ -3,6 +3,7 @@ import {
   isEveningFocused,
 } from "../intelligence/collectionMetrics.js";
 import { SEASON_IDS, buildSeasonalEvidence } from "../intelligence/seasonalEvidence.js";
+import { createCustomerPricing } from "../../../utils/customerPricing.js";
 
 export function buildCollectionCardViewModel({
   selectedPerfumes,
@@ -32,6 +33,9 @@ export function buildCollectionCardViewModel({
     .map((item) => formatLabel(item.label));
   const primaryDna = dnaDescriptors[0] || "";
   const title = collectionIdentity?.title;
+  // A host that speaks money to customers (commerce.priceDisplay: "price") has the card's summary read the
+  // box's total amount instead of its points. This one view model feeds Preview, Download and Share alike.
+  const pricing = createCustomerPricing(config);
 
   return {
     header: {
@@ -94,6 +98,9 @@ export function buildCollectionCardViewModel({
       palette: collectionIdentity?.palette,
       fragranceCount: items.length,
       collectionPoints: totalPoints,
+      ...(pricing.isPriceDisplay
+        ? { collectionTotal: pricing.formatAmountWithCurrency(estimatedValue), collectionTotalLabel: "Total" }
+        : {}),
       profileTraits: profileTraits.slice(0, 3),
       dnaDescriptors,
       primaryDna,

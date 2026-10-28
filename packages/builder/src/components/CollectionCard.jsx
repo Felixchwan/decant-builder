@@ -21,6 +21,10 @@ const CollectionCard = forwardRef(function CollectionCard({
   perfumes = DEFAULT_PERFUMES,
   fragranceCount = perfumes.length,
   collectionPoints = 0,
+  // When a host words the box's value as money, the summary shows this amount (e.g. "$1,900 MXN") under
+  // its label instead of the points. Absent keeps the original "Collection Points" summary.
+  collectionTotal = null,
+  collectionTotalLabel = "Total",
   profileTraits = DEFAULT_PROFILE_TRAITS,
   dnaDescriptors = DEFAULT_DNA_DESCRIPTORS,
   isCuratorBonusUnlocked = false,
@@ -128,10 +132,17 @@ const CollectionCard = forwardRef(function CollectionCard({
           <span>{fragranceCount === 1 ? "Fragrance" : "Fragrances"}</span>
         </div>
 
-        <div>
-          <strong>{Number(collectionPoints).toFixed(1)}</strong>
-          <span>Collection Points</span>
-        </div>
+        {collectionTotal === null ? (
+          <div>
+            <strong>{Number(collectionPoints).toFixed(1)}</strong>
+            <span>Collection Points</span>
+          </div>
+        ) : (
+          <div>
+            <strong>{collectionTotal}</strong>
+            <span>{collectionTotalLabel}</span>
+          </div>
+        )}
       </div>
 
       <CollectionCardSection title="Collection Profile">

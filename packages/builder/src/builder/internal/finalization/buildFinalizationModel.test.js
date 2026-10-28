@@ -430,8 +430,15 @@ describe("buildFinalizationModel", () => {
     expect(result.message).toContain("Municipio: Monterrey");
     expect(result.message).toContain("Fragancias seleccionadas:");
     expect(result.message).toContain("Total de fragancias: 3");
-    expect(result.message).toContain("Puntos totales: 4.5");
-    expect(result.message).toContain("Total estimado de la Discovery Box: $450");
+    // Aurelian words the request in money, like the rest of its customer-facing UI: each fragrance
+    // carries its price, there is no points line, and the total names its currency. (The order
+    // model above still carries points -- only the message wording changes.)
+    expect(result.message).toContain("1. Azure Office - Maison Test ($100)");
+    expect(result.message).toContain("2. Amber Date - Atelier Warm ($150)");
+    expect(result.message).toContain("3. Nocturne Leather - Maison Test ($200)");
+    expect(result.message).not.toContain("Puntos totales");
+    expect(result.message).not.toMatch(/\bpts?\b|puntos/i);
+    expect(result.message).toContain("Total estimado de la Discovery Box: $450 MXN");
     expect(result.message).toContain("Curator Bonus: Desbloqueado");
     expect(result.message).toContain("Preferencia Curator Bonus: Complementar mi colección");
     expect(result.message).toContain("confirmará disponibilidad antes de enviarme las instrucciones de pago");

@@ -43,11 +43,11 @@ describe("Mobile Mi caja stack (builder-mobile.css)", () => {
     expect(withoutComments.match(/var\(--[\w-]+\)/g).every((token) => token === "var(--aur-intel-rule)")).toBe(true);
   });
 
-  it("keeps the summary on ONE row of three at every phone width (the shared <=420px rule wrapped the total)", () => {
+  it("keeps the summary on ONE row of two (Fragancias | Total MXN) at every phone width (the shared <=420px rule wrapped the total)", () => {
     const card = bodyOf(".builder-page .box-summary-card");
     const total = bodyOf(".builder-page .box-summary-total");
 
-    expect(card).toContain("grid-template-columns: repeat(3, minmax(0, 1fr))");
+    expect(card).toContain("grid-template-columns: repeat(2, minmax(0, 1fr))");
     expect(card).toMatch(/padding: \d+px \d+px/);
     // undoes exactly what the shared small-phone rule does to the total, and restores its divider
     expect(total).toContain("grid-column: auto");

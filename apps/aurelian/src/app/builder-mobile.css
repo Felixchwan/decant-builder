@@ -15,7 +15,8 @@
    What changes, top to bottom:
      panel         22px -> 16px padding (16px more width for the rack and the cards)
      header        a little less space under "Mi caja / Vaciar caja / Revisar"
-     summary card  one row of three (Espacios | Puntos | Total) at every phone width: ~51px, not 102px
+     summary card  one row of two (Fragancias | Total MXN) at every phone width: ~51px, not 102px
+                   (it was three metrics until points left the customer-facing summary)
      rack, share   the gaps between the rack, the share row and the Composer, 12-14px -> 10px
      progress bar  a thin 5px brass hairline, 12px margin (it was a 12px gauge with 18px margins)
      review bar    padding 8 -> 6, helper line tight under the button: ~80px, not 108px
@@ -30,9 +31,9 @@
     margin-bottom: 12px;
   }
 
-  /* ---- Summary: Espacios | Puntos | Total, on one row ------------------------------------------------ */
+  /* ---- Summary: Fragancias | Total MXN, on one row ---------------------------------------------------- */
   .builder-page .box-summary-card {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     margin-bottom: 10px;
     padding: 7px 4px;
   }

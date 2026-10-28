@@ -343,8 +343,10 @@ describe("BuilderPanel Composer setup launcher", () => {
       missingSlots: 6,
       missingPoints: 12,
     });
-    expect(esMarkup).toContain("6 fragancias y 12.0 puntos");
-    expect(esMarkup).not.toMatch(/fragancias and|puntos and/);
+    // Aurelian words the missing amount as money (commerce.priceDisplay: "price"): 12 points x $100.
+    expect(esMarkup).toContain("6 fragancias y $1,200");
+    expect(esMarkup).not.toContain("fragancias and");
+    expect(esMarkup).not.toContain("$1,200 and");
   });
 
   it("does not introduce a conjunction when only one requirement is outstanding", () => {
@@ -356,7 +358,7 @@ describe("BuilderPanel Composer setup launcher", () => {
       missingSlots: 0,
       missingPoints: 3,
     });
-    expect(pointsOnlyMarkup).toContain("<p>Falta 3.0 puntos para revisar.</p>");
+    expect(pointsOnlyMarkup).toContain("<p>Falta $300 para revisar.</p>");
   });
 
   it("keeps only the operational summary sticky, leaving Collection Card onward in normal flow", () => {

@@ -29,7 +29,10 @@ export const aurelianConfig = createBuilderConfig({
     heading: "Aurelian",
   },
   analytics: { merchantId: "aurelian" },
-  commerce: { ...localized.commerce, locale },
+  // Aurelian speaks money to customers: fragrance tier chips, the box summary and Curator
+  // Bonus progress read as MXN amounts (points x pointValue). Points stay the internal
+  // measure for selection, Composer and Curator Bonus -- this only changes the wording.
+  commerce: { ...localized.commerce, locale, priceDisplay: "price" },
   // minPoints is a shared-config field with a default (see
   // defaultBuilderConfig.js) that used to be purely informational for
   // Aurelian. It now also drives Composer's completion-floor behavior (see

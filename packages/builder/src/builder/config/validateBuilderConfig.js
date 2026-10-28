@@ -33,6 +33,7 @@ export function validateBuilderConfig(config) {
   assertPath(isNonEmptyString(config.commerce.currency), "commerce.currency", "must be a non-empty string");
   assertPath(SUPPORTED_LOCALES.includes(config.commerce.locale), "commerce.locale", "must be a supported locale");
   assertPath(isNonEmptyString(config.commerce.currencySymbol), "commerce.currencySymbol", "must be a non-empty string");
+  assertPath(["points", "price"].includes(config.commerce.priceDisplay), "commerce.priceDisplay", "must be \"points\" or \"price\"");
 
   assertPath(isPositiveNumber(config.box.minSelectableSlots), "box.minSelectableSlots", "must be a positive number");
   assertPath(isPositiveNumber(config.box.maxSelectableSlots), "box.maxSelectableSlots", "must be a positive number");

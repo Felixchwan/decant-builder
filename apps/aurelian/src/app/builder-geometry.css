@@ -17,11 +17,13 @@
      panels            10px   Collection Card, Composer, Curator Bonus, My Box strip, tray
      perfume cards      9px   image inside the card 5px
      controls          10px   search, filters, intent toggles, mobile tab bar (12px)
-     buttons            8px   every text button / CTA (tabs inside the bar: 7px)
+     buttons            8px   every text button / CTA (tabs inside the bar: 7px), and the tier
+                              price chip beside a card's add button, so the pair reads as one row
      nested panels      8px   Curator inner cards, recommendation cards
    Intentionally still round: icon buttons ("i", close, carousel, expand), progress
    tracks, count/status pills, chips and tags, tooltips and the vial artwork --
-   their semantics (a dot, a chip, a gauge) read through the round form. */
+   their semantics (a dot, a chip, a gauge) read through the round form. The one exception is the
+   card's tier price chip (it sits beside the add button and shares its radius). */
 
 /* ---- Shells ---------------------------------------------------------------- */
 .builder-page .catalog-section,
@@ -83,6 +85,7 @@
 
 /* ---- Buttons / CTAs -------------------------------------------------------- */
 .builder-page .perfume-card-compact-actions button,
+.builder-page .perfume-card-points,
 .builder-page .recommendation-actions button,
 .builder-page .compose-box-header-actions button,
 .builder-page .share-box-buttons button,

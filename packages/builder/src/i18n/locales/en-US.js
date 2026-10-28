@@ -180,6 +180,9 @@ export const enUS = {
   "composer.bonus.unlocked": "Curator Bonus unlocked.",
   "composer.bonus.progress": "{current} / {target} points toward Curator Bonus.",
   "composer.bonus.valueProgress": "{current} / {target} pts",
+  "composer.bonus.noLimitAmount": "Bonus unlocks at {amount}.",
+  "composer.bonus.progressAmount": "{current} / {target} toward Curator Bonus.",
+  "composer.bonus.valueProgressAmount": "{current} / {target}",
 
   "composer.strategy.balanced": "Balanced",
   "composer.strategy.versatile": "Versatile",
@@ -208,6 +211,7 @@ export const enUS = {
   "curator.pick": "Curator Pick",
   "curator.pointsAway":
     "{count} point{plural} away from unlocking your Curator Bonus",
+  "curator.amountAway": "{amount} away from unlocking your Curator Bonus",
   "curator.fragrancesAway":
     "Need {count} more fragrance{plural} to unlock your Curator Bonus",
   "curator.selectedWrapped":
