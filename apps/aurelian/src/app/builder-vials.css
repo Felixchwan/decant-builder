@@ -1,0 +1,490 @@
+/* Aurelian Builder box: the vials are drawn as real 5 ml spray decants.
+
+   HOST-OWNED and Builder-route-only, presentation-only. The shared stylesheet is frozen and the shared
+   markup is unchanged (a vial is still .box-vial > .vial-cap + .vial-body > .vial-label), so every state,
+   handler, slot rule and the tray layout stay the package's. This file only re-skins those same elements in
+   the Aurelian Builder: the in-page tray (.builder-page), the header-docked box (#aurelian-builder-summary-slot,
+   which lives outside .builder-page) and the Collection Card mini box (preview + the Download/Share image),
+   which lives in the Builder portal root. Discovery Decants has none of these selectors, so its vials are
+   untouched.
+
+   The decant is drawn as an ordinary VERTICAL 5 ml glass atomizer and then turned 90 degrees to lie in the
+   rack, sprayer on the left:
+
+     actuator (pump button, with its tiny spray hole set into the face) -> one metal collar -> short glass
+     neck -> glass vial (rounded shoulder, thick base, pale tier-tinted liquid) -> small dark label
+
+   Two techniques, each where it is strongest. The sprayer is ONE small inline SVG (a data: URI on
+   .vial-cap, so no asset to ship and nothing for the PNG export to fetch): curves, a hole embedded in the
+   button and a collar that wraps the neck are exact in a vector, and it scales from the vial height. The
+   glass body has to stretch to every column width, so it stays CSS.
+
+   Tier is read, in order, from the liquid (a pale translucent wash of the tier colour) and the strip on the dark
+   label's edge, with a hairline on the collar as the only other cue. The glass, the dark gunmetal button, the
+   steel collar and the label itself are the same for every tier. Empty slots are only a faint glass outline;
+   the bonus slots are the same bottle with a gold collar and a gold (Curator) liquid, never a tier, plus the
+   package's own seal / lock mark.
+
+   Geometry is proportional to one number, --dv (--cv on the Collection Card), the vial's own height, set to
+   the exact height the shared stylesheet already gives the vial at that width (tray: 18px docked/desktop,
+   28px tablet, 26px phone; card: 34px preview, 26px phone, 50px export), so nothing here changes any size in
+   the layout: only the split inside the vial's two columns moves. Selectors are written as :is(...) so the
+   host scopes beat the package's zero-specificity rules without !important. */
+
+
+:is(.builder-page, #aurelian-builder-summary-slot) .box-slot-tray .box-vial {
+  --dv: 18px;
+  --dv-accent: var(--tier-color);
+  position: relative;
+}
+/* Silver and Platinum are only 12.6 apart (CIE76) in the canonical palette; at a 2-3px accent they blur. Only
+   the Builder's accent is nudged (Silver a touch steelier, Platinum a touch icier, 25 apart): the canonical
+   tier colours are untouched everywhere else, and an unrecognised value falls back to the canonical one. */
+:is(.builder-page, #aurelian-builder-summary-slot) .box-slot-tray .box-vial[style*="--tier-color: #cbd5e1"] {
+  --dv-accent: #a3acb9;
+}
+:is(.builder-page, #aurelian-builder-summary-slot) .box-slot-tray .box-vial[style*="--tier-color: #bae6fd"] {
+  --dv-accent: #c2f0ff;
+}
+@media (max-width: 980px) {
+  :is(.builder-page, #aurelian-builder-summary-slot) .box-slot-tray .box-vial {
+    --dv: 28px;
+  }
+}
+@media (max-width: 520px) {
+  :is(.builder-page, #aurelian-builder-summary-slot) .box-slot-tray .box-vial {
+    --dv: 26px;
+  }
+}
+
+/* ---- sprayer: one small SVG (neck + collar + actuator with its spray hole), sized from the vial height ---- */
+:is(.builder-page, #aurelian-builder-summary-slot) .box-slot-tray .box-vial {
+  grid-template-columns: calc(var(--dv) * 0.82) minmax(0, 1fr);
+}
+
+:is(.builder-page, #aurelian-builder-summary-slot) .box-slot-tray .box-vial .vial-cap {
+  position: relative;
+  z-index: 2;
+  justify-self: stretch;
+  width: auto;
+  height: var(--dv);
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  transform: none;
+  background: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2082%20100%22%20preserveAspectRatio%3D%22xMinYMid%20meet%22%3E%3Cdefs%3E%3ClinearGradient%20id%3D%22t%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%220%22%20y2%3D%221%22%3E%3Cstop%20offset%3D%220%22%20stop-color%3D%22%236d7279%22%2F%3E%3Cstop%20offset%3D%220.32%22%20stop-color%3D%22%23484d54%22%2F%3E%3Cstop%20offset%3D%220.72%22%20stop-color%3D%22%2333373d%22%2F%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23232629%22%2F%3E%3C%2FlinearGradient%3E%3ClinearGradient%20id%3D%22m%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%220%22%20y2%3D%221%22%3E%3Cstop%20offset%3D%220%22%20stop-color%3D%22%2392959c%22%2F%3E%3Cstop%20offset%3D%220.32%22%20stop-color%3D%22%236f737a%22%2F%3E%3Cstop%20offset%3D%220.72%22%20stop-color%3D%22%2352565d%22%2F%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23393c42%22%2F%3E%3C%2FlinearGradient%3E%3ClinearGradient%20id%3D%22g%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%220%22%20y2%3D%221%22%3E%3Cstop%20offset%3D%220%22%20stop-color%3D%22%23fff%22%20stop-opacity%3D%22.5%22%2F%3E%3Cstop%20offset%3D%22.14%22%20stop-color%3D%22%23fff%22%20stop-opacity%3D%22.16%22%2F%3E%3Cstop%20offset%3D%22.86%22%20stop-color%3D%22%23fff%22%20stop-opacity%3D%22.1%22%2F%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23fff%22%20stop-opacity%3D%22.4%22%2F%3E%3C%2FlinearGradient%3E%3C%2Fdefs%3E%3Crect%20x%3D%2264%22%20y%3D%2231%22%20width%3D%2220%22%20height%3D%2238%22%20fill%3D%22url(%23g)%22%2F%3E%3Crect%20x%3D%2242%22%20y%3D%2214%22%20width%3D%2222%22%20height%3D%2272%22%20rx%3D%223%22%20fill%3D%22url(%23m)%22%2F%3E%3Cpath%20d%3D%22M46.4%2C17V83M59.6%2C17V83%22%20stroke%3D%22rgba(0%2C0%2C0%2C.22)%22%20stroke-width%3D%221%22%2F%3E%3Cpath%20d%3D%22M15%2C27H41A3%2C3%200%200%201%2044%2C30V70A3%2C3%200%200%201%2041%2C73H15A15%2C15%200%200%201%200%2C58V42A15%2C15%200%200%201%2015%2C27Z%22%20fill%3D%22url(%23t)%22%2F%3E%3Cpath%20d%3D%22M15%2C28.8H41%22%20stroke%3D%22rgba(255%2C255%2C255%2C.24)%22%20stroke-width%3D%221.8%22%20stroke-linecap%3D%22round%22%2F%3E%3Cpath%20d%3D%22M43.4%2C30V70%22%20stroke%3D%22rgba(0%2C0%2C0%2C.4)%22%20stroke-width%3D%221.4%22%2F%3E%3Ccircle%20cx%3D%2213%22%20cy%3D%2245%22%20r%3D%224.6%22%20fill%3D%22%23050607%22%2F%3E%3Ccircle%20cx%3D%2213%22%20cy%3D%2245%22%20r%3D%224.6%22%20fill%3D%22none%22%20stroke%3D%22rgba(255%2C255%2C255%2C.3)%22%20stroke-width%3D%221%22%2F%3E%3C%2Fsvg%3E") left center / auto 100% no-repeat;
+}
+
+:is(.builder-page, #aurelian-builder-summary-slot) .box-slot-tray .box-vial.bonus-reserved .vial-cap {
+  background-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2082%20100%22%20preserveAspectRatio%3D%22xMinYMid%20meet%22%3E%3Cdefs%3E%3ClinearGradient%20id%3D%22t%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%220%22%20y2%3D%221%22%3E%3Cstop%20offset%3D%220%22%20stop-color%3D%22%236d7279%22%2F%3E%3Cstop%20offset%3D%220.32%22%20stop-color%3D%22%23484d54%22%2F%3E%3Cstop%20offset%3D%220.72%22%20stop-color%3D%22%2333373d%22%2F%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23232629%22%2F%3E%3C%2FlinearGradient%3E%3ClinearGradient%20id%3D%22m%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%220%22%20y2%3D%221%22%3E%3Cstop%20offset%3D%220%22%20stop-color%3D%22%23fdeebd%22%2F%3E%3Cstop%20offset%3D%220.32%22%20stop-color%3D%22%23e5bd55%22%2F%3E%3Cstop%20offset%3D%220.72%22%20stop-color%3D%22%23ad842c%22%2F%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%236d4e16%22%2F%3E%3C%2FlinearGradient%3E%3ClinearGradient%20id%3D%22g%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%220%22%20y2%3D%221%22%3E%3Cstop%20offset%3D%220%22%20stop-color%3D%22%23fff%22%20stop-opacity%3D%22.5%22%2F%3E%3Cstop%20offset%3D%22.14%22%20stop-color%3D%22%23fff%22%20stop-opacity%3D%22.16%22%2F%3E%3Cstop%20offset%3D%22.86%22%20stop-color%3D%22%23fff%22%20stop-opacity%3D%22.1%22%2F%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23fff%22%20stop-opacity%3D%22.4%22%2F%3E%3C%2FlinearGradient%3E%3C%2Fdefs%3E%3Crect%20x%3D%2264%22%20y%3D%2231%22%20width%3D%2220%22%20height%3D%2238%22%20fill%3D%22url(%23g)%22%2F%3E%3Crect%20x%3D%2242%22%20y%3D%2214%22%20width%3D%2222%22%20height%3D%2272%22%20rx%3D%223%22%20fill%3D%22url(%23m)%22%2F%3E%3Cpath%20d%3D%22M46.4%2C17V83M59.6%2C17V83%22%20stroke%3D%22rgba(0%2C0%2C0%2C.22)%22%20stroke-width%3D%221%22%2F%3E%3Cpath%20d%3D%22M15%2C27H41A3%2C3%200%200%201%2044%2C30V70A3%2C3%200%200%201%2041%2C73H15A15%2C15%200%200%201%200%2C58V42A15%2C15%200%200%201%2015%2C27Z%22%20fill%3D%22url(%23t)%22%2F%3E%3Cpath%20d%3D%22M15%2C28.8H41%22%20stroke%3D%22rgba(255%2C255%2C255%2C.24)%22%20stroke-width%3D%221.8%22%20stroke-linecap%3D%22round%22%2F%3E%3Cpath%20d%3D%22M43.4%2C30V70%22%20stroke%3D%22rgba(0%2C0%2C0%2C.4)%22%20stroke-width%3D%221.4%22%2F%3E%3Ccircle%20cx%3D%2213%22%20cy%3D%2245%22%20r%3D%224.6%22%20fill%3D%22%23050607%22%2F%3E%3Ccircle%20cx%3D%2213%22%20cy%3D%2245%22%20r%3D%224.6%22%20fill%3D%22none%22%20stroke%3D%22rgba(255%2C255%2C255%2C.3)%22%20stroke-width%3D%221%22%2F%3E%3C%2Fsvg%3E");
+}
+
+:is(.builder-page, #aurelian-builder-summary-slot) .box-slot-tray .box-vial .vial-cap::before {
+  display: none;
+}
+
+/* the one tier accent on the metal: a hairline on the collar */
+:is(.builder-page, #aurelian-builder-summary-slot) .box-slot-tray .box-vial .vial-cap::after {
+  content: "";
+  position: absolute;
+  left: calc(var(--dv) * 0.53);
+  top: 50%;
+  right: auto;
+  width: max(1.5px, calc(var(--dv) * 0.075));
+  height: calc(var(--dv) * 0.6192);
+  border-radius: 0;
+  background: var(--dv-accent);
+  box-shadow: none;
+  transform: translate(-50%, -50%);
+}
+
+/* ---- glass ---- */
+:is(.builder-page, #aurelian-builder-summary-slot) .box-slot-tray .box-vial .vial-body {
+  border: 1px solid rgba(255, 255, 255, 0.26);
+  border-radius: calc(var(--dv) * 0.38) calc(var(--dv) * 0.2) calc(var(--dv) * 0.2) calc(var(--dv) * 0.38);
+}
+
+:is(.builder-page, #aurelian-builder-summary-slot) .box-slot-tray .box-vial:is(.filled, .bonus-unlocked) .vial-body {
+  padding-inline: 2px;
+  border-color: rgba(255, 255, 255, 0.27);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.05) 38%, rgba(255, 255, 255, 0.03) 72%, rgba(255, 255, 255, 0.08)),
+    rgba(26, 29, 30, 0.45);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.03),
+    inset 0 -2px 3px rgba(0, 0, 0, 0.25),
+    inset calc(var(--dv) * -0.12) 0 0 rgba(255, 255, 255, 0.04);
+}
+
+/* liquid: a pale, translucent wash of the vial's own tier (the accent at a low alpha over dark glass, which is what keeps
+   Diamond from going neon and Mythic from going bright), up to a fine surface line near the shoulder */
+:is(.builder-page, #aurelian-builder-summary-slot) .box-slot-tray .box-vial:is(.filled, .bonus-unlocked) .vial-body::before {
+  content: "";
+  position: absolute;
+  z-index: 0;
+  inset: 0 0 0 calc(var(--dv) * 0.46);
+  border-left: 1px solid rgba(255, 255, 255, 0.26);
+  border-radius: calc(var(--dv) * 0.1) calc(var(--dv) * 0.2 - 1px) calc(var(--dv) * 0.2 - 1px) calc(var(--dv) * 0.1) / 50% calc(var(--dv) * 0.2 - 1px) calc(var(--dv) * 0.2 - 1px) 50%;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.13), rgba(255, 255, 255, 0) 40%, rgba(0, 0, 0, 0.08)),
+    color-mix(in srgb, var(--dv-accent) 20%, transparent);
+  opacity: 1;
+  pointer-events: none;
+}
+
+/* one restrained reflection along the glass */
+:is(.builder-page, #aurelian-builder-summary-slot) .box-slot-tray .box-vial:is(.filled, .bonus-unlocked) .vial-body::after {
+  content: "";
+  position: absolute;
+  z-index: 2;
+  left: calc(var(--dv) * 0.62);
+  right: calc(var(--dv) * 0.3);
+  top: 1px;
+  bottom: auto;
+  height: max(1px, calc(var(--dv) * 0.05));
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0), rgba(255, 255, 255, 0.42) 16%, rgba(255, 255, 255, 0.2) 72%, rgba(255, 255, 255, 0));
+  pointer-events: none;
+}
+
+/* ---- label: dark and discreet, soft ivory text, a hairline of tier on one edge ---- */
+:is(.builder-page, #aurelian-builder-summary-slot) .box-slot-tray .box-vial:is(.filled, .bonus-unlocked) .vial-label {
+  padding: calc(var(--dv) * 0.06) 2px calc(var(--dv) * 0.06) calc(max(2px, calc(var(--dv) * 0.14)) + 3px);
+  border: 0;
+  border-radius: calc(var(--dv) * 0.06);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0) 40%),
+    rgba(8, 10, 10, 0.64);
+  color: #ece6d6;
+  font-size: calc(var(--builder-unit-046) * 0.94);
+  letter-spacing: 0.01em;
+  box-shadow:
+    inset max(2px, calc(var(--dv) * 0.14)) 0 0 var(--dv-accent),
+    inset 0 -1px 0 color-mix(in srgb, var(--dv-accent) 55%, transparent),
+    0 1px 1.5px rgba(0, 0, 0, 0.28);
+  transform: none;
+}
+
+/* ---- remove: a small oxblood button in the centre gutter, beside the vial it belongs to ----
+   The shared markup puts the x inside .vial-body; here it is lifted out into the empty centre channel of the
+   box, on the side of the vial's column that faces the channel, on the same row (top: 50% of that vial), and
+   joined to the vial by a hairline so the pair reads as one. A LEFT-column vial gets it just right of its glass;
+   a RIGHT-column vial just left of its sprayer tip (the sprayer column is 0.82 vial heights wide, so that is
+   how far the body sits from the channel). Nothing in the tray moves: the button and its hairline are
+   absolutely positioned and the columns, channel and vials keep their sizes.
+
+   Shown on mouse hover and keyboard focus, and on the tapped (.is-active) state where hover does not exist (touch),
+   so the existing two-step touch model is kept. Hidden it takes no pointer events, so the gutter is never
+   clickable: only the circle and its small invisible touch margin remove. One control at a time: when any vial is
+   hovered, a control revealed only by focus on another vial is withdrawn.
+
+   The tray also toggles .is-active on the pointer-up of ANY press inside the vial, the x included, which would hide
+   the button before its own click arrives; so pointer-events lags 260ms behind the visual state in both directions
+   (a discrete transition) and a revealed button stays unarmed for its first 220ms (the keyframe below, which also
+   covers browsers without discrete transitions). */
+@keyframes aurelian-vial-remove-arm {
+  from {
+    pointer-events: none;
+  }
+}
+:is(.builder-page, #aurelian-builder-summary-slot) .box-slot-tray .box-vial {
+  --dv-gap: 10px;
+  --dv-remove: 26px;
+}
+@media (max-width: 980px) {
+  :is(.builder-page, #aurelian-builder-summary-slot) .box-slot-tray .box-vial {
+    --dv-remove: 28px;
+  }
+}
+@media (max-width: 520px) {
+  :is(.builder-page, #aurelian-builder-summary-slot) .box-slot-tray .box-vial {
+    --dv-gap: 8px;
+    --dv-remove: 26px;
+  }
+}
+:is(.builder-page, #aurelian-builder-summary-slot) .box-slot-tray .box-vial .slot-remove-button {
+  z-index: 4;
+  top: 50%;
+  width: var(--dv-remove);
+  height: var(--dv-remove);
+  border: 1px solid var(--aur-burgundy-lift, #8a344a);
+  background: radial-gradient(circle at 34% 28%, #7d2339, var(--aur-burgundy, #4a0f1f) 74%);
+  color: var(--aur-ivory, #e7ddcf);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(0, 0, 0, 0.4);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-50%) scale(0.92);
+  transition:
+    opacity 160ms ease,
+    transform 160ms ease,
+    pointer-events 0s linear 260ms allow-discrete;
+}
+:is(.builder-page, #aurelian-builder-summary-slot) .box-slot-tray .box-vial .slot-remove-button::after {
+  content: "";
+  position: absolute;
+  inset: -9px;
+}
+:is(.builder-page, #aurelian-builder-summary-slot) .box-slot-tray .box-column:first-child .box-vial .slot-remove-button {
+  left: calc(100% + var(--dv-gap) + 4px);
+  right: auto;
+}
+:is(.builder-page, #aurelian-builder-summary-slot) .box-slot-tray .box-column:last-child .box-vial .slot-remove-button {
+  right: calc(100% + var(--dv) * 0.82 + var(--dv-gap) + 4px);
+  left: auto;
+}
+/* the hairline from the vial to its button; while it shows it is also part of the vial, so crossing the gap never un-hovers */
+:is(.builder-page, #aurelian-builder-summary-slot) .box-slot-tray .box-column:first-child .box-vial.filled::after,
+:is(.builder-page, #aurelian-builder-summary-slot) .box-slot-tray .box-column:last-child .box-vial.filled::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: calc(var(--dv-gap) + 4px);
+  display: none;
+  background: linear-gradient(var(--aur-burgundy-lift, #8a344a), var(--aur-burgundy-lift, #8a344a)) center / 100% 1px no-repeat;
+}
+:is(.builder-page, #aurelian-builder-summary-slot) .box-slot-tray .box-column:first-child .box-vial.filled::after {
+  left: 100%;
+}
+:is(.builder-page, #aurelian-builder-summary-slot) .box-slot-tray .box-column:last-child .box-vial.filled::after {
+  right: 100%;
+}
+:is(.builder-page, #aurelian-builder-summary-slot) .box-slot-tray .box-vial.filled:focus-within .slot-remove-button {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(-50%) scale(1);
+}
+:is(.builder-page, #aurelian-builder-summary-slot) .box-slot-tray .box-column .box-vial.filled:focus-within::after {
+  display: block;
+}
+@media (hover: hover) {
+  :is(.builder-page, #aurelian-builder-summary-slot) .box-slot-tray .box-vial.filled:hover .slot-remove-button {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(-50%) scale(1);
+    animation: aurelian-vial-remove-arm 1ms linear 220ms backwards;
+  }
+  :is(.builder-page, #aurelian-builder-summary-slot) .box-slot-tray .box-column .box-vial.filled:hover::after {
+    display: block;
+  }
+  /* one control at a time: a focus-revealed one yields to whichever vial the pointer is on */
+  :is(.builder-page, #aurelian-builder-summary-slot) .box-slot-tray:has(.box-vial.filled:hover) .box-vial.filled:not(:hover) .slot-remove-button {
+    opacity: 0;
+    pointer-events: none;
+  }
+  :is(.builder-page, #aurelian-builder-summary-slot) .box-slot-tray:has(.box-vial.filled:hover) .box-vial.filled:not(:hover)::after {
+    display: none;
+  }
+}
+@media (hover: none) {
+  :is(.builder-page, #aurelian-builder-summary-slot) .box-slot-tray .box-vial.filled.is-active .slot-remove-button {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(-50%) scale(1);
+    animation: aurelian-vial-remove-arm 1ms linear 220ms backwards;
+  }
+  :is(.builder-page, #aurelian-builder-summary-slot) .box-slot-tray .box-column .box-vial.filled.is-active::after {
+    display: block;
+  }
+}
+
+/* The package also opens a small popover under a tapped vial ("Remove" + a reorder hint). Its Remove button would be
+   a second visible remove control next to the gutter one, so only that button is hidden; the hint stays. */
+:is(.builder-page, #aurelian-builder-summary-slot) .box-slot-tray .box-vial .slot-action-popover button {
+  display: none;
+}
+
+/* empty slots: a faint glass outline only, no sprayer */
+:is(.builder-page, #aurelian-builder-summary-slot) .box-slot-tray .box-vial.empty .vial-body {
+  border-color: rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.02);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+:is(.builder-page, #aurelian-builder-summary-slot) .box-slot-tray .box-vial.empty .vial-cap {
+  background: none;
+}
+:is(.builder-page, #aurelian-builder-summary-slot) .box-slot-tray .box-vial.empty .vial-cap::after {
+  display: none;
+}
+:is(.builder-page, #aurelian-builder-summary-slot) .box-slot-tray .box-vial.next-available .vial-body {
+  border-color: rgba(255, 255, 255, 0.5);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), 0 0 0 1px rgba(255, 255, 255, 0.18), 0 0 12px rgba(255, 255, 255, 0.12);
+}
+:is(.builder-page, #aurelian-builder-summary-slot) .box-slot-tray .box-vial.bonus-locked .vial-body {
+  border-color: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.025);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+:is(.builder-page, #aurelian-builder-summary-slot) .box-slot-tray .box-vial.bonus-locked .vial-body::before,
+:is(.builder-page, #aurelian-builder-summary-slot) .box-slot-tray .box-vial.bonus-locked .vial-body::after {
+  display: none;
+}
+:is(.builder-page, #aurelian-builder-summary-slot) .box-slot-tray .box-vial.bonus-reserved .vial-cap::after {
+  display: none;
+}
+:is(.builder-page, #aurelian-builder-summary-slot) .box-slot-tray .box-vial.bonus-reserved {
+  --dv-accent: #d9a93a;
+}
+:is(.builder-page, #aurelian-builder-summary-slot) .box-slot-tray .box-vial.drag-target .vial-body {
+  border-color: color-mix(in srgb, var(--builder-color-accent, #4ade80) 72%, transparent);
+  box-shadow: inset 0 0 8px rgba(255, 255, 255, 0.07), 0 0 0 1px color-mix(in srgb, var(--builder-color-accent, #4ade80) 20%, transparent), 0 0 18px color-mix(in srgb, var(--builder-color-accent, #4ade80) 16%, transparent);
+}
+
+/* ---- Collection Card ----
+   The Collection Card mini box (preview modal and the 1080x1920 export, both in .builder-portal-root) draws
+   the same decant on the package's own .collection-card-vial markup. */
+:is(.builder-page, .builder-portal-root) .collection-card .collection-card-vial {
+  --cv: 34px;
+  --cv-accent: var(--collection-tier-color);
+  position: relative;
+}
+:is(.builder-page, .builder-portal-root) .collection-card .collection-card-vial[style*="--collection-tier-color: #cbd5e1"] {
+  --cv-accent: #a3acb9;
+}
+:is(.builder-page, .builder-portal-root) .collection-card .collection-card-vial[style*="--collection-tier-color: #bae6fd"] {
+  --cv-accent: #c2f0ff;
+}
+@media (max-width: 560px) {
+  :is(.builder-page, .builder-portal-root) .collection-card:not(.collection-card--export) .collection-card-vial {
+    --cv: 26px;
+  }
+}
+:is(.builder-page, .builder-portal-root) .collection-card.collection-card--export .collection-card-vial {
+  --cv: 50px;
+}
+
+/* ---- sprayer: one small SVG (neck + collar + actuator with its spray hole), sized from the vial height ---- */
+:is(.builder-page, .builder-portal-root) .collection-card .collection-card-vial {
+  grid-template-columns: calc(var(--cv) * 0.82) minmax(0, 1fr);
+}
+
+:is(.builder-page, .builder-portal-root) .collection-card .collection-card-vial-cap {
+  position: relative;
+  z-index: 2;
+  justify-self: stretch;
+  width: auto;
+  height: var(--cv);
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  transform: none;
+  background: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2082%20100%22%20preserveAspectRatio%3D%22xMinYMid%20meet%22%3E%3Cdefs%3E%3ClinearGradient%20id%3D%22t%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%220%22%20y2%3D%221%22%3E%3Cstop%20offset%3D%220%22%20stop-color%3D%22%236d7279%22%2F%3E%3Cstop%20offset%3D%220.32%22%20stop-color%3D%22%23484d54%22%2F%3E%3Cstop%20offset%3D%220.72%22%20stop-color%3D%22%2333373d%22%2F%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23232629%22%2F%3E%3C%2FlinearGradient%3E%3ClinearGradient%20id%3D%22m%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%220%22%20y2%3D%221%22%3E%3Cstop%20offset%3D%220%22%20stop-color%3D%22%2392959c%22%2F%3E%3Cstop%20offset%3D%220.32%22%20stop-color%3D%22%236f737a%22%2F%3E%3Cstop%20offset%3D%220.72%22%20stop-color%3D%22%2352565d%22%2F%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23393c42%22%2F%3E%3C%2FlinearGradient%3E%3ClinearGradient%20id%3D%22g%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%220%22%20y2%3D%221%22%3E%3Cstop%20offset%3D%220%22%20stop-color%3D%22%23fff%22%20stop-opacity%3D%22.5%22%2F%3E%3Cstop%20offset%3D%22.14%22%20stop-color%3D%22%23fff%22%20stop-opacity%3D%22.16%22%2F%3E%3Cstop%20offset%3D%22.86%22%20stop-color%3D%22%23fff%22%20stop-opacity%3D%22.1%22%2F%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23fff%22%20stop-opacity%3D%22.4%22%2F%3E%3C%2FlinearGradient%3E%3C%2Fdefs%3E%3Crect%20x%3D%2264%22%20y%3D%2231%22%20width%3D%2220%22%20height%3D%2238%22%20fill%3D%22url(%23g)%22%2F%3E%3Crect%20x%3D%2242%22%20y%3D%2214%22%20width%3D%2222%22%20height%3D%2272%22%20rx%3D%223%22%20fill%3D%22url(%23m)%22%2F%3E%3Cpath%20d%3D%22M46.4%2C17V83M59.6%2C17V83%22%20stroke%3D%22rgba(0%2C0%2C0%2C.22)%22%20stroke-width%3D%221%22%2F%3E%3Cpath%20d%3D%22M15%2C27H41A3%2C3%200%200%201%2044%2C30V70A3%2C3%200%200%201%2041%2C73H15A15%2C15%200%200%201%200%2C58V42A15%2C15%200%200%201%2015%2C27Z%22%20fill%3D%22url(%23t)%22%2F%3E%3Cpath%20d%3D%22M15%2C28.8H41%22%20stroke%3D%22rgba(255%2C255%2C255%2C.24)%22%20stroke-width%3D%221.8%22%20stroke-linecap%3D%22round%22%2F%3E%3Cpath%20d%3D%22M43.4%2C30V70%22%20stroke%3D%22rgba(0%2C0%2C0%2C.4)%22%20stroke-width%3D%221.4%22%2F%3E%3Ccircle%20cx%3D%2213%22%20cy%3D%2245%22%20r%3D%224.6%22%20fill%3D%22%23050607%22%2F%3E%3Ccircle%20cx%3D%2213%22%20cy%3D%2245%22%20r%3D%224.6%22%20fill%3D%22none%22%20stroke%3D%22rgba(255%2C255%2C255%2C.3)%22%20stroke-width%3D%221%22%2F%3E%3C%2Fsvg%3E") left center / auto 100% no-repeat;
+}
+
+:is(.builder-page, .builder-portal-root) .collection-card .collection-card-vial-bonus .collection-card-vial-cap {
+  background-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2082%20100%22%20preserveAspectRatio%3D%22xMinYMid%20meet%22%3E%3Cdefs%3E%3ClinearGradient%20id%3D%22t%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%220%22%20y2%3D%221%22%3E%3Cstop%20offset%3D%220%22%20stop-color%3D%22%236d7279%22%2F%3E%3Cstop%20offset%3D%220.32%22%20stop-color%3D%22%23484d54%22%2F%3E%3Cstop%20offset%3D%220.72%22%20stop-color%3D%22%2333373d%22%2F%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23232629%22%2F%3E%3C%2FlinearGradient%3E%3ClinearGradient%20id%3D%22m%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%220%22%20y2%3D%221%22%3E%3Cstop%20offset%3D%220%22%20stop-color%3D%22%23fdeebd%22%2F%3E%3Cstop%20offset%3D%220.32%22%20stop-color%3D%22%23e5bd55%22%2F%3E%3Cstop%20offset%3D%220.72%22%20stop-color%3D%22%23ad842c%22%2F%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%236d4e16%22%2F%3E%3C%2FlinearGradient%3E%3ClinearGradient%20id%3D%22g%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%220%22%20y2%3D%221%22%3E%3Cstop%20offset%3D%220%22%20stop-color%3D%22%23fff%22%20stop-opacity%3D%22.5%22%2F%3E%3Cstop%20offset%3D%22.14%22%20stop-color%3D%22%23fff%22%20stop-opacity%3D%22.16%22%2F%3E%3Cstop%20offset%3D%22.86%22%20stop-color%3D%22%23fff%22%20stop-opacity%3D%22.1%22%2F%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23fff%22%20stop-opacity%3D%22.4%22%2F%3E%3C%2FlinearGradient%3E%3C%2Fdefs%3E%3Crect%20x%3D%2264%22%20y%3D%2231%22%20width%3D%2220%22%20height%3D%2238%22%20fill%3D%22url(%23g)%22%2F%3E%3Crect%20x%3D%2242%22%20y%3D%2214%22%20width%3D%2222%22%20height%3D%2272%22%20rx%3D%223%22%20fill%3D%22url(%23m)%22%2F%3E%3Cpath%20d%3D%22M46.4%2C17V83M59.6%2C17V83%22%20stroke%3D%22rgba(0%2C0%2C0%2C.22)%22%20stroke-width%3D%221%22%2F%3E%3Cpath%20d%3D%22M15%2C27H41A3%2C3%200%200%201%2044%2C30V70A3%2C3%200%200%201%2041%2C73H15A15%2C15%200%200%201%200%2C58V42A15%2C15%200%200%201%2015%2C27Z%22%20fill%3D%22url(%23t)%22%2F%3E%3Cpath%20d%3D%22M15%2C28.8H41%22%20stroke%3D%22rgba(255%2C255%2C255%2C.24)%22%20stroke-width%3D%221.8%22%20stroke-linecap%3D%22round%22%2F%3E%3Cpath%20d%3D%22M43.4%2C30V70%22%20stroke%3D%22rgba(0%2C0%2C0%2C.4)%22%20stroke-width%3D%221.4%22%2F%3E%3Ccircle%20cx%3D%2213%22%20cy%3D%2245%22%20r%3D%224.6%22%20fill%3D%22%23050607%22%2F%3E%3Ccircle%20cx%3D%2213%22%20cy%3D%2245%22%20r%3D%224.6%22%20fill%3D%22none%22%20stroke%3D%22rgba(255%2C255%2C255%2C.3)%22%20stroke-width%3D%221%22%2F%3E%3C%2Fsvg%3E");
+}
+
+:is(.builder-page, .builder-portal-root) .collection-card .collection-card-vial-cap::before {
+  display: none;
+}
+
+/* the one tier accent on the metal: a hairline on the collar */
+:is(.builder-page, .builder-portal-root) .collection-card .collection-card-vial-cap::after {
+  content: "";
+  position: absolute;
+  left: calc(var(--cv) * 0.53);
+  top: 50%;
+  right: auto;
+  width: max(1.5px, calc(var(--cv) * 0.075));
+  height: calc(var(--cv) * 0.6192);
+  border-radius: 0;
+  background: var(--cv-accent);
+  box-shadow: none;
+  transform: translate(-50%, -50%);
+}
+
+/* ---- glass ---- */
+:is(.builder-page, .builder-portal-root) .collection-card .collection-card-vial-body {
+  border: 1px solid rgba(255, 255, 255, 0.26);
+  border-radius: calc(var(--cv) * 0.38) calc(var(--cv) * 0.2) calc(var(--cv) * 0.2) calc(var(--cv) * 0.38);
+}
+
+:is(.builder-page, .builder-portal-root) .collection-card .collection-card-vial.is-filled .collection-card-vial-body {
+  padding-inline: 2px;
+  border-color: rgba(255, 255, 255, 0.27);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.05) 38%, rgba(255, 255, 255, 0.03) 72%, rgba(255, 255, 255, 0.08)),
+    rgba(26, 29, 30, 0.45);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.03),
+    inset 0 -2px 3px rgba(0, 0, 0, 0.25),
+    inset calc(var(--cv) * -0.12) 0 0 rgba(255, 255, 255, 0.04);
+}
+
+/* liquid: a pale, translucent wash of the vial's own tier (the accent at a low alpha over dark glass, which is what keeps
+   Diamond from going neon and Mythic from going bright), up to a fine surface line near the shoulder */
+:is(.builder-page, .builder-portal-root) .collection-card .collection-card-vial.is-filled .collection-card-vial-body::before {
+  content: "";
+  position: absolute;
+  z-index: 0;
+  inset: 0 0 0 calc(var(--cv) * 0.46);
+  border-left: 1px solid rgba(255, 255, 255, 0.26);
+  border-radius: calc(var(--cv) * 0.1) calc(var(--cv) * 0.2 - 1px) calc(var(--cv) * 0.2 - 1px) calc(var(--cv) * 0.1) / 50% calc(var(--cv) * 0.2 - 1px) calc(var(--cv) * 0.2 - 1px) 50%;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.13), rgba(255, 255, 255, 0) 40%, rgba(0, 0, 0, 0.08)),
+    color-mix(in srgb, var(--cv-accent) 20%, transparent);
+  opacity: 1;
+  pointer-events: none;
+}
+
+/* one restrained reflection along the glass */
+:is(.builder-page, .builder-portal-root) .collection-card .collection-card-vial.is-filled .collection-card-vial-body::after {
+  content: "";
+  position: absolute;
+  z-index: 2;
+  left: calc(var(--cv) * 0.62);
+  right: calc(var(--cv) * 0.3);
+  top: 1px;
+  bottom: auto;
+  height: max(1px, calc(var(--cv) * 0.05));
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0), rgba(255, 255, 255, 0.42) 16%, rgba(255, 255, 255, 0.2) 72%, rgba(255, 255, 255, 0));
+  pointer-events: none;
+}
+
+/* ---- label: dark and discreet, soft ivory text, a hairline of tier on one edge ---- */
+:is(.builder-page, .builder-portal-root) .collection-card .collection-card-vial.is-filled .collection-card-vial-label {
+  padding: calc(var(--cv) * 0.06) 2px calc(var(--cv) * 0.06) calc(max(2px, calc(var(--cv) * 0.14)) + 3px);
+  border: 0;
+  border-radius: calc(var(--cv) * 0.06);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0) 40%),
+    rgba(8, 10, 10, 0.64);
+  color: #ece6d6;
+  
+  letter-spacing: 0.01em;
+  box-shadow:
+    inset max(2px, calc(var(--cv) * 0.14)) 0 0 var(--cv-accent),
+    inset 0 -1px 0 color-mix(in srgb, var(--cv-accent) 55%, transparent),
+    0 1px 1.5px rgba(0, 0, 0, 0.28);
+  transform: none;
+}
+
+:is(.builder-page, .builder-portal-root) .collection-card .collection-card-vial-body {
+  height: var(--cv);
+}
+:is(.builder-page, .builder-portal-root) .collection-card .collection-card-vial.is-empty .collection-card-vial-cap {
+  background: none;
+}
+:is(.builder-page, .builder-portal-root) .collection-card .collection-card-vial.is-empty .collection-card-vial-cap::after,
+:is(.builder-page, .builder-portal-root) .collection-card .collection-card-vial-bonus .collection-card-vial-cap::after {
+  display: none;
+}
+:is(.builder-page, .builder-portal-root) .collection-card .collection-card-vial.is-empty .collection-card-vial-body,
+:is(.builder-page, .builder-portal-root) .collection-card .collection-card-vial-bonus .collection-card-vial-body {
+  border-color: rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.02);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+:is(.builder-page, .builder-portal-root) .collection-card .collection-card-vial-image {
+  z-index: 1;
+  left: auto;
+  right: calc(var(--cv) * 0.22);
+  width: calc(var(--cv) * 0.64);
+  height: calc(var(--cv) * 0.8);
+}
+:is(.builder-page, .builder-portal-root) .collection-card .collection-card-vial-image + .collection-card-vial-label {
+  margin-left: 0;
+  margin-right: calc(var(--cv) * 0.92);
+}
