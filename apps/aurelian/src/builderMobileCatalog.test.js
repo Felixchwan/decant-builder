@@ -73,15 +73,60 @@ describe("Aurelian phone catalog: compact two-column cards and the Ver caja edge
     expect(stripped).not.toMatch(/overflow-x|scroll-snap/);
   });
 
-  it("compresses the card: 8px padding, an 84px image box with a 76px bottle drawn by the package's own object-fit", () => {
+  it("compresses the text, not the product: 8px padding and a 6px gap around a tall image region", () => {
     expect(sizeOf(bodyOf(cards, CARD), "padding")).toBe(8);
     expect(sizeOf(bodyOf(cards, CARD), "gap")).toBe(6);
-    expect(sizeOf(bodyOf(cards, `${GRID} .perfume-card-image`), "height")).toBe(84);
+    // the card's own width is the unit the image box is sized from
+    expect(bodyOf(cards, CARD)).toMatch(/container-type:\s*inline-size/);
+  });
+
+  it("makes the bottle the dominant element: an image region 95% as tall as it is wide, between 112px and 150px", () => {
+    const image = bodyOf(cards, `${GRID} .perfume-card-image`);
+    // a browser without container query units keeps a fixed 132px; the next line replaces it where they exist
+    expect(image).toMatch(/height:\s*132px;\s*height:\s*clamp\(112px, 95cqw, 150px\)/);
+    expect(image).not.toMatch(/aspect-ratio/); // an aspect-ratio box would grow with a tall image and break uniform height
+    // the old 84px region is gone
+    expect(image).not.toMatch(/height:\s*84px/);
+    // at the real phone card widths (viewport - 54px, halved, less the card's 18px of padding and border) the region is
+    // 125-150px at 360 and wider, and capped at 150px
+    const heightAt = (viewport) => Math.min(150, Math.max(112, 0.95 * ((viewport - 54) / 2 - 18)));
+    expect(heightAt(390)).toBeCloseTo(142.5, 1);
+    [360, 375, 390, 428, 619].forEach((viewport) => {
+      expect(heightAt(viewport), String(viewport)).toBeGreaterThanOrEqual(125);
+      expect(heightAt(viewport), String(viewport)).toBeLessThanOrEqual(150);
+    });
+    expect(sizeOf(bodyOf(cards, `${GRID} .perfume-card-image`), "padding")).toBe(6);
+  });
+
+  it("fills that region with the bottle as the package draws it: object-fit contain, no stretch, no crop, no asset change", () => {
     const bottle = bodyOf(cards, `${GRID} .perfume-card-image .perfume-card-bottle-image`);
-    expect(sizeOf(bottle, "height")).toBe(76);
+    expect(bottle).toMatch(/height:\s*100%/); // the bottle takes the region's whole height
+    expect(bottle).toMatch(/width:\s*100%/);
     expect(bottle).toMatch(/max-width:\s*100%/);
-    expect(bottle).not.toMatch(/object-fit|transform|scale|filter/);
+    // nothing that would change an asset's own proportions, scale or edges, and nothing per perfume
+    expect(bottle).not.toMatch(/object-fit|transform|scale|filter|aspect-ratio|clip|overflow/);
     expect(stripped).not.toMatch(/url\(|\.png|\.webp|\.jpg/);
+    expect(stripped).not.toMatch(/data-perfume|\[alt|nth-child|id="|#\d/);
+    // the shared stylesheet keeps owning object-fit: contain for this element
+    expect(read(REPOSITORY_ROOT, "packages", "builder", "styles.css")).toMatch(
+      /\.perfume-card-image \.perfume-card-bottle-image \{[^}]*object-fit:\s*contain/
+    );
+  });
+
+  it("keeps the corner marks off the bottle: the brand logo and Info mark sit 2px further into their corners", () => {
+    expect(sizeOf(bodyOf(cards, `${GRID} .perfume-card-brand-badge`), "right")).toBe(2);
+    expect(sizeOf(bodyOf(cards, `${GRID} .perfume-card-brand-badge`), "bottom")).toBe(2);
+    const info = bodyOf(cards, `${CARD} .perfume-card-info-icon`);
+    expect(sizeOf(info, "top")).toBe(11);
+    expect(sizeOf(info, "right")).toBe(11);
+    expect(sizeOf(info, "width")).toBe(24); // still a 24px target
+  });
+
+  it("gives a card that has a subtitle a 16px band for it, by rule and not by perfume, without changing the card's height", () => {
+    const band = bodyOf(cards, `${CARD}:has(.perfume-subtitle) .perfume-card-bottle-image`);
+    expect(band).toMatch(/height:\s*calc\(100% - 16px\)/);
+    expect(sizeOf(band, "margin-top")).toBe(16);
+    expect(band).not.toMatch(/width:|aspect-ratio|object-fit/);
   });
 
   it("keeps one-line name and brand in a smaller, legible size, with no wrapping", () => {

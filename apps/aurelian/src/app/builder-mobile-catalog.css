@@ -36,6 +36,8 @@
     min-width: 0;
     padding: 8px;
     border-radius: 14px;
+    /* the card's own width is the unit the image box is sized from (cqw, below) */
+    container-type: inline-size;
   }
 
   .builder-page .catalog-grid .perfume-card-details-trigger {
@@ -43,22 +45,43 @@
     min-width: 0;
   }
 
-  /* The bottle stays the first thing you see: its box is 84px (was 88-112) and the bottle itself 76px, drawn by the
-     package's own object-fit: contain, so every normalised asset keeps its scale and its clean edges. */
+  /* The bottle is the card. Measured on the real catalog at 390px, the 84px box held a visible bottle only ~65px tall and
+     ~35px wide, with ~58px of empty box on either side: product-last, not product-first. The box is now as tall as 95%
+     of its own width (20:19: 142px at 390px, 128px at 360px), never under 112px or over 150px, so its height follows the
+     card and every card in the catalog gets the same one (a definite height: an aspect-ratio box would grow with a tall
+     image). The 132px line is the fallback for a browser without container query units. The bottle fills the box's
+     height (object-fit: contain keeps each asset's own proportions, scale and clean edges: nothing is stretched, cropped
+     or re-sized per perfume), so a tall bottle uses the height and a wide one the width. The Info mark and the brand logo sit
+     2px further into their corners than the full-size card has them, so even the widest bottle in the narrowest
+     (360px) card stays clear of both. */
   .builder-page .catalog-grid .perfume-card-image {
-    height: 84px;
+    height: 132px;
+    height: clamp(112px, 95cqw, 150px);
     margin: 0;
+    padding: 6px 4px;
+    box-sizing: border-box;
     border-radius: 12px;
   }
 
   .builder-page .catalog-grid .perfume-card-image .perfume-card-bottle-image {
-    height: 76px;
+    width: 100%;
     max-width: 100%;
+    height: 100%;
+    min-height: 0;
+  }
+
+  /* A card with a subtitle (Tuxedo) keeps a 16px band at the top of its image for it, and the bottle sits below that
+     band: a rule for "has a subtitle", not for one perfume. The box and the card keep the height every other card has.
+     Known and accepted for now: that card's bottle is 16px shorter inside the same box, so it renders roughly 8% smaller
+     than its neighbours (about 97px visible against 104px for the next smallest at 390px). Left for a separate pass. */
+  .builder-page .catalog-grid .perfume-card:has(.perfume-subtitle) .perfume-card-bottle-image {
+    height: calc(100% - 16px);
+    margin-top: 16px;
   }
 
   .builder-page .catalog-grid .perfume-card-brand-badge {
-    right: 4px;
-    bottom: 4px;
+    right: 2px;
+    bottom: 2px;
     max-width: 36px;
     height: 18px;
     padding: 2px 4px;
@@ -72,8 +95,8 @@
 
   /* Product Info keeps its 24px target, tucked into the corner of the image. */
   .builder-page .catalog-grid .perfume-card .perfume-card-info-icon {
-    top: 13px;
-    right: 13px;
+    top: 11px;
+    right: 11px;
     width: 24px;
     height: 24px;
   }
