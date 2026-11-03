@@ -161,6 +161,10 @@ export const defaultBuilderConfig = {
     // Fragrance names on catalog cards stay on one line (ellipsis) and reveal their full text on hover/focus.
     // Off by default: a host that never opts in keeps the original wrapping title.
     singleLineCardTitles: false,
+    // Phone/tablet tab layout: the "box" tab is labelled as a shortcut ("View box") so a host can float it over the catalog,
+    // and opening it scrolls the box into view instead of leaving the reader mid-page. Off by default: a host that never
+    // opts in keeps the "My Box" label and today's tab behaviour.
+    mobileBoxShortcut: false,
     recommendations: true,
     collectionIntelligence: true,
     collectionDna: true,

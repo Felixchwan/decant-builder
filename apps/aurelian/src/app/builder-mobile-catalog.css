@@ -1,0 +1,233 @@
+/* Aurelian Builder, phone catalog: two compact cards per row, and one small "Ver caja" shortcut.
+
+   HOST-OWNED and Builder-route-only (every selector is under .builder-page), presentation-only. The shared stylesheet is
+   frozen; the only shared change behind this file is the opt-in features.mobileBoxShortcut (Aurelian sets it, Discovery
+   Decants does not): the box tab's label reads "Ver caja" and opening it scrolls the box into view. Discovery Decants has
+   no .builder-page, so none of this reaches it, and the desktop catalog (981px and up) is outside every query below.
+
+   WHY (measured on the real page, 390px): the shared rules give a phone ONE card per row, 304px wide and 217-243px tall,
+   with 22px of padding in the catalog card and 20px in the page around it. Ninety-three fragrances were a ~22,000px
+   scroll. And once scrolled, the only way to the box, the "Explorar | Mi caja" bar, was not reachable: it sticks at
+   top: 8px, which is behind the site header (z-index 50 against its 40), so it was invisible from the first scroll on.
+
+   WHERE the compact card and the shortcut stop (619px): the shared catalog grid is auto-fill, minmax(260px, 1fr), so it
+   only reaches two columns when the grid is 520px wide, which is a 620px viewport. Up to 619px the shared layout is a
+   single card as wide as the screen (434px at 520px, 514px at 600px); from 620px it is two cards of 260px and wider,
+   which is the existing tablet layout. The shortcut is a phone control (the compact catalog is what makes the box a
+   long scroll away), so from 620px the tab bar is the package's own, untouched. */
+
+/* ---- 1. Two cards per row, 619px and below --------------------------------------------------- */
+@media (max-width: 619px) {
+  /* The catalog card gives its side padding back to the cards: 22px -> 10px, and it reaches 8px into the page's own 20px.
+     At 390px the grid goes from 304px to 344px, so each card is 168px, not 304px. */
+  .builder-page .catalog-section {
+    margin-inline: -8px;
+    padding: 14px 10px;
+    border-radius: 22px;
+  }
+
+  .builder-page .catalog-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .builder-page .catalog-grid .perfume-card {
+    gap: 6px;
+    min-width: 0;
+    padding: 8px;
+    border-radius: 14px;
+  }
+
+  .builder-page .catalog-grid .perfume-card-details-trigger {
+    gap: 6px;
+    min-width: 0;
+  }
+
+  /* The bottle stays the first thing you see: its box is 84px (was 88-112) and the bottle itself 76px, drawn by the
+     package's own object-fit: contain, so every normalised asset keeps its scale and its clean edges. */
+  .builder-page .catalog-grid .perfume-card-image {
+    height: 84px;
+    margin: 0;
+    border-radius: 12px;
+  }
+
+  .builder-page .catalog-grid .perfume-card-image .perfume-card-bottle-image {
+    height: 76px;
+    max-width: 100%;
+  }
+
+  .builder-page .catalog-grid .perfume-card-brand-badge {
+    right: 4px;
+    bottom: 4px;
+    max-width: 36px;
+    height: 18px;
+    padding: 2px 4px;
+    border-radius: 6px;
+  }
+
+  .builder-page .catalog-grid .perfume-card-brand-badge img {
+    max-width: 28px;
+    max-height: 12px;
+  }
+
+  /* Product Info keeps its 24px target, tucked into the corner of the image. */
+  .builder-page .catalog-grid .perfume-card .perfume-card-info-icon {
+    top: 13px;
+    right: 13px;
+    width: 24px;
+    height: 24px;
+  }
+
+  /* ---- Name and brand: one line each, smaller ---------------------------------------------- */
+  .builder-page .catalog-grid .perfume-info h3 {
+    font-size: 13.5px;
+    line-height: 1.25;
+  }
+
+  .builder-page .catalog-grid .perfume-info p.perfume-brand-name {
+    margin-top: 1px;
+    overflow: hidden;
+    font-size: 11px;
+    line-height: 1.3;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* The one fragrance with a subtitle (Tuxedo, "Sharp Patchouli") made its card 26px taller than the rest and, in a
+     two-column row, stretched the card beside it. Product Info does not carry the subtitle (it never has), so hiding it
+     would remove it from the catalog; instead it moves out of the text column into the free top-left corner of the
+     bottle image: one line, its own colour and glow, no height of its own. The card's other corners are the Product
+     Info mark (top right) and the brand mark (bottom right); the corner is only the card, never its text. */
+  .builder-page .catalog-grid .perfume-info .perfume-subtitle {
+    position: absolute;
+    top: 13px;
+    left: 13px;
+    z-index: 1;
+    max-width: calc(100% - 62px);
+    margin: 0;
+    padding: 2px 6px;
+    overflow: hidden;
+    border-radius: 6px;
+    background: rgba(9, 10, 9, 0.6);
+    font-size: 9.5px;
+    line-height: 1.3;
+    letter-spacing: 0.02em;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    pointer-events: none;
+  }
+
+  .builder-page .catalog-grid .perfume-info .perfume-card-reason {
+    margin-top: 2px;
+    font-size: 10.5px;
+    -webkit-line-clamp: 1;
+  }
+
+  /* ---- Price | Agregar, one 36px row ---------------------------------------------------------- */
+  .builder-page .catalog-grid .perfume-card-compact-actions {
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 5px;
+    margin-top: 1px;
+  }
+
+  .builder-page .catalog-grid .perfume-card-compact-actions .perfume-card-points {
+    min-height: 36px;
+    gap: 4px;
+    padding: 0 6px;
+    font-size: 11.5px;
+  }
+
+  .builder-page .catalog-grid .perfume-card .perfume-card-compact-actions button {
+    min-height: 36px;
+    padding: 0 6px;
+    justify-self: stretch;
+    font-size: 12.5px;
+  }
+
+  /* "Agregar a la caja" is the desktop wording; on a card this narrow the package's own short label ("Agregar") is the
+     one that fits, at every width up to 619px (the package only switches to it at 520px). "Agregado" is shared. */
+  .builder-page .catalog-grid .perfume-card .perfume-card-compact-actions button .perfume-card-add-label-full {
+    display: none;
+  }
+
+  .builder-page .catalog-grid .perfume-card .perfume-card-compact-actions button .perfume-card-add-label-short {
+    display: inline;
+  }
+}
+
+/* ---- 2. "Ver caja": the box tab, as a slim tab on the screen edge, 619px and below ------------------ */
+@media (max-width: 619px) {
+  /* The tab bar was sticky at top: 8px, behind the 69-77px site header, so it only ever showed at the very top of the
+     page. Static is what it already looked like, and it lets the box tab scroll it into view. 84px keeps it clear of
+     the header when it does. */
+  .builder-page .mobile-builder-tabs {
+    position: static;
+    scroll-margin-top: 84px;
+  }
+
+  /* While the catalog is showing, the bar has nothing to offer but the box: "Explorar" is where you already are. The
+     bar collapses to nothing in the flow (no lost height, no second control), and its box button, the same button, the
+     same handler, the same count, floats at the edge. backdrop-filter has to go: it would make the bar the containing
+     block of its fixed child. */
+  .builder-page .mobile-builder-tabs:has(> button:first-child.is-active) {
+    display: block;
+    height: 0;
+    margin: 0;
+    padding: 0;
+    overflow: visible;
+    border: 0;
+    background: none;
+    box-shadow: none;
+    backdrop-filter: none;
+  }
+
+  .builder-page .mobile-builder-tabs:has(> button:first-child.is-active) > button:first-child {
+    display: none;
+  }
+
+  /* WHERE it floats, and why. A floating control over a scrolling catalog covers whatever scrolls under it. Measured
+     with the pill at the bottom-right corner (108x40px) across the whole scroll range at six phone sizes, it sat over
+     an actionable control at 94% of scroll positions: the card's own tap area (up to 90px of it), its Info mark, the
+     price and Agregar row, and the search and filters. Padding under the last row, hiding it while scrolling or moving
+     it up or down do not change that: a card's controls are everywhere vertically, and a pill that comes back when the
+     scroll settles can settle on top of one. The one place with no control in it is the screen edge: cards end 22px
+     from it (the page's 20px, the catalog card's 10px less the 8px it reaches into the page), and a card's own controls
+     end 8px further in. So the shortcut is a slim tab flush to the right edge, 24px wide, whose text runs along it. It
+     overlaps 2px of a card's edge at most (padding, never a control) and none of the search and filters (they end
+     where the tab starts: it sits 1px past the screen edge). It sits at the thumb's height, a little above the middle of the lower half. */
+  .builder-page .mobile-builder-tabs:has(> button:first-child.is-active) > button:last-child {
+    position: fixed;
+    right: -1px;
+    bottom: max(120px, calc(env(safe-area-inset-bottom) + 104px));
+    z-index: 45;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    width: 24px;
+    min-height: 96px;
+    padding: 12px 0 8px;
+    border: 1px solid var(--aur-burgundy-lift);
+    border-right: 0;
+    border-radius: 10px 0 0 10px;
+    background: var(--aur-burgundy);
+    box-shadow: -3px 4px 14px rgba(0, 0, 0, 0.5);
+    color: var(--aur-ivory);
+    font-size: 0.75rem;
+    letter-spacing: 0.06em;
+    text-orientation: mixed;
+    writing-mode: vertical-rl;
+  }
+
+  /* The count stays upright inside the vertical text. */
+  .builder-page .mobile-builder-tabs:has(> button:first-child.is-active) > button:last-child span {
+    min-width: 18px;
+    height: 18px;
+    margin: 0;
+    padding: 0;
+    background: rgba(200, 166, 101, 0.2);
+    color: var(--gold);
+    font-size: 0.6875rem;
+    letter-spacing: 0;
+    writing-mode: horizontal-tb;
+  }
+}

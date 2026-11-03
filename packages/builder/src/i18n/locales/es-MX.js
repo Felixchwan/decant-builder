@@ -32,6 +32,7 @@ export const esMX = {
 
   "app.mobileTabs": "Secciones del builder",
   "app.mobileExploreTab": "Explorar",
+  "app.mobileBoxShortcut": "Ver caja",
   "app.heroTitle": "Arma tu caja de fragancias",
   "app.heroDescription":
     "Selecciona hasta {maxSelectableSlots} decants, explora diferentes estilos y ve cómo se actualiza el valor de tu caja en tiempo real.",

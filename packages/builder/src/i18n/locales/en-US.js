@@ -32,6 +32,7 @@ export const enUS = {
 
   "app.mobileTabs": "Builder sections",
   "app.mobileExploreTab": "Explore",
+  "app.mobileBoxShortcut": "View box",
   "app.heroTitle": "Build your fragrance box",
   "app.heroDescription":
     "Select up to {maxSelectableSlots} decants, explore different moods, and see the value of your box update in real time.",

@@ -6,6 +6,7 @@ import "./builder-geometry.css";
 import "./builder-catalog-grid.css";
 import "./builder-card-titles.css";
 import "./builder-vials.css";
+import "./builder-mobile-catalog.css";
 import "./builder-dock-clearance.css";
 import "./builder-filters.css";
 import "./builder-header.css";

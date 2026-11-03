@@ -238,6 +238,62 @@ function App({
   // this has zero effect for a host that never opts in.
   const [isPanelCollapsed, setIsPanelCollapsed] = useState(false);
   const panelRowRef = useRef(null);
+  const mobileTabsRef = useRef(null);
+  const mobileBoxButtonRef = useRef(null);
+  // Where the catalog was scrolled to when the box was opened from the floating shortcut. Only this component's memory
+  // (a ref, not storage): it is read once when the reader comes back to the catalog, and never on first load.
+  const savedCatalogScrollRef = useRef(null);
+  const mobileBoxShortcut = builderConfig.features?.mobileBoxShortcut === true;
+  // "Floating" is decided by the host's own CSS: the box tab is a shortcut only while the host has lifted its button
+  // out of the tab bar (position: fixed). Where the bar is still an ordinary bar (tablet, desktop, a host that never
+  // opted in) nothing below runs and the tabs behave exactly as they always have.
+  const isBoxShortcutFloating = () =>
+    mobileBoxShortcut &&
+    typeof window !== "undefined" &&
+    mobileBoxButtonRef.current !== null &&
+    window.getComputedStyle(mobileBoxButtonRef.current).position === "fixed";
+  // The box tab opened from deep in the catalog would otherwise leave the reader wherever the (much shorter) box page
+  // happens to clamp the old scroll position: remember the catalog position, then bring the tab bar -- the top of the
+  // box -- into view.
+  const openMobileBoxTab = () => {
+    const floating = isBoxShortcutFloating();
+
+    if (floating && activeMobileTab === "catalog") {
+      savedCatalogScrollRef.current = window.scrollY;
+    }
+
+    setActiveMobileTab("box");
+
+    if (floating) {
+      // "instant": a host with smooth page scrolling would otherwise animate the whole way up from deep in the catalog.
+      window.requestAnimationFrame(() => mobileTabsRef.current?.scrollIntoView?.({ block: "start", behavior: "instant" }));
+    }
+  };
+  // Back to the catalog: put it where the reader left it. The Explorar button disappears while the catalog shows (the
+  // host collapses the bar to the one shortcut), so focus that was on it moves to the shortcut instead of being lost.
+  const openMobileCatalogTab = () => {
+    const restoreTo = savedCatalogScrollRef.current;
+    savedCatalogScrollRef.current = null;
+    setActiveMobileTab("catalog");
+
+    if (mobileBoxShortcut && typeof window !== "undefined") {
+      window.requestAnimationFrame(() => {
+        if (restoreTo !== null) {
+          window.scrollTo({ top: restoreTo, behavior: "instant" });
+        }
+
+        const explore = mobileTabsRef.current?.querySelector("button");
+
+        // (The browser only drops focus from a hidden element on its next render, so at this point it may still be on
+        // Explorar rather than already on the page body.)
+        const focusedHere = document.activeElement === explore || document.activeElement === document.body;
+
+        if (explore && window.getComputedStyle(explore).display === "none" && focusedHere) {
+          mobileBoxButtonRef.current?.focus({ preventScroll: true });
+        }
+      });
+    }
+  };
   const [panelStickyTop, setPanelStickyTop] = useState(0);
   const [activeFilters, setActiveFilters] = useState({
     seasons: "",
@@ -1272,11 +1328,11 @@ const confirmAddPerfume = () => {
         </section>
       )}
 
-      <nav className="mobile-builder-tabs" aria-label={t("app.mobileTabs")}>
+      <nav className="mobile-builder-tabs" aria-label={t("app.mobileTabs")} ref={mobileTabsRef}>
         <button
           type="button"
           className={activeMobileTab === "catalog" ? "is-active" : ""}
-          onClick={() => setActiveMobileTab("catalog")}
+          onClick={openMobileCatalogTab}
           aria-controls="catalog-panel"
           aria-selected={activeMobileTab === "catalog"}
         >
@@ -1286,11 +1342,12 @@ const confirmAddPerfume = () => {
         <button
           type="button"
           className={activeMobileTab === "box" ? "is-active" : ""}
-          onClick={() => setActiveMobileTab("box")}
+          onClick={openMobileBoxTab}
+          ref={mobileBoxButtonRef}
           aria-controls="my-box-panel"
           aria-selected={activeMobileTab === "box"}
         >
-          {t("general.myBox")} <span>{totalSlots}</span>
+          {mobileBoxShortcut ? t("app.mobileBoxShortcut") : t("general.myBox")} <span>{totalSlots}</span>
         </button>
       </nav>
 
