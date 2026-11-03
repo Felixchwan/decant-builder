@@ -5,6 +5,7 @@ import {
   createMerchantCatalog,
   fragrances,
   notes,
+  sortFragrancesForDisplay,
 } from "@discovery-box/catalog";
 import { discoveryDecantsConfig } from "../merchants/discoveryDecants/config.js";
 import { discoveryDecantsAvailableIds } from "../merchants/discoveryDecants/catalog.js";
@@ -16,10 +17,13 @@ const finalizationAdapter = createWhatsAppFinalizationAdapter({
   phoneNumber: discoveryDecantsConfig.finalization.whatsappNumber,
 });
 const assetResolver = createCatalogAssetResolver({ basePath: "/catalog-assets" });
-const discoveryDecantsCatalog = createMerchantCatalog({
-  source: fragrances,
-  availableIds: discoveryDecantsAvailableIds,
-});
+// The manifest decides membership; the shared display order (tier, brand, name) decides presentation.
+const discoveryDecantsCatalog = sortFragrancesForDisplay(
+  createMerchantCatalog({
+    source: fragrances,
+    availableIds: discoveryDecantsAvailableIds,
+  })
+);
 
 export default function DiscoveryDecantsApp() {
   const analytics = createAnalytics({

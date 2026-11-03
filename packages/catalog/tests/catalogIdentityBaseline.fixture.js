@@ -8,6 +8,7 @@ export const CATALOG_IDENTITY_BASELINE = Object.freeze([
   [24, "Bronze", 1], [25, "Bronze", 1], [26, "Bronze", 1], [27, "Bronze", 1],
   [28, "Bronze", 1], [29, "Bronze", 1], [30, "Bronze", 1], [31, "Bronze", 1],
   [33, "Bronze", 1], [34, "Bronze", 1], [35, "Bronze", 1],
+  [36, "Bronze", 1],
   [100, "Silver", 1.5], [101, "Silver", 1.5], [102, "Silver", 1.5],
   [103, "Silver", 1.5], [119, "Silver", 1.5], [104, "Silver", 1.5],
   [105, "Silver", 1.5], [106, "Silver", 1.5], [107, "Silver", 1.5],

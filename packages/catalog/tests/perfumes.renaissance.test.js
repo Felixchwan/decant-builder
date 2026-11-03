@@ -244,7 +244,7 @@ describe("Xerjoff Renaissance catalog entry", () => {
     expect(notes.virginiaCedar).toMatchObject({ name: "Virginia Cedar", noteImageAssetKey: "notes/cedar.jpg" });
     expect(notes.patchouli).toMatchObject({ name: "Patchouli", family: "earthy" });
     expect(notes.amber).toMatchObject({ name: "Amber", family: "amber" });
-    expect(Object.keys(notes)).toHaveLength(187);
+    expect(Object.keys(notes)).toHaveLength(191);
     // Amalfi Lemon is carried by Renaissance alone
     expect(perfumes.filter((perfume) => allNoteIds(perfume).includes("amalfiLemon")).map((perfume) => perfume.id)).toEqual([RENAISSANCE_ID]);
   });
@@ -277,7 +277,7 @@ describe("Xerjoff Renaissance catalog entry", () => {
   });
 
   it("is visible to both merchants through the identical manifest, and the catalog has grown by exactly one perfume", () => {
-    expect(perfumes).toHaveLength(93);
+    expect(perfumes).toHaveLength(94);
     expect(aurelianAvailableIds).toContain(RENAISSANCE_ID);
     expect(discoveryDecantsAvailableIds).toContain(RENAISSANCE_ID);
     expect(discoveryDecantsAvailableIds).toEqual(aurelianAvailableIds);
@@ -292,7 +292,7 @@ describe("Xerjoff Renaissance catalog entry", () => {
     expect(brandAssets.Xerjoff).toBe("brands/xerjoff.png");
     expect(existsSync(assetPath(brandAssets.Xerjoff))).toBe(true);
     expect(Object.values(brandAssets).filter((key) => /xerjoff/i.test(key))).toHaveLength(1);
-    expect(Object.keys(brandAssets)).toHaveLength(48);
+    expect(Object.keys(brandAssets)).toHaveLength(49);
   });
 
   it("gives Aurelian an es-MX label for Amalfi Lemon and for every note in the pyramid", () => {

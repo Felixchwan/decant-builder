@@ -3,7 +3,7 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
-import { createMerchantCatalog, fragrances } from "@discovery-box/catalog";
+import { createMerchantCatalog, fragrances, sortFragrancesForDisplay } from "@discovery-box/catalog";
 import { validateBuilderConfig } from "@discovery-box/builder/config";
 import { aurelianConfig } from "./merchant/config.js";
 import { aurelianAvailableIds, aurelianCatalog } from "./merchant/catalog.js";
@@ -47,11 +47,12 @@ describe("Aurelian application foundation", () => {
     expect(aurelianConfig.finalization.customerFieldLabels.city).toBe("Municipio");
   });
 
-  it("owns an explicit 93-ID manifest and canonical projection", () => {
-    expect(aurelianAvailableIds).toHaveLength(93);
-    expect(new Set(aurelianAvailableIds).size).toBe(93);
-    expect(aurelianCatalog).toHaveLength(93);
-    const projection = createMerchantCatalog({ source: fragrances, availableIds: aurelianAvailableIds });
+  it("owns an explicit 94-ID manifest and canonical projection", () => {
+    expect(aurelianAvailableIds).toHaveLength(94);
+    expect(new Set(aurelianAvailableIds).size).toBe(94);
+    expect(aurelianCatalog).toHaveLength(94);
+    // the manifest decides membership; the shared display order decides presentation
+    const projection = sortFragrancesForDisplay(createMerchantCatalog({ source: fragrances, availableIds: aurelianAvailableIds }));
     projection.forEach((record, index) => expect(record).toBe(aurelianCatalog[index]));
   });
 

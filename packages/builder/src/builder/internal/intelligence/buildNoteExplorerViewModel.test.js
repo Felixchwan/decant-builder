@@ -832,16 +832,16 @@ describe("Note Explorer 'Most prominent' sort reflects the Phase 3C calibrated o
 // members trail after every scored one, and exact canonical variants
 // (e.g. bergamot vs. bloodOrange, musk vs. whiteMusk) never cross-rank.
 describe("Note Explorer 'Most prominent' sort reflects the Phase 3D calibrated order, per distinct canonical key", () => {
-  it("bergamot (41 members): scores descend ((Acqua di Gio EDT = Essenza = Sauvage EDP) at 7, down to Silver Mountain Water at 5), then all 35 unscored members trail in catalog order", () => {
+  it("bergamot (42 members): scores descend ((Acqua di Gio EDT = Essenza = Sauvage EDP) at 7, down to Silver Mountain Water at 5), then all 36 unscored members trail in catalog order", () => {
     const matches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "bergamot" });
     expect(matches.map((match) => match.id).sort((a, b) => a - b)).toEqual([
-      1, 3, 4, 5, 7, 12, 17, 19, 23, 25, 30, 31, 34, 35, 100, 101, 102, 103, 107, 114, 115, 117, 118, 119, 201, 202,
+      1, 3, 4, 5, 7, 12, 17, 19, 23, 25, 30, 31, 34, 35, 36, 100, 101, 102, 103, 107, 114, 115, 117, 118, 119, 201, 202,
       205, 207, 209, 211, 213, 217, 301, 306, 401, 404, 405, 406, 410, 411, 501,
     ]);
 
     const sorted = sortNoteExplorerMatchesByProminence(matches, "bergamot");
     expect(sorted.map((match) => match.id)).toEqual([
-      1, 101, 202, 3, 30, 401, 4, 5, 7, 12, 17, 19, 23, 25, 31, 34, 35, 100, 102, 103, 119, 107, 114, 115, 117, 118,
+      1, 101, 202, 3, 30, 401, 4, 5, 7, 12, 17, 19, 23, 25, 31, 34, 35, 36, 100, 102, 103, 119, 107, 114, 115, 117, 118,
       201, 205, 207, 209, 211, 213, 217, 301, 306, 404, 405, 406, 410, 411, 501,
     ]);
 
@@ -918,21 +918,21 @@ describe("Note Explorer 'Most prominent' sort reflects the Phase 3D calibrated o
 
   it("mandarin: Silver Mountain Water's newly-approved score outranks every unscored member, in catalog order", () => {
     const matches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "mandarin" });
-    expect(matches.map((match) => match.id).sort((a, b) => a - b)).toEqual([110, 206, 302, 401, 404]);
+    expect(matches.map((match) => match.id).sort((a, b) => a - b)).toEqual([36, 110, 206, 302, 401, 404]);
 
     const sorted = sortNoteExplorerMatchesByProminence(matches, "mandarin");
-    expect(sorted.map((match) => match.id)).toEqual([401, 110, 206, 302, 404]);
+    expect(sorted.map((match) => match.id)).toEqual([401, 36, 110, 206, 302, 404]);
   });
 
-  it("musk (23 members): Fierce > Versace Pour Homme > Silver Mountain Water, then all 20 unscored members trail in catalog order", () => {
+  it("musk (24 members): Fierce > Versace Pour Homme > Silver Mountain Water, then all 21 unscored members trail in catalog order", () => {
     const matches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "musk" });
     expect(matches.map((match) => match.id).sort((a, b) => a - b)).toEqual([
-      3, 9, 14, 17, 19, 28, 31, 32, 100, 101, 103, 105, 106, 107, 114, 207, 209, 304, 401, 405, 408, 411, 500,
+      3, 9, 14, 17, 19, 28, 31, 32, 36, 100, 101, 103, 105, 106, 107, 114, 207, 209, 304, 401, 405, 408, 411, 500,
     ]);
 
     const sorted = sortNoteExplorerMatchesByProminence(matches, "musk");
     expect(sorted.map((match) => match.id)).toEqual([
-      9, 3, 401, 14, 17, 19, 32, 28, 31, 100, 101, 103, 105, 106, 107, 114, 207, 209, 304, 405, 408, 411, 500,
+      9, 3, 401, 14, 17, 19, 32, 28, 31, 36, 100, 101, 103, 105, 106, 107, 114, 207, 209, 304, 405, 408, 411, 500,
     ]);
 
     const rank = new Map(sorted.map((match, index) => [match.id, index]));
@@ -1000,16 +1000,16 @@ describe("Note Explorer 'Most prominent' sort reflects the Phase 3E calibrated o
     expect(sorted.map((match) => match.id)).toEqual([305]);
   });
 
-  it("patchouli (37 members): Patchouli Ink and Tuxedo tie at the defining score 9 (catalog order), down through Terre d'Hermès EDT's Phase 3E addition, then 21 unscored members trail in catalog order", () => {
+  it("patchouli (38 members): Patchouli Ink and Tuxedo tie at the defining score 9 (catalog order), down through Terre d'Hermès EDT's Phase 3E addition, then 22 unscored members trail in catalog order", () => {
     const matches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "patchouli" });
     expect(matches.map((match) => match.id).sort((a, b) => a - b)).toEqual([
-      1, 2, 6, 15, 16, 17, 19, 21, 25, 29, 30, 33, 101, 103, 110, 111, 115, 205, 206, 207, 208, 209, 211, 215,
+      1, 2, 6, 15, 16, 17, 19, 21, 25, 29, 30, 33, 36, 101, 103, 110, 111, 115, 205, 206, 207, 208, 209, 211, 215,
       216, 217, 302, 303, 304, 306, 402, 403, 404, 406, 410, 411, 501,
     ]);
 
     const sorted = sortNoteExplorerMatchesByProminence(matches, "patchouli");
     expect(sorted.map((match) => match.id)).toEqual([
-      217, 501, 306, 205, 206, 209, 410, 21, 33, 110, 111, 2, 25, 101, 406, 1, 6, 15, 16, 17, 19, 29, 30, 103,
+      217, 501, 306, 205, 206, 209, 410, 21, 33, 110, 111, 2, 25, 101, 406, 1, 6, 15, 16, 17, 19, 29, 30, 36, 103,
       115, 207, 208, 211, 215, 216, 302, 303, 304, 402, 403, 404, 411,
     ]);
 
@@ -1260,14 +1260,14 @@ describe("Note Explorer 'Most prominent' sort reflects the Phase 3I calibrated o
     expect(sorted.map((match) => match.id)).toEqual([3]);
   });
 
-  it("jasmine (13 members): 3 tied members at score 5 lead, down through 2 more scored members, then 9 unscored members trail in catalog order", () => {
+  it("jasmine (14 members): 3 tied members at score 5 lead, down through 2 more scored members, then 10 unscored members trail in catalog order", () => {
     const matches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "jasmine" });
     expect(matches.map((match) => match.id).sort((a, b) => a - b)).toEqual([
-      1, 9, 12, 19, 23, 101, 102, 115, 119, 404, 406, 408, 409,
+      1, 9, 12, 19, 23, 36, 101, 102, 115, 119, 404, 406, 408, 409,
     ]);
 
     const sorted = sortNoteExplorerMatchesByProminence(matches, "jasmine");
-    expect(sorted.map((match) => match.id)).toEqual([1, 101, 409, 23, 9, 12, 19, 102, 119, 115, 404, 406, 408]);
+    expect(sorted.map((match) => match.id)).toEqual([1, 101, 409, 23, 9, 12, 19, 36, 102, 119, 115, 404, 406, 408]);
 
     // 1, 101, and 409 tie at score 5 -- the sort preserves their
     // ascending catalog-array order rather than forcing an artificial
@@ -1298,15 +1298,15 @@ describe("Note Explorer 'Most prominent' sort reflects the Phase 3I calibrated o
 // fragrances sort descending, ties preserve catalog order, and unscored
 // members trail after every scored one.
 describe("Note Explorer 'Most prominent' sort reflects the Phase 3J calibrated order, per distinct canonical key", () => {
-  it("tonkaBean (22 members): Armani Code EDT leads, down through several tied groups, then 6 unscored members trail in catalog order", () => {
+  it("tonkaBean (23 members): Armani Code EDT leads, down through several tied groups, then 7 unscored members trail in catalog order", () => {
     const matches = getNoteExplorerMatches({ catalogPerfumes: catalogFragrances, noteId: "tonkaBean" });
     expect(matches.map((match) => match.id).sort((a, b) => a - b)).toEqual([
-      3, 4, 5, 10, 11, 15, 16, 20, 21, 24, 27, 29, 104, 112, 116, 117, 203, 205, 213, 304, 403, 409,
+      3, 4, 5, 10, 11, 15, 16, 20, 21, 24, 27, 29, 36, 104, 112, 116, 117, 203, 205, 213, 304, 403, 409,
     ]);
 
     const sorted = sortNoteExplorerMatchesByProminence(matches, "tonkaBean");
     expect(sorted.map((match) => match.id)).toEqual([
-      104, 4, 10, 11, 16, 304, 5, 20, 29, 112, 116, 117, 403, 15, 24, 409, 3, 21, 27, 203, 205, 213,
+      104, 4, 10, 11, 16, 304, 5, 20, 29, 112, 116, 117, 403, 15, 24, 409, 3, 21, 27, 36, 203, 205, 213,
     ]);
 
     // 4/10/11/16/304 tie at score 6, 5/20/29/112/116/117 tie at score 5,

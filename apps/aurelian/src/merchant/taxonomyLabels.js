@@ -227,4 +227,8 @@ export const aurelianTaxonomyLabels = {
   "taxonomy.grapefruitBlossom": "Flor de Toronja",
   "taxonomy.sicilianLemon": "Limón Siciliano",
   "taxonomy.amalfiLemon": "Limón de Amalfi",
+  "taxonomy.coconutMilk": "Leche de Coco",
+  "taxonomy.sugarCane": "Caña de Azúcar",
+  "taxonomy.hibiscus": "Hibisco",
+  "taxonomy.gardenia": "Gardenia",
 };

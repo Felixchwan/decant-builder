@@ -329,17 +329,20 @@ describe("Composer Phase 2J note-prominence seed batch (final vertical-pass batc
     // (120), Ralph's Club Elixir (215), Spicebomb Night Vision EDP (216),
     // and Patchouli Ink (217) were added afterward and were never part of
     // this review effort; they are asserted unscored below, not counted
-    // here. Valentino Uomo Born In Roma Yellow Dream (121) and Dior Homme
+    // here. Born in Roma Yellow Dream (121) and Dior Homme
     // Cologne 2022 (218) were added later still, from merchant note
     // pyramids only, with no approved editorial prominence data -- same
     // deliberate exception, also asserted unscored below.
     // Xerjoff Renaissance (411) joins them: added from its approved note
     // pyramid and main accords only, with no per-note prominence evidence --
     // honestly empty rather than an invented score.
-    const postVerticalPassAdditionIds = new Set([120, 121, 215, 216, 217, 218, 411]);
+    // Rayhaan Aquatica (36) joins them on the same basis: added from its
+    // approved note pyramid and main accords only, with no per-note
+    // prominence evidence.
+    const postVerticalPassAdditionIds = new Set([36, 120, 121, 215, 216, 217, 218, 411]);
     const originallyReviewedPerfumes = perfumes.filter((perfume) => !postVerticalPassAdditionIds.has(perfume.id));
 
-    expect(perfumes).toHaveLength(93);
+    expect(perfumes).toHaveLength(94);
     expect(originallyReviewedPerfumes).toHaveLength(86);
     // 86 originally-reviewed fragrances + Patchouli Ink (217), later scored.
     expect(Object.keys(NOTE_PROMINENCE_BY_ID)).toHaveLength(87);
@@ -362,7 +365,10 @@ describe("Composer Phase 2J note-prominence seed batch (final vertical-pass batc
     // Xerjoff Renaissance (411) joins them: added from its approved note
     // pyramid and main accords only, with no per-note prominence evidence --
     // honestly empty rather than an invented score.
-    const postVerticalPassAdditionIds = new Set([120, 121, 215, 216, 217, 218, 411]);
+    // Rayhaan Aquatica (36) joins them on the same basis: added from its
+    // approved note pyramid and main accords only, with no per-note
+    // prominence evidence.
+    const postVerticalPassAdditionIds = new Set([36, 120, 121, 215, 216, 217, 218, 411]);
 
     for (const perfume of perfumes) {
       if (postVerticalPassAdditionIds.has(perfume.id)) {

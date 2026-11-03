@@ -23,14 +23,17 @@ describe("@discovery-box/catalog package boundary", () => {
   it("exports exactly the approved public API", () => {
     expect(Object.keys(catalog).sort()).toEqual([
       "brandAssets",
+      "compareFragrancesForDisplay",
       "createCatalogAssetResolver",
       "createMerchantCatalog",
       "fragrances",
       "getExplicitSeasonWeight",
+      "getFragranceTierRank",
       "getNoteProminenceLevel",
       "metadataAssets",
       "notes",
       "perfumePlaceholderAssetKey",
+      "sortFragrancesForDisplay",
     ]);
   });
 
@@ -58,9 +61,9 @@ describe("@discovery-box/catalog package boundary", () => {
   });
 
   it("retains the approved mapping sizes and intentional aliases", () => {
-    expect(catalog.fragrances).toHaveLength(93);
-    expect(Object.keys(catalog.notes)).toHaveLength(187);
-    expect(Object.keys(catalog.brandAssets)).toHaveLength(48);
+    expect(catalog.fragrances).toHaveLength(94);
+    expect(Object.keys(catalog.notes)).toHaveLength(191);
+    expect(Object.keys(catalog.brandAssets)).toHaveLength(49);
     expect(
       Object.values(catalog.metadataAssets).reduce(
         (count, values) => count + Object.keys(values).length,

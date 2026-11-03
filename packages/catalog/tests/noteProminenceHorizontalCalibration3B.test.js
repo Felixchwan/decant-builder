@@ -212,8 +212,8 @@ describe("Composer Phase 3B taxonomy audit", () => {
 describe("Composer Phase 3B horizontal calibration -- apple and mint canonical-key families", () => {
   const perfumesById = new Map(perfumes.map((perfume) => [perfume.id, perfume]));
 
-  it("has exactly 93 catalog fragrances to search for exhaustive family membership", () => {
-    expect(perfumes).toHaveLength(93);
+  it("has exactly 94 catalog fragrances to search for exhaustive family membership", () => {
+    expect(perfumes).toHaveLength(94);
   });
 
   for (const [noteId, family] of Object.entries(ALL_FAMILIES)) {

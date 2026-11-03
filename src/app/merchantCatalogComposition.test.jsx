@@ -14,7 +14,7 @@ vi.mock("@discovery-box/builder", () => ({
 
 import { BuilderExperience } from "../../apps/aurelian/src/components/BuilderExperience.jsx";
 import DiscoveryDecantsApp from "./DiscoveryDecantsApp.jsx";
-import { createMerchantCatalog, fragrances as perfumes } from "@discovery-box/catalog";
+import { createMerchantCatalog, fragrances as perfumes, sortFragrancesForDisplay } from "@discovery-box/catalog";
 import { CATALOG_IDENTITY_BASELINE } from "../../packages/catalog/tests/catalogIdentityBaseline.fixture.js";
 import { aurelianAvailableIds } from "../../apps/aurelian/src/merchant/catalog.js";
 import { aurelianConfig } from "../../apps/aurelian/src/merchant/config.js";
@@ -42,7 +42,7 @@ function expectedIds() {
 }
 
 function assertCurrentCatalog(catalog) {
-  expect(catalog).toHaveLength(93);
+  expect(catalog).toHaveLength(94);
   expect(catalog.map(({ id }) => id)).toEqual(expectedIds());
   expect(catalog.map(({ id, points }) => [id, points])).toEqual(
     CATALOG_IDENTITY_BASELINE.map(([id, , points]) => [id, points])
@@ -50,14 +50,25 @@ function assertCurrentCatalog(catalog) {
   catalog.forEach((record, index) => expect(record).toBe(perfumes[index]));
 }
 
+// What a host hands the Builder: the very same canonical records (IDs untouched), in the shared display order
+// (tier, brand, name) instead of manifest order.
+function assertDisplayOrderedCatalog(catalog) {
+  const displayOrdered = sortFragrancesForDisplay(perfumes);
+
+  expect(catalog).toHaveLength(94);
+  expect(catalog.map(({ id }) => id)).toEqual(displayOrdered.map(({ id }) => id));
+  expect([...catalog.map(({ id }) => id)].sort((a, b) => a - b)).toEqual([...expectedIds()].sort((a, b) => a - b));
+  catalog.forEach((record, index) => expect(record).toBe(displayOrdered[index]));
+}
+
 describe("merchant catalog composition", () => {
   beforeEach(() => {
     builderCalls.length = 0;
   });
 
-  it("gives each merchant an explicit independent 93-ID manifest", () => {
-    expect(discoveryDecantsAvailableIds).toHaveLength(93);
-    expect(aurelianAvailableIds).toHaveLength(93);
+  it("gives each merchant an explicit independent 94-ID manifest", () => {
+    expect(discoveryDecantsAvailableIds).toHaveLength(94);
+    expect(aurelianAvailableIds).toHaveLength(94);
     expect(discoveryDecantsAvailableIds).toEqual(expectedIds());
     expect(aurelianAvailableIds).toEqual(expectedIds());
     expect(discoveryDecantsAvailableIds).not.toBe(aurelianAvailableIds);
@@ -107,8 +118,8 @@ describe("merchant catalog composition", () => {
 
     expect(builderCalls).toHaveLength(2);
     const [discoveryProps, aurelianProps] = builderCalls;
-    assertCurrentCatalog(discoveryProps.catalog);
-    assertCurrentCatalog(aurelianProps.catalog);
+    assertDisplayOrderedCatalog(discoveryProps.catalog);
+    assertDisplayOrderedCatalog(aurelianProps.catalog);
     expect(discoveryProps.catalog).not.toBe(perfumes);
     expect(aurelianProps.catalog).not.toBe(perfumes);
     expect(discoveryProps.catalog).not.toBe(aurelianProps.catalog);

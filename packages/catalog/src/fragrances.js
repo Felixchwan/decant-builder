@@ -854,6 +854,63 @@ vibes: ["fresh", "clean", "bright", "versatile"]
     "approachable",
   ],
 },
+
+{
+  id: 36,
+  name: "Aquatica",
+  shortName: "Aquatica",
+  brand: "Rayhaan",
+  points: 1,
+  imageAssetKey: "perfumes/bronze/aquatica.png",
+
+  accords: [
+    "citrus",
+    "sweet",
+    "coconut",
+    "vanilla",
+    "fresh spicy",
+  ],
+
+  topNotes: [
+    "lime",
+    "coconutMilk",
+    "bergamot",
+    "mandarin",
+  ],
+
+  middleNotes: [
+    "sugarCane",
+    "jasmine",
+    "hibiscus",
+    "gardenia",
+  ],
+
+  baseNotes: [
+    "musk",
+    "rum",
+    "tonkaBean",
+    "patchouli",
+  ],
+
+  seasons: [
+    "spring",
+    "summer",
+  ],
+
+  occasions: [
+    "daily",
+    "casual",
+    "vacation",
+  ],
+
+  vibes: [
+    "fresh",
+    "tropical",
+    "sweet",
+    "playful",
+  ],
+},
+
 {
   id: 100,
   name: "Arancia di Capri",
@@ -1331,7 +1388,7 @@ baseNotes: ["caramel", "musk"],
 
 {
   id: 121,
-  name: "Valentino Uomo Born In Roma Yellow Dream",
+  name: "Born in Roma Yellow Dream",
   shortName: "Yellow Dream",
   brand: "Valentino",
   points: 1.5,
@@ -3399,6 +3456,7 @@ export const SEASON_WEIGHTS_BY_ID = {
   33: { spring: 8, summer: 7, fall: 5, winter: 2 },
   34: { spring: 8, summer: 8, fall: 4, winter: 1 },
   35: { spring: 3, summer: 1, fall: 8, winter: 9 },
+  36: { spring: 7, summer: 10, fall: 3, winter: 1 },
   100: { spring: 8, summer: 10, fall: 2, winter: 0 },
   101: { spring: 8, summer: 10, fall: 2, winter: 0 },
   102: { spring: 9, summer: 10, fall: 2, winter: 0 },

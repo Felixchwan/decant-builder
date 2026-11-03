@@ -1,8 +1,8 @@
-import { createMerchantCatalog, fragrances } from "@discovery-box/catalog";
+import { createMerchantCatalog, fragrances, sortFragrancesForDisplay } from "@discovery-box/catalog";
 
 export const aurelianAvailableIds = Object.freeze([
   1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
-  32, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 33, 34, 35,
+  32, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 33, 34, 35, 36,
   100, 101, 102, 103, 119, 104, 105, 106, 107, 108, 109, 110, 111, 112,
   113, 114, 115, 116, 117, 118, 120, 121,
   201, 202, 203, 204, 205, 206, 207, 208, 214, 209, 210, 211, 212, 213, 215,
@@ -12,7 +12,10 @@ export const aurelianAvailableIds = Object.freeze([
   500, 501,
 ]);
 
-export const aurelianCatalog = createMerchantCatalog({
-  source: fragrances,
-  availableIds: aurelianAvailableIds,
-});
+// The manifest decides membership; the shared display order (tier, brand, name) decides presentation.
+export const aurelianCatalog = sortFragrancesForDisplay(
+  createMerchantCatalog({
+    source: fragrances,
+    availableIds: aurelianAvailableIds,
+  })
+);

@@ -59,7 +59,7 @@ import { NOTE_PROMINENCE_BY_ID } from "../src/fragrances.js";
 //                                bergamot:5 as 1 of only 2 top notes,
 //                                "citrus" accord #1, but still secondary
 //                                to the defining greenTea:9/blackCurrant:8)
-const LIME_FAMILY = { 1: undefined };
+const LIME_FAMILY = { 1: undefined, 36: undefined };
 
 const LEMON_FAMILY = {
   1: undefined,
@@ -103,6 +103,7 @@ const BERGAMOT_FAMILY = {
   31: undefined,
   34: undefined,
   35: undefined,
+  36: undefined, // Rayhaan Aquatica -- approved pyramid only, no approved score
   100: undefined,
   101: 7,
   102: undefined,
@@ -154,7 +155,7 @@ const MANDARIN_ORANGE_FAMILY = {
   27: undefined,
   29: undefined,
   101: undefined,
-  121: undefined, // Valentino Uomo Born In Roma Yellow Dream -- merchant pyramid only, no approved score
+  121: undefined, // Born in Roma Yellow Dream -- merchant pyramid only, no approved score
 };
 
 const BITTER_ORANGE_FAMILY = {
@@ -210,6 +211,7 @@ const TANGERINE_FAMILY = { 15: undefined, 411: undefined };
 const FINGER_LIME_FAMILY = { 18: 6 };
 
 const MANDARIN_FAMILY = {
+  36: undefined, // Rayhaan Aquatica -- approved pyramid only, no approved score
   110: undefined,
   206: undefined,
   302: undefined,
@@ -234,6 +236,7 @@ const MUSK_FAMILY = {
   28: undefined,
   31: undefined,
   32: undefined,
+  36: undefined, // Rayhaan Aquatica -- approved pyramid only, no approved score
   100: undefined,
   101: undefined,
   103: undefined,
@@ -374,8 +377,8 @@ describe("Composer Phase 3D canonical-data sanity audit", () => {
 describe("Composer Phase 3D horizontal calibration -- citrus/orange and musk canonical-key families", () => {
   const perfumesById = new Map(perfumes.map((perfume) => [perfume.id, perfume]));
 
-  it("has exactly 93 catalog fragrances to search for exhaustive family membership", () => {
-    expect(perfumes).toHaveLength(93);
+  it("has exactly 94 catalog fragrances to search for exhaustive family membership", () => {
+    expect(perfumes).toHaveLength(94);
   });
 
   for (const [noteId, family] of Object.entries(ALL_FAMILIES)) {
@@ -468,14 +471,14 @@ describe("Composer Phase 3D horizontal calibration -- citrus/orange and musk can
     });
   });
 
-  it("bergamot (41 members) and musk (23 members) stay overwhelmingly unscored -- common presence was never treated as evidence of genuine prominence", () => {
+  it("bergamot (42 members) and musk (24 members) stay overwhelmingly unscored -- common presence was never treated as evidence of genuine prominence", () => {
     const bergamotScoredCount = Object.values(BERGAMOT_FAMILY).filter((score) => score !== undefined).length;
     const muskScoredCount = Object.values(MUSK_FAMILY).filter((score) => score !== undefined).length;
 
-    expect(Object.keys(BERGAMOT_FAMILY)).toHaveLength(41);
+    expect(Object.keys(BERGAMOT_FAMILY)).toHaveLength(42);
     expect(bergamotScoredCount).toBe(6);
 
-    expect(Object.keys(MUSK_FAMILY)).toHaveLength(23);
+    expect(Object.keys(MUSK_FAMILY)).toHaveLength(24);
     expect(muskScoredCount).toBe(3);
   });
 

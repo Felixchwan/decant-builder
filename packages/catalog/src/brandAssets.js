@@ -36,6 +36,7 @@ export const brandAssets = {
   "Parfums de Marly": "brands/parfums-de-marly.png",
   Prada: "brands/prada.png",
   "Ralph Lauren": "brands/ralph-lauren.png",
+  Rayhaan: "brands/rayhaan.png",
   "Salvatore Ferragamo": "brands/salvatore-ferragamo.png",
   "Sospiro Perfumes": "brands/sospiro-perfumes.png",
   Tous: "brands/tous.png",

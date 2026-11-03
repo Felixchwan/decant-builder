@@ -649,7 +649,7 @@ absinthe: { name: "Absinthe", family: "sweet", noteImageAssetKey: "notes/absinth
 // Gingerbread is its own real Fragrantica gourmand note (the baked-spice
 // cookie accord), not a form of the existing raw "ginger" key above -- same
 // distinct-identity reasoning as rum/amaretto elsewhere in this file. Added
-// for Valentino Uomo Born In Roma Yellow Dream. Originally reused
+// for Born in Roma Yellow Dream. Originally reused
 // cinnamon.jpg as a closest-match placeholder; now has its own dedicated
 // photo (Fragrantica ingredient thumbnail), matching this dictionary's
 // existing 120x120 note-thumbnail convention.
@@ -660,13 +660,13 @@ gingerbread: { name: "Gingerbread", family: "sweet", noteImageAssetKey: "notes/g
 // sandalwood/vetiver origin-qualified variants elsewhere in this file (a
 // distinct canonical identity, not collapsed into the base note), reusing
 // vanilla.jpg as the closest existing visual match rather than a new photo.
-// Added for Valentino Uomo Born In Roma Yellow Dream.
+// Added for Born in Roma Yellow Dream.
 vanillaAbsolute: { name: "Vanilla Absolute", family: "sweet", noteImageAssetKey: "notes/vanilla.jpg" },
 
 // Cedar Essence is an extraction-form-qualified variant of the existing
 // generic "cedar" above -- same reuse pattern as texasCedar/virginiaCedar
 // (distinct identity, reuses cedar.jpg rather than a new photo). Added for
-// Valentino Uomo Born In Roma Yellow Dream.
+// Born in Roma Yellow Dream.
 cedarEssence: { name: "Cedar Essence", family: "woody", noteImageAssetKey: "notes/cedar.jpg" },
 
 // Calabrian Bergamot is a geographic-origin-qualified variant of the
@@ -698,4 +698,32 @@ sicilianLemon: { name: "Sicilian Lemon", family: "citrus", noteImageAssetKey: "n
 // the base note, reuses lemon.jpg rather than a new photo). Added for
 // Xerjoff Renaissance, whose approved pyramid names Amalfi Lemon.
 amalfiLemon: { name: "Amalfi Lemon", family: "citrus", noteImageAssetKey: "notes/lemon.jpg" },
+
+// Coconut Milk is the creamy preparation, not the whole fruit -- a distinct
+// identity from the existing generic "coconut" above, same established
+// pattern as vanillaAbsolute/cedarEssence (a form-qualified variant, not
+// collapsed into the base note). No dedicated photo exists for it yet, so it
+// reuses coconut.jpg as the closest existing visual match. Added for Rayhaan
+// Aquatica, whose approved pyramid names Coconut Milk.
+coconutMilk: { name: "Coconut Milk", family: "tropical", noteImageAssetKey: "notes/coconut.jpg" },
+
+// Sugar Cane is the plant (its juice/syrup note), not refined sugar -- a
+// genuinely distinct identity from the existing "sugar" above, kept separate
+// the way this dictionary already keeps ginger/gingerbread and
+// orange/orangeBlossom apart. No dedicated photo exists for it yet, so it
+// reuses sugar.jpg as the closest existing visual match. Added for Rayhaan
+// Aquatica.
+sugarCane: { name: "Sugar Cane", family: "sweet", noteImageAssetKey: "notes/sugar.jpg" },
+
+// Hibiscus is a floral note with no existing counterpart in this dictionary.
+// Has its own dedicated photo (Fragrantica ingredient thumbnail, 120x120),
+// matching this dictionary's existing note-thumbnail convention. Added for
+// Rayhaan Aquatica.
+hibiscus: { name: "Hibiscus", family: "floral", noteImageAssetKey: "notes/hibiscus.jpg" },
+
+// Gardenia is a floral note with no existing counterpart in this dictionary.
+// Has its own dedicated photo (Fragrantica ingredient thumbnail, 120x120),
+// matching this dictionary's existing note-thumbnail convention. Added for
+// Rayhaan Aquatica.
+gardenia: { name: "Gardenia", family: "floral", noteImageAssetKey: "notes/gardenia.jpg" },
 };

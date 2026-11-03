@@ -92,6 +92,7 @@ const PATCHOULI_FAMILY = {
   29: undefined,
   30: undefined,
   33: 5,
+  36: undefined, // Rayhaan Aquatica -- approved pyramid only, no approved score
   101: 4,
   103: undefined,
   110: 5,
@@ -196,8 +197,8 @@ describe("Composer Phase 3E canonical-data sanity audit", () => {
 describe("Composer Phase 3E horizontal calibration -- sandalwood and patchouli canonical-key families", () => {
   const perfumesById = new Map(perfumes.map((perfume) => [perfume.id, perfume]));
 
-  it("has exactly 93 catalog fragrances to search for exhaustive family membership", () => {
-    expect(perfumes).toHaveLength(93);
+  it("has exactly 94 catalog fragrances to search for exhaustive family membership", () => {
+    expect(perfumes).toHaveLength(94);
   });
 
   for (const [noteId, family] of Object.entries(ALL_FAMILIES)) {

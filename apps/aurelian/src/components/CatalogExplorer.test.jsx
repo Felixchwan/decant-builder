@@ -15,7 +15,7 @@ describe("CatalogExplorer", () => {
   it("renders a representative card with fragrance identity, points, the commercial action, and the learning disclosure", () => {
     const markup = renderToStaticMarkup(<CatalogExplorer />);
 
-    expect(markup).toContain(representative.brand);
+    expect(markup).toContain(renderToStaticMarkup(<>{representative.brand}</>)); // HTML-escaped, e.g. "Abercrombie &amp; Fitch"
     expect(markup).toContain(representative.name);
     expect(markup).toMatch(/product-card__points/);
     expect(markup).toContain("Agregar a mi Discovery Box");

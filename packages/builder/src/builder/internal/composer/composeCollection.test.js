@@ -565,6 +565,14 @@ describe("composeCollection", () => {
     // 407 gone, Composer's search legitimately settles on 107 and 404 in
     // its place on this budget/preference scenario -- a real, expected
     // consequence of the catalog change, not a regression.
+    //
+    // Recomputed again after adding Rayhaan Aquatica (36, bronze): a fresh,
+    // vacation-leaning Bronze fragrance joins the pool, and the More Variety
+    // search on this budget/preference scenario legitimately selects it and
+    // rebalances five other picks (7, 11, 23, 26 and 302 give way to 2, 16,
+    // 109, 36 and 213; the 14-fragrance, 17-point shape is unchanged). Premium
+    // Focus is unaffected. Again an expected consequence of the catalog
+    // change, not a regression.
     expect(
       composeRealCatalog({ ...baseRequest, collectionStyle: "premium_focus" }, "best")
         .collectionIds
@@ -572,7 +580,7 @@ describe("composeCollection", () => {
     expect(
       composeRealCatalog({ ...baseRequest, collectionStyle: "more_variety" }, "best")
         .collectionIds
-    ).toEqual([1, 7, 8, 10, 11, 15, 19, 23, 26, 30, 35, 118, 207, 302]);
+    ).toEqual([1, 2, 8, 10, 15, 16, 19, 30, 35, 36, 109, 118, 207, 213]);
   }, 20000);
 
   it("keeps collection-style counts ordered across a compact real-catalog matrix", () => {

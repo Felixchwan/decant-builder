@@ -65,6 +65,7 @@ const TONKA_BEAN_FAMILY = {
   24: 4,
   27: undefined,
   29: 5,
+  36: undefined, // Rayhaan Aquatica -- approved pyramid only, no approved score
   104: 9,
   112: 5,
   116: 5,
@@ -192,8 +193,8 @@ describe("Composer Phase 3J canonical-data sanity audit", () => {
 describe("Composer Phase 3J horizontal calibration -- tonka bean and lavender canonical-key families", () => {
   const perfumesById = new Map(perfumes.map((perfume) => [perfume.id, perfume]));
 
-  it("has exactly 93 catalog fragrances to search for exhaustive family membership", () => {
-    expect(perfumes).toHaveLength(93);
+  it("has exactly 94 catalog fragrances to search for exhaustive family membership", () => {
+    expect(perfumes).toHaveLength(94);
   });
 
   for (const [noteId, family] of Object.entries(ALL_FAMILIES)) {

@@ -67,6 +67,7 @@ const JASMINE_FAMILY = {
   12: undefined,
   19: undefined,
   23: 4,
+  36: undefined, // Rayhaan Aquatica -- approved pyramid only, no approved score
   101: 5,
   102: undefined,
   115: undefined,
@@ -168,8 +169,8 @@ describe("Composer Phase 3I canonical-data sanity audit", () => {
 describe("Composer Phase 3I horizontal calibration -- rose and jasmine canonical-key families", () => {
   const perfumesById = new Map(perfumes.map((perfume) => [perfume.id, perfume]));
 
-  it("has exactly 93 catalog fragrances to search for exhaustive family membership", () => {
-    expect(perfumes).toHaveLength(93);
+  it("has exactly 94 catalog fragrances to search for exhaustive family membership", () => {
+    expect(perfumes).toHaveLength(94);
   });
 
   for (const [noteId, family] of Object.entries(ALL_FAMILIES)) {
