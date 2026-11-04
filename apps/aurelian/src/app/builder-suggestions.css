@@ -458,7 +458,8 @@
     }
   }
 
-  #aurelian-builder-summary-slot .box-center-suggestions:is(:hover, :focus-visible)::before {
+  #aurelian-builder-summary-slot .box-center-suggestions:is(:hover, :focus-visible)::before,
+  #aurelian-builder-summary-slot .box-slot-tray:has(.box-vial.has-suggestions-label:is(:hover, :focus-visible)) .box-center-suggestions::before {
     box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--gold) 22%, transparent);
     opacity: 1;
   }
@@ -476,43 +477,74 @@
     align-items: center;
     justify-content: center;
     text-align: center;
-    transform: rotate(180deg);
     transition: opacity 180ms ease;
+  }
+
+  /* At rest the centre is only the star, with a faint warm halo (the word "SUGERENCIAS" sits in the glowing next slot). */
+  #aurelian-builder-summary-slot .box-center-suggestions__rest {
+    line-height: 1;
+    transform: rotate(180deg);
     writing-mode: vertical-rl;
   }
 
-  #aurelian-builder-summary-slot .box-center-suggestions__rest {
-    gap: 7px;
-    font-size: 0.6875rem;
+  #aurelian-builder-summary-slot .box-center-suggestions__mark {
+    color: color-mix(in srgb, var(--gold) 88%, transparent);
+    font-size: 1rem;
+    letter-spacing: 0;
+    text-shadow: 0 0 7px color-mix(in srgb, var(--gold) 30%, transparent);
+  }
+
+  /* The invitation reads horizontally, centred in the channel. The channel is narrow (about 63px of room), so the copy wraps to a
+     few short lines, and its one long word breaks at the syllable the dictionary marks with a soft hyphen (no reliance on the
+     browser's own hyphenation dictionaries). Nothing is rotated, and every other word is short enough that nothing can leave the
+     channel. */
+  #aurelian-builder-summary-slot .box-center-suggestions__hint {
+    padding: 8px 0;
+    color: var(--text);
+    font-size: 0.5625rem;
+    font-weight: 500;
+    letter-spacing: 0;
+    line-height: 1.35;
+    opacity: 0;
+    overflow-wrap: break-word;
+  }
+
+  #aurelian-builder-summary-slot .box-center-suggestions:is(:hover, :focus-visible) .box-center-suggestions__rest,
+  #aurelian-builder-summary-slot .box-slot-tray:has(.box-vial.has-suggestions-label:is(:hover, :focus-visible)) .box-center-suggestions__rest {
+    opacity: 0;
+  }
+
+  #aurelian-builder-summary-slot .box-center-suggestions:is(:hover, :focus-visible) .box-center-suggestions__hint,
+  #aurelian-builder-summary-slot .box-slot-tray:has(.box-vial.has-suggestions-label:is(:hover, :focus-visible)) .box-center-suggestions__hint {
+    opacity: 1;
+  }
+
+  /* ---- The glowing next slot carries the word ----
+     The slot that is already glowing (and breathing) is the one the next fragrance goes into; in the docked rack it now says
+     "SUGERENCIAS" instead of its "+", and opens the same drawer as the centre. The slot keeps every bit of its own styling and
+     size: only its "+" gives way to the word, which sits in the same place, in the same single line. Hovering or focusing it wakes
+     the centre too, so the invitation appears wherever the pointer is on the opener. */
+  #aurelian-builder-summary-slot .box-vial.has-suggestions-label .empty-slot-add {
+    display: none;
+  }
+
+  #aurelian-builder-summary-slot .box-vial.has-suggestions-label .vial-suggestions-label {
+    color: color-mix(in srgb, var(--gold) 92%, white);
+    font-family: inherit;
+    font-size: 0.5625rem;
     font-weight: 600;
     letter-spacing: 0.16em;
     line-height: 1;
+    pointer-events: none;
+    text-indent: 0.16em; /* the trailing letter-space would otherwise push the word off centre */
+    text-shadow: 0 0 6px color-mix(in srgb, var(--gold) 28%, transparent);
     text-transform: uppercase;
     white-space: nowrap;
   }
 
-  #aurelian-builder-summary-slot .box-center-suggestions__mark {
-    color: var(--gold);
-    font-size: 0.625rem;
-    letter-spacing: 0;
-  }
-
-  #aurelian-builder-summary-slot .box-center-suggestions__hint {
-    padding: 12px 6px;
-    color: var(--text);
-    font-size: 0.625rem;
-    font-weight: 500;
-    letter-spacing: 0.03em;
-    line-height: 1.4;
-    opacity: 0;
-  }
-
-  #aurelian-builder-summary-slot .box-center-suggestions:is(:hover, :focus-visible) .box-center-suggestions__rest {
-    opacity: 0;
-  }
-
-  #aurelian-builder-summary-slot .box-center-suggestions:is(:hover, :focus-visible) .box-center-suggestions__hint {
-    opacity: 1;
+  #aurelian-builder-summary-slot .box-vial.has-suggestions-label:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--gold) 80%, transparent);
+    outline-offset: 2px;
   }
 
   @media (prefers-reduced-motion: reduce) {

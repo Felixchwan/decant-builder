@@ -81,7 +81,7 @@ describe("the edge tab (rendered by the Runtime)", () => {
 describe("one drawer, one state, one open handler: the phone tab and the desktop rack opener share them", () => {
   const trayStart = panelSource.indexOf("function BoxSlotTray(");
   const traySource = panelSource.slice(trayStart, panelSource.indexOf("\nfunction ", trayStart + 20));
-  const centerStart = traySource.indexOf("{isCompact && typeof onOpenSuggestions");
+  const centerStart = traySource.indexOf("{hasSuggestionsOpener ? (");
   const center = traySource.slice(centerStart, traySource.indexOf(") : (", centerStart));
 
   it("the Runtime keeps ONE open state and ONE handler, and remembers which control opened the drawer", () => {
@@ -106,7 +106,8 @@ describe("one drawer, one state, one open handler: the phone tab and the desktop
   });
 
   it("renders the centre opener ONLY in the docked (desktop) rack, and keeps the plain decorative channel everywhere else", () => {
-    expect(center.startsWith('{isCompact && typeof onOpenSuggestions === "function" ? (')).toBe(true);
+    expect(traySource).toContain('const hasSuggestionsOpener = isCompact && typeof onOpenSuggestions === "function";');
+    expect(center.startsWith("{hasSuggestionsOpener ? (")).toBe(true);
     expect(traySource).toContain('<div className="box-center-channel" aria-hidden="true" />');
     expect(panelSource).toContain("isCompact={isSummaryDocked}");
     expect(panelSource).toContain('window.matchMedia("(min-width: 981px)")'); // the docking breakpoint, reused, not a new one
@@ -122,8 +123,11 @@ describe("one drawer, one state, one open handler: the phone tab and the desktop
     expect(center).not.toMatch(/<(a|input|select|textarea)\b/);
     expect(center).toContain('<span className="box-center-suggestions__rest" aria-hidden="true">');
     expect(center).toContain('<span className="box-center-suggestions__hint" aria-hidden="true">');
-    expect(center).toContain('translator.t("app.suggestionsTab")');
     expect(center).toContain('translator.t("suggestions.centerOpener.hint")');
+    // at rest the centre is only the star: the word lives in the glowing next slot
+    expect(center).toContain('<span className="box-center-suggestions__mark">✦</span>');
+    expect(center).not.toContain('app.suggestionsTab');
+    expect(center).not.toContain('box-center-suggestions__label');
   });
 
   it("holds no Spanish in shared code: both lines come from the dictionary", () => {
@@ -146,6 +150,63 @@ describe("one drawer, one state, one open handler: the phone tab and the desktop
   });
 });
 
+describe("the glowing next slot carries the word, and opens the same drawer, in the docked rack only", () => {
+  const trayStart = panelSource.indexOf("function BoxSlotTray(");
+  const traySource = panelSource.slice(trayStart, panelSource.indexOf("\nfunction ", trayStart + 20));
+  const slotStart = panelSource.indexOf("function BoxVialSlot(");
+  const slotSource = panelSource.slice(slotStart, panelSource.indexOf("\nfunction ", slotStart + 20));
+  const emptyBranch = slotSource.slice(slotSource.indexOf("if (!perfume) {"), slotSource.indexOf("const tierData"));
+
+  it("the tray decides once, from the same flag as the centre opener, and only then swaps the slot's action and gives it the word", () => {
+    expect(traySource).toContain('const hasSuggestionsOpener = isCompact && typeof onOpenSuggestions === "function";');
+    expect(traySource).toContain("const nextSlotAction = hasSuggestionsOpener ? onOpenSuggestions : onNextSlotRecommendation;");
+    expect(traySource).toContain('const nextSlotLabel = hasSuggestionsOpener ? translator.t("app.suggestionsTab") : undefined;');
+    // both columns, nothing else
+    expect(traySource.match(/onNextSlotRecommendation=\{nextSlotAction\}/g)).toHaveLength(2);
+    expect(traySource.match(/suggestionsLabel=\{nextSlotLabel\}/g)).toHaveLength(2);
+    expect(traySource).not.toMatch(/onNextSlotRecommendation=\{onNextSlotRecommendation\}/);
+  });
+
+  it("the label is given to the GLOWING next slot only, never to a plain empty, a filled or a reserved slot", () => {
+    expect(emptyBranch).toContain('const carriesLabel = isNextAvailable && typeof suggestionsLabel === "string" && suggestionsLabel !== "";');
+    expect(slotSource.slice(slotSource.indexOf("if (isReserved) {"), slotSource.indexOf("if (!perfume) {"))).not.toMatch(/suggestionsLabel|has-suggestions-label/); // the reserved branch
+    expect(slotSource.slice(slotSource.indexOf("const tierData"))).not.toMatch(/suggestionsLabel|has-suggestions-label/); // the filled branch
+  });
+
+  it("keeps the slot's own markup: the plus stays in the tree (hidden by the host), and the word is a decorative extra", () => {
+    expect(emptyBranch).toContain('<span className="empty-slot-add" aria-hidden="true">+</span>');
+    expect(emptyBranch).toContain('<span className="vial-suggestions-label" aria-hidden="true">');
+    expect(emptyBranch).toContain("{suggestionsLabel}");
+    expect(emptyBranch).toContain('${carriesLabel ? " has-suggestions-label" : ""}');
+  });
+
+  it("keeps the slot's accessible name and announces the dialog it opens, only when it carries the word", () => {
+    expect(emptyBranch).toContain('"collectionIntelligence.viewRecommendationsForNextSlot"');
+    expect(emptyBranch).toContain('aria-haspopup={carriesLabel ? "dialog" : undefined}');
+    expect(emptyBranch).toContain("aria-expanded={carriesLabel ? isSuggestionsOpen : undefined}");
+  });
+
+  it("click and Enter / Space reach the same action, and the keyboard path passes its event so focus can return to this very button", () => {
+    expect(emptyBranch).toContain("onClick={isInteractiveNextAvailable ? onNextSlotRecommendation : undefined}");
+    expect(emptyBranch).toContain("onNextSlotRecommendation?.(event);");
+  });
+
+  it("everywhere else the slot is exactly what it was: it scrolls to the recommendation lane, with no word and no dialog", () => {
+    expect(panelSource).toContain("onNextSlotRecommendation={handleNextSlotRecommendation}");
+    expect(panelSource).toContain("balanceLaneRef.current.scrollIntoView({");
+    // no host opener -> nextSlotAction is the original handler and nextSlotLabel is undefined: the word is never rendered
+    expect(traySource).toContain(": onNextSlotRecommendation;");
+  });
+
+  it("is live-rack only: the Collection Card never renders a slot with this word", () => {
+    expect(read("./CollectionCard.jsx")).not.toMatch(/BoxVialSlot|vial-suggestions-label|has-suggestions-label/);
+  });
+
+  it("holds no Spanish: the word comes from the dictionary", () => {
+    expect(emptyBranch + traySource).not.toMatch(/SUGERENCIAS|Sugerencias/);
+  });
+});
+
 describe("the opener's markup in context (rendered)", () => {
   // BoxSlotTray is private to BuilderPanel, so this exercises its source exactly as the contract tests above do, plus the
   // dictionary lines it reads.
@@ -154,7 +215,10 @@ describe("the opener's markup in context (rendered)", () => {
     const en = createTranslator("en-US");
 
     expect(es.t("app.suggestionsTab")).toBe("Sugerencias");
-    expect(es.t("suggestions.centerOpener.hint")).toBe("Ver recomendaciones para completar tu caja");
+    // the visible invitation carries one soft hyphen (U+00AD) where its longest word may break in the narrow rack centre
+    expect(es.t("suggestions.centerOpener.hint")).toBe("Ver recomen\u00ADdaciones para completar tu caja");
+    expect(es.t("suggestions.centerOpener.hint").replace(/\u00AD/g, "")).toBe("Ver recomendaciones para completar tu caja");
+    expect(es.t("suggestions.centerOpener.hint").match(/\u00AD/g)).toHaveLength(1);
     expect(es.t("suggestions.centerOpener.aria")).toBe("Sugerencias: ver recomendaciones para completar tu caja");
     expect(en.t("suggestions.centerOpener.hint")).toBe("See suggestions to complete your box");
     expect(en.t("suggestions.centerOpener.aria")).toContain("Suggestions");
@@ -163,7 +227,8 @@ describe("the opener's markup in context (rendered)", () => {
   it("the accessible name carries the whole meaning, so nothing depends on hovering", () => {
     const es = createTranslator("es-MX");
 
-    expect(es.t("suggestions.centerOpener.aria")).toContain(es.t("suggestions.centerOpener.hint").toLowerCase());
+    expect(es.t("suggestions.centerOpener.aria")).toContain(es.t("suggestions.centerOpener.hint").replace(/\u00AD/g, "").toLowerCase());
+    expect(es.t("suggestions.centerOpener.aria")).not.toContain("\u00AD"); // the accessible name is plain text
     expect(es.t("suggestions.centerOpener.aria").startsWith(es.t("app.suggestionsTab"))).toBe(true);
   });
 });

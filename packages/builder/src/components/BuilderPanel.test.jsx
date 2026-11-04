@@ -2318,7 +2318,7 @@ describe("Restored empty next-available vial slot recommendation action", () => 
     expect(boxVialSlotSource).toContain(
       'if (!isInteractiveNextAvailable || (event.key !== "Enter" && event.key !== " ")) {'
     );
-    expect(boxVialSlotSource).toContain("onNextSlotRecommendation?.();");
+    expect(boxVialSlotSource).toContain("onNextSlotRecommendation?.(event);"); // the event goes along, for whatever focus return needs
     expect(boxVialSlotSource).toContain("onClick={isInteractiveNextAvailable ? onNextSlotRecommendation : undefined}");
   });
 

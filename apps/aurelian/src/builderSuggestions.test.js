@@ -273,8 +273,24 @@ describe("the desktop opener in the docked rack's centre (builder-suggestions.cs
 
     expect(shared).toMatch(/position: absolute;/);
     expect(shared).toMatch(/inset: 0;/);
-    expect(shared).toMatch(/writing-mode: vertical-rl;/);
+    expect(shared).not.toMatch(/writing-mode|transform/); // neither layer inherits a rotation
     expect(flat).toMatch(/__hint \{[^}]*opacity: 0;/);
+  });
+
+  it("the invitation reads HORIZONTALLY: no rotation, no vertical writing mode, a readable size, wrapped inside the channel", () => {
+    const hint = flat.match(/\.box-center-suggestions__hint \{(\s*padding:[^}]*)\}/)[1]; // the hint's own rule (the shared layer rule is tested above)
+    const rest = flat.match(/\.box-center-suggestions__rest \{(\s*line-height:[^}]*)\}/)[1];
+
+    expect(hint).not.toMatch(/writing-mode|transform|rotate|text-orientation/);
+    expect(flat.match(/writing-mode: vertical-rl;/g)).toHaveLength(1); // only the star's rule keeps it, exactly as at rest before
+    expect(rest).toMatch(/writing-mode: vertical-rl;/);
+    expect(rest).toMatch(/transform: rotate\(180deg\);/);
+    expect(hint).toMatch(/font-size: 0\.5625rem;/); // 9px: the same size as the word in the glowing slot, not shrunk to force one line
+    expect(hint).toMatch(/line-height: 1\.35;/);
+    expect(hint).toMatch(/padding: 8px 0;/);
+    expect(hint).toMatch(/overflow-wrap: break-word;/);
+    expect(hint).toMatch(/color: var\(--text\);/); // warm ivory
+    expect(hint).not.toMatch(/white-space: nowrap/);
   });
 
   it("the hover and focus rules change opacity, a hairline and an outline only: nothing that could move or resize anything", () => {
@@ -289,11 +305,40 @@ describe("the desktop opener in the docked rack's centre (builder-suggestions.cs
     }
   });
 
-  it("reads 'SUGERENCIAS' at rest and the invitation on hover or focus-visible, never on hover alone: the name is the aria-label", () => {
+  it("shows the invitation in the centre on hover or focus-visible of the centre OR of the labelled slot, never on hover alone: the name is the aria-label", () => {
+    const tray = ":has\\(\\.box-vial\\.has-suggestions-label:is\\(:hover, :focus-visible\\)\\)";
+
     expect(flat).toMatch(/__hint \{[^}]*opacity: 0;/);
-    expect(flat).toMatch(/:is\(:hover, :focus-visible\) \.box-center-suggestions__rest \{\s*opacity: 0;/);
-    expect(flat).toMatch(/:is\(:hover, :focus-visible\) \.box-center-suggestions__hint \{\s*opacity: 1;/);
-    expect(flat).toMatch(/:focus-visible \{\s*outline: 2px solid/);
+    expect(flat).toMatch(new RegExp(`:is\\(:hover, :focus-visible\\) \\.box-center-suggestions__rest,\\s*#aurelian-builder-summary-slot \\.box-slot-tray${tray} \\.box-center-suggestions__rest \\{\\s*opacity: 0;`));
+    expect(flat).toMatch(new RegExp(`:is\\(:hover, :focus-visible\\) \\.box-center-suggestions__hint,\\s*#aurelian-builder-summary-slot \\.box-slot-tray${tray} \\.box-center-suggestions__hint \\{\\s*opacity: 1;`));
+    expect(flat).toMatch(/\.box-center-suggestions:focus-visible \{\s*outline: 2px solid/);
+  });
+
+  it("at rest the centre is only a star with a faint halo; the word lives in the glowing next slot, in the same single line, in place of its plus", () => {
+    const mark = bodyOf(flat, `${SLOT} .box-center-suggestions__mark`);
+    const word = bodyOf(flat, `${SLOT} .box-vial.has-suggestions-label .vial-suggestions-label`);
+
+    expect(mark).toMatch(/font-size: 1rem;/);
+    expect(mark).toMatch(/text-shadow: 0 0 7px color-mix\(in srgb, var\(--gold\) 30%, transparent\);/);
+    expect(flat).not.toContain("box-center-suggestions__label");
+    expect(bodyOf(flat, `${SLOT} .box-vial.has-suggestions-label .empty-slot-add`)).toBe("display: none;");
+    expect(word).toMatch(/font-size: 0\.5625rem;/);
+    expect(word).toMatch(/text-transform: uppercase;/);
+    expect(word).toMatch(/white-space: nowrap;/);
+    expect(word).toMatch(/pointer-events: none;/);
+    expect(word).toMatch(/text-shadow: 0 0 6px/); // a small halo, not a bloom
+  });
+
+  it("does not restyle or resize the glowing slot itself: only its plus gives way, and its focus ring takes the brass", () => {
+    const slotRules = [...flat.matchAll(/([^{}]*\.box-vial\.has-suggestions-label[^{}]*)\{([^}]*)\}/g)].map((match) => ({ selector: match[1].trim(), body: match[2] }));
+    const ownRules = slotRules.filter(({ selector }) => !selector.includes("box-center-suggestions") && !selector.includes(".vial-suggestions-label")); // the word's own rule is tested above
+
+    expect(ownRules.map(({ selector }) => selector.replace(`${SLOT} `, ""))).toEqual([
+      ".box-vial.has-suggestions-label .empty-slot-add",
+      ".box-vial.has-suggestions-label:focus-visible",
+    ]);
+    ownRules.forEach(({ selector, body }) => expect(body, selector).not.toMatch(/\b(width|height|min-width|min-height|padding|margin|transform|position)\s*:/));
+    expect(bodyOf(flat, `${SLOT} .box-vial.has-suggestions-label:focus-visible`)).toMatch(/outline: 2px solid color-mix\(in srgb, var\(--gold\) 80%, transparent\);/);
   });
 
   it("is restrained: a low-alpha brass wash, a small slow breathing layer, no neon, green, burgundy or heavy blur", () => {

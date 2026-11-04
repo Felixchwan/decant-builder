@@ -6194,6 +6194,12 @@ function BoxSlotTray({
   const didLongPressRef = useRef(false);
   const didDragRef = useRef(false);
   const lastPointerTypeRef = useRef(null);
+  // The docked (desktop) rack, with the host's Suggestions opener switched on: its glowing "next slot" carries the word and,
+  // like the centre channel, opens the Suggestions drawer. Everywhere else (the inline tablet and phone trays, a host without
+  // the opener) that slot keeps its own action: scrolling to the box panel's recommendation lane.
+  const hasSuggestionsOpener = isCompact && typeof onOpenSuggestions === "function";
+  const nextSlotAction = hasSuggestionsOpener ? onOpenSuggestions : onNextSlotRecommendation;
+  const nextSlotLabel = hasSuggestionsOpener ? translator.t("app.suggestionsTab") : undefined;
   const rowCount = Math.ceil(maxSlots / 2);
   const rows = Array.from({ length: rowCount }, (_, rowIndex) => ({
     leftIndex: rowIndex * 2,
@@ -6313,7 +6319,9 @@ function BoxSlotTray({
               isActive={activeSlotIndex === leftIndex}
               isDragging={draggingIndex === leftIndex}
               isDragTarget={dragOverIndex === leftIndex}
-              onNextSlotRecommendation={onNextSlotRecommendation}
+              onNextSlotRecommendation={nextSlotAction}
+              suggestionsLabel={nextSlotLabel}
+              isSuggestionsOpen={isSuggestionsOpen}
               onRemove={handleRemove}
               onDragStart={handleDragStart}
               onDragOver={(event) => {
@@ -6337,10 +6345,11 @@ function BoxSlotTray({
         ))}
       </div>
 
-      {isCompact && typeof onOpenSuggestions === "function" ? (
+      {hasSuggestionsOpener ? (
         // The docked (desktop) rack's empty centre doubles as the Suggestions opener: one real button filling the channel, so
         // it takes no slot and moves nothing. It is UI chrome of the live rack only: the Collection Card draws its own rack
-        // and never mounts this tray. The visible words are decorative twins of the accessible name, so the name never changes.
+        // and never mounts this tray. At rest it is only a star (the word sits in the glowing next slot); the longer invitation
+        // appears on hover or focus. The visible text is a decorative twin of the accessible name, so the name never changes.
         <div className="box-center-channel">
           <button
             type="button"
@@ -6352,7 +6361,6 @@ function BoxSlotTray({
           >
             <span className="box-center-suggestions__rest" aria-hidden="true">
               <span className="box-center-suggestions__mark">✦</span>
-              <span className="box-center-suggestions__label">{translator.t("app.suggestionsTab")}</span>
             </span>
             <span className="box-center-suggestions__hint" aria-hidden="true">
               {translator.t("suggestions.centerOpener.hint")}
@@ -6376,7 +6384,9 @@ function BoxSlotTray({
               isActive={activeSlotIndex === rightIndex}
               isDragging={draggingIndex === rightIndex}
               isDragTarget={dragOverIndex === rightIndex}
-              onNextSlotRecommendation={onNextSlotRecommendation}
+              onNextSlotRecommendation={nextSlotAction}
+              suggestionsLabel={nextSlotLabel}
+              isSuggestionsOpen={isSuggestionsOpen}
               onRemove={handleRemove}
               onDragStart={handleDragStart}
               onDragOver={(event) => {
@@ -6425,6 +6435,8 @@ function BoxVialSlot({
   onClick,
   translator,
   isCompact,
+  suggestionsLabel,
+  isSuggestionsOpen = false,
 }) {
   if (isReserved) {
     return (
@@ -6455,18 +6467,21 @@ function BoxVialSlot({
     // falsely promise an action the compact tray can't perform.
     const isInteractiveNextAvailable = isNextAvailable;
     const EmptySlotElement = isInteractiveNextAvailable ? "button" : "div";
+    // Only the glowing next slot, and only when the host has given it a word (the docked rack's Suggestions opener).
+    const carriesLabel = isNextAvailable && typeof suggestionsLabel === "string" && suggestionsLabel !== "";
     const handleNextSlotKeyDown = (event) => {
       if (!isInteractiveNextAvailable || (event.key !== "Enter" && event.key !== " ")) {
         return;
       }
 
       event.preventDefault();
-      onNextSlotRecommendation?.();
+      // The event goes along so whatever the action opens can hand focus back to this very button.
+      onNextSlotRecommendation?.(event);
     };
 
     return (
       <EmptySlotElement
-        className={`box-vial empty ${isNextAvailable ? "next-available" : "passive-empty"} ${isDragTarget ? "drag-target" : ""}`}
+        className={`box-vial empty ${isNextAvailable ? "next-available" : "passive-empty"} ${isDragTarget ? "drag-target" : ""}${carriesLabel ? " has-suggestions-label" : ""}`}
         data-slot-index={index}
         aria-label={
           isNextAvailable
@@ -6476,6 +6491,8 @@ function BoxVialSlot({
               `Empty slot ${index + 1}`
         }
         type={isInteractiveNextAvailable ? "button" : undefined}
+        aria-haspopup={carriesLabel ? "dialog" : undefined}
+        aria-expanded={carriesLabel ? isSuggestionsOpen : undefined}
         onClick={isInteractiveNextAvailable ? onNextSlotRecommendation : undefined}
         onKeyDown={isInteractiveNextAvailable ? handleNextSlotKeyDown : undefined}
         onDragOver={isCompact ? undefined : onDragOver}
@@ -6486,6 +6503,11 @@ function BoxVialSlot({
         <span className="vial-cap" />
         <span className="vial-body">
           <span className="empty-slot-add" aria-hidden="true">+</span>
+          {carriesLabel && (
+            <span className="vial-suggestions-label" aria-hidden="true">
+              {suggestionsLabel}
+            </span>
+          )}
         </span>
       </EmptySlotElement>
     );
