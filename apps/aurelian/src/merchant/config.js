@@ -107,5 +107,6 @@ export const aurelianConfig = createBuilderConfig({
     discoveryCoachmark: false,
     singleLineCardTitles: true,
     mobileBoxShortcut: true,
+    marketSegmentFilter: true,
   },
 });

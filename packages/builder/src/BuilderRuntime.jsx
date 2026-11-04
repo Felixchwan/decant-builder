@@ -2,6 +2,7 @@ import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react"
 import { getTierData } from "./utils/tierUtils";
 import PerfumeCard from "./components/PerfumeCard";
 import FilterBar from "./components/FilterBar";
+import MarketSegmentFilter from "./components/MarketSegmentFilter";
 import BuilderPanel from "./components/BuilderPanel";
 import MetadataPreview from "./components/MetadataPreview";
 import { useNoteEasterEgg } from "./builder/internal/notes/useNoteEasterEgg.js";
@@ -33,6 +34,7 @@ import {
   buildIntentRecommendations,
 } from "./builder/internal/recommendations/buildComposerRecommendations.js";
 import {
+  MARKET_SEGMENTS,
   brandAssets,
   metadataAssets,
 } from "@discovery-box/catalog";
@@ -300,6 +302,12 @@ function App({
     occasions: "",
     vibes: "",
   });
+  // Market-segment filter (opt-in, features.marketSegmentFilter). Plain state, never persisted: every fresh load starts with
+  // all three segments on. It only decides which catalog cards show: the box, Composer, recommendations and Note Explorer
+  // never read it. When the feature is off the catalog is not segment-filtered at all.
+  const marketSegmentFilter = builderConfig.features?.marketSegmentFilter === true;
+  const [enabledMarketSegments, setEnabledMarketSegments] = useState(() => [...MARKET_SEGMENTS]);
+  const catalogMarketSegments = marketSegmentFilter ? enabledMarketSegments : null;
   const hasCustomizedComposerBudgetRef = useRef(false);
   const [composerSettings, setComposerSettings] = useState(() => {
     const initialSelectedPerfumes = initialSelectionState.selectedPerfumes;
@@ -399,9 +407,10 @@ function App({
         notes,
         searchQuery,
         activeFilters,
+        enabledMarketSegments: catalogMarketSegments,
         sortOption,
       }),
-    [activeFilters, perfumes, notes, searchQuery, sortOption]
+    [activeFilters, catalogMarketSegments, perfumes, notes, searchQuery, sortOption]
   );
   const filterOptions = catalogView.filterOptions;
   const visiblePerfumes = catalogView.visiblePerfumes;
@@ -638,6 +647,12 @@ const isComposerProposalStale = isComposerBoxProposalStale(
     ref.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
+  function handleMarketSegmentToggle(segment, isEnabled) {
+    setEnabledMarketSegments((current) =>
+      MARKET_SEGMENTS.filter((candidate) => (candidate === segment ? isEnabled : current.includes(candidate)))
+    );
+  }
+
   function handleFilterChange(category, value) {
     const nextFilters = {
       ...activeFilters,
@@ -656,6 +671,7 @@ const isComposerProposalStale = isComposerBoxProposalStale(
         notes,
         searchQuery,
         activeFilters: nextFilters,
+        enabledMarketSegments: catalogMarketSegments,
         sortOption,
       }),
       source: "manual",
@@ -671,6 +687,7 @@ const isComposerProposalStale = isComposerBoxProposalStale(
         notes,
         searchQuery: value,
         activeFilters,
+        enabledMarketSegments: catalogMarketSegments,
         sortOption,
       }),
       activeFilterCount: Object.values(activeFilters).filter(Boolean).length,
@@ -688,6 +705,7 @@ const isComposerProposalStale = isComposerBoxProposalStale(
         notes,
         searchQuery,
         activeFilters,
+        enabledMarketSegments: catalogMarketSegments,
         sortOption: value,
       }),
       source: "manual",
@@ -1369,6 +1387,13 @@ const confirmAddPerfume = () => {
               <div className="catalog-title-group">
                 <h2>{t("general.catalog")}</h2>
                 <p>{t("general.perfumesAvailable", { count: visiblePerfumes.length })}</p>
+                {marketSegmentFilter && (
+                  <MarketSegmentFilter
+                    t={t}
+                    enabledSegments={enabledMarketSegments}
+                    onToggleSegment={handleMarketSegmentToggle}
+                  />
+                )}
               </div>
 
               {onCatalogInfoRequest && (
@@ -1659,12 +1684,13 @@ function deriveMinimumComposerBudget({ catalog, minSlots, pointValue }) {
   return Math.round(minimumPerfumePoints * minSlots * pointValue);
 }
 
-function getCatalogResultsCount({ catalog, notes, searchQuery, activeFilters, sortOption }) {
+function getCatalogResultsCount({ catalog, notes, searchQuery, activeFilters, enabledMarketSegments = null, sortOption }) {
   return buildCatalogView({
     catalog,
     notes,
     searchQuery,
     activeFilters,
+    enabledMarketSegments,
     sortOption,
   }).visiblePerfumes.length;
 }

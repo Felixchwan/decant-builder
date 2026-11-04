@@ -22,11 +22,14 @@ function javascriptFiles(directory) {
 describe("@discovery-box/catalog package boundary", () => {
   it("exports exactly the approved public API", () => {
     expect(Object.keys(catalog).sort()).toEqual([
+      "MARKET_SEGMENTS",
       "brandAssets",
+      "brandMarketSegments",
       "compareFragrancesForDisplay",
       "createCatalogAssetResolver",
       "createMerchantCatalog",
       "fragrances",
+      "getBrandMarketSegment",
       "getExplicitSeasonWeight",
       "getFragranceTierRank",
       "getNoteProminenceLevel",

@@ -33,6 +33,12 @@ export const enUS = {
   "app.mobileTabs": "Builder sections",
   "app.mobileExploreTab": "Explore",
   "app.mobileBoxShortcut": "View box",
+  "filter.marketSegment.label": "Type",
+  "filter.marketSegment.group": "Fragrance type",
+  "filter.marketSegment.triggerAria": "Fragrance type: {count} of {total} enabled",
+  "filter.marketSegment.arabic": "Arabic",
+  "filter.marketSegment.designer": "Designer",
+  "filter.marketSegment.niche": "Niche",
   "app.heroTitle": "Build your fragrance box",
   "app.heroDescription":
     "Select up to {maxSelectableSlots} decants, explore different moods, and see the value of your box update in real time.",

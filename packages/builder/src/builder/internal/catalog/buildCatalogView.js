@@ -1,3 +1,4 @@
+import { MARKET_SEGMENTS, getBrandMarketSegment } from "@discovery-box/catalog";
 import { buildFilterOptions } from "../../../utils/filterUtils.js";
 import { getPerfumeNoteIds } from "../../../utils/noteUtils.js";
 
@@ -9,6 +10,9 @@ export function buildCatalogView({
   notes = EMPTY_NOTES,
   searchQuery = "",
   activeFilters = EMPTY_FILTERS,
+  // Which market segments (arabic / designer / niche) the catalog shows. Omitted (undefined or null) means no segment filter
+  // at all; an array is the exact set of enabled segments, so an empty array shows nothing.
+  enabledMarketSegments = null,
   sortOption = "bestMatch",
 }) {
   if (!Array.isArray(catalog)) {
@@ -20,6 +24,7 @@ export function buildCatalogView({
   const visiblePerfumes = sortPerfumes(
     catalog.filter((perfume) =>
       matchesActiveFilters(perfume, activeFilters) &&
+      matchesMarketSegment(perfume, enabledMarketSegments) &&
       matchesSearch(perfume, notes || EMPTY_NOTES, normalizedSearchQuery)
     ),
     sortOption,
@@ -31,7 +36,7 @@ export function buildCatalogView({
     resultCount: visiblePerfumes.length,
     normalizedSearchQuery,
     hasActiveSearch: Boolean(normalizedSearchQuery),
-    hasActiveFilters: hasActiveFilters(activeFilters),
+    hasActiveFilters: hasActiveFilters(activeFilters) || hasActiveMarketSegmentFilter(enabledMarketSegments),
     filterOptions,
   };
 }
@@ -49,6 +54,29 @@ function matchesActiveFilters(perfume, activeFilters = EMPTY_FILTERS) {
     !activeFilters.vibes || perfume.vibes.includes(activeFilters.vibes);
 
   return matchesSeason && matchesOccasion && matchesVibe;
+}
+
+// A fragrance is shown when its brand's segment is enabled. A brand with no segment is never hidden by the segment filter
+// (it fails open), except when no segment at all is enabled: an empty selection shows nothing.
+function matchesMarketSegment(perfume, enabledMarketSegments) {
+  if (!Array.isArray(enabledMarketSegments)) {
+    return true;
+  }
+
+  if (enabledMarketSegments.length === 0) {
+    return false;
+  }
+
+  const segment = getBrandMarketSegment(perfume.brand);
+
+  return segment === undefined || enabledMarketSegments.includes(segment);
+}
+
+function hasActiveMarketSegmentFilter(enabledMarketSegments) {
+  return (
+    Array.isArray(enabledMarketSegments) &&
+    MARKET_SEGMENTS.some((segment) => !enabledMarketSegments.includes(segment))
+  );
 }
 
 function matchesSearch(perfume, notes, normalizedSearchQuery) {

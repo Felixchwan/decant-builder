@@ -165,6 +165,10 @@ export const defaultBuilderConfig = {
     // and opening it scrolls the box into view instead of leaving the reader mid-page. Off by default: a host that never
     // opts in keeps the "My Box" label and today's tab behaviour.
     mobileBoxShortcut: false,
+    // A compact "Type" control beside the catalog count that shows/hides fragrances by their brand's market segment (arabic,
+    // designer, niche). Not persisted: every fresh page load starts with all three on. Off by default: a host that never opts
+    // in renders nothing of it and filters nothing by segment.
+    marketSegmentFilter: false,
     recommendations: true,
     collectionIntelligence: true,
     collectionDna: true,

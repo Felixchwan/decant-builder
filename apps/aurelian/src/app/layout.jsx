@@ -9,6 +9,7 @@ import "./builder-vials.css";
 import "./builder-mobile-catalog.css";
 import "./builder-dock-clearance.css";
 import "./builder-filters.css";
+import "./builder-market-filter.css";
 import "./builder-header.css";
 import "./builder-collection-card.css";
 import "./builder-actions.css";

@@ -42,7 +42,7 @@ describe("BuilderRuntime catalog-header info affordance boundary", () => {
   it("gates the info button behind onCatalogInfoRequest, inside the catalog panel-header row, never a second copy of the heading", () => {
     const panelHeaderIndex = runtimeSource.indexOf('<div className="catalog-title-group">');
     expect(panelHeaderIndex).toBeGreaterThan(-1);
-    const panelHeaderSource = runtimeSource.slice(panelHeaderIndex, panelHeaderIndex + 700);
+    const panelHeaderSource = runtimeSource.slice(panelHeaderIndex, panelHeaderIndex + 1000);
     expect(panelHeaderSource).toContain("{onCatalogInfoRequest && (");
     expect(panelHeaderSource).toContain('className="panel-header-actions"');
     expect(panelHeaderSource).toContain('className="catalog-info-button"');

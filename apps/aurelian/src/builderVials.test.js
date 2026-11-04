@@ -142,13 +142,13 @@ describe("Aurelian 5 ml spray-decant vials (host-owned, presentation-only)", () 
     expect(masked(gold)).toBe(masked(standard));
   });
 
-  it("shows tier through the liquid and the label strip (primary) and a collar hairline (secondary), nothing else", () => {
+  it("shows tier through the liquid and the label strip (primary) and the tier-coloured collar band (secondary), nothing else", () => {
     const label = bodyOf(`${FILLED} .vial-label`);
     expect(label).toMatch(/inset max\(2px, calc\(var\(--dv\) \* 0\.14\)\) 0 0 var\(--dv-accent\)/); // the strip
     expect(label).toMatch(/inset 0 -1px 0 color-mix\(in srgb, var\(--dv-accent\) 55%/); // the hairline under it
     expect(label).toMatch(/rgba\(8, 10, 10, 0\.64\)/); // still a dark label
-    expect(bodyOf(`${TRAY} .vial-cap::after`)).toMatch(/background:\s*var\(--dv-accent\)/); // collar hairline
-    expect(bodyOf(`${TRAY} .vial-cap::after`)).toMatch(/width:\s*max\(1\.5px/);
+    // the collar is one thick band in the tier colour, not a hairline over a steel collar (see the collar tests below)
+    expect(bodyOf(`${TRAY} .vial-cap::after`)).toMatch(/color-mix\(in srgb, var\(--dv-accent\) 92%, white\)/);
     // the liquid is the tier colour at a low alpha, over the dark glass (so Diamond cannot go neon, Mythic cannot go bright)
     expect(bodyOf(`${FILLED} .vial-body::before`)).toMatch(/color-mix\(in srgb, var\(--dv-accent\) 20%, transparent\)/);
     // the sprayer SVG, the glass, the reflection and the label body never carry the tier colour
@@ -374,5 +374,65 @@ describe("Aurelian 5 ml spray-decant vials (host-owned, presentation-only)", () 
     const packageStyles = read(REPOSITORY_ROOT, "packages", "builder", "styles.css");
     expect(packageStyles).toMatch(/\.collection-card-vial \{[^}]*height: 34px/);
     expect(packageStyles).toMatch(/\.collection-card--export \.collection-card-vial \{[^}]*height: 50px/);
+  });
+});
+
+describe("Aurelian vial label typography and tier collar (rack and Collection Card share one contract)", () => {
+  const RACK_LABEL = `${FILLED} .vial-label`;
+  const CARD_LABEL = `${CARD}.is-filled .collection-card-vial-label`;
+  const RACK_COLLAR = `${TRAY} .vial-cap::after`;
+  const CARD_COLLAR = `${CARD}-cap::after`;
+
+  it("sets the fragrance name in semibold with 0.02em tracking, on the rack and on the Collection Card alike", () => {
+    [RACK_LABEL, CARD_LABEL].forEach((selector) => {
+      expect(bodyOf(selector), selector).toMatch(/font-weight:\s*600/);
+      expect(bodyOf(selector), selector).toMatch(/letter-spacing:\s*0\.02em/);
+    });
+  });
+
+  it("keeps the rack's <strong> on the label's weight instead of the browser's bolder default", () => {
+    expect(bodyOf(`${RACK_LABEL} strong`)).toMatch(/font-weight:\s*inherit/);
+  });
+
+  it("does not move the label's family, size or truncation", () => {
+    [RACK_LABEL, CARD_LABEL].forEach((selector) => {
+      const body = bodyOf(selector);
+      expect(body, selector).not.toMatch(/font-family/);
+      expect(body, selector).not.toMatch(/text-overflow|white-space|max-width/); // truncation is inherited, untouched
+    });
+    expect(bodyOf(RACK_LABEL)).toMatch(/font-size:\s*calc\(var\(--builder-unit-046\) \* 0\.94\)/); // the size is the one it already had
+  });
+
+  it("draws the collar as ONE thick tier-coloured band: the same recipe on the rack (--dv) and the card (--cv)", () => {
+    const recipe = (body, unit, accent) =>
+      body.replaceAll(accent, "--accent").replaceAll(unit, "--u").replace(/\s+/g, " ").trim();
+    const rack = recipe(bodyOf(RACK_COLLAR), "--dv", "--dv-accent");
+    const card = recipe(bodyOf(CARD_COLLAR), "--cv", "--cv-accent");
+
+    expect(rack).toBe(card);
+    expect(rack).toMatch(/width:\s*calc\(var\(--u\) \* 0\.22\)/);
+    expect(rack).toMatch(/height:\s*calc\(var\(--u\) \* 0\.72\)/);
+    expect(rack).toMatch(/linear-gradient\(/);
+    expect(rack).not.toMatch(/max\(1\.5px/); // no hairline any more
+    expect(rack.match(/var\(--accent\)/g)?.length ?? 0).toBeGreaterThanOrEqual(4); // every stop is the tier colour, lit or shaded
+  });
+
+  it("takes the tier colour from the label strip's own variables, with no per-tier collar rules", () => {
+    expect(bodyOf(RACK_COLLAR)).toMatch(/--dv-accent/);
+    expect(bodyOf(CARD_COLLAR)).toMatch(/--cv-accent/);
+    expect(selectors.filter((selector) => /vial-cap(::after)?$/.test(selector) && /tier-|data-tier/.test(selector))).toEqual([]);
+    // the Silver / Platinum nudges stay: they only change the accent, so the one band shows them
+    expect(vialsCss).toMatch(/#a3acb9/);
+    expect(vialsCss).toMatch(/#c2f0ff/);
+  });
+
+  it("keeps the bonus and empty vials free of the tier band", () => {
+    expect(bodyOf(`${TRAY}.bonus-reserved .vial-cap::after`)).toMatch(/display:\s*none/);
+    expect(bodyOf(`${TRAY}.empty .vial-cap::after`)).toMatch(/display:\s*none/);
+  });
+
+  it("stays out of Discovery Decants: the shared stylesheet carries none of it", () => {
+    const shared = read(REPOSITORY_ROOT, "packages", "builder", "styles.css");
+    expect(shared).not.toMatch(/--dv-accent|--cv-accent|color-mix\(in srgb, var\(--(?:dv|cv)-accent\)/);
   });
 });

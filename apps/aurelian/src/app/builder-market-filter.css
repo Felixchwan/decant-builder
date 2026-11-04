@@ -1,0 +1,200 @@
+/* Aurelian Builder -- the "Tipo" market-segment control beside the catalog count (Árabes / Diseñador / Nicho).
+
+   HOST-OWNED and Builder-route-only (every selector is under `.builder-page .catalog-section`): look and layout only. The
+   markup, copy and behaviour live in the package's opt-in MarketSegmentFilter (features.marketSegmentFilter, on for Aurelian
+   only); Discovery Decants never turns it on, so it never renders any of this. Colours and type come from the same
+   --aur-intel-* tokens as the Collection Intelligence popovers: a brass hairline on a near-black ground, low radius, no
+   floating-card softness.
+
+   Layout: the control joins the heading row after the count. Where the row is too narrow for heading, count and control
+   (phones), the heading takes its own line and the count and control share the next, so nothing is squeezed. */
+
+.builder-page .catalog-section .catalog-title-group:has(.market-segment-filter) {
+  flex-wrap: wrap;
+  row-gap: 0.4rem;
+}
+
+@media (max-width: 620px) {
+  .builder-page .catalog-section .catalog-title-group:has(.market-segment-filter) {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    column-gap: 0.75rem;
+  }
+
+  .builder-page .catalog-section .catalog-title-group:has(.market-segment-filter) > h2 {
+    grid-column: 1 / -1;
+  }
+}
+
+.builder-page .catalog-section .market-segment-filter {
+  position: relative;
+  flex: none;
+}
+
+/* ---- the trigger: a small brass-lettered tab, filled with the wash when it is open or when it is filtering ---- */
+.builder-page .catalog-section .market-segment-filter__trigger {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-height: 1.75rem;
+  padding: 0 0.6rem;
+  border: 1px solid var(--aur-intel-rim);
+  border-radius: 3px;
+  background: transparent;
+  color: var(--aur-intel-label);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  line-height: 1;
+  white-space: nowrap;
+  transition:
+    border-color 160ms ease,
+    background-color 160ms ease,
+    color 160ms ease;
+}
+
+.builder-page .catalog-section .market-segment-filter__trigger:hover,
+.builder-page .catalog-section .market-segment-filter.is-open .market-segment-filter__trigger,
+.builder-page .catalog-section .market-segment-filter.is-filtered .market-segment-filter__trigger {
+  border-color: var(--aur-intel-rim-strong);
+  background: var(--aur-intel-wash);
+  color: var(--aur-intel-ink);
+}
+
+.builder-page .catalog-section .market-segment-filter__trigger:focus-visible {
+  outline: 2px solid var(--aur-intel-brass);
+  outline-offset: 2px;
+}
+
+/* A fine pointer needs no more; a touch screen gets the 44px target as an invisible halo, so the tab itself stays small. */
+@media (pointer: coarse) {
+  .builder-page .catalog-section .market-segment-filter__trigger::before {
+    position: absolute;
+    inset: -0.55rem -0.4rem;
+    content: "";
+  }
+}
+
+/* the chevron is drawn, not typed, so it is the same on every system font */
+.builder-page .catalog-section .market-segment-filter__chevron {
+  width: 0.375rem;
+  height: 0.375rem;
+  margin-top: -0.15rem;
+  border-right: 1.5px solid currentColor;
+  border-bottom: 1.5px solid currentColor;
+  transform: rotate(45deg);
+  transition: transform 160ms ease;
+}
+
+.builder-page .catalog-section .market-segment-filter.is-open .market-segment-filter__chevron {
+  margin-top: 0.15rem;
+  transform: rotate(225deg);
+}
+
+/* ---- the group: opaque, brass hairline, overlays what is under it (never reflows the catalog) ---- */
+.builder-page .catalog-section .market-segment-filter__panel {
+  position: absolute;
+  z-index: 30;
+  top: calc(100% + 0.4rem);
+  left: 0;
+  min-width: 11.5rem;
+  max-width: calc(100vw - 1.5rem);
+  padding: 0.25rem 0;
+  border: 1px solid var(--aur-intel-rim);
+  border-radius: 4px;
+  background: var(--aur-intel-card);
+  box-shadow:
+    0 18px 40px var(--aur-intel-shadow),
+    inset 0 1px 0 var(--aur-intel-hair);
+  text-transform: none;
+}
+
+.builder-page .catalog-section .market-segment-filter__panel.is-end {
+  right: 0;
+  left: auto;
+}
+
+.builder-page .catalog-section .market-segment-filter__title {
+  display: block;
+  padding: 0.5rem 0.75rem 0.35rem;
+  border-bottom: 1px solid var(--aur-intel-hair);
+  color: var(--aur-intel-label);
+  font-size: 0.625rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+/* focusable only so that a press on a row keeps focus in the group (see MarketSegmentFilter); it never shows a ring */
+.builder-page .catalog-section .market-segment-filter__panel:focus {
+  outline: none;
+}
+
+/* a row is a 40px target: the whole line toggles, not just the box */
+.builder-page .catalog-section .market-segment-filter__option {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  min-height: 2.5rem;
+  padding: 0 0.75rem;
+  color: var(--aur-intel-ink);
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 400;
+  letter-spacing: 0.01em;
+  line-height: 1.2;
+  transition: background-color 120ms ease;
+}
+
+.builder-page .catalog-section .market-segment-filter__option:hover {
+  background: var(--aur-intel-wash);
+}
+
+/* the native checkbox, drawn in brass: still the real control (focus, space, label, state) */
+.builder-page .catalog-section .market-segment-filter__option input[type="checkbox"] {
+  position: relative;
+  flex: none;
+  width: 1rem;
+  height: 1rem;
+  margin: 0;
+  border: 1px solid var(--aur-intel-rim-strong);
+  border-radius: 2px;
+  background: transparent;
+  appearance: none;
+  cursor: pointer;
+}
+
+.builder-page .catalog-section .market-segment-filter__option input[type="checkbox"]:checked {
+  border-color: var(--aur-intel-brass);
+  background: var(--aur-intel-brass);
+}
+
+.builder-page .catalog-section .market-segment-filter__option input[type="checkbox"]:checked::after {
+  position: absolute;
+  top: 0.0625rem;
+  left: 0.3125rem;
+  width: 0.25rem;
+  height: 0.5625rem;
+  border-right: 2px solid #171108;
+  border-bottom: 2px solid #171108;
+  content: "";
+  transform: rotate(40deg);
+}
+
+.builder-page .catalog-section .market-segment-filter__option input[type="checkbox"]:focus-visible {
+  outline: 2px solid var(--aur-intel-brass);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .builder-page .catalog-section .market-segment-filter__trigger,
+  .builder-page .catalog-section .market-segment-filter__chevron,
+  .builder-page .catalog-section .market-segment-filter__option {
+    transition: none;
+  }
+}

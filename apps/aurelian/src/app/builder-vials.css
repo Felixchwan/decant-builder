@@ -20,8 +20,8 @@
    glass body has to stretch to every column width, so it stays CSS.
 
    Tier is read, in order, from the liquid (a pale translucent wash of the tier colour) and the strip on the dark
-   label's edge, with a hairline on the collar as the only other cue. The glass, the dark gunmetal button, the
-   steel collar and the label itself are the same for every tier. Empty slots are only a faint glass outline;
+   label's edge, and by the collar, which is one thick band in the tier colour (the same language as the gold Curator
+   collar). The glass, the dark gunmetal button and the label itself are the same for every tier. Empty slots are only a faint glass outline;
    the bonus slots are the same bottle with a gold collar and a gold (Curator) liquid, never a tier, plus the
    package's own seal / lock mark.
 
@@ -83,18 +83,24 @@
   display: none;
 }
 
-/* the one tier accent on the metal: a hairline on the collar */
+/* the tier on the metal: the collar itself, one thick band in the tier colour (no hairline laid over a steel collar) */
 :is(.builder-page, #aurelian-builder-summary-slot) .box-slot-tray .box-vial .vial-cap::after {
   content: "";
   position: absolute;
   left: calc(var(--dv) * 0.53);
   top: 50%;
   right: auto;
-  width: max(1.5px, calc(var(--dv) * 0.075));
-  height: calc(var(--dv) * 0.6192);
-  border-radius: 0;
-  background: var(--dv-accent);
-  box-shadow: none;
+  width: calc(var(--dv) * 0.22);
+  height: calc(var(--dv) * 0.72);
+  border-radius: calc(var(--dv) * 0.03);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--dv-accent) 55%, white) 0,
+    color-mix(in srgb, var(--dv-accent) 92%, white) 32%,
+    color-mix(in srgb, var(--dv-accent) 80%, black) 72%,
+    color-mix(in srgb, var(--dv-accent) 52%, black) 100%
+  );
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.18);
   transform: translate(-50%, -50%);
 }
 
@@ -157,12 +163,17 @@
     rgba(8, 10, 10, 0.64);
   color: #ece6d6;
   font-size: calc(var(--builder-unit-046) * 0.94);
-  letter-spacing: 0.01em;
+  font-weight: 600;
+  letter-spacing: 0.02em;
   box-shadow:
     inset max(2px, calc(var(--dv) * 0.14)) 0 0 var(--dv-accent),
     inset 0 -1px 0 color-mix(in srgb, var(--dv-accent) 55%, transparent),
     0 1px 1.5px rgba(0, 0, 0, 0.28);
   transform: none;
+}
+
+:is(.builder-page, #aurelian-builder-summary-slot) .box-slot-tray .box-vial:is(.filled, .bonus-unlocked) .vial-label strong {
+  font-weight: inherit;
 }
 
 /* ---- remove: a small oxblood button in the centre gutter, beside the vial it belongs to ----
@@ -379,18 +390,24 @@
   display: none;
 }
 
-/* the one tier accent on the metal: a hairline on the collar */
+/* the tier on the metal: the collar itself, one thick band in the tier colour -- the same band as the rack's */
 :is(.builder-page, .builder-portal-root) .collection-card .collection-card-vial-cap::after {
   content: "";
   position: absolute;
   left: calc(var(--cv) * 0.53);
   top: 50%;
   right: auto;
-  width: max(1.5px, calc(var(--cv) * 0.075));
-  height: calc(var(--cv) * 0.6192);
-  border-radius: 0;
-  background: var(--cv-accent);
-  box-shadow: none;
+  width: calc(var(--cv) * 0.22);
+  height: calc(var(--cv) * 0.72);
+  border-radius: calc(var(--cv) * 0.03);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--cv-accent) 55%, white) 0,
+    color-mix(in srgb, var(--cv-accent) 92%, white) 32%,
+    color-mix(in srgb, var(--cv-accent) 80%, black) 72%,
+    color-mix(in srgb, var(--cv-accent) 52%, black) 100%
+  );
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.18);
   transform: translate(-50%, -50%);
 }
 
@@ -453,7 +470,8 @@
     rgba(8, 10, 10, 0.64);
   color: #ece6d6;
   
-  letter-spacing: 0.01em;
+  font-weight: 600;
+  letter-spacing: 0.02em;
   box-shadow:
     inset max(2px, calc(var(--cv) * 0.14)) 0 0 var(--cv-accent),
     inset 0 -1px 0 color-mix(in srgb, var(--cv-accent) 55%, transparent),
