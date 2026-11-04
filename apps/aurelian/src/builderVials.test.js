@@ -62,9 +62,20 @@ describe("Aurelian 5 ml spray-decant vials (host-owned, presentation-only)", () 
     expect(selectors.length).toBeGreaterThan(25);
     selectors.filter((selector) => selector !== "from").forEach((selector) => {
       expect(selector, selector).toMatch(
-        /^:is\(\.builder-page, (?:#aurelian-builder-summary-slot\) \.box-slot-tray(?::has\([^)]*\))? (?:\.box-column(?::first-child|:last-child)? )?\.box-vial|\.builder-portal-root\) \.collection-card)/
+        /^(?::is\(\.builder-page, (?:#aurelian-builder-summary-slot\) \.box-slot-tray(?::has\([^)]*\))? (?:\.box-column(?::first-child|:last-child)? )?\.box-vial|\.builder-portal-root\) \.collection-card)|#aurelian-builder-summary-slot \.box-slot-tray \.box-vial\.filled$)/
       );
     });
+  });
+
+  it("keeps the remove button above the docked Suggestions channel: a filled vial (a stacking context of its own) sits one level above it, in the docked rack only", () => {
+    const lift = bodyOf("#aurelian-builder-summary-slot .box-slot-tray .box-vial.filled");
+    const suggestions = read(APP_ROOT, "src", "app", "builder-suggestions.css");
+    const channel = suggestions.match(/\.box-center-channel:has\([^)]*\) \{([^}]*)\}/)?.[1] ?? "";
+
+    expect(lift.trim()).toBe("z-index: 1;"); // the smallest level that clears the channel, nothing larger
+    expect(channel).toMatch(/position:\s*relative/);
+    expect(channel).not.toMatch(/z-index/); // the channel is never raised above the vials
+    expect(bodyOf(`${TRAY} .slot-remove-button`)).toMatch(/z-index:\s*4/); // the button still rides above the glass inside its vial
   });
 
   it("is never imported by Discovery Decants and the shared package neither knows nor mentions it", () => {

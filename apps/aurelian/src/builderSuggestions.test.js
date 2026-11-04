@@ -293,7 +293,7 @@ describe("the desktop opener in the docked rack's centre (builder-suggestions.cs
     expect(hint).not.toMatch(/white-space: nowrap/);
   });
 
-  it("the hover and focus rules change opacity, a hairline and an outline only: nothing that could move or resize anything", () => {
+  it("the hover and focus rules change opacity, a hairline, an outline and the plus's own breathing only: nothing that could move or resize anything", () => {
     const stateRules = [...flat.matchAll(/([^{}]*:is\(:hover, :focus-visible\)[^{}]*|[^{}]*:focus-visible[^{}]*)\{([^}]*)\}/g)];
 
     expect(stateRules.length).toBeGreaterThanOrEqual(3);
@@ -301,7 +301,7 @@ describe("the desktop opener in the docked rack's centre (builder-suggestions.cs
     for (const [, selector, body] of stateRules) {
       const properties = [...body.matchAll(/([a-z-]+):/g)].map((match) => match[1]);
 
-      properties.forEach((property) => expect(["opacity", "box-shadow", "outline", "outline-offset"], `${selector.trim()} -> ${property}`).toContain(property));
+      properties.forEach((property) => expect(["opacity", "box-shadow", "outline", "outline-offset", "animation"], `${selector.trim()} -> ${property}`).toContain(property));
     }
   });
 
@@ -314,14 +314,16 @@ describe("the desktop opener in the docked rack's centre (builder-suggestions.cs
     expect(flat).toMatch(/\.box-center-suggestions:focus-visible \{\s*outline: 2px solid/);
   });
 
-  it("at rest the centre is only a star with a faint halo; the word lives in the glowing next slot, in the same single line, in place of its plus", () => {
+  it("at rest the centre is only a star with a faint halo and the glowing next slot keeps its plus; the word is laid over the plus, hidden until hover or focus", () => {
     const mark = bodyOf(flat, `${SLOT} .box-center-suggestions__mark`);
     const word = bodyOf(flat, `${SLOT} .box-vial.has-suggestions-label .vial-suggestions-label`);
 
     expect(mark).toMatch(/font-size: 1rem;/);
     expect(mark).toMatch(/text-shadow: 0 0 7px color-mix\(in srgb, var\(--gold\) 30%, transparent\);/);
     expect(flat).not.toContain("box-center-suggestions__label");
-    expect(bodyOf(flat, `${SLOT} .box-vial.has-suggestions-label .empty-slot-add`)).toBe("display: none;");
+    expect(flat).not.toMatch(/\.empty-slot-add \{\s*display: none;/); // the plus is never removed from layout, only faded on hover and focus
+    expect(word).toMatch(/position: absolute;\s*inset: 0;/); // laid over the plus's own box: nothing can shift
+    expect(word).toMatch(/opacity: 0;/); // invisible at rest
     expect(word).toMatch(/font-size: 0\.5625rem;/);
     expect(word).toMatch(/text-transform: uppercase;/);
     expect(word).toMatch(/white-space: nowrap;/);
@@ -329,15 +331,17 @@ describe("the desktop opener in the docked rack's centre (builder-suggestions.cs
     expect(word).toMatch(/text-shadow: 0 0 6px/); // a small halo, not a bloom
   });
 
-  it("does not restyle or resize the glowing slot itself: only its plus gives way, and its focus ring takes the brass", () => {
+  it("does not restyle or resize the glowing slot itself: on hover or focus its plus fades and the word fades in, and its focus ring takes the brass", () => {
     const slotRules = [...flat.matchAll(/([^{}]*\.box-vial\.has-suggestions-label[^{}]*)\{([^}]*)\}/g)].map((match) => ({ selector: match[1].trim(), body: match[2] }));
-    const ownRules = slotRules.filter(({ selector }) => !selector.includes("box-center-suggestions") && !selector.includes(".vial-suggestions-label")); // the word's own rule is tested above
+    const ownRules = slotRules.filter(({ selector }) => !selector.includes("box-center-suggestions") && !selector.includes(".vial-suggestions-label")); // the word's own rules are tested above and below
 
     expect(ownRules.map(({ selector }) => selector.replace(`${SLOT} `, ""))).toEqual([
-      ".box-vial.has-suggestions-label .empty-slot-add",
+      ".box-vial.has-suggestions-label:is(:hover, :focus-visible) .empty-slot-add",
       ".box-vial.has-suggestions-label:focus-visible",
     ]);
-    ownRules.forEach(({ selector, body }) => expect(body, selector).not.toMatch(/\b(width|height|min-width|min-height|padding|margin|transform|position)\s*:/));
+    ownRules.forEach(({ selector, body }) => expect(body, selector).not.toMatch(/\b(width|height|min-width|min-height|padding|margin|transform|position|display)\s*:/));
+    expect(bodyOf(flat, `${SLOT} .box-vial.has-suggestions-label:is(:hover, :focus-visible) .empty-slot-add`)).toMatch(/animation: none;\s*opacity: 0;/);
+    expect(bodyOf(flat, `${SLOT} .box-vial.has-suggestions-label:is(:hover, :focus-visible) .vial-suggestions-label`)).toBe("opacity: 1;");
     expect(bodyOf(flat, `${SLOT} .box-vial.has-suggestions-label:focus-visible`)).toMatch(/outline: 2px solid color-mix\(in srgb, var\(--gold\) 80%, transparent\);/);
   });
 

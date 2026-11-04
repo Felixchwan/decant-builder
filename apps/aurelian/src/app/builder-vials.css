@@ -243,6 +243,15 @@
   right: calc(100% + var(--dv) * 0.82 + var(--dv-gap) + 4px);
   left: auto;
 }
+/* Paint order in the docked rack, lowest to highest: the rack's own background, then the centre channel (the Suggestions opener
+   there is a positioned, clipped layer), then the filled vials with their remove buttons. A vial is its own stacking context
+   (position: relative plus a drop-shadow filter), so the button's z-index only counts inside it, and the channel, which comes
+   later in the DOM than the left column, would otherwise paint over a left-column button that reaches into the gutter. One level
+   (z-index: 1, no larger) lifts each filled vial, and with it its button, above the channel; the tray is isolated, so this
+   cannot reach outside it, and no box moves. */
+#aurelian-builder-summary-slot .box-slot-tray .box-vial.filled {
+  z-index: 1;
+}
 /* the hairline from the vial to its button; while it shows it is also part of the vial, so crossing the gap never un-hovers */
 :is(.builder-page, #aurelian-builder-summary-slot) .box-slot-tray .box-column:first-child .box-vial.filled::after,
 :is(.builder-page, #aurelian-builder-summary-slot) .box-slot-tray .box-column:last-child .box-vial.filled::after {

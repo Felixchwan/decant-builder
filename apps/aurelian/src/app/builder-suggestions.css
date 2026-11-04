@@ -519,27 +519,39 @@
     opacity: 1;
   }
 
-  /* ---- The glowing next slot carries the word ----
-     The slot that is already glowing (and breathing) is the one the next fragrance goes into; in the docked rack it now says
-     "SUGERENCIAS" instead of its "+", and opens the same drawer as the centre. The slot keeps every bit of its own styling and
-     size: only its "+" gives way to the word, which sits in the same place, in the same single line. Hovering or focusing it wakes
-     the centre too, so the invitation appears wherever the pointer is on the opener. */
-  #aurelian-builder-summary-slot .box-vial.has-suggestions-label .empty-slot-add {
-    display: none;
-  }
-
+  /* ---- The glowing next slot offers the word on hover / focus ----
+     At rest the glowing next slot is exactly what it always was: its outline, its "+" and its own breathing glow. Hovering it, or
+     focusing it from the keyboard, swaps the "+" for "SUGERENCIAS", centred in the same spot, and wakes the centre's invitation
+     too; the slot opens the same drawer as the centre. Both marks live in the same box: the "+" keeps its place and size (it only
+     fades, so the slot cannot shift), and the word is laid over it, so nothing resizes or jumps. */
   #aurelian-builder-summary-slot .box-vial.has-suggestions-label .vial-suggestions-label {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     color: color-mix(in srgb, var(--gold) 92%, white);
     font-family: inherit;
     font-size: 0.5625rem;
     font-weight: 600;
     letter-spacing: 0.16em;
     line-height: 1;
+    opacity: 0;
     pointer-events: none;
     text-indent: 0.16em; /* the trailing letter-space would otherwise push the word off centre */
     text-shadow: 0 0 6px color-mix(in srgb, var(--gold) 28%, transparent);
     text-transform: uppercase;
+    transition: opacity 180ms ease;
     white-space: nowrap;
+  }
+
+  #aurelian-builder-summary-slot .box-vial.has-suggestions-label:is(:hover, :focus-visible) .empty-slot-add {
+    animation: none;
+    opacity: 0;
+  }
+
+  #aurelian-builder-summary-slot .box-vial.has-suggestions-label:is(:hover, :focus-visible) .vial-suggestions-label {
+    opacity: 1;
   }
 
   #aurelian-builder-summary-slot .box-vial.has-suggestions-label:focus-visible {
@@ -550,7 +562,8 @@
   @media (prefers-reduced-motion: reduce) {
     #aurelian-builder-summary-slot .box-center-suggestions::before,
     #aurelian-builder-summary-slot .box-center-suggestions__rest,
-    #aurelian-builder-summary-slot .box-center-suggestions__hint {
+    #aurelian-builder-summary-slot .box-center-suggestions__hint,
+    #aurelian-builder-summary-slot .box-vial.has-suggestions-label .vial-suggestions-label {
       transition: none;
     }
 
