@@ -146,6 +146,10 @@ function App({
   // handler; the Builder never interprets what the click means, only
   // renders the control and relays the click, same as explainRecommendation.
   onCatalogInfoRequest,
+  // Generic, opt-in host hooks (see DiscoveryBoxBuilder.jsx's doc comment): the box shortcut a host control outside this
+  // tree can run, and the moment the Suggestions drawer's "For today" section ranks against. Absent by default.
+  onBoxShortcutChange,
+  getTodayContext,
 }) {
   const builderConfig = config;
   const customerPricing = useMemo(() => createCustomerPricing(builderConfig), [builderConfig]);
@@ -308,6 +312,11 @@ function App({
   const marketSegmentFilter = builderConfig.features?.marketSegmentFilter === true;
   const [enabledMarketSegments, setEnabledMarketSegments] = useState(() => [...MARKET_SEGMENTS]);
   const catalogMarketSegments = marketSegmentFilter ? enabledMarketSegments : null;
+  // Suggestions drawer (opt-in, features.suggestionsDrawer): a phone edge tab opens it. Only whether it is open lives here;
+  // what it shows is computed inside the box panel from the same recommendations the panel already renders.
+  const suggestionsDrawer = builderConfig.features?.suggestionsDrawer === true;
+  const [isSuggestionsOpen, setIsSuggestionsOpen] = useState(false);
+  const suggestionsTabRef = useRef(null);
   const hasCustomizedComposerBudgetRef = useRef(false);
   const [composerSettings, setComposerSettings] = useState(() => {
     const initialSelectedPerfumes = initialSelectionState.selectedPerfumes;
@@ -758,6 +767,40 @@ const isComposerProposalStale = isComposerBoxProposalStale(
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialDetailPerfume, portalRoot]);
 
+  // The host's control outside this tree (e.g. a header menu) runs the SAME box action as this component's own box tab:
+  // openMobileBoxTab above, nothing re-implemented. `openBoxFromHostRef` always holds this render's version of it, and the
+  // function handed out is one stable wrapper around the ref, so a host never calls a stale closure. After the transition
+  // focus moves to the box tab: the host control that triggered it has just gone away (a closed menu), so focus would
+  // otherwise be lost.
+  const openBoxFromHostRef = useRef(null);
+  useEffect(() => {
+    openBoxFromHostRef.current = () => {
+      openMobileBoxTab();
+
+      if (typeof window !== "undefined") {
+        // Two frames: the tab switch and the scroll land first, then focus (without scrolling again).
+        window.requestAnimationFrame(() =>
+          window.requestAnimationFrame(() => mobileBoxButtonRef.current?.focus({ preventScroll: true }))
+        );
+      }
+    };
+  });
+  const openBoxForHost = useCallback(() => openBoxFromHostRef.current?.(), []);
+  useEffect(() => {
+    if (typeof onBoxShortcutChange !== "function") {
+      return;
+    }
+
+    onBoxShortcutChange({ count: totalSlots, open: openBoxForHost });
+  }, [onBoxShortcutChange, totalSlots, openBoxForHost]);
+  useEffect(() => {
+    if (typeof onBoxShortcutChange !== "function") {
+      return undefined;
+    }
+
+    return () => onBoxShortcutChange(null);
+  }, [onBoxShortcutChange]);
+
   const closePerfumeDetails = useCallback(() => {
     setDetailPerfume(null);
     setDetailScopedPerfumeIds(null);
@@ -812,6 +855,17 @@ const isComposerProposalStale = isComposerBoxProposalStale(
 
     if (perfume) {
       openPerfumeDetails(perfume, "recommendation", orderedPerfumeIds);
+    }
+  }
+
+  // Same scoped-navigation contract once more, for the Suggestions drawer: the ids are the picks of the section the click came
+  // from, in the order shown, and `source` names that section for analytics ("suggestions_today" | "suggestions_versatility"
+  // | "suggestions_affinity", values the existing event already accepts).
+  function openSuggestionPerfumeDetails(perfumeId, orderedPerfumeIds, source) {
+    const perfume = perfumes.find((item) => item.id === perfumeId);
+
+    if (perfume) {
+      openPerfumeDetails(perfume, source, orderedPerfumeIds);
     }
   }
 
@@ -1289,6 +1343,11 @@ const confirmAddPerfume = () => {
       composerProposal={composerProposal}
       onOpenComposerProposalPerfumeDetails={openComposerProposalPerfumeDetails}
       onOpenRecommendationPerfumeDetails={openRecommendationPerfumeDetails}
+      isSuggestionsOpen={suggestionsDrawer && isSuggestionsOpen}
+      onSuggestionsClose={() => setIsSuggestionsOpen(false)}
+      suggestionsOpenerRef={suggestionsTabRef}
+      getTodayContext={getTodayContext}
+      onOpenSuggestionPerfumeDetails={openSuggestionPerfumeDetails}
       isComposerGenerating={isComposerGenerating}
       composerStatusMessage={composerStatusMessage}
       isComposerProposalStale={isComposerProposalStale}
@@ -1368,6 +1427,25 @@ const confirmAddPerfume = () => {
           {mobileBoxShortcut ? t("app.mobileBoxShortcut") : t("general.myBox")} <span>{totalSlots}</span>
         </button>
       </nav>
+
+      {/* A standalone button, deliberately not a child of the tab bar: the host's floating "box" tab is styled by its position
+          in that bar, and a third child would move it. The host's CSS decides where and when it shows (phones, catalog
+          showing); without that CSS it is not displayed at all. */}
+      {suggestionsDrawer && (
+        <button
+          ref={suggestionsTabRef}
+          type="button"
+          className="suggestions-edge-tab"
+          aria-haspopup="dialog"
+          aria-expanded={isSuggestionsOpen}
+          onClick={() => setIsSuggestionsOpen(true)}
+        >
+          <span className="suggestions-edge-tab__mark" aria-hidden="true">
+            ✦
+          </span>
+          <span className="suggestions-edge-tab__label">{t("app.suggestionsTab")}</span>
+        </button>
+      )}
 
       <section
         className={`layout${

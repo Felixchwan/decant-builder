@@ -710,8 +710,9 @@ describe("Builder portal architecture", () => {
     // opt-in, customer-facing capability (showCollectionCardPreview), and it
     // is the tenth family, routed through this same owned mechanism (not a
     // raw createPortal), after Composer Phase 2A's Note Explorer modal as the
-    // ninth -- every other family is otherwise unchanged.
-    expect(portalSources.match(/renderOwnedPortal\(/g)).toHaveLength(10);
+    // ninth. The Suggestions drawer (opt-in, features.suggestionsDrawer) is the eleventh, routed through the same owned
+    // mechanism -- every other family is otherwise unchanged.
+    expect(portalSources.match(/renderOwnedPortal\(/g)).toHaveLength(11);
     expect(portalSources).not.toContain("createPortal(");
     expect(ownedPortalSource).toContain("createPortalLike(content, portalRoot)");
     expect(appSource).toContain("portalRoot={portalRoot}");

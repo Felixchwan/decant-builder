@@ -9,6 +9,9 @@ import { aurelianCatalog } from "../merchant/catalog.js";
 import { aurelianConfig } from "../merchant/config.js";
 import { FRAGRANCE_QUERY_PARAM } from "../lib/parseFragranceIntent.js";
 import { useBuilderSummarySlot } from "../lib/builderSummarySlot.js";
+import { registerBuilderBoxShortcut } from "../lib/builderBoxShortcut.js";
+import { useFooterNearEdgeTab } from "../lib/footerEdgeTabClearance.js";
+import { getMonterreyTodayContext } from "../lib/monterreyContext.js";
 import { resolveBuilderIntentsFromSearch, DETAILS_QUERY_PARAM } from "../lib/parseDetailsIntent.js";
 import { createAnalytics, buildAnalyticsContext } from "../analytics/createAnalytics.js";
 import { createDevelopmentAnalytics } from "../analytics/developmentAnalytics.js";
@@ -63,6 +66,9 @@ export function BuilderExperience({
   // inline panel on desktop. Subscribing means this renders with null if it
   // must and is re-rendered with the slot the moment it exists.
   const stickySummaryPortalTarget = useBuilderSummarySlot();
+  // At the very end of the page the footer scrolls up into the phone edge tab's band: while it is there the "Sugerencias" tab
+  // steps aside (builder-suggestions.css). One observer on the footer, for as long as the Builder is mounted.
+  useFooterNearEdgeTab();
 
   useEffect(() => {
     // Both intents are one-shot: once consumed (valid or not) they leave the URL,
@@ -154,6 +160,12 @@ export function BuilderExperience({
       // Aurelian folds the Box Analysis strengths to the first three behind a quiet "+N fortalezas más" button
       // (painted in builder-intelligence.css); Discovery Decants never passes this and keeps the full list.
       compactStrengths
+      // The site header's menu offers "Ver mi caja" once the box has something in it, and runs the Builder's own box action
+      // (the one its "Ver caja" tab runs); the store hands it across the sibling trees (lib/builderBoxShortcut.js).
+      onBoxShortcutChange={registerBuilderBoxShortcut}
+      // "Para hoy" in the Suggestions drawer ranks against Monterrey's clock and calendar, read when the drawer opens
+      // (lib/monterreyContext.js). Discovery Decants passes neither this nor features.suggestionsDrawer.
+      getTodayContext={getMonterreyTodayContext}
     />
   );
 }

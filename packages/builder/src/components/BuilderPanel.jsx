@@ -1,4 +1,4 @@
-import { Fragment, forwardRef, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { Fragment, forwardRef, useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { flushSync } from "react-dom";
 import { createRoot } from "react-dom/client";
 import { toBlob } from "html-to-image";
@@ -30,6 +30,8 @@ import {
 } from "../builder/internal/intelligence/buildNoteExplorerViewModel.js";
 import { isCuratorBonusUnlocked as deriveCuratorBonusUnlocked } from "../builder/internal/curatorBonus/isCuratorBonusUnlocked.js";
 import { createRecommendationDetailsOpener } from "../builder/internal/recommendations/createRecommendationDetailsOpener.js";
+import { buildTodayRecommendations } from "../builder/internal/recommendations/buildTodayRecommendations.js";
+import { getTodayLeadLabel, getTodayReasonLabels } from "../builder/presentation/todayRecommendationLabels.js";
 import { isCuratorBonusUnlockTransition } from "../builder/internal/curatorBonus/isCuratorBonusUnlockTransition.js";
 import { buildBuilderThemeStyle, hasCustomBuilderTheme } from "../builder/theme/builderTheme.js";
 import {
@@ -188,6 +190,13 @@ const BuilderPanel = forwardRef(function BuilderPanel({
   finalizationAdapter,
   stickySummaryPortalTarget = null,
   onOpenRecommendationPerfumeDetails,
+  // Suggestions drawer (opt-in, features.suggestionsDrawer): open state and the focus-return control belong to the Runtime,
+  // which owns the edge tab that opens it; what the drawer shows is computed here, from this panel's own recommendations.
+  isSuggestionsOpen = false,
+  onSuggestionsClose,
+  suggestionsOpenerRef,
+  getTodayContext,
+  onOpenSuggestionPerfumeDetails,
   showRecommendationLenses = false,
   showAccordEvidence = false,
   showBalanceHelp = false,
@@ -1277,6 +1286,24 @@ const BuilderPanel = forwardRef(function BuilderPanel({
           onClose={() => setIsNoteExplorerOpen(false)}
         />
       )}
+      {isSuggestionsOpen && portalRoot && (
+        <SuggestionsDrawer
+          translator={translator}
+          portalRoot={portalRoot}
+          catalogPerfumes={catalogPerfumes}
+          selectedPerfumeIds={selectedPerfumeIds}
+          selectedCount={totalSlots}
+          isBoxFull={totalSlots >= maxSelectableSlots}
+          basedOnYourPicks={basedOnYourPicks}
+          nextImprovementResult={nextImprovementResult}
+          getTodayContext={getTodayContext}
+          onAddPerfume={onAddPerfume}
+          onOpenPerfumeDetails={onOpenSuggestionPerfumeDetails}
+          isDetailOpen={isLayerAboveOpen}
+          openerRef={suggestionsOpenerRef}
+          onClose={onSuggestionsClose}
+        />
+      )}
       {isCollectionCardPreviewOpen && portalRoot && (
         <CollectionCardPreviewModal
           cardProps={collectionCardViewModel.cardProps}
@@ -1289,6 +1316,178 @@ const BuilderPanel = forwardRef(function BuilderPanel({
     </aside>
   );
 });
+
+// The Suggestions drawer: one left-anchored dialog that gathers three things the Builder already knows how to say, without
+// recomputing any of them:
+//   For today     up to three picks for the moment (buildTodayRecommendations), from the context the HOST derived
+//   Versatility   the panel's own next-improvement result, rendered by the same lane as in the box panel
+//   Affinity      the panel's own "based on your picks" recommendations, rendered by the same lane
+// It is a layer over the page, not a route: the catalog stays mounted and scrolled where it was. Add keeps it open (the
+// picks just show as added); Ver perfume opens the one Product Info dialog, which sits above it and owns Escape while open.
+// Focus, Escape and the body scroll lock follow the Builder's other dialogs (see useModalFocus).
+function SuggestionsDrawer({
+  translator,
+  portalRoot,
+  catalogPerfumes,
+  selectedPerfumeIds,
+  selectedCount,
+  isBoxFull,
+  basedOnYourPicks,
+  nextImprovementResult,
+  getTodayContext,
+  onAddPerfume,
+  onOpenPerfumeDetails,
+  isDetailOpen,
+  openerRef,
+  onClose,
+}) {
+  const { t } = translator;
+  const pricing = useCustomerPricing();
+  const dialogRef = useRef(null);
+  const titleId = useId();
+
+  // "Now" is read when the drawer opens (it mounts on open and unmounts on close), never on a timer.
+  const [hostToday] = useState(() => {
+    try {
+      return typeof getTodayContext === "function" ? getTodayContext() : null;
+    } catch {
+      return null;
+    }
+  });
+  const today = useMemo(
+    () => (hostToday ? buildTodayRecommendations({ perfumes: catalogPerfumes, context: hostToday }) : null),
+    [catalogPerfumes, hostToday]
+  );
+
+  useModalFocus({
+    dialogRef,
+    openerRef,
+    // The tab first; if a host has taken it off the screen meanwhile (it can step aside at the end of the page), the box
+    // tab, the Builder's other always-available control at the same screen edge row.
+    fallbackSelector: [".suggestions-edge-tab", '[aria-controls="my-box-panel"]'],
+    initialFocusSelector: ".suggestions-header button",
+    suspended: isDetailOpen,
+  });
+
+  // Held for the dialog's whole mounted lifetime, in its own effect so Escape's re-subscription never releases it.
+  useEffect(() => {
+    const releaseBodyScrollLock = acquireBodyScrollLock(document);
+
+    return () => releaseBodyScrollLock();
+  }, []);
+
+  useEffect(() => {
+    function handleKeyDown(event) {
+      // Product Info (or the rare-selection confirmation an Add can open) sits on top: Escape is its alone, so one
+      // Escape closes one layer.
+      if (event.key === "Escape" && !isDetailOpen) {
+        onClose();
+      }
+    }
+
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [onClose, isDetailOpen]);
+
+  // The cards' own Add reports "manual"; here it is reported as the section the pick came from, through the same
+  // addPerfume path (so the rare-selection confirmation, duplicate protection and a full box work exactly as elsewhere).
+  const addFrom = (source) => (perfume, _reportedSource, opener) => onAddPerfume(perfume, source, opener);
+  const detailsFrom = (source) =>
+    typeof onOpenPerfumeDetails === "function"
+      ? (perfumeId, orderedPerfumeIds) => onOpenPerfumeDetails(perfumeId, orderedPerfumeIds, source)
+      : undefined;
+  const todayPicks = today?.recommendations || [];
+  const todayOpenDetails = createRecommendationDetailsOpener(detailsFrom("suggestions_today"), todayPicks);
+  const hasVersatility = selectedCount > 0 && nextImprovementResult && nextImprovementResult.recommendations.length > 0;
+
+  return renderOwnedPortal(
+    <div className="modal-overlay suggestions-overlay" role="presentation" onClick={onClose}>
+      <div
+        ref={dialogRef}
+        className="suggestions-drawer"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        tabIndex={-1}
+        onClick={(event) => event.stopPropagation()}
+      >
+        <div className="modal-header suggestions-header">
+          <div>
+            <h3 id={titleId}>{t("suggestions.title")}</h3>
+            {hostToday?.label ? <p className="suggestions-context">{hostToday.label}</p> : null}
+          </div>
+
+          <button type="button" onClick={onClose}>
+            {t("general.close")}
+          </button>
+        </div>
+
+        <div className="suggestions-body">
+          {todayPicks.length > 0 && (
+            <section className="recommendation-lane recommendation-lane--today suggestions-today" aria-label={t("suggestions.today.title")}>
+              <div className="recommendation-lens">
+                <span className="recommendation-lens-label">{t("suggestions.today.title")}</span>
+                <span className="recommendation-lens-hint">{getTodayLeadLabel(today, translator)}</span>
+              </div>
+
+              <div className="suggestions-today-list">
+                {todayPicks.map((recommendation) => (
+                  <RecommendationCard
+                    key={recommendation.perfume.id}
+                    recommendation={recommendation}
+                    isAdded={selectedPerfumeIds.has(recommendation.perfume.id)}
+                    isBoxFull={isBoxFull}
+                    onAddPerfume={addFrom("suggestions_today")}
+                    onOpenDetails={todayOpenDetails}
+                    translator={translator}
+                    pricing={pricing}
+                    reasons={getTodayReasonLabels(recommendation, translator)}
+                    confidenceLabel=""
+                  />
+                ))}
+              </div>
+            </section>
+          )}
+
+          {hasVersatility && (
+            <NextImprovementSection
+              result={nextImprovementResult}
+              selectedPerfumeIds={selectedPerfumeIds}
+              isBoxFull={isBoxFull}
+              onAddPerfume={addFrom("suggestions_versatility")}
+              lens="versatility"
+              onOpenPerfumeDetails={detailsFrom("suggestions_versatility")}
+              translator={translator}
+            />
+          )}
+
+          {selectedCount === 0 ? (
+            <section className="recommendation-lane recommendation-lane--affinity suggestions-affinity-empty">
+              <div className="recommendation-lens">
+                <span className="recommendation-lens-label">{t("recommendation.lens.affinity.label")}</span>
+                <span className="recommendation-lens-hint">{t("recommendation.lens.affinity.hint")}</span>
+              </div>
+              <p>{t("suggestions.affinity.empty")}</p>
+            </section>
+          ) : (
+            <RecommendationLane
+              title={t("collectionIntelligence.basedOnYourPicks")}
+              recommendations={basedOnYourPicks}
+              selectedPerfumeIds={selectedPerfumeIds}
+              isBoxFull={isBoxFull}
+              onAddPerfume={addFrom("suggestions_affinity")}
+              lens="affinity"
+              onOpenPerfumeDetails={detailsFrom("suggestions_affinity")}
+              translator={translator}
+            />
+          )}
+        </div>
+      </div>
+    </div>,
+    portalRoot
+  );
+}
 
 // The Collection Card, as the Download and Share actions export it, shown in a dialog. It is the same
 // CollectionCard and the same view-model props those actions render, so what is previewed is what is exported.
@@ -5540,11 +5739,18 @@ export function RecommendationCard({
   onOpenDetails,
   translator,
   pricing = DEFAULT_CUSTOMER_PRICING,
+  // Optional, for a surface that has its own evidence (the Suggestions drawer's "For today"): finished reason lines, and a
+  // confidence label ("" shows none). Absent, the card derives both exactly as it always has.
+  reasons,
+  confidenceLabel: confidenceLabelOverride,
 }) {
   const { perfume } = recommendation;
-  const explanations = getRecommendationDisplayReasons({ recommendation, objectiveKey, translator });
-  const confidence = getRecommendationConfidence(recommendation);
-  const confidenceLabel = getRecommendationConfidenceLabel(recommendation, translator);
+  const explanations = reasons ?? getRecommendationDisplayReasons({ recommendation, objectiveKey, translator });
+  const hasConfidenceOverride = typeof confidenceLabelOverride === "string";
+  const confidence = hasConfidenceOverride ? "" : getRecommendationConfidence(recommendation);
+  const confidenceLabel = hasConfidenceOverride
+    ? confidenceLabelOverride
+    : getRecommendationConfidenceLabel(recommendation, translator);
   const imageFallback = perfume.imageFallback;
   const isAddDisabled = isAdded || isBoxFull;
   const addButtonLabel = isAdded
@@ -5606,13 +5812,15 @@ export function RecommendationCard({
       <div className="recommendation-intelligence">
         <div className="recommendation-intelligence-header">
           <span>{translator?.t?.("recommendation.whyThisFits") || "Why this fits"}</span>
-          <span
-            className={`recommendation-confidence recommendation-confidence-${confidence
-              .toLowerCase()
-              .replace(/\s+/g, "-")}`}
-          >
-            {confidenceLabel}
-          </span>
+          {confidenceLabel && (
+            <span
+              className={`recommendation-confidence recommendation-confidence-${confidence
+                .toLowerCase()
+                .replace(/\s+/g, "-")}`}
+            >
+              {confidenceLabel}
+            </span>
+          )}
         </div>
 
         <div className="recommendation-reasons">

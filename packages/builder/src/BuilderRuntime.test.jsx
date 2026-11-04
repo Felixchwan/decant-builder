@@ -36,7 +36,8 @@ describe("BuilderRuntime shared hero-section capability boundary", () => {
 // "renders a compact info button..." test.
 describe("BuilderRuntime catalog-header info affordance boundary", () => {
   it("has no default value -- absent by default, rendering the catalog heading row exactly as it always has", () => {
-    expect(runtimeSource).toMatch(/onCatalogInfoRequest,\s*\n\}\) \{/);
+    expect(runtimeSource).toMatch(/\n {2}onCatalogInfoRequest,\n/);
+    expect(runtimeSource).not.toMatch(/onCatalogInfoRequest\s*=[^=>]/);
   });
 
   it("gates the info button behind onCatalogInfoRequest, inside the catalog panel-header row, never a second copy of the heading", () => {

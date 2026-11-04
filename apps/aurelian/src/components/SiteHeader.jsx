@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef } from "react";
 import { registerBuilderSummarySlot } from "../lib/builderSummarySlot.js";
+import { useBuilderBoxShortcut } from "../lib/builderBoxShortcut.js";
 
 const links = [
   ["/", "Inicio"],
@@ -16,6 +17,7 @@ export function SiteHeader() {
   const pathname = usePathname();
   const menuRef = useRef(null);
   const summaryRef = useRef(null);
+  const boxShortcut = useBuilderBoxShortcut();
 
   function closeMenu({ restoreFocus = false } = {}) {
     if (!menuRef.current?.open) return;
@@ -40,6 +42,16 @@ export function SiteHeader() {
 
   const isCurrent = (href) => href === "/" ? pathname === href : pathname.startsWith(href);
   const isBuilderRoute = pathname.startsWith("/build-your-box");
+  // Inside the Builder, once the box has something in it, the menu's call to action is the way back to it: the Builder's own
+  // box action (the one its "Ver caja" tab runs), not a link to the page the reader is already on. An empty box, and every
+  // other route, keep "Construye tu Discovery Box".
+  const showBoxShortcut = isBuilderRoute && boxShortcut !== null && boxShortcut.count >= 1;
+
+  function openBox() {
+    // Close the menu WITHOUT handing focus back to "Menú": the Builder moves focus to its box tab once the switch is done.
+    closeMenu();
+    boxShortcut.open();
+  }
 
   return (
     <header className="site-header">
@@ -59,7 +71,11 @@ export function SiteHeader() {
           <summary aria-label="Abrir navegación" ref={summaryRef}>Menú</summary>
           <nav aria-label="Navegación móvil">
             {links.map(([href, label]) => <Link aria-current={isCurrent(href) ? "page" : undefined} href={href} key={href} onClick={() => closeMenu()}>{label}</Link>)}
-            <Link className="button" href="/build-your-box" onClick={() => closeMenu()}>Construye tu Discovery Box</Link>
+            {showBoxShortcut ? (
+              <button type="button" className="button" onClick={openBox}>Ver mi caja</button>
+            ) : (
+              <Link className="button" href="/build-your-box" onClick={() => closeMenu()}>Construye tu Discovery Box</Link>
+            )}
           </nav>
         </details>
       </div>

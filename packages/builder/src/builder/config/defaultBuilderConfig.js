@@ -169,6 +169,11 @@ export const defaultBuilderConfig = {
     // designer, niche). Not persisted: every fresh page load starts with all three on. Off by default: a host that never opts
     // in renders nothing of it and filters nothing by segment.
     marketSegmentFilter: false,
+    // A "Suggestions" surface for phones: an edge tab opens a drawer that gathers "For today" (a deterministic, context-based
+    // pick), the existing versatility lane and the existing affinity lane in one place. The "For today" section also needs
+    // the host's `getTodayContext` (see DiscoveryBoxBuilder); without it that section is simply absent. Off by default: a
+    // host that never opts in renders no tab, no drawer and runs none of it.
+    suggestionsDrawer: false,
     recommendations: true,
     collectionIntelligence: true,
     collectionDna: true,

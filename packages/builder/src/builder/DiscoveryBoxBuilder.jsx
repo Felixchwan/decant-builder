@@ -30,6 +30,8 @@ import { validateBuilderConfig } from "./config/index.js";
  * @param {boolean} [props.showBalanceHelp] Optional, opt-in presentation capability: when true, the "Collection Balance" heading in Collection Intelligence gets one small info button that opens a short "how to read this balance" help (what each of the five indicators describes, and that there is no ideal score). Defaults to false, which renders the heading exactly as it always has. Copy only: no metric, level or formula is read or changed.
  * @param {boolean} [props.compactStrengths] Optional, opt-in presentation capability: when true, the "Box Analysis" strengths in the expanded Collection Intelligence show only the first three, in their existing order, followed by a small disclosure button ("+N more strengths" / "Show less") that expands the rest in place. Defaults to false, which renders the list exactly as it always has. Presentation only: which strengths exist, their order and their labels are the same either way.
  * @param {() => void} [props.onCatalogInfoRequest] Optional, opt-in presentation hook: when supplied, renders a compact accessible info button at the end of the catalog heading row and calls this handler on click. Absent by default, which renders the row exactly as it always has -- no button, no extra DOM. The Builder never interprets what the click should do; a host wires this to whatever local presentation concern it owns (e.g. restoring a dismissed intro block).
+ * @param {(shortcut: {count: number, open: () => void}|null) => void} [props.onBoxShortcutChange] Optional, opt-in host hook: called with the box's current selected count and `open`, the Builder's own "go to my box" action (the one its floating box tab runs: switch to the box, remember where the catalog was, restore it on the way back, move focus), whenever the count changes, and with null when the Builder goes away. It lets a host control that lives outside the Builder (a header, a menu) offer the same action without duplicating it. `open` is stable and never stale. Absent by default: nothing is published.
+ * @param {() => ({season: string, hour: number, weekday: number}|null)} [props.getTodayContext] Optional, opt-in host callback for the Suggestions drawer's "For today" section (see features.suggestionsDrawer). Called each time the drawer opens, it returns the moment as the HOST understands it: `season` ("spring" | "summer" | "fall" | "winter"), `hour` (0-23, host-local) and `weekday` (0-6, Sunday = 0), plus an optional presentation `label` the drawer shows as-is. The Builder knows no city, time zone or calendar: it only scores those values. Optional `temperatureBucket` / `weatherCondition` are accepted for later but not scored today. When absent, or when it returns null, the drawer simply has no "For today" section.
  */
 export default function DiscoveryBoxBuilder({
   catalog,
@@ -55,6 +57,8 @@ export default function DiscoveryBoxBuilder({
   showBalanceHelp = false,
   compactStrengths = false,
   onCatalogInfoRequest,
+  onBoxShortcutChange,
+  getTodayContext,
 }) {
   if (!config) {
     throw new Error("DiscoveryBoxBuilder requires a normalized builder config.");
@@ -124,6 +128,8 @@ export default function DiscoveryBoxBuilder({
       showBalanceHelp={showBalanceHelp}
       compactStrengths={compactStrengths}
       onCatalogInfoRequest={onCatalogInfoRequest}
+      onBoxShortcutChange={onBoxShortcutChange}
+      getTodayContext={getTodayContext}
     />
   );
 }

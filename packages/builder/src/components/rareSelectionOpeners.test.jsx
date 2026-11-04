@@ -15,12 +15,15 @@ const cardSource = read("./PerfumeCard.jsx");
 const OPENER_CALL = 'onAddPerfume(perfume, "manual", event?.currentTarget)';
 
 describe("Rare-selection entry points: every add control forwards its exact opener", () => {
-  it("BuilderPanel: every call to onAddPerfume forwards the clicked control, and there are exactly the four add controls", () => {
+  it("BuilderPanel: every call to onAddPerfume forwards the clicked control: the four add controls plus the Suggestions drawer's forwarder", () => {
     // calls only (a parameter or a prop pass-through is not followed by an opening parenthesis)
     const calls = [...panelSource.matchAll(/onAddPerfume\(/g)];
 
-    expect(calls).toHaveLength(4);
+    expect(calls).toHaveLength(5);
     expect(panelSource.split(OPENER_CALL).length - 1).toBe(4);
+    // the fifth is the Suggestions drawer re-reporting a card's own click under its section's source: the opener goes
+    // straight through, so the rare-selection confirmation still returns focus to the control that was pressed
+    expect(panelSource.split("onAddPerfume(perfume, source, opener)").length - 1).toBe(1);
   });
 
   it("the four controls are the Composer proposal row, the Note Explorer row, the Collection DNA row and the recommendation card", () => {
@@ -82,7 +85,7 @@ describe("Rare-selection confirmation above the panel's dialogs: one Escape clos
   });
 
   it("hands that flag to the three dialogs that host an Add control, through the pattern they already use for details", () => {
-    expect(panelSource.match(/isDetailOpen=\{isLayerAboveOpen\}/g)).toHaveLength(2); // Composer proposal, Note Explorer
+    expect(panelSource.match(/isDetailOpen=\{isLayerAboveOpen\}/g)).toHaveLength(3); // Composer proposal, Note Explorer, Suggestions drawer
     expect(panelSource.match(/isLayerAboveOpen=\{isLayerAboveOpen\}/g)).toHaveLength(2); // panel -> snapshot -> DNA dialog
     expect(panelSource).not.toContain("isDetailOpen={isPerfumeDetailsOpen}");
   });
@@ -97,7 +100,7 @@ describe("Rare-selection confirmation above the panel's dialogs: one Escape clos
   });
 
   it("the Composer proposal and Note Explorer keep their existing Escape guard and Tab stand-down on that flag", () => {
-    expect(panelSource.match(/if \(event\.key === "Escape" && !isDetailOpen\) \{/g)).toHaveLength(2);
+    expect(panelSource.match(/if \(event\.key === "Escape" && !isDetailOpen\) \{/g)).toHaveLength(3); // + the Suggestions drawer
     expect(panelSource).toContain("suspended: isDetailOpen,");
     expect(panelSource).toContain('if (event.key !== "Tab" || isDetailOpen || !dialog) {');
   });

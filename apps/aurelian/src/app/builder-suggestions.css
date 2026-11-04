@@ -1,0 +1,402 @@
+/* Aurelian Builder -- "Sugerencias": the left edge tab on phones, and the drawer it opens.
+
+   HOST-OWNED, paint and placement only. The markup, copy and behaviour live in the package (features.suggestionsDrawer, on for
+   Aurelian only: the tab in BuilderRuntime, the drawer in BuilderPanel); Discovery Decants never turns it on, so it never renders
+   any of this. The shared stylesheet is frozen and its selectors have zero specificity, so plain host selectors win.
+
+   ---- The tab ------------------------------------------------------------------------------------------
+   The mirror of "Ver caja" (builder-mobile-catalog.css), and deliberately the quieter of the two: that one is the funnel
+   (burgundy, ivory), this one is an editor's aside (near-black, a brass hairline, muted ivory). It sits on the opposite screen
+   edge for the same reason that one sits on its edge: the page's own padding leaves the last ~22px of each side with no
+   control in it, so a slim tab flush to the edge covers padding, never a card's tap target, a filter or a search field.
+   Same bottom offset, same safe-area logic, same z-index (below the header's 50 and every dialog's 1000).
+
+   It is a standalone button after the tab bar, NOT a third child of it: "Ver caja" is styled by being the bar's last child,
+   and a third child would move it. It shows only where "Ver caja" shows: 619px and below, with the catalog tab active. With the
+   menu open both edge tabs go (the menu has no scrim and does not lock the page, so they would otherwise sit tappable behind it).
+   At 620px and up (tablets, phones in landscape) it is not displayed, matching "Ver caja". */
+
+.builder-page .suggestions-edge-tab {
+  display: none;
+}
+
+@media (max-width: 619px) {
+  .builder-page .mobile-builder-tabs:has(> button:first-child.is-active) + .suggestions-edge-tab {
+    position: fixed;
+    bottom: max(120px, calc(env(safe-area-inset-bottom) + 104px));
+    left: -1px;
+    z-index: 45;
+    display: inline-flex;
+    flex-direction: column-reverse;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 22px;
+    min-height: 116px;
+    margin: 0;
+    padding: 10px 0;
+    border: 1px solid var(--aur-intel-rim);
+    border-left: 0;
+    border-radius: 0 6px 6px 0;
+    background: rgba(15, 14, 12, 0.96);
+    box-shadow: 3px 4px 14px rgba(0, 0, 0, 0.45);
+    color: var(--aur-intel-label);
+    cursor: pointer;
+    font: inherit;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    line-height: 1;
+  }
+
+  /* The text reads upward, the way a spine on the left edge does; only the label turns, so the border and the mark do not. */
+  .builder-page .suggestions-edge-tab__label {
+    transform: rotate(180deg);
+    white-space: nowrap;
+    writing-mode: vertical-rl;
+  }
+
+  .builder-page .suggestions-edge-tab__mark {
+    color: var(--aur-intel-brass);
+    font-size: 0.625rem;
+    line-height: 1;
+  }
+
+  .builder-page .mobile-builder-tabs:has(> button:first-child.is-active) + .suggestions-edge-tab:is(:hover, :active, [aria-expanded="true"]) {
+    border-color: var(--aur-intel-rim-strong);
+    background: rgb(24, 21, 17);
+    color: var(--aur-intel-ink);
+  }
+
+  .builder-page .mobile-builder-tabs:has(> button:first-child.is-active) + .suggestions-edge-tab:focus-visible {
+    outline: 2px solid var(--aur-intel-brass);
+    outline-offset: 1px;
+  }
+
+  /* The footer in the tab's band: the tab is not displayed (lib/footerEdgeTabClearance.js sets the attribute while the footer is
+     there, from one IntersectionObserver). A plain, immediate display change, no slide or fade: a hidden control takes no
+     pointer events and cannot be focused, and the drawer's focus return skips it for the next Builder control. "Ver caja" does not
+     need this: the footer's links are on the left, and it never reaches the right edge's band. */
+  html[data-footer-near] .builder-page .mobile-builder-tabs:has(> button:first-child.is-active) + .suggestions-edge-tab {
+    display: none;
+  }
+
+  /* The menu open: neither edge tab shows. (Same structure as the rules they override, plus the menu, so they win.) */
+  body:has(.mobile-menu[open]) .builder-page .mobile-builder-tabs:has(> button:first-child.is-active) + .suggestions-edge-tab,
+  body:has(.mobile-menu[open]) .builder-page .mobile-builder-tabs:has(> button:first-child.is-active) > button:last-child {
+    display: none;
+  }
+}
+
+/* ---- The drawer ---------------------------------------------------------------------------------------
+   A layer over the page, hung from the left edge, in the same near-black, brass-rimmed language as the other Aurelian dialogs
+   (builder-modals.css). It leaves a strip of scrim on the right, so a tap outside closes it. It is a dialog the Builder portals
+   to <body>, hence `.builder-portal-root`. */
+
+.builder-portal-root .suggestions-overlay {
+  align-items: stretch;
+  justify-content: flex-start;
+  padding: 0; /* the package gives phone overlays 10px; this one is flush to the edge it hangs from */
+  background: var(--aur-intel-scrim);
+}
+
+.builder-portal-root .suggestions-drawer {
+  display: flex;
+  flex-direction: column;
+  width: min(24rem, calc(100vw - 2.5rem));
+  max-width: 100%;
+  height: 100%;
+  border-right: 1px solid var(--aur-intel-rim);
+  background: var(--aur-intel-card);
+  box-shadow:
+    18px 0 60px var(--aur-intel-shadow),
+    inset -1px 0 0 var(--aur-intel-hair);
+  color: var(--aur-intel-ink);
+  outline: none;
+  animation: aur-suggestions-in 220ms ease-out;
+}
+
+@keyframes aur-suggestions-in {
+  from {
+    transform: translateX(-24px);
+    opacity: 0;
+  }
+
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+
+.builder-portal-root .suggestions-header {
+  display: flex;
+  flex: none;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: calc(1rem + env(safe-area-inset-top)) 1.25rem 0.9rem;
+  border-bottom: 1px solid var(--aur-intel-hair);
+  background: var(--aur-modal-head-ground);
+}
+
+.builder-portal-root .suggestions-header h3 {
+  margin: 0;
+  color: var(--aur-intel-ink);
+  font-family: var(--aur-intel-serif);
+  font-size: 1.375rem;
+  font-weight: 400;
+  line-height: 1.2;
+}
+
+.builder-portal-root .suggestions-context {
+  margin: 0.25rem 0 0;
+  color: var(--aur-intel-label);
+  font-size: 0.8125rem;
+  letter-spacing: 0.04em;
+  line-height: 1.3;
+}
+
+.builder-portal-root .suggestions-header button {
+  flex: 0 0 auto;
+  min-height: 2.25rem;
+  padding: 0.4rem 0.85rem;
+  border: 1px solid var(--aur-intel-rim);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--aur-intel-ink);
+  cursor: pointer;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  line-height: 1.2;
+}
+
+.builder-portal-root .suggestions-header button:is(:hover, :focus-visible) {
+  border-color: var(--aur-intel-rim-strong);
+  background: var(--aur-intel-wash);
+}
+
+.builder-portal-root .suggestions-header button:focus-visible {
+  outline: 2px solid var(--aur-intel-brass);
+  outline-offset: 2px;
+}
+
+.builder-portal-root .suggestions-body {
+  display: grid;
+  flex: 1;
+  align-content: start;
+  gap: 1.5rem;
+  min-height: 0;
+  padding: 1.1rem 1.25rem calc(1.5rem + env(safe-area-inset-bottom));
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+/* ---- The three sections: one lens each (a small brass label and an italic line), one hairline card per pick ---- */
+.builder-portal-root .suggestions-drawer .recommendation-lane {
+  display: grid;
+  gap: 0.6rem;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+}
+
+.builder-portal-root .suggestions-drawer .recommendation-lens {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  min-width: 0;
+}
+
+.builder-portal-root .suggestions-drawer .recommendation-lens-label {
+  flex: 0 0 auto;
+  padding: 2px 9px 1px;
+  border: 1px solid var(--aur-intel-rim);
+  border-radius: 999px;
+  background: var(--aur-intel-wash);
+  color: var(--aur-intel-ink);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  line-height: 1.3;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.builder-portal-root .suggestions-drawer .recommendation-lens-hint {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--aur-intel-ink-soft);
+  font-family: var(--aur-intel-serif);
+  font-size: 0.875rem;
+  font-style: italic;
+  line-height: 1.3;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.builder-portal-root .suggestions-today-list {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.builder-portal-root .suggestions-drawer .recommendation-card {
+  border: 1px solid var(--aur-intel-hair);
+  border-radius: var(--aur-intel-radius-card);
+  background: var(--aur-intel-ground);
+  box-shadow: inset 0 1px 0 var(--aur-intel-hair);
+}
+
+.builder-portal-root .suggestions-drawer .recommendation-card:has(.recommendation-detail-trigger:is(:hover, :focus-visible)) {
+  border-color: var(--aur-intel-rim);
+}
+
+.builder-portal-root .suggestions-drawer .recommendation-detail-trigger:focus-visible {
+  outline: 2px solid var(--aur-intel-brass);
+  outline-offset: 2px;
+}
+
+.builder-portal-root .suggestions-drawer .recommendation-card .recommendation-actions button:focus-visible,
+.builder-portal-root .suggestions-drawer .recommendation-carousel-controls button:focus-visible {
+  outline: 2px solid var(--aur-intel-brass);
+  outline-offset: 2px;
+}
+
+/* The package paints these in its own navy-and-green; here they take the same quiet ground, brass hairline and serif as the rest. */
+.builder-portal-root .suggestions-drawer .next-improvement-section {
+  gap: 0.75rem;
+  padding: 0;
+  border: 0;
+  background: none;
+}
+
+.builder-portal-root .suggestions-drawer .next-improvement-copy {
+  gap: 0.3rem;
+}
+
+.builder-portal-root .suggestions-drawer .next-improvement-copy span {
+  color: var(--aur-intel-label);
+  font-size: 0.6875rem;
+  letter-spacing: 0.12em;
+}
+
+.builder-portal-root .suggestions-drawer .next-improvement-copy h4,
+.builder-portal-root .suggestions-drawer .recommendation-lane-header h4 {
+  margin: 0;
+  color: var(--aur-intel-ink);
+  font-family: var(--aur-intel-serif);
+  font-size: 1.0625rem;
+  font-weight: 400;
+  letter-spacing: 0;
+  line-height: 1.25;
+  text-transform: none;
+}
+
+.builder-portal-root .suggestions-drawer .next-improvement-copy p {
+  margin: 0;
+  color: var(--aur-intel-ink-soft);
+  font-size: 0.8125rem;
+  line-height: 1.5;
+}
+
+.builder-portal-root .suggestions-drawer .recommendation-lane-header {
+  gap: 0.75rem;
+}
+
+.builder-portal-root .suggestions-drawer .recommendation-carousel-card {
+  padding: 0;
+  border: 0;
+  background: none;
+}
+
+.builder-portal-root .suggestions-drawer .recommendation-card {
+  padding: 0.75rem;
+}
+
+.builder-portal-root .suggestions-drawer .recommendation-title-group strong {
+  color: var(--aur-intel-ink);
+  font-size: 0.9375rem;
+  font-weight: 600;
+}
+
+.builder-portal-root .suggestions-drawer .recommendation-title-group span {
+  color: var(--aur-intel-ink-soft);
+  font-size: 0.8125rem;
+}
+
+.builder-portal-root .suggestions-drawer .recommendation-intelligence {
+  gap: 0.35rem;
+  margin-top: 0.6rem;
+  padding: 0.55rem 0.7rem;
+  border: 1px solid var(--aur-intel-hair);
+  border-radius: 6px;
+  background: var(--aur-intel-ground-deep);
+}
+
+.builder-portal-root .suggestions-drawer .recommendation-intelligence-header {
+  color: var(--aur-intel-label);
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+}
+
+.builder-portal-root .suggestions-drawer .recommendation-confidence {
+  border-color: var(--aur-intel-rim);
+  background: transparent;
+  color: var(--aur-intel-ink-soft);
+}
+
+.builder-portal-root .suggestions-drawer .recommendation-reasons p {
+  color: var(--aur-intel-ink-soft);
+  font-size: 0.8125rem;
+  line-height: 1.4;
+}
+
+/* "Agregar a caja": a brass-rimmed button, not the package's solid green pill; "Agregado" is the same button gone quiet. */
+.builder-portal-root .suggestions-drawer .recommendation-actions {
+  margin-top: 0.6rem;
+}
+
+.builder-portal-root .suggestions-drawer .recommendation-actions button {
+  min-height: 2.25rem;
+  padding: 0.4rem 0.95rem;
+  border: 1px solid var(--aur-intel-rim-strong);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--aur-intel-ink);
+  cursor: pointer;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.builder-portal-root .suggestions-drawer .recommendation-actions button:hover:not(:disabled) {
+  background: var(--aur-intel-wash);
+}
+
+.builder-portal-root .suggestions-drawer .recommendation-actions button:disabled {
+  border-color: var(--aur-intel-hair);
+  background: transparent;
+  color: var(--aur-intel-ink-muted);
+  cursor: default;
+}
+
+.builder-portal-root .suggestions-drawer .recommendation-carousel-controls button {
+  border-color: var(--aur-intel-rim);
+  background: transparent;
+  color: var(--aur-intel-ink-soft);
+}
+
+.builder-portal-root .suggestions-affinity-empty p {
+  margin: 0;
+  color: var(--aur-intel-ink-soft);
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .builder-portal-root .suggestions-drawer {
+    animation: none;
+  }
+}
