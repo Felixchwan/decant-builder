@@ -313,13 +313,10 @@ describe("reasons come only from factors that scored, with the evidence that ear
     }
   });
 
-  it("accepts a temperature bucket and weather condition without scoring them", () => {
+  it("scores a temperature bucket and weather condition only when they are supplied (see buildTodayRecommendations.weather.test.js)", () => {
     const withLive = buildTodayRecommendations({ perfumes: fragrances, context: { ...TUE_NOON, temperatureBucket: "hot", weatherCondition: "rain" } });
-    const without = buildTodayRecommendations({ perfumes: fragrances, context: TUE_NOON });
 
-    expect(withLive.recommendations.map(({ perfume: item, score }) => [item.id, score])).toEqual(
-      without.recommendations.map(({ perfume: item, score }) => [item.id, score])
-    );
+    expect(withLive.recommendations[0].factors.map(({ code }) => code)).toEqual(["season", "timeOfDay", "dayContext", "temperature", "weather"]);
   });
 });
 

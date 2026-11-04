@@ -395,6 +395,33 @@
   line-height: 1.5;
 }
 
+/* The credit line the weather data's licence asks for: present only while weather is in use, quiet and small, last in the drawer. */
+.builder-portal-root .suggestions-attribution {
+  margin: 0;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--aur-intel-hair);
+  color: var(--aur-intel-ink-muted);
+  font-size: 0.6875rem;
+  letter-spacing: 0.04em;
+  line-height: 1.4;
+}
+
+.builder-portal-root .suggestions-attribution a {
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-color: var(--aur-intel-rim);
+  text-underline-offset: 2px;
+}
+
+.builder-portal-root .suggestions-attribution a:is(:hover, :focus-visible) {
+  color: var(--aur-intel-ink-soft);
+}
+
+.builder-portal-root .suggestions-attribution a:focus-visible {
+  outline: 2px solid var(--aur-intel-brass);
+  outline-offset: 2px;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .builder-portal-root .suggestions-drawer {
     animation: none;

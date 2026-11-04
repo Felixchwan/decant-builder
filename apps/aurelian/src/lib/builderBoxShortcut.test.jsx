@@ -150,7 +150,8 @@ describe("BuilderExperience: wires the host pieces", () => {
 
   it("hands the Builder the store's register function and the Monterrey context", () => {
     expect(experience).toContain('import { registerBuilderBoxShortcut } from "../lib/builderBoxShortcut.js";');
-    expect(experience).toContain('import { getMonterreyTodayContext } from "../lib/monterreyContext.js";');
+    expect(experience).toContain('import { getMonterreyTodayContext, resolveMonterreyTodayContext } from "../lib/monterreyContext.js";');
+    expect(experience).toContain("resolveTodayContext={resolveMonterreyTodayContext}");
     expect(experience).toContain("onBoxShortcutChange={registerBuilderBoxShortcut}");
     expect(experience).toContain("getTodayContext={getMonterreyTodayContext}");
   });

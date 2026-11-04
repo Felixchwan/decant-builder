@@ -4,6 +4,9 @@
 // time zone or language; deciding WHERE the moment is read, how months map to seasons and how the moment is worded in
 // Spanish are this storefront's choices. Read when the drawer opens, never on a timer, and no request is made: the time
 // zone comes from the browser's built-in Intl data.
+import { loadWeatherContext } from "./weather/weatherContextClient.js";
+import { WEATHER_ATTRIBUTION, describePartOfDay, weatherToContextFields } from "./weather/weatherContext.js";
+
 export const MONTERREY_TIME_ZONE = "America/Monterrey";
 
 // December-February winter, March-May spring, June-September summer, October-November fall.
@@ -53,16 +56,46 @@ export function getPartOfDay(hour) {
   return "night";
 }
 
-// What the Builder's `getTodayContext` expects: the moment (season, hour, weekday) plus the line the drawer shows under its
-// title, for example "Monterrey · Noche de otoño". No degrees and no weather: none is known.
-export function getMonterreyTodayContext(date = new Date()) {
+// What the Builder's context callbacks expect: the moment (season, hour, weekday) plus the line the drawer shows under its title.
+//
+//   without weather   "Monterrey · Noche de otoño"        (the moment alone: no degrees, nothing about the sky)
+//   with weather      "Monterrey · 18 °C · Noche fresca"  (plus the generic temperatureBucket / weatherCondition the Builder scores,
+//                                                          and the credit line the data's licence asks for)
+//   with a STALE one  "Monterrey · Noche fresca"          (the bucket still describes the day, but an hours-old number is not shown)
+//
+// `weather` is an answer from loadWeatherContext (or null / unavailable).
+export function getMonterreyTodayContext(date = new Date(), weather = null) {
   const { month, hour, weekday } = getMonterreyClock(date);
   const season = SEASON_BY_MONTH[month];
+  const partLabel = PART_OF_DAY_LABELS[getPartOfDay(hour)];
+  const live = weatherToContextFields(weather);
+
+  if (!live.temperatureBucket && !live.weatherCondition) {
+    return {
+      season,
+      hour,
+      weekday,
+      label: `Monterrey · ${partLabel} de ${SEASON_LABELS[season]}`,
+    };
+  }
+
+  const described = describePartOfDay({ partLabel, temperatureBucket: live.temperatureBucket });
+  const degrees = weather.stale || !live.temperatureBucket ? "" : ` · ${Math.round(weather.temperatureC)} °C`;
 
   return {
     season,
     hour,
     weekday,
-    label: `Monterrey · ${PART_OF_DAY_LABELS[getPartOfDay(hour)]} de ${SEASON_LABELS[season]}`,
+    ...live,
+    label: `Monterrey${degrees} · ${described}`,
+    attribution: WEATHER_ATTRIBUTION,
   };
+}
+
+// The context WITH weather, for the drawer's background request: Monterrey's moment read now, plus the shared weather snapshot
+// through Aurelian's own endpoint. Null when there is no weather (the drawer then keeps the moment-only context it already has).
+export async function resolveMonterreyTodayContext() {
+  const weather = await loadWeatherContext();
+
+  return weather?.available ? getMonterreyTodayContext(new Date(), weather) : null;
 }

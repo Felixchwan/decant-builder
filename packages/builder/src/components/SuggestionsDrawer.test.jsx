@@ -115,8 +115,26 @@ describe("the drawer: a dialog on the Builder's existing infrastructure", () => 
   });
 
   it("recomputes 'now' only when it opens: the host callback is read once, in the mount-time state initialiser", () => {
-    expect(drawerSource).toMatch(/const \[hostToday\] = useState\(\(\) => \{\s*try \{\s*return typeof getTodayContext === "function" \? getTodayContext\(\) : null;/);
+    expect(drawerSource).toMatch(/const \[hostToday, setHostToday\] = useState\(\(\) => \{\s*try \{\s*return typeof getTodayContext === "function" \? getTodayContext\(\) : null;/);
     expect(drawerCode).not.toMatch(/setInterval|setTimeout|requestAnimationFrame/);
+  });
+
+  it("asks the host's optional async context ONCE per opening, in the background, and keeps what it had if that fails", () => {
+    const effect = drawerSource.slice(drawerSource.indexOf("useEffect(() => {\n    if (typeof resolveTodayContext"), drawerSource.indexOf("useModalFocus({"));
+
+    expect(effect).toContain('if (typeof resolveTodayContext !== "function") {');
+    expect(effect).toContain(".then(() => resolveTodayContext())");
+    expect(effect).toContain("if (isCurrent && resolved) {\n          setHostToday(resolved);");
+    expect(effect).toContain(".catch(() => {});");
+    expect(effect).toMatch(/isCurrent = false;/);
+    expect(effect).toContain("}, []);"); // mount only
+    expect(drawerCode).not.toMatch(/fetch\(|XMLHttpRequest|setInterval/);
+  });
+
+  it("shows a credit line only when the host supplied one, as a plain external link", () => {
+    expect(drawerSource).toContain("{hostToday?.attribution?.text ? (");
+    expect(drawerSource).toContain('<a href={hostToday.attribution.href} target="_blank" rel="noopener noreferrer">');
+    expect(drawerCode).not.toMatch(/MET|Norway|Monterrey|api\.met\.no/);
   });
 
   it("treats a throwing or absent host context as no 'Para hoy', never an error", () => {

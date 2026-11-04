@@ -11,7 +11,7 @@ import { FRAGRANCE_QUERY_PARAM } from "../lib/parseFragranceIntent.js";
 import { useBuilderSummarySlot } from "../lib/builderSummarySlot.js";
 import { registerBuilderBoxShortcut } from "../lib/builderBoxShortcut.js";
 import { useFooterNearEdgeTab } from "../lib/footerEdgeTabClearance.js";
-import { getMonterreyTodayContext } from "../lib/monterreyContext.js";
+import { getMonterreyTodayContext, resolveMonterreyTodayContext } from "../lib/monterreyContext.js";
 import { resolveBuilderIntentsFromSearch, DETAILS_QUERY_PARAM } from "../lib/parseDetailsIntent.js";
 import { createAnalytics, buildAnalyticsContext } from "../analytics/createAnalytics.js";
 import { createDevelopmentAnalytics } from "../analytics/developmentAnalytics.js";
@@ -166,6 +166,9 @@ export function BuilderExperience({
       // "Para hoy" in the Suggestions drawer ranks against Monterrey's clock and calendar, read when the drawer opens
       // (lib/monterreyContext.js). Discovery Decants passes neither this nor features.suggestionsDrawer.
       getTodayContext={getMonterreyTodayContext}
+      // ... and, in the background, the same moment WITH Monterrey's weather from Aurelian's own endpoint (a shared, lazily
+      // refreshed server snapshot; the browser never contacts the weather provider). No weather leaves the drawer as it was.
+      resolveTodayContext={resolveMonterreyTodayContext}
     />
   );
 }

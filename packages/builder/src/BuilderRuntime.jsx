@@ -150,6 +150,7 @@ function App({
   // tree can run, and the moment the Suggestions drawer's "For today" section ranks against. Absent by default.
   onBoxShortcutChange,
   getTodayContext,
+  resolveTodayContext,
 }) {
   const builderConfig = config;
   const customerPricing = useMemo(() => createCustomerPricing(builderConfig), [builderConfig]);
@@ -1347,6 +1348,7 @@ const confirmAddPerfume = () => {
       onSuggestionsClose={() => setIsSuggestionsOpen(false)}
       suggestionsOpenerRef={suggestionsTabRef}
       getTodayContext={getTodayContext}
+      resolveTodayContext={resolveTodayContext}
       onOpenSuggestionPerfumeDetails={openSuggestionPerfumeDetails}
       isComposerGenerating={isComposerGenerating}
       composerStatusMessage={composerStatusMessage}

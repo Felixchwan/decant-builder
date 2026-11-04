@@ -1,6 +1,8 @@
 // Words for the "Para hoy" evidence. This is the ONLY place a Today reason becomes text, and it works from the reason's own
 // code and evidence: a sentence can only appear when the evidence behind it is in the reason, so nothing is said that the
-// scoring did not actually find. (No weather or temperature wording exists here because none is scored.)
+// scoring did not actually find. Weather and temperature wording exists only for a reason that carries a temperature bucket or
+// a weather condition, which only a host that supplied them can ever produce; and each sentence additionally checks that the
+// evidence is the right kind (heat wording needs a hot or warm bucket, rain wording needs rain, cool wording a cool or cold one).
 
 const MAX_TODAY_REASON_LINES = 2;
 
@@ -36,6 +38,30 @@ function getReasonLabel({ code, evidence = {} }, t) {
 
   if (code === "timeOfDay") {
     return t(`suggestions.today.reason.time.${evidence.time}`);
+  }
+
+  if (code === "temperature") {
+    return ["hot", "warm", "mild", "cool", "cold"].includes(evidence.temperatureBucket)
+      ? t(`suggestions.today.reason.temperature.${evidence.temperatureBucket}`)
+      : "";
+  }
+
+  if (code === "weather") {
+    const { profile, temperatureBucket, weatherCondition } = evidence;
+
+    if (profile === "heat" && (temperatureBucket === "hot" || temperatureBucket === "warm")) {
+      return t("suggestions.today.reason.weather.heat");
+    }
+
+    if (profile === "rain" && weatherCondition === "rain") {
+      return t("suggestions.today.reason.weather.rain");
+    }
+
+    if (profile === "cool" && (temperatureBucket === "cool" || temperatureBucket === "cold")) {
+      return t(`suggestions.today.reason.weather.${temperatureBucket}`);
+    }
+
+    return "";
   }
 
   if (code === "dayContext") {

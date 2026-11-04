@@ -133,7 +133,7 @@ describe("the context handed to the Builder", () => {
     }
   });
 
-  it("makes no network request and keeps no state: the source has no fetch, timer or storage", () => {
+  it("makes no network request itself and keeps no state: weather arrives only through the weather client, and there is no timer or storage", () => {
     const code = readFileSync(new URL("./monterreyContext.js", import.meta.url), "utf8").replace(/^\s*\/\/.*$/gm, "");
 
     expect(code).not.toMatch(/fetch\(|XMLHttpRequest|setInterval|setTimeout|localStorage|sessionStorage|navigator\./);

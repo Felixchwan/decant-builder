@@ -196,6 +196,7 @@ const BuilderPanel = forwardRef(function BuilderPanel({
   onSuggestionsClose,
   suggestionsOpenerRef,
   getTodayContext,
+  resolveTodayContext,
   onOpenSuggestionPerfumeDetails,
   showRecommendationLenses = false,
   showAccordEvidence = false,
@@ -1297,6 +1298,7 @@ const BuilderPanel = forwardRef(function BuilderPanel({
           basedOnYourPicks={basedOnYourPicks}
           nextImprovementResult={nextImprovementResult}
           getTodayContext={getTodayContext}
+          resolveTodayContext={resolveTodayContext}
           onAddPerfume={onAddPerfume}
           onOpenPerfumeDetails={onOpenSuggestionPerfumeDetails}
           isDetailOpen={isLayerAboveOpen}
@@ -1335,6 +1337,7 @@ function SuggestionsDrawer({
   basedOnYourPicks,
   nextImprovementResult,
   getTodayContext,
+  resolveTodayContext,
   onAddPerfume,
   onOpenPerfumeDetails,
   isDetailOpen,
@@ -1346,14 +1349,39 @@ function SuggestionsDrawer({
   const dialogRef = useRef(null);
   const titleId = useId();
 
-  // "Now" is read when the drawer opens (it mounts on open and unmounts on close), never on a timer.
-  const [hostToday] = useState(() => {
+  // "Now" is read when the drawer opens (it mounts on open and unmounts on close), never on a timer. The synchronous context
+  // renders at once; a host whose context also has live parts (resolveTodayContext) is asked once, in the background, and the
+  // drawer re-ranks when it answers. If that fails, or never answers, nothing changes and nothing is shown about it.
+  const [hostToday, setHostToday] = useState(() => {
     try {
       return typeof getTodayContext === "function" ? getTodayContext() : null;
     } catch {
       return null;
     }
   });
+
+  useEffect(() => {
+    if (typeof resolveTodayContext !== "function") {
+      return undefined;
+    }
+
+    let isCurrent = true;
+
+    Promise.resolve()
+      .then(() => resolveTodayContext())
+      .then((resolved) => {
+        if (isCurrent && resolved) {
+          setHostToday(resolved);
+        }
+      })
+      .catch(() => {});
+
+    return () => {
+      isCurrent = false;
+    };
+    // Mount only: one request per opening, however often the panel re-renders around the drawer.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const today = useMemo(
     () => (hostToday ? buildTodayRecommendations({ perfumes: catalogPerfumes, context: hostToday }) : null),
     [catalogPerfumes, hostToday]
@@ -1482,6 +1510,18 @@ function SuggestionsDrawer({
               translator={translator}
             />
           )}
+
+          {hostToday?.attribution?.text ? (
+            <p className="suggestions-attribution">
+              {hostToday.attribution.href ? (
+                <a href={hostToday.attribution.href} target="_blank" rel="noopener noreferrer">
+                  {hostToday.attribution.text}
+                </a>
+              ) : (
+                hostToday.attribution.text
+              )}
+            </p>
+          ) : null}
         </div>
       </div>
     </div>,

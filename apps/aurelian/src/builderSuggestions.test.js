@@ -217,6 +217,15 @@ describe("the drawer (builder-suggestions.css)", () => {
     expect(add).toMatch(/border: 1px solid var\(--aur-intel-rim-strong\);/);
   });
 
+  it("keeps the weather credit line small, muted and last, with a visible focus ring on its link", () => {
+    const line = bodyOf(outside, ".builder-portal-root .suggestions-attribution");
+
+    expect(line).toMatch(/font-size: 0\.6875rem;/);
+    expect(line).toMatch(/color: var\(--aur-intel-ink-muted\);/);
+    expect(line).toMatch(/border-top: 1px solid var\(--aur-intel-hair\);/);
+    expect(outside).toMatch(/\.suggestions-attribution a:focus-visible \{[^}]*outline: 2px solid var\(--aur-intel-brass\);/);
+  });
+
   it("respects reduced motion", () => {
     const reduced = blocks.find(({ query }) => query === "(prefers-reduced-motion: reduce)");
 
