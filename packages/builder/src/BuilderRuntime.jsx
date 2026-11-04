@@ -317,7 +317,15 @@ function App({
   // what it shows is computed inside the box panel from the same recommendations the panel already renders.
   const suggestionsDrawer = builderConfig.features?.suggestionsDrawer === true;
   const [isSuggestionsOpen, setIsSuggestionsOpen] = useState(false);
-  const suggestionsTabRef = useRef(null);
+  // The control that actually opened the drawer (the phone edge tab, or a host's desktop opener): focus goes back to THAT one on
+  // close. Set from the click that opened it, so any number of openers share this one handler, one state and one drawer.
+  const suggestionsOpenerRef = useRef(null);
+  const openSuggestions = (event) => {
+    const opener = event?.currentTarget;
+
+    suggestionsOpenerRef.current = opener?.nodeType === 1 ? opener : null;
+    setIsSuggestionsOpen(true);
+  };
   const hasCustomizedComposerBudgetRef = useRef(false);
   const [composerSettings, setComposerSettings] = useState(() => {
     const initialSelectedPerfumes = initialSelectionState.selectedPerfumes;
@@ -1346,7 +1354,8 @@ const confirmAddPerfume = () => {
       onOpenRecommendationPerfumeDetails={openRecommendationPerfumeDetails}
       isSuggestionsOpen={suggestionsDrawer && isSuggestionsOpen}
       onSuggestionsClose={() => setIsSuggestionsOpen(false)}
-      suggestionsOpenerRef={suggestionsTabRef}
+      suggestionsOpenerRef={suggestionsOpenerRef}
+      onSuggestionsOpen={suggestionsDrawer ? openSuggestions : undefined}
       getTodayContext={getTodayContext}
       resolveTodayContext={resolveTodayContext}
       onOpenSuggestionPerfumeDetails={openSuggestionPerfumeDetails}
@@ -1435,12 +1444,11 @@ const confirmAddPerfume = () => {
           showing); without that CSS it is not displayed at all. */}
       {suggestionsDrawer && (
         <button
-          ref={suggestionsTabRef}
           type="button"
           className="suggestions-edge-tab"
           aria-haspopup="dialog"
           aria-expanded={isSuggestionsOpen}
-          onClick={() => setIsSuggestionsOpen(true)}
+          onClick={openSuggestions}
         >
           <span className="suggestions-edge-tab__mark" aria-hidden="true">
             ✦

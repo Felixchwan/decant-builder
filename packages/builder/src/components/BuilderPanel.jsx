@@ -193,6 +193,9 @@ const BuilderPanel = forwardRef(function BuilderPanel({
   // Suggestions drawer (opt-in, features.suggestionsDrawer): open state and the focus-return control belong to the Runtime,
   // which owns the edge tab that opens it; what the drawer shows is computed here, from this panel's own recommendations.
   isSuggestionsOpen = false,
+  // The same open handler the phone edge tab uses, passed on to the desktop rack's centre opener (see BoxSlotTray). Absent
+  // unless the host opted into the Suggestions drawer, in which case the rack's centre stays the plain decorative channel.
+  onSuggestionsOpen,
   onSuggestionsClose,
   suggestionsOpenerRef,
   getTodayContext,
@@ -1041,6 +1044,8 @@ const BuilderPanel = forwardRef(function BuilderPanel({
                 onReorderPerfumes={onReorderPerfumes}
                 translator={translator}
                 isCompact={isSummaryDocked}
+                onOpenSuggestions={onSuggestionsOpen}
+                isSuggestionsOpen={isSuggestionsOpen}
               />
             </div>
           </div>
@@ -1390,9 +1395,10 @@ function SuggestionsDrawer({
   useModalFocus({
     dialogRef,
     openerRef,
-    // The tab first; if a host has taken it off the screen meanwhile (it can step aside at the end of the page), the box
-    // tab, the Builder's other always-available control at the same screen edge row.
-    fallbackSelector: [".suggestions-edge-tab", '[aria-controls="my-box-panel"]'],
+    // The control that opened it (openerRef) comes first. If that is gone (a host has taken the phone tab off the screen at
+    // the end of the page), the desktop rack's centre opener, then the phone tab, then the box tab, the Builder's other
+    // always-available control at the same screen edge row.
+    fallbackSelector: [".box-center-suggestions", ".suggestions-edge-tab", '[aria-controls="my-box-panel"]'],
     initialFocusSelector: ".suggestions-header button",
     suspended: isDetailOpen,
   });
@@ -6178,6 +6184,8 @@ function BoxSlotTray({
   onReorderPerfumes,
   translator,
   isCompact,
+  onOpenSuggestions,
+  isSuggestionsOpen = false,
 }) {
   const [activeSlotIndex, setActiveSlotIndex] = useState(null);
   const [draggingIndex, setDraggingIndex] = useState(null);
@@ -6329,7 +6337,31 @@ function BoxSlotTray({
         ))}
       </div>
 
-      <div className="box-center-channel" aria-hidden="true" />
+      {isCompact && typeof onOpenSuggestions === "function" ? (
+        // The docked (desktop) rack's empty centre doubles as the Suggestions opener: one real button filling the channel, so
+        // it takes no slot and moves nothing. It is UI chrome of the live rack only: the Collection Card draws its own rack
+        // and never mounts this tray. The visible words are decorative twins of the accessible name, so the name never changes.
+        <div className="box-center-channel">
+          <button
+            type="button"
+            className="box-center-suggestions"
+            aria-haspopup="dialog"
+            aria-expanded={isSuggestionsOpen}
+            aria-label={translator.t("suggestions.centerOpener.aria")}
+            onClick={onOpenSuggestions}
+          >
+            <span className="box-center-suggestions__rest" aria-hidden="true">
+              <span className="box-center-suggestions__mark">✦</span>
+              <span className="box-center-suggestions__label">{translator.t("app.suggestionsTab")}</span>
+            </span>
+            <span className="box-center-suggestions__hint" aria-hidden="true">
+              {translator.t("suggestions.centerOpener.hint")}
+            </span>
+          </button>
+        </div>
+      ) : (
+        <div className="box-center-channel" aria-hidden="true" />
+      )}
 
       <div className="box-column">
         {rows.map(({ rightIndex }) =>

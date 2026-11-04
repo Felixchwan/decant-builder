@@ -133,7 +133,7 @@ describe("the band matches the tab's own CSS, and the hook is wired once for the
     expect(rule[2].trim()).toBe("display: none;");
     expect(css.indexOf("html[data-footer-near]")).toBeGreaterThan(css.indexOf("@media (max-width: 619px)"));
     expect(css.indexOf("html[data-footer-near]")).toBeLessThan(css.indexOf("@media (prefers-reduced-motion"));
-    expect(css).not.toMatch(/transition/);
+    expect(rule[2]).not.toMatch(/transition|animation|opacity/); // the footer rule itself animates nothing
   });
 
   it("Ver caja is left alone by the footer rule (it never meets the footer's links)", () => {

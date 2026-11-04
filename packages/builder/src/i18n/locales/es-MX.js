@@ -70,6 +70,8 @@ export const esMX = {
   "suggestions.today.reason.weather.cool": "Encaja especialmente bien con el clima fresco",
   "suggestions.today.reason.weather.cold": "Encaja especialmente bien con el frío",
   "suggestions.affinity.empty": "Agrega algunas fragancias y aquí aparecerán sugerencias basadas en tus elecciones.",
+  "suggestions.centerOpener.hint": "Ver recomendaciones para completar tu caja",
+  "suggestions.centerOpener.aria": "Sugerencias: ver recomendaciones para completar tu caja",
   "filter.marketSegment.label": "Tipo",
   "filter.marketSegment.group": "Tipo de fragancia",
   "filter.marketSegment.triggerAria": "Tipo de fragancia: {count} de {total} activos",

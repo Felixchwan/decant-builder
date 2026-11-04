@@ -70,6 +70,8 @@ export const enUS = {
   "suggestions.today.reason.weather.cool": "Suits cool weather especially well",
   "suggestions.today.reason.weather.cold": "Suits the cold especially well",
   "suggestions.affinity.empty": "Add a few fragrances and suggestions based on your choices will appear here.",
+  "suggestions.centerOpener.hint": "See suggestions to complete your box",
+  "suggestions.centerOpener.aria": "Suggestions: see suggestions to complete your box",
   "filter.marketSegment.label": "Type",
   "filter.marketSegment.group": "Fragrance type",
   "filter.marketSegment.triggerAria": "Fragrance type: {count} of {total} enabled",

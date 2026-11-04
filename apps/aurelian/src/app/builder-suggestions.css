@@ -395,6 +395,139 @@
   line-height: 1.5;
 }
 
+/* ---- The desktop opener: the docked rack's empty centre -------------------------------------------------------
+   On desktop (981px and up, the same breakpoint at which the Builder docks the box summary into the header) the dark channel
+   between the two vial columns is the way into this same drawer: one real button filling the channel (see BoxSlotTray), so it
+   takes no slot and moves nothing, and the page's own tokens apply here (the header is outside .builder-page, so --gold, not
+   --aur-intel-*). It reads "SUGERENCIAS" upward along the channel, like the phone tab; on hover or keyboard focus the same
+   words swap, in place, for the longer invitation. Both layers fill the same box, so nothing resizes or jumps.
+
+   Glow: a very low warm-brass wash at rest, a touch more on hover / focus, and one slower, fainter breathing layer that is removed
+   entirely for reduced motion. It stays inside the channel (overflow hidden), so it never spills onto the vials. */
+@media (min-width: 981px) {
+  #aurelian-builder-summary-slot .box-center-channel:has(> .box-center-suggestions) {
+    position: relative;
+    overflow: hidden;
+  }
+
+  #aurelian-builder-summary-slot .box-center-suggestions {
+    position: absolute;
+    inset: 0;
+    display: block;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    border-radius: inherit;
+    background: transparent;
+    color: color-mix(in srgb, var(--gold) 78%, transparent);
+    cursor: pointer;
+    font: inherit;
+    overflow: hidden;
+  }
+
+  #aurelian-builder-summary-slot .box-center-suggestions::before,
+  #aurelian-builder-summary-slot .box-center-suggestions::after {
+    position: absolute;
+    inset: 0;
+    content: "";
+    pointer-events: none;
+  }
+
+  #aurelian-builder-summary-slot .box-center-suggestions::before {
+    background: radial-gradient(ellipse 90% 60% at 50% 50%, color-mix(in srgb, var(--gold) 9%, transparent), transparent 74%);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--gold) 7%, transparent);
+    opacity: 0.7;
+    transition: opacity 180ms ease;
+  }
+
+  #aurelian-builder-summary-slot .box-center-suggestions::after {
+    background: radial-gradient(ellipse 70% 40% at 50% 50%, color-mix(in srgb, var(--gold) 7%, transparent), transparent 80%);
+    animation: aur-center-breathe 9s ease-in-out infinite;
+    opacity: 0;
+  }
+
+  @keyframes aur-center-breathe {
+    0%,
+    100% {
+      opacity: 0;
+    }
+
+    50% {
+      opacity: 0.55;
+    }
+  }
+
+  #aurelian-builder-summary-slot .box-center-suggestions:is(:hover, :focus-visible)::before {
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--gold) 22%, transparent);
+    opacity: 1;
+  }
+
+  #aurelian-builder-summary-slot .box-center-suggestions:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--gold) 80%, transparent);
+    outline-offset: -4px;
+  }
+
+  #aurelian-builder-summary-slot .box-center-suggestions__rest,
+  #aurelian-builder-summary-slot .box-center-suggestions__hint {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    transform: rotate(180deg);
+    transition: opacity 180ms ease;
+    writing-mode: vertical-rl;
+  }
+
+  #aurelian-builder-summary-slot .box-center-suggestions__rest {
+    gap: 7px;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    line-height: 1;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  #aurelian-builder-summary-slot .box-center-suggestions__mark {
+    color: var(--gold);
+    font-size: 0.625rem;
+    letter-spacing: 0;
+  }
+
+  #aurelian-builder-summary-slot .box-center-suggestions__hint {
+    padding: 12px 6px;
+    color: var(--text);
+    font-size: 0.625rem;
+    font-weight: 500;
+    letter-spacing: 0.03em;
+    line-height: 1.4;
+    opacity: 0;
+  }
+
+  #aurelian-builder-summary-slot .box-center-suggestions:is(:hover, :focus-visible) .box-center-suggestions__rest {
+    opacity: 0;
+  }
+
+  #aurelian-builder-summary-slot .box-center-suggestions:is(:hover, :focus-visible) .box-center-suggestions__hint {
+    opacity: 1;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    #aurelian-builder-summary-slot .box-center-suggestions::before,
+    #aurelian-builder-summary-slot .box-center-suggestions__rest,
+    #aurelian-builder-summary-slot .box-center-suggestions__hint {
+      transition: none;
+    }
+
+    #aurelian-builder-summary-slot .box-center-suggestions::after {
+      animation: none;
+    }
+  }
+}
+
 /* The credit line the weather data's licence asks for: present only while weather is in use, quiet and small, last in the drawer. */
 .builder-portal-root .suggestions-attribution {
   margin: 0;

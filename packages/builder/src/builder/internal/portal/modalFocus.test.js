@@ -152,6 +152,39 @@ describe("resolveFocusRestoreTarget", () => {
     expect(resolveFocusRestoreTarget([body, null, undefined], body)).toBeNull();
     expect(resolveFocusRestoreTarget([], body)).toBeNull();
   });
+
+  // One drawer, several openers (the phone edge tab, the desktop rack's centre opener): focus goes back to whichever control
+  // actually opened it, and only when that one is gone does the fallback list (desktop opener, phone tab, box tab) apply.
+  describe("a drawer with more than one opener", () => {
+    const hidden = (name) => ({ ...ok(name), getClientRects: () => [] }); // display: none
+    const box = ok("box tab (Ver caja)");
+
+    it("desktop: focus returns to the desktop opener that was pressed, never to another opener", () => {
+      const desktop = ok("desktop opener");
+      const phoneTab = hidden("phone tab"); // not displayed at this width
+
+      expect(resolveFocusRestoreTarget([desktop, desktop, ...[hidden("desktop"), phoneTab, box]], body)).toBe(desktop);
+    });
+
+    it("phone: focus returns to the phone tab that was pressed", () => {
+      const phoneTab = ok("phone tab");
+
+      expect(resolveFocusRestoreTarget([phoneTab, phoneTab, hidden("desktop"), phoneTab, box], body)).toBe(phoneTab);
+    });
+
+    it("phone, tab stepped aside at the end of the page (not displayed): the box tab, never <body>", () => {
+      const phoneTab = hidden("phone tab");
+
+      expect(resolveFocusRestoreTarget([phoneTab, phoneTab, hidden("desktop opener"), phoneTab, box], body)).toBe(box);
+    });
+
+    it("desktop, the pressed opener was re-created while the drawer was open: the new one with the same class", () => {
+      const stale = { ...ok("stale desktop opener"), isConnected: false };
+      const recreated = ok("re-created desktop opener");
+
+      expect(resolveFocusRestoreTarget([stale, stale, recreated, hidden("phone tab"), box], body)).toBe(recreated);
+    });
+  });
 });
 
 describe("hasDialogTakenOver", () => {

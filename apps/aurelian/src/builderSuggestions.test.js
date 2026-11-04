@@ -233,6 +233,94 @@ describe("the drawer (builder-suggestions.css)", () => {
   });
 });
 
+describe("the desktop opener in the docked rack's centre (builder-suggestions.css)", () => {
+  const desktop = blocks.find(({ query }) => query === "(min-width: 981px)");
+  const SLOT = "#aurelian-builder-summary-slot";
+  const BTN = `${SLOT} .box-center-suggestions`;
+  // rules inside the desktop query, with nested at-rules (keyframes, reduced motion) taken out of the way
+  const nested = split(desktop.body);
+  const flat = nested.outside;
+  const reduced = nested.blocks.find(({ query }) => query === "(prefers-reduced-motion: reduce)");
+
+  it("exists only in the desktop query: 981px and up, the breakpoint at which the Builder docks the box summary", () => {
+    expect(desktop).toBeDefined();
+    expect(outside).not.toContain("box-center-suggestions");
+    expect(phone.body).not.toContain("box-center-suggestions");
+  });
+
+  it("every rule is scoped to the docked rack in the header slot, never to the page, the inline panel, the tablet rack or the Collection Card", () => {
+    const selectors = [...flat.matchAll(/([^{}]+)\{/g)].map((match) => match[1].trim()).filter((selector) => selector && !selector.startsWith("@") && !/^(\d+%|from|to|0%,\s*100%)/.test(selector));
+
+    expect(selectors.length).toBeGreaterThan(8);
+    selectors.forEach((selector) => expect(selector, selector).toMatch(/^#aurelian-builder-summary-slot /));
+    expect(desktop.body).not.toMatch(/\.collection-card|\.builder-portal-root|\.mobile-|\.builder-page/);
+  });
+
+  it("is one button filling the channel: absolutely placed inside it, so it consumes no room and shifts no vial", () => {
+    expect(bodyOf(flat, `${SLOT} .box-center-channel:has(> .box-center-suggestions)`)).toMatch(/position: relative;/);
+    expect(bodyOf(flat, BTN)).toMatch(/position: absolute;/);
+    expect(bodyOf(flat, BTN)).toMatch(/inset: 0;/);
+    expect(bodyOf(flat, BTN)).toMatch(/overflow: hidden;/); // the glow stays inside the channel
+    expect(bodyOf(flat, BTN)).toMatch(/cursor: pointer;/);
+  });
+
+  it("both text layers fill the same box and are swapped by opacity alone", () => {
+    for (const layer of ["rest", "hint"]) {
+      expect(flat).toContain(`${SLOT} .box-center-suggestions__${layer}`);
+    }
+
+    const shared = bodyOf(flat, `${SLOT} .box-center-suggestions__rest,\n  ${SLOT} .box-center-suggestions__hint`) || flat.match(/__rest,\s*#aurelian-builder-summary-slot \.box-center-suggestions__hint \{([^}]*)\}/)?.[1];
+
+    expect(shared).toMatch(/position: absolute;/);
+    expect(shared).toMatch(/inset: 0;/);
+    expect(shared).toMatch(/writing-mode: vertical-rl;/);
+    expect(flat).toMatch(/__hint \{[^}]*opacity: 0;/);
+  });
+
+  it("the hover and focus rules change opacity, a hairline and an outline only: nothing that could move or resize anything", () => {
+    const stateRules = [...flat.matchAll(/([^{}]*:is\(:hover, :focus-visible\)[^{}]*|[^{}]*:focus-visible[^{}]*)\{([^}]*)\}/g)];
+
+    expect(stateRules.length).toBeGreaterThanOrEqual(3);
+
+    for (const [, selector, body] of stateRules) {
+      const properties = [...body.matchAll(/([a-z-]+):/g)].map((match) => match[1]);
+
+      properties.forEach((property) => expect(["opacity", "box-shadow", "outline", "outline-offset"], `${selector.trim()} -> ${property}`).toContain(property));
+    }
+  });
+
+  it("reads 'SUGERENCIAS' at rest and the invitation on hover or focus-visible, never on hover alone: the name is the aria-label", () => {
+    expect(flat).toMatch(/__hint \{[^}]*opacity: 0;/);
+    expect(flat).toMatch(/:is\(:hover, :focus-visible\) \.box-center-suggestions__rest \{\s*opacity: 0;/);
+    expect(flat).toMatch(/:is\(:hover, :focus-visible\) \.box-center-suggestions__hint \{\s*opacity: 1;/);
+    expect(flat).toMatch(/:focus-visible \{\s*outline: 2px solid/);
+  });
+
+  it("is restrained: a low-alpha brass wash, a small slow breathing layer, no neon, green, burgundy or heavy blur", () => {
+    expect(desktop.body).toMatch(/color-mix\(in srgb, var\(--gold\) 9%, transparent\)/);
+    expect(desktop.body).not.toMatch(/burgundy|green|neon|#4ade80|blur\(|filter:/i);
+    expect(desktop.body).toMatch(/animation: aur-center-breathe 9s ease-in-out infinite;/);
+    expect(desktop.body).toMatch(/50% \{\s*opacity: 0\.55;/);
+    expect(desktop.body).not.toMatch(/infinite[^;]*\b[1-3]s\b|animation:[^;]*\b[0-3](\.\d+)?s\b/); // nothing fast
+  });
+
+  it("removes the autonomous animation for reduced motion, and the transitions with it", () => {
+    expect(reduced).toBeDefined();
+    expect(reduced.body).toMatch(/::after \{\s*animation: none;/);
+    expect(reduced.body).toMatch(/transition: none;/);
+  });
+
+  it("uses the page's own tokens (the header is outside .builder-page), and never the Builder-scoped ones that would be undefined there", () => {
+    expect(desktop.body).toContain("var(--gold)");
+    expect(desktop.body).not.toContain("--aur-intel-");
+  });
+
+  it("is untouched by the phone rules: the phone tab and Ver caja keep their own", () => {
+    expect(phone.body).toContain("suggestions-edge-tab");
+    expect(desktop.body).not.toContain("suggestions-edge-tab");
+  });
+});
+
 describe("loading and Discovery Decants safety", () => {
   it("is imported by Aurelian's layout, after the shared stylesheet and after the Ver caja rules it must mirror and out-rank", () => {
     const layout = read(APP_ROOT, "src", "app", "layout.jsx");

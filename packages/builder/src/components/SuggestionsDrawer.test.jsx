@@ -30,7 +30,7 @@ describe("features.suggestionsDrawer: Aurelian only", () => {
 
   it("is read strictly (=== true) and gates both the edge tab and the open state the panel receives", () => {
     expect(runtimeSource).toContain("const suggestionsDrawer = builderConfig.features?.suggestionsDrawer === true;");
-    expect(runtimeSource).toMatch(/\{suggestionsDrawer && \(\s*<button\s+ref=\{suggestionsTabRef\}/);
+    expect(runtimeSource).toMatch(/\{suggestionsDrawer && \(\s*<button\s+type="button"\s+className="suggestions-edge-tab"/);
     expect(runtimeSource).toContain("isSuggestionsOpen={suggestionsDrawer && isSuggestionsOpen}");
   });
 
@@ -54,7 +54,7 @@ describe("the edge tab (rendered by the Runtime)", () => {
     expect(tab).toContain('type="button"');
     expect(tab).toContain('aria-haspopup="dialog"');
     expect(tab).toContain("aria-expanded={isSuggestionsOpen}");
-    expect(tab).toContain("onClick={() => setIsSuggestionsOpen(true)}");
+    expect(tab).toContain("onClick={openSuggestions}"); // the one open handler every opener shares
     expect(tab).toContain('t("app.suggestionsTab")');
   });
 
@@ -70,10 +70,101 @@ describe("the edge tab (rendered by the Runtime)", () => {
   });
 
   it("is the control focus returns to when the drawer closes", () => {
-    expect(runtimeSource).toContain("suggestionsOpenerRef={suggestionsTabRef}");
-    // the tab first, then the box tab if a host has taken the tab off the screen (it steps aside at the end of the page)
-    expect(drawerSource).toContain('fallbackSelector: [".suggestions-edge-tab", \'[aria-controls="my-box-panel"]\'],');
+    expect(runtimeSource).toContain("suggestionsOpenerRef={suggestionsOpenerRef}");
+    // whichever control opened it comes first; if that is gone (the phone tab steps aside at the end of the page) the desktop
+    // rack's opener, then the phone tab, then the box tab
+    expect(drawerSource).toContain('fallbackSelector: [".box-center-suggestions", ".suggestions-edge-tab", \'[aria-controls="my-box-panel"]\'],');
     expect(drawerSource).toContain("openerRef,");
+  });
+});
+
+describe("one drawer, one state, one open handler: the phone tab and the desktop rack opener share them", () => {
+  const trayStart = panelSource.indexOf("function BoxSlotTray(");
+  const traySource = panelSource.slice(trayStart, panelSource.indexOf("\nfunction ", trayStart + 20));
+  const centerStart = traySource.indexOf("{isCompact && typeof onOpenSuggestions");
+  const center = traySource.slice(centerStart, traySource.indexOf(") : (", centerStart));
+
+  it("the Runtime keeps ONE open state and ONE handler, and remembers which control opened the drawer", () => {
+    expect(runtimeSource.match(/useState\(false\);\s*\n\s*\/\/ The control that actually opened/g)).toHaveLength(1);
+    expect(runtimeSource.match(/const \[isSuggestionsOpen, setIsSuggestionsOpen\]/g)).toHaveLength(1);
+    expect(runtimeSource.match(/const openSuggestions = \(event\) => \{/g)).toHaveLength(1);
+    expect(runtimeSource).toContain("suggestionsOpenerRef.current = opener?.nodeType === 1 ? opener : null;");
+    expect(runtimeSource).toContain("setIsSuggestionsOpen(true);");
+    expect(runtimeSource.match(/setIsSuggestionsOpen\(true\)/g)).toHaveLength(1); // only inside the shared handler
+  });
+
+  it("hands the desktop rack the very same handler, and only when the Suggestions feature is on", () => {
+    expect(runtimeSource).toContain("onSuggestionsOpen={suggestionsDrawer ? openSuggestions : undefined}");
+    expect(panelSource).toContain("onOpenSuggestions={onSuggestionsOpen}");
+    expect(panelSource).toContain("isSuggestionsOpen={isSuggestionsOpen}\n              />");
+    expect(panelSource).toContain("onClick={onOpenSuggestions}");
+  });
+
+  it("the drawer is mounted once, in the panel, whoever opened it: the rack opener never mounts a drawer or computes anything", () => {
+    expect(panelSource.match(/<SuggestionsDrawer/g)).toHaveLength(1);
+    expect(center).not.toMatch(/SuggestionsDrawer|buildToday|useState|useEffect|fetch|getTodayContext|resolveTodayContext|recommendations/);
+  });
+
+  it("renders the centre opener ONLY in the docked (desktop) rack, and keeps the plain decorative channel everywhere else", () => {
+    expect(center.startsWith('{isCompact && typeof onOpenSuggestions === "function" ? (')).toBe(true);
+    expect(traySource).toContain('<div className="box-center-channel" aria-hidden="true" />');
+    expect(panelSource).toContain("isCompact={isSummaryDocked}");
+    expect(panelSource).toContain('window.matchMedia("(min-width: 981px)")'); // the docking breakpoint, reused, not a new one
+  });
+
+  it("is one native button with an accessible name, a dialog relationship and decorative visible words", () => {
+    expect(center).toContain('type="button"');
+    expect(center).toContain('className="box-center-suggestions"');
+    expect(center).toContain('aria-haspopup="dialog"');
+    expect(center).toContain("aria-expanded={isSuggestionsOpen}");
+    expect(center).toContain('aria-label={translator.t("suggestions.centerOpener.aria")}');
+    expect(center.match(/<button/g)).toHaveLength(1); // no nested interactive element
+    expect(center).not.toMatch(/<(a|input|select|textarea)\b/);
+    expect(center).toContain('<span className="box-center-suggestions__rest" aria-hidden="true">');
+    expect(center).toContain('<span className="box-center-suggestions__hint" aria-hidden="true">');
+    expect(center).toContain('translator.t("app.suggestionsTab")');
+    expect(center).toContain('translator.t("suggestions.centerOpener.hint")');
+  });
+
+  it("holds no Spanish in shared code: both lines come from the dictionary", () => {
+    expect(center).not.toMatch(/SUGERENCIAS|Sugerencias|Ver recomendaciones/);
+  });
+
+  it("is not a fragrance slot: it adds no slot, no index and no handler to the rack", () => {
+    expect(center.replace(/^\s*\/\/.*$/gm, "")).not.toMatch(/BoxVialSlot|onRemove|onDrop|onDragStart|slot|index/i);
+  });
+
+  it("is never part of the Collection Card or its export: the card draws its own rack and never mounts the tray", () => {
+    const card = read("./CollectionCard.jsx");
+    const exportStart = panelSource.indexOf("async function renderCollectionCardPng");
+    const exportSource = panelSource.slice(exportStart, panelSource.indexOf("\nfunction ", exportStart + 20));
+
+    expect(card).not.toMatch(/BoxSlotTray|box-center|Suggestions|suggestions|Sugerencias|onOpenSuggestions/);
+    expect(exportSource).toContain("<CollectionCard");
+    expect(exportSource).not.toMatch(/BoxSlotTray|box-center|Suggestions|suggestions|onOpenSuggestions/);
+    expect(read("../builder/internal/collectionCard/buildCollectionCardViewModel.js")).not.toMatch(/uggestion|box-center/);
+  });
+});
+
+describe("the opener's markup in context (rendered)", () => {
+  // BoxSlotTray is private to BuilderPanel, so this exercises its source exactly as the contract tests above do, plus the
+  // dictionary lines it reads.
+  it("has real copy in both locales: 'Sugerencias' and the longer invitation", () => {
+    const es = createTranslator("es-MX");
+    const en = createTranslator("en-US");
+
+    expect(es.t("app.suggestionsTab")).toBe("Sugerencias");
+    expect(es.t("suggestions.centerOpener.hint")).toBe("Ver recomendaciones para completar tu caja");
+    expect(es.t("suggestions.centerOpener.aria")).toBe("Sugerencias: ver recomendaciones para completar tu caja");
+    expect(en.t("suggestions.centerOpener.hint")).toBe("See suggestions to complete your box");
+    expect(en.t("suggestions.centerOpener.aria")).toContain("Suggestions");
+  });
+
+  it("the accessible name carries the whole meaning, so nothing depends on hovering", () => {
+    const es = createTranslator("es-MX");
+
+    expect(es.t("suggestions.centerOpener.aria")).toContain(es.t("suggestions.centerOpener.hint").toLowerCase());
+    expect(es.t("suggestions.centerOpener.aria").startsWith(es.t("app.suggestionsTab"))).toBe(true);
   });
 });
 
