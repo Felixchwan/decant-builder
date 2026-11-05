@@ -36,6 +36,7 @@ describe("@discovery-box/builder public boundary", () => {
     expect(Object.keys(configEntry).sort()).toEqual([
       "buildLocalizedConfigOverrides",
       "createBuilderConfig",
+      "createCustomerPricing",
       "defaultBuilderConfig",
       "validateBuilderConfig",
     ]);

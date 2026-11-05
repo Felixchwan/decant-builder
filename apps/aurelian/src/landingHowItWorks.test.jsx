@@ -63,7 +63,7 @@ describe("landing 'Cómo funciona': three chapters of one ritual", () => {
 
   it("says the three acts in the approved copy and keeps the approved product facts", () => {
     expect(section).toContain(`Conoce perfiles, notas y estilos de las ${aurelianCatalog.length} fragancias del catálogo, sin tener que decidirte por una botella completa.`);
-    expect(section).toContain("Elige 6–14 fragancias, alcanza el mínimo de 12 puntos y arma una Discovery Box que tenga sentido para ti.");
+    expect(section).toContain("Elige 6–14 fragancias, alcanza el mínimo de $1,200 MXN y arma una Discovery Box que tenga sentido para ti.");
     expect(section).toContain("Úsalas en tu rutina real y descubre cuáles merecen de verdad un lugar en tu colección.");
     expect(section).toContain("Aurelian revisa disponibilidad y después comparte las instrucciones de pago.");
   });

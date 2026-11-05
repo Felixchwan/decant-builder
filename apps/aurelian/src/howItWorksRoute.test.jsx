@@ -90,13 +90,15 @@ describe("/como-funciona: the dedicated destination", () => {
     for (const title of ["Explora el catálogo", `Selecciona ${aurelianConfig.box.minSelectableSlots}–${aurelianConfig.box.maxSelectableSlots} fragancias`, "Comparte tus datos al finalizar", "Revisamos disponibilidad", "Recibe las instrucciones de pago"]) {
       expect(details).toContain(`<h3>${title}</h3>`);
     }
-    expect(details).toContain(`puntos de las ${aurelianCatalog.length} fragancias`);
-    expect(details).toContain(`hasta alcanzar al menos ${aurelianConfig.box.minPoints} puntos. Los puntos equilibran la composición de la caja; no son el precio de una botella.`);
+    expect(details).toContain(`perfiles aromáticos y precios de las ${aurelianCatalog.length} fragancias`);
+    expect(details).toContain("hasta alcanzar al menos $1,200 MXN. Cada fragancia suma su precio al total de tu caja.");
+    expect(aurelianConfig.box.minPoints * aurelianConfig.commerce.pointValue).toBe(1200); // the figure above is derived, not a second rule
     expect(details).toContain("Nuestro objetivo no es solo entregarte fragancias, sino ayudarte a comparar cada vez con más criterio.");
     expect(details).toContain("Dos espacios para ampliar el descubrimiento.");
     expect(details).toContain("Las opciones dependen de disponibilidad.");
     expect(details).toContain(`capacidad física de ${aurelianConfig.box.totalPhysicalSlots} espacios`);
-    expect(details).toContain(`Al alcanzar ${aurelianConfig.curatorBonus.targetPoints} puntos`);
+    expect(details).toContain("Al alcanzar $1,200 MXN, podrás");
+    expect(aurelianConfig.curatorBonus.targetPoints * aurelianConfig.commerce.pointValue).toBe(1200);
     expect(details).toContain("solicitarás por WhatsApp una revisión de disponibilidad");
     expect(details).toContain("Aurelian revisa manualmente tu selección.");
     expect(details).toContain("no una promesa de inventario inmediato");

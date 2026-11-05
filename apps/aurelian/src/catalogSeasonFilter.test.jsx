@@ -38,10 +38,10 @@ function sourceFiles(directory) {
 }
 
 describe("the manual season filter (a control for the existing seasonal mode)", () => {
-  it("is a labelled select after Search and Points, with Todas first and the four seasons by their approved names", () => {
+  it("is a labelled select after Search and Price, with Todas first and the four seasons by their approved names", () => {
     const markup = renderToStaticMarkup(<CatalogPageView />);
     const labels = [...markup.matchAll(/<div class="catalog-controls"[\s\S]*?<\/div>/g)][0][0].match(/<label>[^<]+/g).map((label) => label.replace("<label>", ""));
-    expect(labels).toEqual(["Buscar fragancia o casa", "Puntos por fragancia", "Temporada"]);
+    expect(labels).toEqual(["Buscar fragancia o casa", "Precio por fragancia", "Temporada"]);
     expect(seasonSelect(markup)).toEqual([
       { value: "all", label: "Todas", selected: true },
       { value: "spring", label: "Primavera", selected: false },

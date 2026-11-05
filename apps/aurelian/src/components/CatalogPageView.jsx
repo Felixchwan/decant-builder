@@ -14,7 +14,7 @@ export function CatalogPageView({ season = null, fullHref = "/catalogo" }) {
       <section className="page-shell page-intro catalog-page">
         <p className="eyebrow">{label ? `Selección de ${label.lower}` : `${aurelianCatalog.length} fragancias para explorar`}</p>
         <h1>Encuentra los aromas que quieres conocer.</h1>
-        <p className="lede">Busca por fragancia o casa. El catálogo no está ordenado por popularidad ni por lo más vendido. Los puntos equilibran tu Discovery Box y no representan el precio de una botella.</p>
+        <p className="lede">Busca por fragancia o casa. El catálogo no está ordenado por popularidad ni por lo más vendido. Cada fragancia muestra su precio en MXN; tu Discovery Box se arma sumando esos montos.</p>
         {label ? (
           <div className="catalog-season-context">
             <p>Fragancias compatibles con {label.lower}, de mayor a menor afinidad con la temporada.</p>

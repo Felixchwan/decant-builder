@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { aurelianCatalog } from "../merchant/catalog.js";
+import { aurelianConfig } from "../merchant/config.js";
+import { formatThresholdAmount } from "../merchant/pricing.js";
 
 // The "Cómo funciona" experience: three chapters of one small ritual. It lives on
 // its own page (/como-funciona); the landing only carries a short teaser (see
@@ -19,7 +21,7 @@ export const HOW_IT_WORKS_STEPS = Object.freeze([
   {
     key: "build",
     title: "Construye tu selección",
-    body: "Elige 6–14 fragancias, alcanza el mínimo de 12 puntos y arma una Discovery Box que tenga sentido para ti.",
+    body: `Elige 6–14 fragancias, alcanza el mínimo de ${formatThresholdAmount(aurelianConfig.box.minPoints)} y arma una Discovery Box que tenga sentido para ti.`,
   },
   {
     key: "discover",

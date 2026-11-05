@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createCatalogAssetResolver } from "@discovery-box/catalog";
 import { aurelianCatalog } from "../merchant/catalog.js";
+import { formatFragrancePrice, formatFragrancePriceWithCurrency } from "../merchant/pricing.js";
 import { filterCatalog } from "../lib/filterCatalog.js";
 import { buildCatalogSeasonHref, filterCatalogBySeason, getCatalogSeasonLabel, parseCatalogSeason } from "../lib/catalogSeason.js";
 import { SEASONAL_SLOTS } from "../lib/seasonalSelection.js";
@@ -177,10 +178,10 @@ export function CatalogExplorer({ season: urlSeason = null }) {
         <label>Buscar fragancia o casa
           <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Ej. bergamota, Armani…" type="search" />
         </label>
-        <label>Puntos por fragancia
+        <label>Precio por fragancia
           <select value={points} onChange={(event) => setPoints(event.target.value)}>
             <option value="all">Todos</option>
-            {pointOptions.map((value) => <option key={value} value={value}>{value} {value === 1 ? "punto" : "puntos"}</option>)}
+            {pointOptions.map((value) => <option key={value} value={value}>{formatFragrancePriceWithCurrency(value)}</option>)}
           </select>
         </label>
         <label>Temporada
@@ -192,7 +193,7 @@ export function CatalogExplorer({ season: urlSeason = null }) {
       </div>
       <div className="catalog-status"><p className="catalog-count" aria-live="polite">{seasonLabel
           ? `${visible.length === seasonTotal ? seasonTotal : `${visible.length} de ${seasonTotal}`} ${seasonTotal === 1 ? "fragancia" : "fragancias"} de ${seasonLabel.lower}`
-          : `${visible.length} de ${aurelianCatalog.length} fragancias`}</p><p>Los puntos ayudan a equilibrar tu Discovery Box; no representan el precio de una botella.</p></div>
+          : `${visible.length} de ${aurelianCatalog.length} fragancias`}</p><p>Cada fragancia muestra su precio en MXN; tu Discovery Box se arma sumando esos montos.</p></div>
       {visible.length ? (
         <div className="catalog-explorer-grid">
           {visible.map((item) => {
@@ -220,10 +221,10 @@ export function CatalogExplorer({ season: urlSeason = null }) {
                       backgroundColor: tier.background,
                       color: tier.color,
                     }}
-                    aria-label={`${item.points} ${item.points === 1 ? "punto" : "puntos"}`}
+                    aria-label={formatFragrancePriceWithCurrency(item.points)}
                   >
                     <span aria-hidden="true">{tier.emoji}</span>
-                    <span>{item.points} {item.points === 1 ? "punto" : "puntos"}</span>
+                    <span>{formatFragrancePrice(item.points)}</span>
                   </p>
                   <Link className="button product-card__action" href={`/build-your-box?fragrance=${encodeURIComponent(item.id)}`} aria-label={`Agregar ${item.name} a mi Discovery Box`}>Agregar a mi Discovery Box</Link>
                 </div>
@@ -258,7 +259,7 @@ export function CatalogExplorer({ season: urlSeason = null }) {
             );
           })}
         </div>
-      ) : <div className="empty-state"><h2>No encontramos coincidencias</h2><p>Prueba otra fragancia o casa, o selecciona “Todos” en puntos.</p></div>}
+      ) : <div className="empty-state"><h2>No encontramos coincidencias</h2><p>Prueba otra fragancia o casa, o selecciona “Todos” en precio.</p></div>}
       <div className="centered-cta"><Link className="button" href="/build-your-box">Construye tu Discovery Box</Link></div>
     </>
   );
