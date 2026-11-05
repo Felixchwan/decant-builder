@@ -355,7 +355,34 @@
 
 /* "Agregar a caja": a brass-rimmed button, not the package's solid green pill; "Agregado" is the same button gone quiet. */
 .builder-portal-root .suggestions-drawer .recommendation-actions {
+  align-items: center;
+  /* A controlled fallback, not a squeeze: if the pill and the button ever cannot share a row, the button drops to its own row at
+     the end instead of shrinking or clipping. The pill's auto margin keeps it at the start of its row. */
+  flex-wrap: wrap;
+  gap: 0.5rem 0.75rem;
   margin-top: 0.6rem;
+}
+
+/* The occasion a "Para hoy" pick stands for: a quiet editorial label, not a control. Near-black fill, restrained brass hairline,
+   muted ivory type, small caps-by-transform, low radius. One treatment for every occasion: no colour coding, no icon. */
+.builder-portal-root .suggestions-drawer .recommendation-occasion {
+  display: flex;
+  align-items: center;
+  /* Pushes the button (the package's end-aligned flex row) to the far end; the package stylesheet is frozen and owns no pill rule. */
+  margin-right: auto;
+  min-height: 1.5rem;
+  max-width: 100%;
+  padding: 0.15rem 0.55rem;
+  border: 1px solid var(--aur-intel-rim);
+  border-radius: 3px;
+  background: rgb(10, 9, 8);
+  color: var(--aur-intel-ink-muted);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  line-height: 1;
+  text-transform: uppercase;
+  white-space: nowrap;
 }
 
 .builder-portal-root .suggestions-drawer .recommendation-actions button {

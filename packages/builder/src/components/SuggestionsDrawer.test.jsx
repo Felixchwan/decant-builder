@@ -345,8 +345,14 @@ describe("the three sections reuse what the panel already computed", () => {
   });
 
   it("'Para hoy' ranks the whole catalog with the host's context, never the box", () => {
-    expect(drawerCode).toContain("buildTodayRecommendations({ perfumes: catalogPerfumes, context: hostToday })");
-    expect(drawerCode).not.toMatch(/buildTodayRecommendations\([^)]*selected/);
+    expect(drawerCode).toContain("buildTodayRoleRecommendations({ perfumes: catalogPerfumes, context: hostToday })");
+    expect(drawerCode).not.toMatch(/buildTodayRoleRecommendations\([^)]*selected/);
+  });
+
+  it("'Para hoy' passes each pick's occasion label from the dictionary to its card, and only to those cards", () => {
+    expect(drawerCode).toContain("occasionLabel={getTodayRoleLabel(recommendation, translator)}");
+    expect(drawerCode.match(/occasionLabel=/g)).toHaveLength(1); // not the Versatility / Affinity lanes
+    expect(panelSource.match(/occasionLabel=/g)).toHaveLength(1);
   });
 });
 
@@ -444,6 +450,30 @@ describe("RecommendationCard: the optional overrides the drawer uses", () => {
 
     expect(markup).toContain("recommendation-confidence recommendation-confidence-high");
     expect(markup).toContain(">Alta<");
+  });
+
+  it("shows an occasion label it is given as a plain, non-interactive span at the START of the action row, before the button", () => {
+    const markup = render({ reasons: ["x"], confidenceLabel: "", occasionLabel: "Vacaciones" });
+    const row = markup.slice(markup.indexOf('<div class="recommendation-actions">'));
+
+    expect(row).toContain('<span class="recommendation-occasion">Vacaciones</span>');
+    expect(row.indexOf("recommendation-occasion")).toBeLessThan(row.indexOf("<button"));
+    expect(row.match(/<button/g)).toHaveLength(1); // the label is not a control: no button, role, tabindex or handler on it
+    expect(row).not.toMatch(/<span class="recommendation-occasion"[^>]*(?:role|tabindex|aria-|onclick)/i);
+    expect(markup.slice(0, markup.indexOf("recommendation-actions"))).not.toContain("recommendation-occasion"); // not beside "Por qué encaja"
+  });
+
+  it("keeps the action row exactly as before when there is no occasion label (Versatility and Affinity cards)", () => {
+    expect(render({ reasons: ["x"], confidenceLabel: "" })).not.toContain("recommendation-occasion");
+    expect(render({ reasons: ["x"], confidenceLabel: "", occasionLabel: "" })).not.toContain("recommendation-occasion");
+    expect(render({})).toContain('<div class="recommendation-actions"><button type="button">Agregar a caja</button></div>');
+  });
+
+  it("an added pick keeps its label and the quiet 'Agregado' button", () => {
+    const markup = render({ isAdded: true, reasons: ["x"], confidenceLabel: "", occasionLabel: "Citas" });
+
+    expect(markup).toContain('<span class="recommendation-occasion">Citas</span>');
+    expect(markup).toMatch(/<button type="button" disabled="">Agregado<\/button>/);
   });
 
   it("an added pick reads as added and its button is disabled", () => {

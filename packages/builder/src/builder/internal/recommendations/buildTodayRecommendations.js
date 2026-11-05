@@ -79,10 +79,7 @@ export function buildTodayRecommendations({ perfumes = [], context, limit = TODA
     return { context: todayContext, confidence: null, recommendations: [] };
   }
 
-  const scored = perfumes
-    .filter(isUsablePerfume)
-    .map((perfume) => scorePerfume(perfume, todayContext))
-    .sort((first, second) => second.score - first.score || first.perfume.id - second.perfume.id);
+  const scored = scoreTodayCandidates(perfumes, todayContext);
 
   // At most one fragrance per house, keeping the best-scoring one of each.
   const houses = new Set();
@@ -110,6 +107,15 @@ export function buildTodayRecommendations({ perfumes = [], context, limit = TODA
           : "moderate",
     recommendations,
   };
+}
+
+// Every usable fragrance scored for an already-derived context, best first (ties by id). The one place the base TodayScore is
+// computed: the role layer (buildTodayRoleRecommendations.js) reads these candidates and never re-scores them.
+export function scoreTodayCandidates(perfumes, todayContext) {
+  return (Array.isArray(perfumes) ? perfumes : [])
+    .filter(isUsablePerfume)
+    .map((perfume) => scorePerfume(perfume, todayContext))
+    .sort((first, second) => second.score - first.score || first.perfume.id - second.perfume.id);
 }
 
 function scorePerfume(perfume, context) {

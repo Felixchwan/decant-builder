@@ -5,13 +5,75 @@ import { createTranslator } from "../../i18n/createTranslator.js";
 import { enUS } from "../../i18n/locales/en-US.js";
 import { esMX } from "../../i18n/locales/es-MX.js";
 import { buildTodayRecommendations } from "../internal/recommendations/buildTodayRecommendations.js";
-import { getTodayLeadLabel, getTodayReasonLabels } from "./todayRecommendationLabels.js";
+import { buildTodayRoleRecommendations } from "../internal/recommendations/buildTodayRoleRecommendations.js";
+import { getTodayLeadLabel, getTodayReasonLabels, getTodayRoleLabel } from "./todayRecommendationLabels.js";
 
 const es = createTranslator("es-MX");
 const en = createTranslator("en-US");
 const labelsSource = readFileSync(new URL("./todayRecommendationLabels.js", import.meta.url), "utf8");
 
 const reasonOf = (code, evidence) => ({ reasons: [{ code, evidence }] });
+
+describe("role pill label: words for the assigned occasion, only when it was assigned from real metadata", () => {
+  const pick = (key, fallback = false) => ({ role: { key, source: "fixed", fallback } });
+
+  it.each([
+    ["daily", "Diario"],
+    ["date", "Citas"],
+    ["office", "Oficina"],
+    ["night", "Noche"],
+    ["casual", "Casual"],
+    ["vacation", "Vacaciones"],
+    ["club", "Fiesta"],
+  ])("%s -> %s", (key, text) => {
+    expect(getTodayRoleLabel(pick(key), es)).toBe(text);
+  });
+
+  it("speaks English from the en-US dictionary", () => {
+    expect(getTodayRoleLabel(pick("daily"), en)).toBe("Daily");
+    expect(getTodayRoleLabel(pick("club"), en)).toBe("Party");
+  });
+
+  it("shows nothing for a fallback pick: it was not chosen for that occasion, so the card must not claim it", () => {
+    expect(getTodayRoleLabel(pick("date", true), es)).toBe("");
+  });
+
+  it("shows nothing without a role, with an unknown key, or without a translator, and never a raw key", () => {
+    expect(getTodayRoleLabel({}, es)).toBe("");
+    expect(getTodayRoleLabel(undefined, es)).toBe("");
+    expect(getTodayRoleLabel(pick("not-an-occasion"), es)).toBe("");
+    expect(getTodayRoleLabel(pick(""), es)).toBe("");
+    expect(getTodayRoleLabel(pick("daily"), undefined)).toBe("");
+  });
+
+  it("every real pick on the catalog gets a label, and the label is one of the approved words", () => {
+    const approved = new Set(["Diario", "Citas", "Oficina", "Noche", "Casual", "Vacaciones", "Fiesta"]);
+
+    for (const context of [
+      { season: "summer", weekday: 2, hour: 11 },
+      { season: "fall", weekday: 3, hour: 21 },
+      { season: "winter", weekday: 5, hour: 22 },
+      { season: "spring", weekday: 6, hour: 13 },
+      { season: "summer", weekday: 0, hour: 10 },
+    ]) {
+      buildTodayRoleRecommendations({ perfumes: fragrances, context }).recommendations.forEach((recommendation) => {
+        expect(approved.has(getTodayRoleLabel(recommendation, es))).toBe(true);
+      });
+    }
+  });
+
+  it("is the only place the role becomes words, and it reads the role, not the perfume's tags", () => {
+    expect(labelsSource).toContain("role.fallback");
+    expect(labelsSource).toContain("suggestions.today.role.");
+  });
+
+  it("adds no reason line: the role is not repeated as a reason", () => {
+    const [first] = buildTodayRoleRecommendations({ perfumes: fragrances, context: { season: "fall", weekday: 5, hour: 22 } }).recommendations;
+
+    getTodayReasonLabels(first, es).forEach((line) => expect(line).not.toMatch(/^(Diario|Citas|Oficina|Noche|Casual|Vacaciones|Fiesta)$/));
+    expect(getTodayReasonLabels(first, es).length).toBeLessThanOrEqual(2);
+  });
+});
 
 describe("lead line: restrained unless the evidence is full", () => {
   it.each([
@@ -249,7 +311,25 @@ describe("copy: es-MX and en-US stay in step", () => {
     }
   });
 
+  it("has a role label for every occasion key in the catalog, in both languages", () => {
+    const occasionKeys = [...new Set(fragrances.flatMap(({ occasions }) => occasions))];
+
+    expect(occasionKeys.length).toBeGreaterThan(0);
+    for (const dictionary of [esMX, enUS]) {
+      for (const key of [...occasionKeys, "daily", "date"]) expect(dictionary[`suggestions.today.role.${key}`], key).toBeTruthy();
+    }
+  });
+
   it("uses the approved Spanish names", () => {
+    expect(["daily", "date", "office", "night", "casual", "vacation", "club"].map((key) => esMX[`suggestions.today.role.${key}`])).toEqual([
+      "Diario",
+      "Citas",
+      "Oficina",
+      "Noche",
+      "Casual",
+      "Vacaciones",
+      "Fiesta",
+    ]);
     expect(esMX["app.suggestionsTab"]).toBe("Sugerencias");
     expect(esMX["suggestions.title"]).toBe("Sugerencias");
     expect(esMX["suggestions.today.title"]).toBe("Para hoy");

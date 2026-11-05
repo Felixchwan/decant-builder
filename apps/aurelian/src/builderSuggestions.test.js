@@ -217,6 +217,39 @@ describe("the drawer (builder-suggestions.css)", () => {
     expect(add).toMatch(/border: 1px solid var\(--aur-intel-rim-strong\);/);
   });
 
+  it("lays the action row out as [occasion pill] ... [Agregar a caja], and wraps the button to its own row instead of squeezing", () => {
+    const row = bodyOf(outside, ".builder-portal-root .suggestions-drawer .recommendation-actions");
+    const add = bodyOf(outside, ".builder-portal-root .suggestions-drawer .recommendation-actions button");
+
+    expect(row).toMatch(/align-items: center;/);
+    expect(row).toMatch(/flex-wrap: wrap;/); // the controlled two-row fallback
+    expect(row).not.toMatch(/display:|justify-content:/); // the package's flex row, end-aligned, is kept: the button stays at the right
+    expect(add).toMatch(/min-height: 2\.25rem;/); // the tap target is not reduced by the pill
+    expect(add).not.toMatch(/flex-shrink|width:|max-width:/);
+  });
+
+  it("paints the occasion pill editorially: near-black, brass hairline, muted ivory, small uppercase, low radius; no colour coding", () => {
+    const pill = bodyOf(outside, ".builder-portal-root .suggestions-drawer .recommendation-occasion");
+
+    expect(pill).toMatch(/background: rgb\(10, 9, 8\);/);
+    expect(pill).toMatch(/border: 1px solid var\(--aur-intel-rim\);/);
+    expect(pill).toMatch(/border-radius: 3px;/);
+    expect(pill).toMatch(/color: var\(--aur-intel-ink-muted\);/);
+    expect(pill).toMatch(/text-transform: uppercase;/);
+    expect(pill).toMatch(/font-size: 0\.6875rem;/);
+    expect(pill).toMatch(/white-space: nowrap;/);
+    expect(pill).toMatch(/margin-right: auto;/); // keeps "Agregar a caja" at the far end of the row
+    expect(pill).not.toMatch(/green|burgundy|#[0-9a-f]{3,6}\b|cursor:|hover/i);
+    // one treatment: no per-occasion rule exists
+    expect(outside).not.toMatch(/recommendation-occasion\[|recommendation-occasion--|recommendation-occasion:(?:nth|first|last)/);
+  });
+
+  it("styles the pill only inside the Suggestions drawer, never the Versatility / Affinity lanes elsewhere", () => {
+    [...css.matchAll(/([^{}]*recommendation-occasion[^{}]*)\{/g)].forEach(([, selector]) => {
+      expect(selector.trim()).toMatch(/^\.builder-portal-root \.suggestions-drawer /);
+    });
+  });
+
   it("keeps the weather credit line small, muted and last, with a visible focus ring on its link", () => {
     const line = bodyOf(outside, ".builder-portal-root .suggestions-attribution");
 

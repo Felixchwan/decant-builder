@@ -16,6 +16,20 @@ export function getTodayLeadLabel({ confidence, context } = {}, translator) {
   return translator?.t?.(`suggestions.today.lead.${level}.${time}`) || "";
 }
 
+// The occasion pill for one pick ("Diario", "Citas", "Oficina"...), from the role the selector assigned. Empty when the pick has
+// no role, or when it filled the role as a fallback (it was not chosen for that occasion, so the card must not say it was), or
+// when the dictionary has no label for the key: a key is never shown raw.
+export function getTodayRoleLabel(recommendation, translator) {
+  const role = recommendation?.role;
+
+  if (!role || role.fallback || typeof role.key !== "string" || !role.key) return "";
+
+  const key = `suggestions.today.role.${role.key}`;
+  const label = translator?.t?.(key);
+
+  return label && label !== key ? label : "";
+}
+
 // Up to two reason lines for one pick (the drawer is a glance, not a report), most telling first. A pick whose factors explained nothing gets one plain,
 // non-specific line rather than a claim.
 export function getTodayReasonLabels(recommendation, translator) {

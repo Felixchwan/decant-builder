@@ -30,8 +30,8 @@ import {
 } from "../builder/internal/intelligence/buildNoteExplorerViewModel.js";
 import { isCuratorBonusUnlocked as deriveCuratorBonusUnlocked } from "../builder/internal/curatorBonus/isCuratorBonusUnlocked.js";
 import { createRecommendationDetailsOpener } from "../builder/internal/recommendations/createRecommendationDetailsOpener.js";
-import { buildTodayRecommendations } from "../builder/internal/recommendations/buildTodayRecommendations.js";
-import { getTodayLeadLabel, getTodayReasonLabels } from "../builder/presentation/todayRecommendationLabels.js";
+import { buildTodayRoleRecommendations } from "../builder/internal/recommendations/buildTodayRoleRecommendations.js";
+import { getTodayLeadLabel, getTodayReasonLabels, getTodayRoleLabel } from "../builder/presentation/todayRecommendationLabels.js";
 import { isCuratorBonusUnlockTransition } from "../builder/internal/curatorBonus/isCuratorBonusUnlockTransition.js";
 import { buildBuilderThemeStyle, hasCustomBuilderTheme } from "../builder/theme/builderTheme.js";
 import {
@@ -1326,7 +1326,8 @@ const BuilderPanel = forwardRef(function BuilderPanel({
 
 // The Suggestions drawer: one left-anchored dialog that gathers three things the Builder already knows how to say, without
 // recomputing any of them:
-//   For today     up to three picks for the moment (buildTodayRecommendations), from the context the HOST derived
+//   For today     three picks for the moment, one per role: daily, date and the occasion that suits it
+//                 (buildTodayRoleRecommendations over the TodayScore), from the context the HOST derived
 //   Versatility   the panel's own next-improvement result, rendered by the same lane as in the box panel
 //   Affinity      the panel's own "based on your picks" recommendations, rendered by the same lane
 // It is a layer over the page, not a route: the catalog stays mounted and scrolled where it was. Add keeps it open (the
@@ -1388,7 +1389,7 @@ function SuggestionsDrawer({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   const today = useMemo(
-    () => (hostToday ? buildTodayRecommendations({ perfumes: catalogPerfumes, context: hostToday }) : null),
+    () => (hostToday ? buildTodayRoleRecommendations({ perfumes: catalogPerfumes, context: hostToday }) : null),
     [catalogPerfumes, hostToday]
   );
 
@@ -1477,6 +1478,7 @@ function SuggestionsDrawer({
                     translator={translator}
                     pricing={pricing}
                     reasons={getTodayReasonLabels(recommendation, translator)}
+                    occasionLabel={getTodayRoleLabel(recommendation, translator)}
                     confidenceLabel=""
                   />
                 ))}
@@ -5789,6 +5791,9 @@ export function RecommendationCard({
   // confidence label ("" shows none). Absent, the card derives both exactly as it always has.
   reasons,
   confidenceLabel: confidenceLabelOverride,
+  // Optional, for the same surface: the occasion the pick stands for ("Diario"), shown as a plain label at the start of the
+  // action row. Not a control. Absent or "" shows nothing, and the row is exactly the lanes' own.
+  occasionLabel = "",
 }) {
   const { perfume } = recommendation;
   const explanations = reasons ?? getRecommendationDisplayReasons({ recommendation, objectiveKey, translator });
@@ -5877,6 +5882,7 @@ export function RecommendationCard({
       </div>
 
       <div className="recommendation-actions">
+        {occasionLabel ? <span className="recommendation-occasion">{occasionLabel}</span> : null}
         <button
           type="button"
           onClick={(event) => onAddPerfume(perfume, "manual", event?.currentTarget)}
