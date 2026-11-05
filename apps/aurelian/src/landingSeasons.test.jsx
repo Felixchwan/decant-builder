@@ -29,6 +29,19 @@ const EXPECTED_ART = {
 const ART_DIR = join(APP_ROOT, "public", "media", "landing", "seasons");
 
 describe("Aurelian landing seasonal editorial cards (host-owned, decorative)", () => {
+  it("says the cards show 5 ml decants, as a quieter note directly under the existing lede and above the cards", () => {
+    const markup = renderToStaticMarkup(<HomePage />);
+    const lede = "No son las fragancias “mejor valoradas”: son un punto de partida distinto en cada estación.</p>";
+    const note = '<p class="section-lede section-lede--note">Las fragancias y precios mostrados corresponden a decants de 5 ml.</p>';
+
+    expect(markup).toContain(`${lede}${note}<div aria-label="Selecciones de temporada"`);
+    expect(markup.split(note).length).toBe(2); // once on the page, never repeated under each card
+
+    const globals = read(APP_ROOT, "src", "app", "globals.css");
+    expect(globals).toMatch(/\.section-lede--note \{[^}]*color:var\(--muted\)/);
+    expect(globals).not.toMatch(/\.section-lede--note \{[^}]*(?:max-width|border|background|padding)/); // same column, no card or badge
+  });
+
   it("exposes exactly four season roles, taken from the card's slot", () => {
     const markup = renderToStaticMarkup(<HomePage />);
     const seasons = [...markup.matchAll(/data-season="([^"]+)"/g)].map((match) => match[1]);
