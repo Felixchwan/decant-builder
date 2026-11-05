@@ -34,7 +34,10 @@ export function getTodayRoleLabel(recommendation, translator) {
 // non-specific line rather than a claim.
 export function getTodayReasonLabels(recommendation, translator) {
   const t = translator?.t;
-  const labels = (recommendation?.reasons || []).map((reason) => getReasonLabel(reason, t)).filter(Boolean);
+  // A pick from the role engine carries `explanation`: the lines to show, as evidence (profile lines first, the moment's own
+  // reasons as fillers). Any other pick is explained by its `reasons`, exactly as before.
+  const source = Array.isArray(recommendation?.explanation) ? recommendation.explanation : recommendation?.reasons || [];
+  const labels = source.map((reason) => getReasonLabel(reason, t, translator)).filter(Boolean);
 
   if (labels.length > 0) return labels.slice(0, MAX_TODAY_REASON_LINES);
 
@@ -43,8 +46,12 @@ export function getTodayReasonLabels(recommendation, translator) {
   return fallback ? [fallback] : [];
 }
 
-function getReasonLabel({ code, evidence = {} }, t) {
+function getReasonLabel({ code, evidence = {} }, t, translator) {
   if (typeof t !== "function") return "";
+
+  if (code === "profileWeather" || code === "profileTime" || code === "profileRole") {
+    return getProfileLabel(code, evidence, t, translator);
+  }
 
   if (code === "season") {
     return t("suggestions.today.reason.season", { season: t(`suggestions.today.season.${evidence.season}`) });
@@ -105,4 +112,90 @@ function getReasonLabel({ code, evidence = {} }, t) {
   }
 
   return "";
+}
+
+// "Su perfil cítrico y marino funciona especialmente bien con el calor": the fragrance's own matched accords and vibes, joined to
+// the part of the moment that earned them. Descriptors come from the evidence only, in the evidence's order, and one without a
+// word in the dictionary is left out (never shown raw); a line with nothing left to describe is no line.
+const MAX_ADJECTIVES = 3;
+const MAX_NOTES = 2;
+
+function getProfileLabel(code, evidence, t, translator) {
+  if (code === "profileWeather") {
+    const { profile, temperatureBucket, weatherCondition } = evidence;
+    // the same guards as the plain weather sentences: heat wording needs a hot or warm bucket, rain needs rain, cool a cool or cold one
+    const kind =
+      profile === "heat" && (temperatureBucket === "hot" || temperatureBucket === "warm")
+        ? "heat"
+        : profile === "rain" && weatherCondition === "rain"
+          ? "rain"
+          : profile === "cool" && (temperatureBucket === "cool" || temperatureBucket === "cold")
+            ? temperatureBucket
+            : "";
+    const { profileText, notesText } = describe(evidence.accords, evidence.vibes, t, translator);
+    const subject = composeSubject(profileText, notesText, t);
+
+    return kind && subject ? t(`suggestions.today.profile.weather.${kind}`, { subject }) : "";
+  }
+
+  if (code === "profileTime") {
+    if (!["morning", "daytime", "evening", "night"].includes(evidence.time)) return "";
+
+    const { profileText } = describe([], evidence.vibes, t, translator);
+
+    return profileText ? t(`suggestions.today.profile.time.${evidence.time}`, { profile: profileText }) : "";
+  }
+
+  if (!["daily", "date", "office", "casual", "night"].includes(evidence.role)) return "";
+
+  const { profileText } = describe([], evidence.vibes, t, translator);
+
+  return profileText ? t(`suggestions.today.profile.role.${evidence.role}`, { profile: profileText }) : "";
+}
+
+function describe(accords = [], vibes = [], t, translator) {
+  const adjectives = [];
+  const notes = [];
+
+  for (const key of [...accords, ...vibes]) {
+    const adjective = word(t, `suggestions.today.descriptor.${key}`);
+
+    if (adjective) {
+      if (!adjectives.includes(adjective)) adjectives.push(adjective);
+    } else if (accords.includes(key)) {
+      // an accord that is a thing rather than a quality (amber, vanilla...) is named by its own catalog label
+      const note = String(translator?.label?.("accords", key, "") || "").toLowerCase();
+
+      if (note && !notes.includes(note)) notes.push(note);
+    }
+  }
+
+  return {
+    profileText: joinList(adjectives.slice(0, MAX_ADJECTIVES), t),
+    notesText: joinList(notes.slice(0, MAX_NOTES), t),
+  };
+}
+
+function composeSubject(profileText, notesText, t) {
+  if (profileText && notesText) return t("suggestions.today.profile.subject.both", { profile: profileText, notes: notesText });
+  if (profileText) return t("suggestions.today.profile.subject.profile", { profile: profileText });
+  if (notesText) return t("suggestions.today.profile.subject.notes", { notes: notesText });
+
+  return "";
+}
+
+function word(t, key) {
+  const text = t(key);
+
+  return text && text !== key ? text : "";
+}
+
+function joinList(items, t) {
+  if (items.length <= 1) return items[0] || "";
+
+  const last = items[items.length - 1];
+  // Spanish "e" before an i- sound (not "hie-"); the dictionary decides what the words are
+  const connector = /^(i|hi(?!e))/i.test(last) ? t("suggestions.today.list.andBeforeI") : t("suggestions.today.list.and");
+
+  return `${items.slice(0, -1).join(", ")} ${connector} ${last}`;
 }

@@ -1,5 +1,6 @@
 import { TODAY_MAX_RECOMMENDATIONS, scoreTodayCandidates } from "./buildTodayRecommendations.js";
 import { deriveTodayContext } from "./todayContext.js";
+import { deriveTodayExplanations } from "./deriveTodayExplanation.js";
 
 // "Para hoy" as a curated set rather than three similar high scorers: one pick for DAILY, one for DATE and one for the
 // occasion that suits the moment. Merchant-neutral, deterministic, no model and no randomness.
@@ -83,13 +84,18 @@ export function buildTodayRoleRecommendations({ perfumes = [], context, limit = 
     return { ...fallback, roleScore: null, role: { key: role.key, source: role.source, fallback: true } };
   }).filter(Boolean);
 
+  // The picks keep the base engine's `reasons` untouched; `explanation` is the (at most two) lines each card shows, as evidence
+  // (see deriveTodayExplanation.js), chosen for the set as a whole.
+  const explanations = deriveTodayExplanations(recommendations);
+  const explained = recommendations.map((pick, index) => ({ ...pick, explanation: explanations[index] }));
+
   return {
     context: todayContext,
     // The set is only as sure as its weakest pick.
     confidence:
-      recommendations.length === 0 ? null : recommendations.every(({ confidence }) => confidence === "high") ? "high" : "moderate",
+      explained.length === 0 ? null : explained.every(({ confidence }) => confidence === "high") ? "high" : "moderate",
     dynamicRole,
-    recommendations,
+    recommendations: explained,
   };
 }
 

@@ -395,6 +395,7 @@ describe("the base TodayScore is unchanged: only the selection layer is new", ()
 
     delete base.role;
     delete base.roleScore;
+    delete base.explanation;
 
     return base;
   };

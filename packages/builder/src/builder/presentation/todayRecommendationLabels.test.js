@@ -232,6 +232,102 @@ describe("truthfulness over the whole catalog: what is said is what scored", () 
   });
 });
 
+describe("profile lines: the fragrance's own words, only with the evidence that earns them", () => {
+  const withNames = createTranslator("es-MX", { "taxonomy.amber": "Ámbar", "taxonomy.vanilla": "Vainilla", "taxonomy.iris": "Iris" });
+  const line = (code, evidence, translator = withNames) => getTodayReasonLabels({ explanation: [{ code, evidence }] }, translator);
+  const generic = ["Una opción razonable para este momento"];
+
+  it("weather: adjectives for qualities, 'con' + names for things, in the evidence's order", () => {
+    expect(line("profileWeather", { profile: "heat", temperatureBucket: "hot", accords: ["citrus", "marine"], vibes: ["fresh", "clean"] })).toEqual([
+      "Su perfil cítrico, marino y fresco funciona especialmente bien con el calor",
+    ]);
+    expect(line("profileWeather", { profile: "cool", temperatureBucket: "cool", accords: ["amber", "vanilla"], vibes: [] })).toEqual([
+      "Su perfil de ámbar y vainilla encaja especialmente bien con el clima fresco",
+    ]);
+    expect(line("profileWeather", { profile: "cool", temperatureBucket: "cold", accords: ["warm spicy", "vanilla"], vibes: ["cozy"] })).toEqual([
+      "Su perfil especiado y acogedor, con vainilla, encaja especialmente bien con el frío",
+    ]);
+    expect(line("profileWeather", { profile: "rain", weatherCondition: "rain", accords: [], vibes: ["cozy", "warm"] })).toEqual([
+      "Su perfil acogedor y cálido encaja bien con un día lluvioso",
+    ]);
+  });
+
+  it("weather wording keeps its guards: heat needs hot/warm, rain needs rain, cool needs cool/cold", () => {
+    expect(line("profileWeather", { profile: "heat", temperatureBucket: "cool", accords: ["citrus"], vibes: [] })).toEqual(generic);
+    expect(line("profileWeather", { profile: "heat", accords: ["citrus"], vibes: [] })).toEqual(generic);
+    expect(line("profileWeather", { profile: "rain", weatherCondition: "clear", accords: ["amber"], vibes: [] })).toEqual(generic);
+    expect(line("profileWeather", { profile: "cool", temperatureBucket: "hot", accords: ["amber"], vibes: [] })).toEqual(generic);
+  });
+
+  it("time: names the part of the day the evidence names, with the vibes it matched", () => {
+    expect(line("profileTime", { time: "morning", vibes: ["fresh", "easy"] })).toEqual(["Su carácter fresco y fácil va bien con la mañana"]);
+    expect(line("profileTime", { time: "daytime", vibes: ["clean"] })).toEqual(["Su carácter limpio va bien con el día"]);
+    expect(line("profileTime", { time: "evening", vibes: ["elegant"] })).toEqual(["Su carácter elegante va bien con la tarde"]);
+    expect(line("profileTime", { time: "night", vibes: ["seductive", "mysterious", "bold"] })).toEqual(["Su carácter seductor, misterioso y audaz va bien con la noche"]);
+    expect(line("profileTime", { time: "midnight", vibes: ["seductive"] })).toEqual(generic);
+  });
+
+  it("role: the profile plus what it suits, and nothing for a role without wording", () => {
+    expect(line("profileRole", { role: "daily", vibes: ["versatile", "fresh"] })).toEqual(["Con su perfil versátil y fresco, encaja con el uso diario"]);
+    expect(line("profileRole", { role: "date", vibes: ["seductive"] })).toEqual(["Con su perfil seductor, encaja con una cita"]);
+    expect(line("profileRole", { role: "club", vibes: ["bold"] })).toEqual(generic);
+  });
+
+  it("never shows a raw key, an unknown descriptor or an empty profile", () => {
+    expect(line("profileTime", { time: "night", vibes: ["not-a-vibe"] })).toEqual(generic);
+    expect(line("profileWeather", { profile: "cool", temperatureBucket: "cool", accords: ["not-an-accord"], vibes: [] })).toEqual(generic);
+    // no accord names supplied by a host: nothing is invented
+    expect(line("profileWeather", { profile: "cool", temperatureBucket: "cool", accords: ["amber"], vibes: [] }, es)).toEqual(generic);
+    expect(line("profileTime", { time: "night", vibes: ["seductive"] }, null)).toEqual([]);
+  });
+
+  it("joins at most three qualities and two names", () => {
+    expect(line("profileTime", { time: "night", vibes: ["seductive", "mysterious", "dark", "bold"] })[0]).toBe("Su carácter seductor, misterioso y oscuro va bien con la noche");
+    expect(line("profileWeather", { profile: "cool", temperatureBucket: "cool", accords: ["amber", "vanilla", "iris"], vibes: [] })[0]).toBe(
+      "Su perfil de ámbar y vainilla encaja especialmente bien con el clima fresco"
+    );
+  });
+
+  it("shows at most two lines, profile lines first, then the moment's own reasons", () => {
+    const labels = getTodayReasonLabels(
+      {
+        explanation: [
+          { code: "profileWeather", evidence: { profile: "heat", temperatureBucket: "hot", accords: ["citrus"], vibes: [] } },
+          { code: "profileTime", evidence: { time: "daytime", vibes: ["fresh"] } },
+          { code: "season", evidence: { season: "summer", weight: 10 } },
+        ],
+      },
+      withNames
+    );
+
+    expect(labels).toEqual(["Su perfil cítrico funciona especialmente bien con el calor", "Su carácter fresco va bien con el día"]);
+  });
+
+  it("a pick with no explanation is explained by its reasons exactly as before", () => {
+    expect(getTodayReasonLabels({ reasons: [{ code: "season", evidence: { season: "fall", weight: 9 } }] }, es)).toEqual(["Encaja con el otoño"]);
+    expect(getTodayReasonLabels({ explanation: [], reasons: [{ code: "season", evidence: { season: "fall" } }] }, es)).toEqual(generic);
+  });
+
+  it("speaks English from the en-US dictionary", () => {
+    const names = createTranslator("en-US", { "taxonomy.amber": "Amber", "taxonomy.vanilla": "Vanilla" });
+
+    expect(line("profileTime", { time: "night", vibes: ["seductive", "bold"] }, names)).toEqual(["Its seductive and bold character suits the night"]);
+    expect(line("profileWeather", { profile: "cool", temperatureBucket: "cool", accords: ["amber", "vanilla"], vibes: [] }, names)).toEqual([
+      "Its amber and vanilla profile suits cool weather especially well",
+    ]);
+  });
+
+  it("has a word for every accord and vibe the profile families can name, and a connector, in both languages", () => {
+    const keys = ["citrus", "aquatic", "marine", "fresh", "green", "mineral", "warm spicy", "smoky", "clean", "bright", "energetic", "easy", "versatile", "cozy", "warm", "calm", "relaxed", "soft", "smooth", "seductive", "mysterious", "dark", "elegant", "bold", "sophisticated"];
+
+    for (const dictionary of [esMX, enUS]) {
+      keys.forEach((key) => expect(dictionary[`suggestions.today.descriptor.${key}`], key).toBeTruthy());
+      expect(dictionary["suggestions.today.list.and"]).toBeTruthy();
+      expect(dictionary["suggestions.today.list.andBeforeI"]).toBeTruthy();
+    }
+  });
+});
+
 describe("weather and temperature reason lines say only what their evidence supports", () => {
   const weather = (evidence) => getTodayReasonLabels({ reasons: [{ code: "weather", evidence }] }, es);
   const temperature = (temperatureBucket) => getTodayReasonLabels({ reasons: [{ code: "temperature", evidence: { temperatureBucket, weight: 8 } }] }, es);
