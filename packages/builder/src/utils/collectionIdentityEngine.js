@@ -243,6 +243,19 @@ export function getCollectionIdentityProfile(boxSummary = {}) {
   };
 }
 
+// Every identity the engine can produce, with its own (English) editorial copy, in library order. Read-only: it exists so a host
+// that words these identities itself can be checked for completeness (a missing identity must never reach a customer unwritten).
+export function listCollectionIdentityProfiles() {
+  return [EMPTY_PROFILE, ...IDENTITY_LIBRARY].map(({ id, title, subtitle, mood, palette, archetype }) => ({
+    id,
+    title,
+    subtitle,
+    mood: [...mood],
+    palette,
+    archetype,
+  }));
+}
+
 export function getCollectionIdentityCandidates(boxSummary = {}) {
   const analysis = analyzeCollection(boxSummary);
 

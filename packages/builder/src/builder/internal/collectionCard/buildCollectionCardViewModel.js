@@ -4,6 +4,27 @@ import {
 } from "../intelligence/collectionMetrics.js";
 import { SEASON_IDS, buildSeasonalEvidence } from "../intelligence/seasonalEvidence.js";
 import { createCustomerPricing } from "../../../utils/customerPricing.js";
+import { createTranslator } from "../../../i18n/createTranslator.js";
+import { localizeCollectionCardEditorial } from "./localizeCollectionCardEditorial.js";
+
+// Every semantic code a profile chip can carry. "coverage" is the chip a box earns from its coverage when no other applies; it is
+// worded from its category / target / level. A host that words the card itself has to cover all of these.
+export const COLLECTION_CARD_TRAIT_CODES = Object.freeze([
+  "balancedRotation",
+  "highlyVersatile",
+  "springSummerSpecialist",
+  "fallWinterSpecialist",
+  "officeFriendly",
+  "eveningFocused",
+  "freshLeaning",
+  "warmLeaning",
+  "dateNightStrong",
+  "collectorFriendly",
+  "coherentSignature",
+  "takingShape",
+  "casualHeavy",
+  "coverage",
+]);
 
 export function buildCollectionCardViewModel({
   selectedPerfumes,
@@ -23,16 +44,25 @@ export function buildCollectionCardViewModel({
     boxSummary.seasonStrengths || boxSummary.seasonCounts || {},
     items.length
   );
-  const profileTraits = buildCollectionCardProfileTraits({
+  const traitEntries = buildCollectionCardProfileTraitEntries({
     selectedPerfumes,
     boxSummary,
     coverageSummary,
   });
-  const dnaDescriptors = buildCollectionCardDnaItems({ boxSummary, scentDna })
-    .slice(0, 3)
-    .map((item) => formatLabel(item.label));
+  const dnaItems = buildCollectionCardDnaItems({ boxSummary, scentDna }).slice(0, 3);
+  // A host that words the card itself (config.collectionCard.editorial) has the engines' semantic results -- identity id, chip
+  // codes, accord keys -- mapped to its own copy; a host without one keeps the engines' English exactly as before.
+  const editorial = config.collectionCard.editorial;
+  const translator = editorial ? createTranslator(config.locale, config.taxonomyLabels) : null;
+  const localized = editorial
+    ? localizeCollectionCardEditorial({ editorial, identity: collectionIdentity, traitEntries, dnaKeys: dnaItems.map((item) => item.label), translator })
+    : null;
+  const profileTraits = localized ? localized.profileTraits : uniqueStrings(traitEntries.map((entry) => entry.label)).slice(0, 5);
+  const dnaDescriptors = localized ? localized.dnaDescriptors : dnaItems.map((item) => formatLabel(item.label));
   const primaryDna = dnaDescriptors[0] || "";
-  const title = collectionIdentity?.title;
+  const title = localized ? localized.title : collectionIdentity?.title;
+  const subtitle = localized ? localized.subtitle : collectionIdentity?.subtitle;
+  const mood = localized ? localized.mood : collectionIdentity?.mood || [];
   // A host that speaks money to customers (commerce.priceDisplay: "price") has the card's summary read the
   // box's total amount instead of its points. This one view model feeds Preview, Download and Share alike.
   const pricing = createCustomerPricing(config);
@@ -42,8 +72,8 @@ export function buildCollectionCardViewModel({
       businessName: config.brand?.businessName || "",
       heading: config.collectionCard.brandHeading,
       title,
-      subtitle: collectionIdentity?.subtitle,
-      mood: collectionIdentity?.mood || [],
+      subtitle,
+      mood,
       palette: collectionIdentity?.palette,
     },
     collection: {
@@ -56,8 +86,8 @@ export function buildCollectionCardViewModel({
     },
     identity: {
       title,
-      subtitle: collectionIdentity?.subtitle,
-      mood: collectionIdentity?.mood || [],
+      subtitle,
+      mood,
       palette: collectionIdentity?.palette,
       archetype: collectionIdentity?.archetype,
     },
@@ -66,7 +96,9 @@ export function buildCollectionCardViewModel({
       primary: primaryDna,
     },
     coverage: {
-      seasons: seasonRows,
+      seasons: translator
+        ? seasonRows.map((row) => ({ ...row, label: translator.label("seasons", row.id, row.label) }))
+        : seasonRows,
       profileTraits: profileTraits.slice(0, 3),
     },
     curatorBonus: {
@@ -93,14 +125,16 @@ export function buildCollectionCardViewModel({
       curatorBonusLockedCopy: config.collectionCard.curatorBonusLockedCopy,
       perfumes: items,
       title,
-      subtitle: collectionIdentity?.subtitle,
-      mood: collectionIdentity?.mood || [],
+      subtitle,
+      mood,
       palette: collectionIdentity?.palette,
       fragranceCount: items.length,
       collectionPoints: totalPoints,
       ...(pricing.isPriceDisplay
-        ? { collectionTotal: pricing.formatAmountWithCurrency(estimatedValue), collectionTotalLabel: "Total" }
+        ? { collectionTotal: pricing.formatAmountWithCurrency(estimatedValue), collectionTotalLabel: config.collectionCard.totalLabel ?? "Total" }
         : {}),
+      // The card's own words (section titles, summary labels, empty states, accessible names), all from the host's config.
+      ...cardLabels(config.collectionCard),
       profileTraits: profileTraits.slice(0, 3),
       dnaDescriptors,
       primaryDna,
@@ -133,7 +167,13 @@ export function buildCollectionCardItems(selectedPerfumes) {
 
 // The profile chips. Every lean here is read from the shared metrics (collectionMetrics.js), as numbers per
 // fragrance, so the chips, the stars, the radar and Box Intelligence describe the same box the same way.
-export function buildCollectionCardProfileTraits({ selectedPerfumes = [], boxSummary = {}, coverageSummary = { strengths: [] } } = {}) {
+export function buildCollectionCardProfileTraits(input = {}) {
+  return uniqueStrings(buildCollectionCardProfileTraitEntries(input).map((entry) => entry.label)).slice(0, 5);
+}
+
+// The same chips as semantic entries: a stable `code` (or, for a chip derived from coverage, the category / target / level it
+// came from) beside the English label. A host that words the card itself maps the code; the label is what everyone else shows.
+export function buildCollectionCardProfileTraitEntries({ selectedPerfumes = [], boxSummary = {}, coverageSummary = { strengths: [] } } = {}) {
   const selectedCount = Array.isArray(selectedPerfumes) ? selectedPerfumes.length : 0;
 
   if (selectedCount === 0) {
@@ -148,60 +188,66 @@ export function buildCollectionCardProfileTraits({ selectedPerfumes = [], boxSum
   const leansCool = leaning.length > 0 && leaning.every((season) => season === "spring" || season === "summer");
   const leansWarm = leaning.length > 0 && leaning.every((season) => season === "fall" || season === "winter");
   const traits = [];
+  const add = (code, label) => traits.push({ code, label });
 
   if (profile.isBalancedRotation) {
-    traits.push("Balanced Rotation");
+    add("balancedRotation", "Balanced Rotation");
   } else if (stars.versatility >= 4) {
-    traits.push("Highly Versatile");
+    add("highlyVersatile", "Highly Versatile");
   }
 
   // Seasonal character comes right after the balance chip: it is the part of the story the radar also tells, and
   // the chips are capped (the card shows the first three), so it must not be the first thing cut.
   if (leansCool) {
-    traits.push("Spring/Summer Specialist");
+    add("springSummerSpecialist", "Spring/Summer Specialist");
   }
 
   if (leansWarm) {
-    traits.push("Fall/Winter Specialist");
+    add("fallWinterSpecialist", "Fall/Winter Specialist");
   }
 
   if (profile.everydayShare >= 0.5) {
-    traits.push("Office Friendly");
+    add("officeFriendly", "Office Friendly");
   }
 
   if (isEveningFocused(profile)) {
-    traits.push("Evening Focused");
+    add("eveningFocused", "Evening Focused");
   }
 
   if (profile.lean === "fresh") {
-    traits.push("Fresh-Leaning");
+    add("freshLeaning", "Fresh-Leaning");
   }
 
   if (profile.lean === "warm") {
-    traits.push("Warm-Leaning");
+    add("warmLeaning", "Warm-Leaning");
   }
 
   if (profile.dateNightCount >= 2 && profile.dateNightShare >= 0.35) {
-    traits.push("Date Night Strong");
+    add("dateNightStrong", "Date Night Strong");
   }
 
   if (stars.breadth >= 4 && selectedCount >= 5) {
-    traits.push("Collector Friendly");
+    add("collectorFriendly", "Collector Friendly");
   }
 
   if (stars.signature >= 4 && selectedCount >= 4) {
-    traits.push("Coherent Signature");
+    add("coherentSignature", "Coherent Signature");
   }
 
   if (traits.length === 0 && coverageSummary.strengths.length > 0) {
-    traits.push(...coverageSummary.strengths.slice(0, 2).map((item) => item.label));
+    traits.push(
+      ...coverageSummary.strengths
+        .slice(0, 2)
+        .map((item) => ({ code: "coverage", label: item.label, category: item.category, target: item.target, level: item.level }))
+    );
   }
 
   if (traits.length === 0) {
-    traits.push(selectedCount < 3 ? "Taking Shape" : "Casual Heavy");
+    if (selectedCount < 3) add("takingShape", "Taking Shape");
+    else add("casualHeavy", "Casual Heavy");
   }
 
-  return uniqueStrings(traits).slice(0, 5);
+  return traits.filter((entry, index) => entry.label && traits.findIndex((other) => other.label === entry.label) === index).slice(0, 5);
 }
 
 export function buildCollectionCardDnaItems({ boxSummary, scentDna }) {
@@ -271,4 +317,27 @@ function formatLabel(value) {
     .filter(Boolean)
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
     .join(" ");
+}
+
+// The card's own words from the host's config, only those the config defines (a config built by createBuilderConfig defines them all,
+// so the card never falls back to a default it was not given); none defined, no `labels` prop at all.
+function cardLabels(card) {
+  const labels = Object.fromEntries(
+    Object.entries({
+      mood: card.moodLabel,
+      moodAria: card.moodAriaLabel,
+      summaryAria: card.summaryAriaLabel,
+      fragrance: card.fragranceLabel,
+      fragrances: card.fragrancesLabel,
+      points: card.pointsLabel,
+      profileTitle: card.profileTitle,
+      profileEmpty: card.profileEmptyCopy,
+      dnaTitle: card.dnaTitle,
+      dnaEmpty: card.dnaEmptyCopy,
+      curatorSlotAria: card.curatorSlotAriaLabel,
+      emptySlotAria: card.emptySlotAriaLabel,
+    }).filter(([, value]) => typeof value === "string")
+  );
+
+  return Object.keys(labels).length > 0 ? { labels } : {};
 }

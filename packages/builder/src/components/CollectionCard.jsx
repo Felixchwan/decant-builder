@@ -6,6 +6,22 @@ import { getCollectionLightingComposition } from "../builder/internal/collection
 const DEFAULT_PROFILE_TRAITS = [];
 const DEFAULT_DNA_DESCRIPTORS = [];
 const DEFAULT_PERFUMES = [];
+// The card's own words. A host passes its language through `labels` (the view model reads them from the host's config); these
+// defaults are the card's original English, so a card rendered without them reads exactly as it always has.
+const DEFAULT_LABELS = Object.freeze({
+  mood: "MOOD",
+  moodAria: "Collection mood",
+  summaryAria: "Collection summary",
+  fragrance: "Fragrance",
+  fragrances: "Fragrances",
+  points: "Collection Points",
+  profileTitle: "Collection Profile",
+  profileEmpty: "Profile develops as the box is curated.",
+  dnaTitle: "Collection DNA",
+  dnaEmpty: "Scent identity develops as the box is curated.",
+  curatorSlotAria: "Curator Bonus slot",
+  emptySlotAria: "Empty collection slot",
+});
 
 const CollectionCard = forwardRef(function CollectionCard({
   heading = "",
@@ -30,6 +46,7 @@ const CollectionCard = forwardRef(function CollectionCard({
   isCuratorBonusUnlocked = false,
   maxSlots = 16,
   maxSelectableSlots = 14,
+  labels: labelOverrides,
   ariaLabel = "collection card",
   boxAriaLabel = "Rendered Discovery Box",
   footer = "Curated for discovery.",
@@ -38,6 +55,8 @@ const CollectionCard = forwardRef(function CollectionCard({
   curatorBonusUnlockedCopy = "Mystery selections remain wrapped.",
   curatorBonusLockedCopy = "Complete your Discovery Box to unlock mystery selections.",
 }, ref) {
+  // a label the host did not supply keeps the card's own wording
+  const labels = { ...DEFAULT_LABELS, ...Object.fromEntries(Object.entries(labelOverrides || {}).filter(([, value]) => typeof value === "string")) };
   const displayTitle = title || collectionIdentity;
   const displaySubtitle = subtitle || curatorSubtitle;
   const visibleMood = mood.filter(Boolean).slice(0, 3);
@@ -77,8 +96,8 @@ const CollectionCard = forwardRef(function CollectionCard({
       </header>
 
       {visibleMood.length === 3 && (
-        <div className="collection-card-mood" aria-label="Collection mood">
-          <span>MOOD</span>
+        <div className="collection-card-mood" aria-label={labels.moodAria}>
+          <span>{labels.mood}</span>
           <p>
             {visibleMood.map((descriptor, index) => (
               <span className="collection-card-mood-item" key={descriptor}>
@@ -104,6 +123,7 @@ const CollectionCard = forwardRef(function CollectionCard({
                 perfume={perfumes[leftIndex]}
                 isReserved={leftIndex >= maxSelectableSlots}
                 isCuratorBonusUnlocked={isCuratorBonusUnlocked}
+                labels={labels}
               />
             ))}
           </div>
@@ -119,6 +139,7 @@ const CollectionCard = forwardRef(function CollectionCard({
                   perfume={perfumes[rightIndex]}
                   isReserved={rightIndex >= maxSelectableSlots}
                   isCuratorBonusUnlocked={isCuratorBonusUnlocked}
+                  labels={labels}
                 />
               ) : null
             )}
@@ -126,16 +147,16 @@ const CollectionCard = forwardRef(function CollectionCard({
         </div>
       </div>
 
-      <div className="collection-card-summary" aria-label="Collection summary">
+      <div className="collection-card-summary" aria-label={labels.summaryAria}>
         <div>
           <strong>{fragranceCount}</strong>
-          <span>{fragranceCount === 1 ? "Fragrance" : "Fragrances"}</span>
+          <span>{fragranceCount === 1 ? labels.fragrance : labels.fragrances}</span>
         </div>
 
         {collectionTotal === null ? (
           <div>
             <strong>{Number(collectionPoints).toFixed(1)}</strong>
-            <span>Collection Points</span>
+            <span>{labels.points}</span>
           </div>
         ) : (
           <div>
@@ -145,7 +166,7 @@ const CollectionCard = forwardRef(function CollectionCard({
         )}
       </div>
 
-      <CollectionCardSection title="Collection Profile">
+      <CollectionCardSection title={labels.profileTitle}>
         {visibleProfileTraits.length > 0 ? (
           <div className="collection-card-chip-row">
             {visibleProfileTraits.map((trait) => (
@@ -153,11 +174,11 @@ const CollectionCard = forwardRef(function CollectionCard({
             ))}
           </div>
         ) : (
-          <p>Profile develops as the box is curated.</p>
+          <p>{labels.profileEmpty}</p>
         )}
       </CollectionCardSection>
 
-      <CollectionCardSection title="Collection DNA">
+      <CollectionCardSection title={labels.dnaTitle}>
         {visibleDnaDescriptors.length > 0 ? (
           <div className="collection-card-dna-row">
             {visibleDnaDescriptors.map((descriptor) => (
@@ -165,7 +186,7 @@ const CollectionCard = forwardRef(function CollectionCard({
             ))}
           </div>
         ) : (
-          <p>Scent identity develops as the box is curated.</p>
+          <p>{labels.dnaEmpty}</p>
         )}
       </CollectionCardSection>
 
@@ -194,14 +215,14 @@ function CollectionCardSection({ title, children }) {
   );
 }
 
-function CollectionCardVial({ perfume, isReserved, isCuratorBonusUnlocked }) {
+function CollectionCardVial({ perfume, isReserved, isCuratorBonusUnlocked, labels }) {
   if (isReserved) {
     return (
       <span
         className={`collection-card-vial collection-card-vial-bonus ${
           isCuratorBonusUnlocked ? "is-unlocked" : "is-locked"
         }`}
-        aria-label="Curator Bonus slot"
+        aria-label={labels.curatorSlotAria}
       >
         <span className="collection-card-vial-cap" />
         <span className="collection-card-vial-body">
@@ -213,7 +234,7 @@ function CollectionCardVial({ perfume, isReserved, isCuratorBonusUnlocked }) {
 
   if (!perfume) {
     return (
-      <span className="collection-card-vial is-empty" aria-label="Empty collection slot">
+      <span className="collection-card-vial is-empty" aria-label={labels.emptySlotAria}>
         <span className="collection-card-vial-cap" />
         <span className="collection-card-vial-body" />
       </span>

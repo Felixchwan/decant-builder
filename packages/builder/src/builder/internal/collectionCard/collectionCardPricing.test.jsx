@@ -49,7 +49,7 @@ describe("Collection Card price display", () => {
   it("renders the summary as Fragrances + Total with no points wording at all", () => {
     const text = summaryText(viewModel(aurelianConfig, 1900).cardProps);
 
-    expect(text).toBe("2 Fragrances $1,900 MXN Total");
+    expect(text).toBe("2 Fragancias $1,900 MXN Total");
     expect(text).not.toMatch(/point|\bpts?\b|punto/i);
   });
 

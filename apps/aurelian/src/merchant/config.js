@@ -2,6 +2,7 @@ import {
   buildLocalizedConfigOverrides,
   createBuilderConfig,
 } from "@discovery-box/builder/config";
+import { aurelianCollectionCardEditorial } from "./collectionCardEditorial.js";
 import { aurelianTaxonomyLabels } from "./taxonomyLabels.js";
 
 const locale = "es-MX";
@@ -62,6 +63,8 @@ export const aurelianConfig = createBuilderConfig({
     filenamePrefix: "aurelian",
     shareTitle: "Mi colección Aurelian",
     shareText: "Una colección Aurelian curada.",
+    // Aurelian words the card's generated copy itself (identity, mood, chips, accord names): in Spanish, from its own file.
+    editorial: aurelianCollectionCardEditorial,
   },
   finalization: {
     ...localized.finalization,

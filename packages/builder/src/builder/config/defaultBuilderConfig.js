@@ -107,6 +107,23 @@ export const defaultBuilderConfig = {
     curatorBonusAvailableLabel: "Curator Bonus Available",
     curatorBonusUnlockedCopy: "Mystery selections remain wrapped.",
     curatorBonusLockedCopy: "Complete your Discovery Box to unlock mystery selections.",
+    // The card's own labels (see CollectionCard.jsx). The English defaults are the card's original wording.
+    moodLabel: "MOOD",
+    moodAriaLabel: "Collection mood",
+    summaryAriaLabel: "Collection summary",
+    fragranceLabel: "Fragrance",
+    fragrancesLabel: "Fragrances",
+    pointsLabel: "Collection Points",
+    totalLabel: "Total",
+    profileTitle: "Collection Profile",
+    profileEmptyCopy: "Profile develops as the box is curated.",
+    dnaTitle: "Collection DNA",
+    dnaEmptyCopy: "Scent identity develops as the box is curated.",
+    curatorSlotAriaLabel: "Curator Bonus slot",
+    emptySlotAriaLabel: "Empty collection slot",
+    // Optional. A host that words the card's GENERATED copy itself (identity title and subtitle, mood, profile chips, DNA
+    // descriptors) supplies the copy here; see localizeCollectionCardEditorial.js. Absent, the card shows the engines' English.
+    editorial: null,
   },
   finalization: {
     mode: "whatsapp",

@@ -249,3 +249,10 @@
     display: none;
   }
 }
+
+/* The card's own title and sentence, wrapped evenly. Aurelian's Spanish sentences run a little longer than the English they replaced, and an
+   unbalanced wrap can leave one word alone on the second line (an orphan). Balancing changes only where the line breaks: the type,
+   the width and the card's height are the shared card's own. The same rule covers Preview and the exported image. */
+:is(.builder-page, .builder-portal-root) .collection-card .collection-card-header :is(h2, p) {
+  text-wrap: balance;
+}
