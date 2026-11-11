@@ -314,3 +314,57 @@ describe("layout: Spanish wraps naturally, the card's type and geometry are the 
     expect(rule[1].replace(/\s+/g, " ").trim()).toBe("text-wrap: balance;");
   });
 });
+
+describe("the Review modal's identity names (Box Intelligence) are the Collection Card's names, exactly", () => {
+  const enTranslator = createTranslator(discoveryDecantsConfig.locale);
+  const ids = identities.map(({ id }) => id);
+
+  it("11 of 11 identity titles match the card's editorial titles exactly, in sentence case", () => {
+    expect(ids).toHaveLength(11);
+    for (const id of ids) {
+      expect(translator.t(`identity.${id}.title`), id).toBe(editorial.identities[id].title);
+      // sentence case: only the first letter is capitalised (no Title Case left over)
+      expect(editorial.identities[id].title, id).toMatch(/^\S+( [a-zñáéíóúü]\S*)*$/);
+    }
+  });
+
+  it("each identity's prose form is its title with the right article, so the Review summary sentence reads correctly", () => {
+    const article = { "in-progress": "una", "fresh-daily": "una", mediterranean: "una", balanced: "una", "everyday-luxury": "un", executive: "una", refined: "una", evening: "una", "golden-hour": "una", signature: "una", collector: "una" };
+
+    for (const id of ids) expect(translator.t(`identity.${id}.articledLower`), id).toBe(`${article[id]} ${editorial.identities[id].title.toLowerCase()}`);
+    expect(translator.t("identity.golden-hour.title")).toBe("Colección hora dorada");
+    expect(translator.t("identity.golden-hour.articledLower")).toBe("una colección hora dorada");
+    expect(translator.t("identity.balanced.articledLower")).toBe("una rotación equilibrada");
+  });
+
+  it("no identity name in Spanish still says Golden Hour, Balanceada or Title Case", () => {
+    for (const id of ids) {
+      for (const key of ["title", "articledLower"]) {
+        const text = translator.t(`identity.${id}.${key}`);
+
+        expect(text, `${id}.${key}`).not.toMatch(/Golden Hour|[Bb]alanceada/);
+        expect(text, `${id}.${key}`).not.toMatch(/ [A-ZÁÉÍÓÚÑ]/);
+      }
+    }
+  });
+
+  it("the card and the Review modal agree on a real balanced box", () => {
+    const { cardProps } = modelFor(aurelianCatalog.slice(0, 8));
+    const id = getCollectionIdentityProfile(buildBoxSummary(aurelianCatalog.slice(0, 8), [])).id;
+
+    expect(cardProps.title).toBe(translator.t(`identity.${id}.title`));
+  });
+
+  it("leaves Discovery Decants' English identity names alone", () => {
+    expect(enTranslator.t("identity.balanced.title")).toBe("Balanced Rotation");
+    expect(enTranslator.t("identity.balanced.articledLower")).toBe("a balanced rotation");
+    expect(enTranslator.t("identity.golden-hour.title")).toBe("Golden Hour Collection");
+    expect(enTranslator.t("identity.fresh-daily.title")).toBe("Fresh Daily Rotation");
+  });
+
+  it("leaves the descriptive wording (profile descriptors, recommendation prose, strengths) as it was", () => {
+    expect(esMX["collectionIntelligence.profile.balancedVersatile"]).toBe("Balanceada y versátil");
+    expect(esMX["collectionIntelligence.profilePhrase.balancedAlready"]).toBe("Tu caja ya se siente balanceada, con {coverage}.");
+    expect(esMX["review.strength.warmCoolBalance"]).toBe("Selección balanceada entre clima cálido y fresco");
+  });
+});
