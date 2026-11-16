@@ -281,7 +281,7 @@ describe("Rayhaan Aquatica catalog entry", () => {
     expect(notes.rum).toMatchObject({ name: "Rum", family: "sweet", noteImageAssetKey: "notes/rum.jpg" });
     expect(notes.tonkaBean).toMatchObject({ name: "Tonka Bean", family: "sweet" });
     expect(notes.patchouli).toMatchObject({ name: "Patchouli", family: "earthy" });
-    expect(Object.keys(notes)).toHaveLength(191);
+    expect(Object.keys(notes)).toHaveLength(192);
     // each new note is carried by Aquatica alone
     for (const key of NEW_NOTE_KEYS) {
       expect(perfumes.filter((perfume) => allNoteIds(perfume).includes(key)).map((perfume) => perfume.id), key).toEqual([AQUATICA_ID]);
@@ -311,7 +311,7 @@ describe("Rayhaan Aquatica catalog entry", () => {
   });
 
   it("is visible to both merchants through the identical manifest, with a stable ID that is independent of where it displays", () => {
-    expect(perfumes).toHaveLength(94);
+    expect(perfumes).toHaveLength(95);
     expect(aurelianAvailableIds).toContain(AQUATICA_ID);
     expect(discoveryDecantsAvailableIds).toContain(AQUATICA_ID);
     expect(discoveryDecantsAvailableIds).toEqual(aurelianAvailableIds);
@@ -347,7 +347,7 @@ describe("Rayhaan Aquatica catalog entry", () => {
       expect(brandAssets.Rayhaan).toBe("brands/rayhaan.png");
       expect(existsSync(file)).toBe(true);
       expect(Object.values(brandAssets).filter((key) => /rayhaan/i.test(key))).toHaveLength(1);
-      expect(Object.keys(brandAssets)).toHaveLength(49);
+      expect(Object.keys(brandAssets)).toHaveLength(50);
     });
 
     it("is a clean opaque tile like the other pale brand tiles: pure white ground, a dark wordmark, no stray noise", () => {

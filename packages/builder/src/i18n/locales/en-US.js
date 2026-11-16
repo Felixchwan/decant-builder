@@ -473,6 +473,7 @@ export const enUS = {
   "recommendation.accord.tropical": "Adds tropical brightness",
   "recommendation.accord.violet": "Adds violet softness",
   "recommendation.accord.mineral": "Adds mineral contrast",
+  "recommendation.accord.metallic": "Adds metallic contrast",
   "recommendation.accord.ozonic": "Adds airy freshness",
   "recommendation.accord.salty": "Adds salty freshness",
   "recommendation.accord.white_floral": "Adds white-floral lift",

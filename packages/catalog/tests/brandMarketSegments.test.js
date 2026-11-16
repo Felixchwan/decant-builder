@@ -28,11 +28,11 @@ describe("brand market segments", () => {
 
     expect(brandsOf("arabic")).toEqual(["Armaf", "Bharara", "Rayhaan"]);
     expect(brandsOf("niche")).toEqual([
-      "Acqua di Parma", "Casamorati", "Creed", "Diptyque", "Essential Parfums", "Jo Milano", "Mancera", "Nishane",
+      "Acqua di Parma", "Casamorati", "Creed", "Diptyque", "Essential Parfums", "Initio Parfums Prives", "Jo Milano", "Mancera", "Nishane",
       "Parfums de Marly", "Sospiro Perfumes", "Xerjoff", "Zoologist",
     ]);
     expect(brandsOf("designer")).toHaveLength(33);
-    expect(Object.keys(brandMarketSegments)).toHaveLength(48);
+    expect(Object.keys(brandMarketSegments)).toHaveLength(49);
   });
 
   it("treats YSL and Yves Saint Laurent as one house in one segment, keeping both brand strings", () => {
@@ -54,9 +54,9 @@ describe("brand market segments", () => {
     });
   });
 
-  it("sizes the segments as the catalog stands (3 Arabic, 20 niche, 71 designer fragrances)", () => {
+  it("sizes the segments as the catalog stands (3 Arabic, 21 niche, 71 designer fragrances)", () => {
     const count = (segment) => fragrances.filter(({ brand }) => getBrandMarketSegment(brand) === segment).length;
 
-    expect([count("arabic"), count("designer"), count("niche")]).toEqual([3, 71, 20]);
+    expect([count("arabic"), count("designer"), count("niche")]).toEqual([3, 71, 21]);
   });
 });

@@ -22,6 +22,7 @@ export const brandAssets = {
   Halloween: "brands/halloween.png",
   "Hermès": "brands/hermes.png",
   "Hugo Boss": "brands/hugo-boss.png",
+  "Initio Parfums Prives": "brands/initio-parfums-prives.png",
   Jaguar: "brands/jaguar.png",
   "Jean Paul Gaultier": "brands/jean-paul-gaultier.png",
   "Jo Milano": "brands/jo-milano.png",

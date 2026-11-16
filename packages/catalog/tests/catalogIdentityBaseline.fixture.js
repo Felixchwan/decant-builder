@@ -34,4 +34,5 @@ export const CATALOG_IDENTITY_BASELINE = Object.freeze([
   [410, "Diamond", 4],
   [411, "Diamond", 4],
   [500, "Mythic", 5], [501, "Mythic", 5],
+  [502, "Mythic", 5],
 ].map(Object.freeze));

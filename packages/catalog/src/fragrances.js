@@ -3415,6 +3415,62 @@ baseNotes: ["caramel", "musk"],
   ],
 },
 
+{
+  id: 502,
+  name: "Oud for Greatness",
+  shortName: "Oud for Greatness",
+  brand: "Initio Parfums Prives",
+  points: 5,
+  imageAssetKey: "perfumes/mythic/oud-for-greatness.png",
+
+  accords: [
+    "warm spicy",
+    "fresh spicy",
+    "oud",
+    "lavender",
+    "patchouli",
+    "metallic",
+    "musky",
+    "leather",
+    "woody",
+    "earthy",
+  ],
+
+  topNotes: [
+    "saffron",
+    "nutmeg",
+    "lavender",
+  ],
+
+  middleNotes: [
+    "agarwood",
+  ],
+
+  baseNotes: [
+    "patchouli",
+    "musk",
+  ],
+
+  seasons: [
+    "fall",
+    "winter",
+    "spring",
+  ],
+
+  occasions: [
+    "date",
+    "night",
+    "club",
+  ],
+
+  vibes: [
+    "bold",
+    "mysterious",
+    "seductive",
+    "warm",
+  ],
+},
+
 ];
 
 // Exported from this source file only (NOT re-exported through index.js), like
@@ -3509,6 +3565,7 @@ export const SEASON_WEIGHTS_BY_ID = {
   411: { spring: 8, summer: 10, fall: 3, winter: 1 },
   500: { spring: 2, summer: 1, fall: 8, winter: 9 },
   501: { spring: 4, summer: 1, fall: 9, winter: 8 },
+  502: { spring: 4, summer: 1, fall: 9, winter: 10 },
 };
 
 const DEFAULT_SEASON_WEIGHTS = {

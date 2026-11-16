@@ -726,4 +726,9 @@ hibiscus: { name: "Hibiscus", family: "floral", noteImageAssetKey: "notes/hibisc
 // matching this dictionary's existing note-thumbnail convention. Added for
 // Rayhaan Aquatica.
 gardenia: { name: "Gardenia", family: "floral", noteImageAssetKey: "notes/gardenia.jpg" },
+
+// Agarwood (Oud) is one canonical identity: "agarwood" is the wood, "oud" its perfumery name, and the catalog had neither as a
+// note, so it is added once under the botanical key with the source's own display name rather than twice. Added for Initio
+// Parfums Prives Oud for Greatness, whose approved pyramid names Agarwood (Oud) at the heart.
+agarwood: { name: "Agarwood (Oud)", family: "woody", noteImageAssetKey: "notes/agarwood.jpg" },
 };

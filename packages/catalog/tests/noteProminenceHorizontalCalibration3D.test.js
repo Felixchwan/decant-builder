@@ -252,6 +252,7 @@ const MUSK_FAMILY = {
   408: undefined,
   411: undefined,
   500: undefined,
+  502: undefined,
 };
 
 const WHITE_MUSK_FAMILY = {
@@ -377,8 +378,8 @@ describe("Composer Phase 3D canonical-data sanity audit", () => {
 describe("Composer Phase 3D horizontal calibration -- citrus/orange and musk canonical-key families", () => {
   const perfumesById = new Map(perfumes.map((perfume) => [perfume.id, perfume]));
 
-  it("has exactly 94 catalog fragrances to search for exhaustive family membership", () => {
-    expect(perfumes).toHaveLength(94);
+  it("has exactly 95 catalog fragrances to search for exhaustive family membership", () => {
+    expect(perfumes).toHaveLength(95);
   });
 
   for (const [noteId, family] of Object.entries(ALL_FAMILIES)) {
@@ -471,14 +472,14 @@ describe("Composer Phase 3D horizontal calibration -- citrus/orange and musk can
     });
   });
 
-  it("bergamot (42 members) and musk (24 members) stay overwhelmingly unscored -- common presence was never treated as evidence of genuine prominence", () => {
+  it("bergamot (42 members) and musk (25 members) stay overwhelmingly unscored -- common presence was never treated as evidence of genuine prominence", () => {
     const bergamotScoredCount = Object.values(BERGAMOT_FAMILY).filter((score) => score !== undefined).length;
     const muskScoredCount = Object.values(MUSK_FAMILY).filter((score) => score !== undefined).length;
 
     expect(Object.keys(BERGAMOT_FAMILY)).toHaveLength(42);
     expect(bergamotScoredCount).toBe(6);
 
-    expect(Object.keys(MUSK_FAMILY)).toHaveLength(24);
+    expect(Object.keys(MUSK_FAMILY)).toHaveLength(25);
     expect(muskScoredCount).toBe(3);
   });
 

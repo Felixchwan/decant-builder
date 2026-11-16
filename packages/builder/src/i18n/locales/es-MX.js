@@ -474,6 +474,7 @@ export const esMX = {
   "recommendation.accord.tropical": "Agrega brillo tropical",
   "recommendation.accord.violet": "Agrega suavidad de violeta",
   "recommendation.accord.mineral": "Agrega contraste mineral",
+  "recommendation.accord.metallic": "Agrega contraste metálico",
   "recommendation.accord.ozonic": "Agrega frescura aireada",
   "recommendation.accord.salty": "Agrega frescura salina",
   "recommendation.accord.white_floral": "Agrega lift de flores blancas",

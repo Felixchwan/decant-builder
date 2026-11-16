@@ -36,10 +36,12 @@ export const aurelianTaxonomyLabels = {
   "taxonomy.lavender": "Lavanda",
   "taxonomy.leather": "Cuero",
   "taxonomy.marine": "Marino",
+  "taxonomy.metallic": "Metálico",
   "taxonomy.mineral": "Mineral",
   "taxonomy.musky": "Almizclado",
   "taxonomy.nutty": "Avellanado",
   "taxonomy.oakmoss": "Musgo de Roble",
+  "taxonomy.oud": "Oud",
   "taxonomy.patchouli": "Pachulí",
   "taxonomy.powdery": "Polvoroso",
   "taxonomy.salty": "Salado",
@@ -231,4 +233,5 @@ export const aurelianTaxonomyLabels = {
   "taxonomy.sugarCane": "Caña de Azúcar",
   "taxonomy.hibiscus": "Hibisco",
   "taxonomy.gardenia": "Gardenia",
+  "taxonomy.agarwood": "Agar (Oud)",
 };

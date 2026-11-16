@@ -42,7 +42,7 @@ function expectedIds() {
 }
 
 function assertCurrentCatalog(catalog) {
-  expect(catalog).toHaveLength(94);
+  expect(catalog).toHaveLength(95);
   expect(catalog.map(({ id }) => id)).toEqual(expectedIds());
   expect(catalog.map(({ id, points }) => [id, points])).toEqual(
     CATALOG_IDENTITY_BASELINE.map(([id, , points]) => [id, points])
@@ -55,7 +55,7 @@ function assertCurrentCatalog(catalog) {
 function assertDisplayOrderedCatalog(catalog) {
   const displayOrdered = sortFragrancesForDisplay(perfumes);
 
-  expect(catalog).toHaveLength(94);
+  expect(catalog).toHaveLength(95);
   expect(catalog.map(({ id }) => id)).toEqual(displayOrdered.map(({ id }) => id));
   expect([...catalog.map(({ id }) => id)].sort((a, b) => a - b)).toEqual([...expectedIds()].sort((a, b) => a - b));
   catalog.forEach((record, index) => expect(record).toBe(displayOrdered[index]));
@@ -66,9 +66,9 @@ describe("merchant catalog composition", () => {
     builderCalls.length = 0;
   });
 
-  it("gives each merchant an explicit independent 94-ID manifest", () => {
-    expect(discoveryDecantsAvailableIds).toHaveLength(94);
-    expect(aurelianAvailableIds).toHaveLength(94);
+  it("gives each merchant an explicit independent 95-ID manifest", () => {
+    expect(discoveryDecantsAvailableIds).toHaveLength(95);
+    expect(aurelianAvailableIds).toHaveLength(95);
     expect(discoveryDecantsAvailableIds).toEqual(expectedIds());
     expect(aurelianAvailableIds).toEqual(expectedIds());
     expect(discoveryDecantsAvailableIds).not.toBe(aurelianAvailableIds);

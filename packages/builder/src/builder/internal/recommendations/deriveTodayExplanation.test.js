@@ -349,11 +349,15 @@ describe("variety within a set, without inventing it", () => {
 });
 
 describe("the ranking is untouched: only the explanation lines are new", () => {
-  // Pick ids, roles, scores, role scores and base reasons for all 8,064 season / weekday / hour / weather contexts, hashed. The hash was
-  // taken from the committed role engine BEFORE the explanation lines were added.
-  const RANKING_HASH = "21a73f9b1e84cdced85b9df28db4cebdd800539802a163f7e49b544ac7c10c56";
+  // Pick ids, roles, scores, role scores and base reasons for all 8,064 season / weekday / hour / weather contexts, hashed. The first
+  // hash was taken from the committed role engine BEFORE the explanation lines were added, over the catalog as it then stood (every
+  // fragrance except Initio Oud for Greatness, id 502, added afterwards). Run over that same catalog it must still be exactly that
+  // hash: the engine, the weights and the role selection did not move. The second hash is the full catalog today, where the new
+  // fragrance is simply one more candidate (it is picked only in cool or cold weather, as a date or night pick).
+  const RANKING_HASH_WITHOUT_502 = "21a73f9b1e84cdced85b9df28db4cebdd800539802a163f7e49b544ac7c10c56";
+  const RANKING_HASH = "ff5aec8437b1547d320be58581d4ac31b73029f78d0ba0eed633d1555994ee5b";
 
-  it("produces the same picks, roles, scores and base reasons as before, in every context", () => {
+  const sweepHash = (catalog) => {
     const out = [];
 
     for (const season of ["spring", "summer", "fall", "winter"]) {
@@ -361,7 +365,7 @@ describe("the ranking is untouched: only the explanation lines are new", () => {
         for (let hour = 0; hour < 24; hour++) {
           for (const temperatureBucket of [undefined, "hot", "warm", "mild", "cool", "cold"]) {
             for (const weatherCondition of [undefined, "rain"]) {
-              const result = run(fragrances, { season, weekday, hour, temperatureBucket, weatherCondition });
+              const result = run(catalog, { season, weekday, hour, temperatureBucket, weatherCondition });
 
               out.push([result.dynamicRole, result.confidence, result.recommendations.map((x) => [x.perfume.id, x.role, x.score, x.roleScore, x.reasons])]);
             }
@@ -370,7 +374,15 @@ describe("the ranking is untouched: only the explanation lines are new", () => {
       }
     }
 
-    expect(createHash("sha256").update(JSON.stringify(out)).digest("hex")).toBe(RANKING_HASH);
+    return createHash("sha256").update(JSON.stringify(out)).digest("hex");
+  };
+
+  it("produces the same picks, roles, scores and base reasons as before, in every context, over the catalog it was pinned on", () => {
+    expect(sweepHash(fragrances.filter(({ id }) => id !== 502))).toBe(RANKING_HASH_WITHOUT_502);
+  }, 60000);
+
+  it("pins the full catalog's picks, roles, scores and base reasons today", () => {
+    expect(sweepHash(fragrances)).toBe(RANKING_HASH);
   }, 60000);
 
   it("the plain Today ranker is not involved at all", () => {

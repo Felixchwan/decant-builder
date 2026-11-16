@@ -21,6 +21,7 @@ export const brandMarketSegments = Object.freeze({
   Creed: "niche",
   Diptyque: "niche",
   "Essential Parfums": "niche",
+  "Initio Parfums Prives": "niche",
   "Jo Milano": "niche",
   Mancera: "niche",
   Nishane: "niche",

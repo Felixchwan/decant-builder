@@ -242,8 +242,8 @@ describe("sort helpers -- deterministic ordering", () => {
 describe("buildNoteRelationships -- live catalog regression (broad invariants only)", () => {
   const relationships = buildNoteRelationships(catalogFragrances);
 
-  it("has exactly 94 catalog fragrances to compute over", () => {
-    expect(catalogFragrances).toHaveLength(94);
+  it("has exactly 95 catalog fragrances to compute over", () => {
+    expect(catalogFragrances).toHaveLength(95);
   });
 
   it("produces a total co-occurring-pair count in the range confirmed by the live audit (~2,330)", () => {

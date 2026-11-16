@@ -7,5 +7,5 @@ export const discoveryDecantsAvailableIds = Object.freeze([
   216, 217, 218,
   301, 302, 303, 304, 305, 306,
   401, 402, 403, 404, 405, 406, 408, 409, 410, 411,
-  500, 501,
+  500, 501, 502,
 ]);

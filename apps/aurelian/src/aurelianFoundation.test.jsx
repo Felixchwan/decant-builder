@@ -47,10 +47,10 @@ describe("Aurelian application foundation", () => {
     expect(aurelianConfig.finalization.customerFieldLabels.city).toBe("Municipio");
   });
 
-  it("owns an explicit 94-ID manifest and canonical projection", () => {
-    expect(aurelianAvailableIds).toHaveLength(94);
-    expect(new Set(aurelianAvailableIds).size).toBe(94);
-    expect(aurelianCatalog).toHaveLength(94);
+  it("owns an explicit 95-ID manifest and canonical projection", () => {
+    expect(aurelianAvailableIds).toHaveLength(95);
+    expect(new Set(aurelianAvailableIds).size).toBe(95);
+    expect(aurelianCatalog).toHaveLength(95);
     // the manifest decides membership; the shared display order decides presentation
     const projection = sortFragrancesForDisplay(createMerchantCatalog({ source: fragrances, availableIds: aurelianAvailableIds }));
     projection.forEach((record, index) => expect(record).toBe(aurelianCatalog[index]));

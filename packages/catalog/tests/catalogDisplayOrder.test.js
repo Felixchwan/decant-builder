@@ -107,6 +107,7 @@ const PINNED_IDENTITIES = [
   [411, "Xerjoff", "Renaissance"],
   [500, "Zoologist", "Squid"],
   [501, "Yves Saint Laurent", "Tuxedo"],
+  [502, "Initio Parfums Prives", "Oud for Greatness"],
 ];
 
 const displayLabel = ({ brand, name }) => `${brand} / ${name}`;

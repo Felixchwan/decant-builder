@@ -333,16 +333,16 @@ describe("Composer Phase 2J note-prominence seed batch (final vertical-pass batc
     // Cologne 2022 (218) were added later still, from merchant note
     // pyramids only, with no approved editorial prominence data -- same
     // deliberate exception, also asserted unscored below.
-    // Xerjoff Renaissance (411) joins them: added from its approved note
-    // pyramid and main accords only, with no per-note prominence evidence --
-    // honestly empty rather than an invented score.
+    // Xerjoff Renaissance (411) and Initio Oud for Greatness (502) join them:
+    // added from their approved note pyramids and main accords only, with no
+    // per-note prominence evidence -- honestly empty rather than an invented score.
     // Rayhaan Aquatica (36) joins them on the same basis: added from its
     // approved note pyramid and main accords only, with no per-note
     // prominence evidence.
-    const postVerticalPassAdditionIds = new Set([36, 120, 121, 215, 216, 217, 218, 411]);
+    const postVerticalPassAdditionIds = new Set([36, 120, 121, 215, 216, 217, 218, 411, 502]);
     const originallyReviewedPerfumes = perfumes.filter((perfume) => !postVerticalPassAdditionIds.has(perfume.id));
 
-    expect(perfumes).toHaveLength(94);
+    expect(perfumes).toHaveLength(95);
     expect(originallyReviewedPerfumes).toHaveLength(86);
     // 86 originally-reviewed fragrances + Patchouli Ink (217), later scored.
     expect(Object.keys(NOTE_PROMINENCE_BY_ID)).toHaveLength(87);
@@ -362,13 +362,13 @@ describe("Composer Phase 2J note-prominence seed batch (final vertical-pass batc
     // with no perceptual-prominence review evidence yet. An empty
     // noteProminence object is the valid, honest state for them -- never
     // replaced with an invented score to force this test green.
-    // Xerjoff Renaissance (411) joins them: added from its approved note
-    // pyramid and main accords only, with no per-note prominence evidence --
-    // honestly empty rather than an invented score.
+    // Xerjoff Renaissance (411) and Initio Oud for Greatness (502) join them:
+    // added from their approved note pyramids and main accords only, with no
+    // per-note prominence evidence -- honestly empty rather than an invented score.
     // Rayhaan Aquatica (36) joins them on the same basis: added from its
     // approved note pyramid and main accords only, with no per-note
     // prominence evidence.
-    const postVerticalPassAdditionIds = new Set([36, 120, 121, 215, 216, 217, 218, 411]);
+    const postVerticalPassAdditionIds = new Set([36, 120, 121, 215, 216, 217, 218, 411, 502]);
 
     for (const perfume of perfumes) {
       if (postVerticalPassAdditionIds.has(perfume.id)) {
