@@ -11,6 +11,8 @@ import {
   buildComposerProposalReasons,
   uniqueComposerProposalReasons,
 } from "./composerProposalReasons.js";
+import { getComposerCostPoints, withComposerCost } from "../composer/composerCost.js";
+import { createCustomerPricing } from "../../../utils/customerPricing.js";
 
 export const COMPOSER_BOX_PROPOSAL_STATUSES = Object.freeze({
   COMPLETED: "completed",
@@ -47,8 +49,11 @@ export function buildComposerBoxProposal({
   minimumPoints = null,
 } = {}) {
   const builderConfig = requireComposerConfig(config);
-  const safeCatalog = Array.isArray(catalog) ? catalog : [];
-  const safeSelectedPerfumes = Array.isArray(selectedPerfumes) ? selectedPerfumes : [];
+  // The Composer budgets with what the customer pays: a fragrance on a valid promotion is costed at its effective price for this run
+  // (see composer/composerCost.js). Every other fragrance, and every fragrance of a points host, is passed through unchanged.
+  const costing = createCustomerPricing(builderConfig);
+  const safeCatalog = (Array.isArray(catalog) ? catalog : []).map((perfume) => withComposerCost(perfume, costing));
+  const safeSelectedPerfumes = (Array.isArray(selectedPerfumes) ? selectedPerfumes : []).map((perfume) => withComposerCost(perfume, costing));
   const safeExcludedPerfumeIds = normalizeIdList(excludedPerfumeIds);
   const pointsFloor = normalizePointsFloorValue(minimumPoints);
   const maxCustomerSlots = normalizeSlot(maxSlots, builderConfig.box.maxSelectableSlots);
@@ -436,7 +441,7 @@ function successfulProposal({
     ? slotAlternativeResult.slots
     : buildSingleAlternativeSlots(proposalItems);
   const totalPoints = roundNumber(
-    collection.reduce((sum, perfume) => sum + normalizePoints(perfume.points), 0)
+    collection.reduce((sum, perfume) => sum + normalizePoints(getComposerCostPoints(perfume)), 0)
   );
   const computedPointValue = normalizePoints(
     compositionResult?.normalizedRequest?.pointValue || reasoningFacts?.summary?.pointValue || pointValue
@@ -539,7 +544,7 @@ function rebuildProposalWithSelectedAlternatives(proposal, slotAlternatives) {
     };
   });
   const totalPoints = roundNumber(
-    collection.reduce((sum, perfume) => sum + normalizePoints(perfume.points), 0)
+    collection.reduce((sum, perfume) => sum + normalizePoints(getComposerCostPoints(perfume)), 0)
   );
   const pointValue = normalizePoints(proposal.diagnostics?.pointValue);
   const orderTotal = roundNumber(totalPoints * pointValue);
@@ -743,7 +748,7 @@ function unavailableProposal({
   diagnostics = {},
 }) {
   const totalPoints = roundNumber(
-    selectedPerfumes.reduce((sum, perfume) => sum + normalizePoints(perfume.points), 0)
+    selectedPerfumes.reduce((sum, perfume) => sum + normalizePoints(getComposerCostPoints(perfume)), 0)
   );
   const normalizedCollectionStyle =
     collectionStyle || compositionResult?.normalizedRequest?.collectionStyle?.id || "balanced_mix";
@@ -963,7 +968,7 @@ function normalizePoints(value) {
 
 function sumPoints(perfumes) {
   return (Array.isArray(perfumes) ? perfumes : []).reduce(
-    (sum, perfume) => sum + normalizePoints(perfume?.points),
+    (sum, perfume) => sum + normalizePoints(getComposerCostPoints(perfume)),
     0
   );
 }

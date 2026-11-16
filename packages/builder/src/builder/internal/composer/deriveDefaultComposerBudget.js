@@ -1,3 +1,5 @@
+import { getComposerCostPoints } from "./composerCost.js";
+
 // Unlike a static, catalog-wide minimum-budget floor, this is completion-aware:
 // it accounts for the box's separate point minimum too, so a customer who
 // accepts the default without editing it gets a budget that can realistically
@@ -7,7 +9,7 @@
 // select; it only changes what the budget field starts at.
 export function deriveDefaultComposerBudget({ catalog, missingSlots, missingPoints, pointValue }) {
   const minimumPerfumePoints = (Array.isArray(catalog) ? catalog : [])
-    .map((perfume) => perfume?.points)
+    .map((perfume) => getComposerCostPoints(perfume))
     .filter((points) => Number.isFinite(points) && points > 0)
     .sort((first, second) => first - second)[0];
 

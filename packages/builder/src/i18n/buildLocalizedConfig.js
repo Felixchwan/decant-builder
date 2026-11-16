@@ -38,6 +38,9 @@ export function buildLocalizedConfigOverrides(locale) {
     commerce: {
       locale,
       totalLabel: t("general.orderTotal"),
+      saleLabel: t("pricing.saleLabel"),
+      regularPriceLabel: t("pricing.regularPriceLabel"),
+      salePriceLabel: t("pricing.salePriceLabel"),
     },
     recovery: {
       title: t("recovery.title"),
@@ -128,6 +131,7 @@ export function buildLocalizedConfigOverrides(locale) {
         totalSlots: t("finalization.totalSlots"),
         totalPoints: t("finalization.totalPoints"),
         orderTotal: t("finalization.orderTotal"),
+        regularPrice: t("finalization.regularPrice"),
         curatorBonus: t("finalization.curatorBonus"),
         curatorStyle: t("finalization.curatorStyle"),
         unlocked: t("finalization.unlocked"),

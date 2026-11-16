@@ -13,5 +13,12 @@ export const formatFragrancePrice = (points) => aurelianPricing.formatPoints(poi
 // The same value spelled out with its currency, for filter options and spoken labels: "$150 MXN".
 export const formatFragrancePriceWithCurrency = (points) => aurelianPricing.formatPointsForAssistiveTech(points);
 
+// What a fragrance costs the customer: its regular price, its effective price (the special price while a valid promotion applies),
+// and the promotion. The one resolver every Aurelian surface asks; none compares prices itself.
+export const getFragrancePrice = (perfume) => aurelianPricing.getFragrancePrice(perfume);
+
+// The effective price in points (price / pointValue): the unit the catalog's price filter and its options already use.
+export const getEffectivePoints = (perfume) => aurelianPricing.getEffectivePoints(perfume);
+
 // A box threshold expressed in points (box.minPoints, curatorBonus.targetPoints) as an amount: "$1,200 MXN".
 export const formatThresholdAmount = (points) => aurelianPricing.formatAmountWithCurrency(aurelianPricing.pointsToAmount(points));

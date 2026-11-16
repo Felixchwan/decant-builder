@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { createCatalogAssetResolver } from "@discovery-box/catalog";
 import { aurelianCatalog } from "../merchant/catalog.js";
-import { formatFragrancePrice } from "../merchant/pricing.js";
+import { FragranceSalePrice } from "./FragranceSalePrice.jsx";
 import { buildSeasonalFragranceHref } from "../lib/catalogSeason.js";
 import { createSeasonalRotationState, SEASONAL_SLOTS, shouldRotateSeasonalSelection } from "../lib/seasonalSelection.js";
 import { applySeasonalTransitionEvent, buildSeasonalCycleSchedule, createSeasonalTransitionState } from "../lib/seasonalTransition.js";
@@ -81,7 +81,7 @@ export function SeasonalFeaturedSelection() {
               <p className="seasonal-card__season">Selección de {season.label.toLowerCase()}</p>
               <p className="eyebrow">{item.brand}</p>
               <h3>{item.name}</h3>
-              <span>{formatFragrancePrice(item.points)}</span>
+              <FragranceSalePrice item={item} />
             </Link>
           </article>
         );

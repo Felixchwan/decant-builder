@@ -1,0 +1,170 @@
+/* Aurelian promotional (special) pricing. Everything here applies only to markup that exists while a fragrance has a VALID promotion
+   (merchant/promotions.js, validated by the Builder's pricing resolver): with none running, none of these classes is rendered and the
+   catalog, the Builder, Review and the landing look exactly as they did.
+
+   One visual language for every surface: the regular price smaller, muted and struck through the middle; the special price larger
+   and in brass; the promotion named in a small near-black pill with a brass hairline (the same quiet pill as "Para hoy"). No red, no
+   starburst, no extra rows: the pair stays inside the box the single price already occupied. */
+
+/* Spoken in full for assistive technology ("Oferta especial: $400 MXN. Precio regular: $500 MXN."); the visible pair is hidden from it. */
+.fragrance-price__sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* ---- Inline price (Builder: selected row, recommendation and Composer lines, Note Explorer, Product Info; landing cards) ---------- */
+.fragrance-price--sale {
+  white-space: nowrap;
+}
+
+.fragrance-price__regular {
+  color: var(--muted);
+  font-size: 0.84em;
+  font-weight: 500;
+  text-decoration-color: currentColor;
+  text-decoration-line: line-through;
+  text-decoration-thickness: 1px;
+}
+
+.fragrance-price__special {
+  color: var(--gold);
+  font-weight: 700;
+}
+
+/* ---- The pill that names the promotion ----------------------------------------------------------------------------------------- */
+:is(.builder-page, .builder-portal-root) .perfume-card-sale-badge,
+:is(.builder-page, .builder-portal-root) .perfume-details-sale-badge,
+.product-card__sale-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.18rem 0.5rem;
+  border: 1px solid var(--aur-intel-rim, rgba(200, 166, 101, 0.3));
+  border-radius: 3px;
+  background: rgb(10, 9, 8);
+  color: var(--gold);
+  font-size: 0.625rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  line-height: 1;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+/* ---- Builder catalog card: the tier chip holds the pair; the pill sits on the bottle, top left (no extra row, no extra height) ---- */
+.builder-page .perfume-card-sale-badge {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  z-index: 1;
+  display: block;
+  box-sizing: border-box;
+  max-width: calc(100% - 46px);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* The two-column phone card is narrow: the pill steps down in type so "OFERTA ESPECIAL" shows whole beside the info button (a longer
+   custom label ends in an ellipsis rather than being cut). */
+@media (max-width: 619px) {
+  .builder-page .perfume-card-sale-badge {
+    top: 5px;
+    left: 5px;
+    padding: 0.16rem 0.36rem;
+    font-size: 0.5rem;
+    letter-spacing: 0.06em;
+  }
+}
+
+.builder-page .perfume-card-price-pair {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
+  line-height: 1;
+}
+
+.builder-page .perfume-card-price-regular {
+  color: var(--muted);
+  font-size: 0.68em;
+  font-weight: 500;
+  text-decoration-color: currentColor;
+  text-decoration-line: line-through;
+  text-decoration-thickness: 1px;
+}
+
+.builder-page .perfume-card-price-special {
+  color: inherit;
+  font-weight: 800;
+}
+
+/* ---- Catalog page cards (/catalogo) -------------------------------------------------------------------------------------------- */
+.product-card__image {
+  position: relative;
+}
+
+.product-card__sale-badge {
+  position: absolute;
+  top: 0.5rem;
+  left: 0.5rem;
+  z-index: 1;
+}
+
+.product-card__price-pair {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  line-height: 1;
+}
+
+.product-card__price-regular {
+  color: var(--muted);
+  font-size: 0.7rem;
+  font-weight: 500;
+  text-decoration-color: currentColor;
+  text-decoration-line: line-through;
+  text-decoration-thickness: 1px;
+}
+
+.product-card__price-special {
+  color: inherit;
+  font-size: 0.86rem;
+  font-weight: 800;
+}
+
+/* ---- Product Info: the price in the meta row, the pill beside it ----------------------------------------------------------------- */
+.builder-portal-root .perfume-details-meta .perfume-details-sale-badge {
+  flex: 0 0 auto;
+}
+
+/* On a phone the row cannot hold tier, price, pill and "Agregar a caja" side by side: the pill drops to its own line under them
+   (only while a promotion shows it), and the button keeps its place and size. */
+@media (max-width: 619px) {
+  .builder-portal-root .perfume-details-meta:has(.perfume-details-sale-badge) {
+    flex-wrap: wrap;
+    row-gap: 8px;
+  }
+
+  .builder-portal-root .perfume-details-meta:has(.perfume-details-sale-badge) .perfume-details-meta-add {
+    order: 1;
+  }
+
+  .builder-portal-root .perfume-details-meta:has(.perfume-details-sale-badge) .perfume-details-sale-badge {
+    order: 2;
+    margin-right: auto;
+  }
+}
+
+/* ---- Landing seasonal cards: the pair replaces the single price on the same line ------------------------------------------------- */
+.seasonal-card .fragrance-price--sale {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.4em;
+}

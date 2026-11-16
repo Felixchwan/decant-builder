@@ -1,5 +1,6 @@
 import { COMPOSER_MOVE_TYPES } from "./composerMoveTypes.js";
 import { evaluateComposerConstraints } from "./evaluateComposerConstraints.js";
+import { getComposerCostPoints } from "./composerCost.js";
 
 export function generateRefinementMoves({
   request,
@@ -75,7 +76,7 @@ function preservesPointsFloorIfAlreadyMet({ request, currentPerfumes, move }) {
   }
 
   const currentPoints = currentPerfumes.reduce(
-    (sum, perfume) => sum + normalizePoints(perfume.points),
+    (sum, perfume) => sum + normalizePoints(getComposerCostPoints(perfume)),
     0
   );
 
@@ -84,7 +85,7 @@ function preservesPointsFloorIfAlreadyMet({ request, currentPerfumes, move }) {
   }
 
   const resultingPoints = move.candidatePerfumes.reduce(
-    (sum, perfume) => sum + normalizePoints(perfume.points),
+    (sum, perfume) => sum + normalizePoints(getComposerCostPoints(perfume)),
     0
   );
 

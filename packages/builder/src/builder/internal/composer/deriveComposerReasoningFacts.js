@@ -17,6 +17,7 @@ import {
   classifyQualityScore,
   classifyRedundancyMagnitude,
 } from "./composerReasoningLevels.js";
+import { getComposerCostPoints } from "./composerCost.js";
 
 const SEASON_IDS = Object.freeze(["spring", "summer", "fall", "winter"]);
 const PREFERENCE_DOMAINS = Object.freeze(["seasons", "occasions", "vibes"]);
@@ -179,7 +180,7 @@ function isDerivable(result, qualityResult, constraintResult) {
 
 function deriveSummaryFacts({ result, request, collection, qualityResult, metrics }) {
   const perfumeCount = collection.length;
-  const totalPoints = finiteOrZero(metrics.totalPoints, sumNumbers(collection.map((p) => p.points)));
+  const totalPoints = finiteOrZero(metrics.totalPoints, sumNumbers(collection.map((p) => getComposerCostPoints(p))));
   const estimatedValue = finiteOrZero(
     metrics.estimatedValue,
     totalPoints * request.pointValue

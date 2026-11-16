@@ -4,6 +4,7 @@ import { evaluateCompositionQuality } from "./evaluateCompositionQuality.js";
 import { generateCandidateMoves } from "./generateCandidateMoves.js";
 import { normalizeComposerRequest } from "./normalizeComposerRequest.js";
 import { requireComposerConfig } from "./requireComposerConfig.js";
+import { getComposerCostPoints } from "./composerCost.js";
 
 export const GREEDY_COMPOSER_STATUSES = Object.freeze({
   COMPLETED: "completed",
@@ -322,7 +323,7 @@ function getFeasibleFinalSlotCount({ request, candidatePerfumes, catalog }) {
   const excludedIds = new Set(request.excludedPerfumeIds || []);
   const remainingPointBudget =
     request.maxPoints -
-    currentPerfumes.reduce((sum, perfume) => sum + normalizePoints(perfume.points), 0);
+    currentPerfumes.reduce((sum, perfume) => sum + normalizePoints(getComposerCostPoints(perfume)), 0);
 
   if (!Number.isFinite(remainingPointBudget)) {
     return Math.min(
@@ -343,7 +344,7 @@ function getFeasibleFinalSlotCount({ request, candidatePerfumes, catalog }) {
     .filter((perfume) => Number.isInteger(perfume?.id))
     .filter((perfume) => !selectedIds.has(perfume.id))
     .filter((perfume) => !excludedIds.has(perfume.id))
-    .map((perfume) => normalizePoints(perfume.points))
+    .map((perfume) => normalizePoints(getComposerCostPoints(perfume)))
     .filter((points) => points >= 0)
     .sort((first, second) => first - second);
 
@@ -496,7 +497,7 @@ function isBelowPointsFloor(request, perfumes) {
   }
 
   const totalPoints = perfumes.reduce(
-    (sum, perfume) => sum + (Number.isFinite(perfume?.points) ? perfume.points : 0),
+    (sum, perfume) => sum + (Number.isFinite(getComposerCostPoints(perfume)) ? getComposerCostPoints(perfume) : 0),
     0
   );
 

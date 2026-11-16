@@ -6,6 +6,7 @@ import {
   COMPOSER_PENALTY_IDS,
   COMPOSER_WEIGHTED_DIMENSION_IDS,
 } from "./composerStrategyWeights.js";
+import { getComposerCostPoints } from "./composerCost.js";
 
 const SEASON_IDS = Object.freeze(["spring", "summer", "fall", "winter"]);
 const BUDGET_UNLIMITED_SCORE = 100;
@@ -216,7 +217,7 @@ function getBudgetEfficiencyDimension({ request, perfumes }) {
   if (typeof pointValue !== "number" || !Number.isFinite(pointValue) || pointValue <= 0) {
     throw new Error("Composer quality evaluation requires normalized request pointValue.");
   }
-  const totalValue = perfumes.reduce((sum, perfume) => sum + perfume.points * pointValue, 0);
+  const totalValue = perfumes.reduce((sum, perfume) => sum + getComposerCostPoints(perfume) * pointValue, 0);
   const utilization = budget && budget > 0 ? totalValue / budget : 0;
 
   if (budget === null || budget === undefined) {

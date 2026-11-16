@@ -187,10 +187,12 @@ describe("buildCollectionSummary", () => {
       remaining: 5,
       minimumRemaining: 3,
     });
-    expect(summary.points).toEqual({ total: 0, minimum: 6, remaining: 6 });
+    expect(summary.points).toEqual({ total: 0, spend: 0, minimum: 6, remaining: 6 });
     expect(summary.money).toEqual({
       pointValue: 100,
       total: 0,
+      regularTotal: 0,
+      savings: 0,
       currency: "MXN",
     });
     expect(summary.readiness).toEqual({
@@ -249,7 +251,7 @@ describe("buildCollectionSummary", () => {
       remaining: 4,
       minimumRemaining: 2,
     });
-    expect(summary.points).toEqual({ total: 2.5, minimum: 6, remaining: 3.5 });
+    expect(summary.points).toEqual({ total: 2.5, spend: 2.5, minimum: 6, remaining: 3.5 });
     expect(summary.money.total).toBe(250);
     expect(summary.readiness).toEqual({
       hasMinimumSlots: false,
@@ -331,10 +333,12 @@ describe("buildCollectionSummary", () => {
       remaining: 0,
       minimumRemaining: 0,
     });
-    expect(summary.points).toEqual({ total: 10.5, minimum: 6, remaining: 0 });
+    expect(summary.points).toEqual({ total: 10.5, spend: 10.5, minimum: 6, remaining: 0 });
     expect(summary.money).toEqual({
       pointValue: 100,
       total: 1050,
+      regularTotal: 1050,
+      savings: 0,
       currency: "MXN",
     });
     expect(summary.selectedIds).toEqual([
@@ -384,6 +388,7 @@ describe("buildCollectionSummary", () => {
     });
     expect(belowMinimum.points).toEqual({
       total: 4.5,
+      spend: 4.5,
       minimum: 6,
       remaining: 1.5,
     });
@@ -414,6 +419,8 @@ describe("buildCollectionSummary", () => {
     expect(summary.money).toEqual({
       pointValue: 80,
       total: 340,
+      regularTotal: 340,
+      savings: 0,
       currency: "USD",
     });
   });
@@ -740,6 +747,7 @@ describe("buildCollectionSummary", () => {
 
     expect(negativePoints.points).toEqual({
       total: -1,
+      spend: -1,
       minimum: 6,
       remaining: 7,
     });
@@ -819,10 +827,12 @@ describe("buildCollectionSummary", () => {
       remaining: 6,
       minimumRemaining: 0,
     });
-    expect(summary.points).toEqual({ total: 15.25, minimum: 6, remaining: 0 });
+    expect(summary.points).toEqual({ total: 15.25, spend: 15.25, minimum: 6, remaining: 0 });
     expect(summary.money).toEqual({
       pointValue: 95,
       total: 1448.75,
+      regularTotal: 1448.75,
+      savings: 0,
       currency: "MXN",
     });
     expect(summary.readiness).toEqual({

@@ -61,7 +61,7 @@ describe("Phase 1 platform-readiness baseline", () => {
     });
 
     expect(summary.points.total).toBe(2.5);
-    expect(summary.money).toEqual({ pointValue: 100, total: 250, currency: "MXN" });
+    expect(summary.money).toEqual({ pointValue: 100, total: 250, regularTotal: 250, savings: 0, currency: "MXN" });
   });
 
   it("preserves Curator Bonus slots and two-part unlock requirement", () => {
@@ -113,6 +113,7 @@ describe("Phase 1 platform-readiness baseline", () => {
         totalSlots: 2,
         totalPoints: 2.5,
         monetaryTotal: 250,
+        savings: 0,
         currency: "MXN",
         curatorBonus: {
           isUnlocked: false,

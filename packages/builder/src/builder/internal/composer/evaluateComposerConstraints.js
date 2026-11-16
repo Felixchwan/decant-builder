@@ -1,6 +1,7 @@
 import { normalizeComposerRequest } from "./normalizeComposerRequest.js";
 import { requireComposerConfig } from "./requireComposerConfig.js";
 import { evaluatePointsFloorReachability } from "./evaluatePointsFloorReachability.js";
+import { getComposerCostPoints } from "./composerCost.js";
 
 export function evaluateComposerConstraints({
   request,
@@ -28,7 +29,7 @@ export function evaluateComposerConstraints({
   const candidateIdSet = new Set(candidateIds.filter((id) => Number.isInteger(id)));
   const totalPoints = roundNumber(
     candidateItems.reduce(
-      (sum, perfume) => sum + (isValidPointValue(perfume?.points) ? perfume.points : 0),
+      (sum, perfume) => sum + (isValidPointValue(getComposerCostPoints(perfume)) ? getComposerCostPoints(perfume) : 0),
       0
     )
   );
@@ -156,7 +157,7 @@ function addRequestViolations({ violations, request, catalogById, catalogItems }
   const lockedPoints = roundNumber(
     request.lockedPerfumeIds.reduce((sum, perfumeId) => {
       const perfume = catalogById.get(perfumeId);
-      return sum + (isValidPointValue(perfume?.points) ? perfume.points : 0);
+      return sum + (isValidPointValue(getComposerCostPoints(perfume)) ? getComposerCostPoints(perfume) : 0);
     }, 0)
   );
 

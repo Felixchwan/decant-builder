@@ -1,3 +1,5 @@
+import { getComposerCostPoints } from "./composerCost.js";
+
 const CANDIDATE_MULTIPLIERS = Object.freeze([1, 2, 4, 5, 10, 20, 25, 50, 100, 1000]);
 const MULTIPLIER_EPSILON = 1e-6;
 // Sized against this domain's real bounds (~84 catalog items, remaining
@@ -36,7 +38,7 @@ export function evaluatePointsFloorReachability({
   }
 
   const safeCandidatePoints = (Array.isArray(legalCandidates) ? legalCandidates : [])
-    .map((perfume) => perfume?.points)
+    .map((perfume) => getComposerCostPoints(perfume))
     .filter((points) => typeof points === "number" && Number.isFinite(points) && points >= 0);
   const safeRemainingSlots = Number.isFinite(remainingSlots)
     ? Math.max(0, Math.trunc(remainingSlots))

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 import { getTierData } from "./utils/tierUtils";
 import PerfumeCard from "./components/PerfumeCard";
+import FragrancePrice from "./components/FragrancePrice.jsx";
 import FilterBar from "./components/FilterBar";
 import MarketSegmentFilter from "./components/MarketSegmentFilter";
 import BuilderPanel from "./components/BuilderPanel";
@@ -40,6 +41,7 @@ import {
 } from "@discovery-box/catalog";
 import { createTranslator } from "./i18n/createTranslator.js";
 import { createCustomerPricing } from "./utils/customerPricing.js";
+import { getComposerCostPoints, withComposerCost } from "./builder/internal/composer/composerCost.js";
 import { CustomerPricingProvider } from "./utils/CustomerPricingProvider.jsx";
 import { ANALYTICS_EVENTS } from "./analytics/events.js";
 import { noopAnalytics } from "./analytics/noopAnalytics.js";
@@ -176,6 +178,12 @@ function App({
   );
   const { t } = translator;
   const perfumes = catalog;
+  // The catalog as the Composer's budget logic must see it: a fragrance on a valid promotion costs its effective price (see
+  // composer/composerCost.js). The same objects for every fragrance not on sale, and for a points host. Never persisted.
+  const composerCatalog = useMemo(
+    () => perfumes.map((perfume) => withComposerCost(perfume, customerPricing)),
+    [perfumes, customerPricing]
+  );
   const notes = useMemo(() => noteMetadata || EMPTY_NOTES, [noteMetadata]);
   const MIN_BOX_SLOTS = builderConfig.box.minSelectableSlots;
   const MAX_BOX_SLOTS = builderConfig.box.totalPhysicalSlots;
@@ -184,11 +192,11 @@ function App({
   const minimumComposerBudget = useMemo(
     () =>
       deriveMinimumComposerBudget({
-        catalog: perfumes,
+        catalog: composerCatalog,
         minSlots: MIN_BOX_SLOTS,
         pointValue: builderConfig.commerce.pointValue,
       }),
-    [perfumes, MIN_BOX_SLOTS, builderConfig]
+    [composerCatalog, MIN_BOX_SLOTS, builderConfig]
   );
   const DEFAULT_BUILDER_STATE = useMemo(() => ({
     selectedPerfumeIds: [],
@@ -329,8 +337,10 @@ function App({
   const hasCustomizedComposerBudgetRef = useRef(false);
   const [composerSettings, setComposerSettings] = useState(() => {
     const initialSelectedPerfumes = initialSelectionState.selectedPerfumes;
+    // The default budget is measured at what the customer pays: a fragrance on a valid promotion counts at its effective price.
+    const initialPricing = createCustomerPricing(builderConfig);
     const initialTotalPoints = initialSelectedPerfumes.reduce(
-      (sum, perfume) => sum + perfume.points,
+      (sum, perfume) => sum + initialPricing.getEffectivePoints(perfume),
       0
     );
     const initialMissingSlots = Math.max(0, MIN_BOX_SLOTS - initialSelectedPerfumes.length);
@@ -340,7 +350,7 @@ function App({
     );
 
     const completionAwareDefault = deriveDefaultComposerBudget({
-      catalog: perfumes,
+      catalog: composerCatalog,
       missingSlots: initialMissingSlots,
       missingPoints: initialMissingPoints,
       pointValue: builderConfig.commerce.pointValue,
@@ -412,6 +422,8 @@ function App({
   );
   const totalSlots = collectionSummary.counts.selected;
   const totalPoints = collectionSummary.points.total;
+  // The box measured at what the customer pays (see buildCollectionSummary): the minimum spend and the Curator Bonus read this.
+  const spendPoints = collectionSummary.points.spend;
   const estimatedValue = collectionSummary.money.total;
   const missingSlots = collectionSummary.counts.minimumRemaining;
   const missingPoints = collectionSummary.points.remaining;
@@ -427,8 +439,9 @@ function App({
         activeFilters,
         enabledMarketSegments: catalogMarketSegments,
         sortOption,
+        getPrice: customerPricing.getEffectivePoints,
       }),
-    [activeFilters, catalogMarketSegments, perfumes, notes, searchQuery, sortOption]
+    [activeFilters, catalogMarketSegments, customerPricing, perfumes, notes, searchQuery, sortOption]
   );
   const filterOptions = catalogView.filterOptions;
   const visiblePerfumes = catalogView.visiblePerfumes;
@@ -563,7 +576,7 @@ const isComposerProposalStale = isComposerBoxProposalStale(
 
   useEffect(() => {
     const curatorBonusUnlocked = isCuratorBonusUnlocked({
-      totalPoints,
+      totalPoints: spendPoints,
       totalSlots,
       targetPoints: builderConfig.curatorBonus.targetPoints,
       minSlots: MIN_BOX_SLOTS,
@@ -582,7 +595,7 @@ const isComposerProposalStale = isComposerBoxProposalStale(
     if (!curatorBonusUnlocked) {
       hasTrackedCuratorBonusUnlockedRef.current = false;
     }
-  }, [analytics, builderConfig, curatorBonusPreference, MIN_BOX_SLOTS, totalPoints, totalSlots]);
+  }, [analytics, builderConfig, curatorBonusPreference, MIN_BOX_SLOTS, totalPoints, spendPoints, totalSlots]);
 
   useEffect(() => {
     const persistedState = createBuilderPersistencePayload({
@@ -904,7 +917,7 @@ const isComposerProposalStale = isComposerBoxProposalStale(
     }
 
     const completionAwareDefault = deriveDefaultComposerBudget({
-      catalog: perfumes,
+      catalog: composerCatalog,
       missingSlots,
       missingPoints,
       pointValue: builderConfig.commerce.pointValue,
@@ -1278,7 +1291,7 @@ const confirmAddPerfume = () => {
         slotCountBefore: selectedPerfumes.length,
         totalPointsBefore: totalPoints,
         curatorBonusUnlockedBefore:
-          totalPoints >= builderConfig.curatorBonus.targetPoints &&
+          spendPoints >= builderConfig.curatorBonus.targetPoints &&
           totalSlots >= MIN_BOX_SLOTS,
         source: "manual",
       });
@@ -1327,6 +1340,7 @@ const confirmAddPerfume = () => {
       maxSlots={MAX_BOX_SLOTS}
       maxSelectableSlots={MAX_SELECTABLE_SLOTS}
       totalPoints={totalPoints}
+      spendPoints={spendPoints}
       estimatedValue={estimatedValue}
       selectedPerfumes={selectedPerfumes}
       catalogPerfumes={perfumes}
@@ -1757,7 +1771,7 @@ function parseComposerBudget(value) {
 
 function deriveMinimumComposerBudget({ catalog, minSlots, pointValue }) {
   const minimumPerfumePoints = (Array.isArray(catalog) ? catalog : [])
-    .map((perfume) => perfume?.points)
+    .map((perfume) => getComposerCostPoints(perfume))
     .filter((points) => Number.isFinite(points) && points > 0)
     .sort((first, second) => first - second)[0];
 
@@ -2164,7 +2178,12 @@ function PerfumeDetailsModal({
             {tierData.name}
           </div>
 
-          <strong>{pricing.formatPoints(perfume.points)}</strong>
+          <strong className={pricing.getFragrancePrice(perfume).isOnSale ? "perfume-details-price perfume-details-price--sale" : undefined}>
+            <FragrancePrice perfume={perfume} pricing={pricing} />
+          </strong>
+          {pricing.getFragrancePrice(perfume).isOnSale && pricing.getFragrancePrice(perfume).saleLabel && (
+            <span className="perfume-details-sale-badge">{pricing.getFragrancePrice(perfume).saleLabel}</span>
+          )}
 
           <button
             className="perfume-details-meta-add"

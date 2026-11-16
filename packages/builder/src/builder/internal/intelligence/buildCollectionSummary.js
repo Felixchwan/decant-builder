@@ -1,6 +1,7 @@
 import { buildBoxSummary } from "../../../utils/buildBoxSummary.js";
 import { buildCoverageSummary } from "../../../utils/buildCoverageSummary.js";
 import { getSelectedPerfumeIds } from "../selection/selectionState.js";
+import { createCustomerPricing } from "../../../utils/customerPricing.js";
 
 function assertNumber(value, path) {
   if (typeof value !== "number" || Number.isNaN(value)) {
@@ -42,9 +43,16 @@ export function buildCollectionSummary({
     (sum, perfume) => sum + perfume.points,
     0
   );
+  // What the customer is charged: each fragrance at its effective price (the sale price while a valid sale applies, its regular
+  // points x pointValue otherwise). `points.total` stays the regular value of the box (its tiers, its catalog value, never altered
+  // by a promotion); `points.spend` is the same box measured at what the customer actually pays. The minimum box spend and the
+  // Curator Bonus are commercial thresholds on what is paid, so they read `spend`; with no promotion the two are the same number.
+  const pricing = createCustomerPricing(config);
+  const savings = selectedPerfumes.reduce((sum, perfume) => sum + pricing.getFragrancePrice(perfume).savings, 0);
+  const spendPoints = savings === 0 ? totalPoints : (totalPoints * pointValue - savings) / pointValue;
   const minimumSlotRemaining = Math.max(0, minimumSlots - selectedCount);
   const capacityRemaining = Math.max(0, maximumSlots - selectedCount);
-  const pointRemaining = Math.max(0, minimumPoints - totalPoints);
+  const pointRemaining = Math.max(0, minimumPoints - spendPoints);
   const hasMinimumSlots = minimumSlotRemaining === 0;
   const hasMinimumPoints = pointRemaining === 0;
   const blockers = [];
@@ -72,12 +80,15 @@ export function buildCollectionSummary({
     },
     points: {
       total: totalPoints,
+      spend: spendPoints,
       minimum: minimumPoints,
       remaining: pointRemaining,
     },
     money: {
       pointValue,
-      total: totalPoints * pointValue,
+      total: totalPoints * pointValue - savings,
+      regularTotal: totalPoints * pointValue,
+      savings,
       currency: config.commerce?.currency,
     },
     readiness: {

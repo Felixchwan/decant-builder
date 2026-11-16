@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createCatalogAssetResolver } from "@discovery-box/catalog";
 import { aurelianCatalog } from "../merchant/catalog.js";
-import { formatFragrancePrice, formatFragrancePriceWithCurrency } from "../merchant/pricing.js";
+import { aurelianPricing, formatFragrancePrice, formatFragrancePriceWithCurrency, getEffectivePoints, getFragrancePrice } from "../merchant/pricing.js";
 import { filterCatalog } from "../lib/filterCatalog.js";
 import { buildCatalogSeasonHref, filterCatalogBySeason, getCatalogSeasonLabel, parseCatalogSeason } from "../lib/catalogSeason.js";
 import { SEASONAL_SLOTS } from "../lib/seasonalSelection.js";
@@ -18,7 +18,8 @@ import { buildEvidenceRevisit } from "../perceptualLearning/evidenceRevisit.js";
 const resolveAsset = createCatalogAssetResolver({ basePath: "/catalog-assets" });
 // How long a card brought into view by ?fragrance= keeps its emphasis before it settles back.
 const CATALOG_HIGHLIGHT_MS = 2600;
-const pointOptions = [...new Set(aurelianCatalog.map((item) => item.points))].sort((a, b) => a - b);
+// The price filter's options are the prices customers actually pay (a promotion's special price is one), in points.
+const pointOptions = [...new Set(aurelianCatalog.map(getEffectivePoints))].sort((a, b) => a - b);
 const tierPresentation = [
   { maxId: 100, emoji: "🟤", color: "#b87333", background: "rgba(184,115,51,0.12)" },
   { maxId: 200, emoji: "⚪", color: "#cbd5e1", background: "rgba(203,213,225,0.12)" },
@@ -198,6 +199,7 @@ export function CatalogExplorer({ season: urlSeason = null }) {
         <div className="catalog-explorer-grid">
           {visible.map((item) => {
             const tier = getCatalogTierPresentation(item.id);
+            const price = getFragrancePrice(item);
             return (
               <article className={`product-card${highlightedId === item.id ? " product-card--highlighted" : ""}`} data-fragrance-id={item.id} key={item.id} ref={requestedFragrance?.id === item.id ? requestedCardRef : undefined} tabIndex={requestedFragrance?.id === item.id ? -1 : undefined}>
                 {/* The bottle and the name both lead to the same place: this perfume's details in the Builder
@@ -205,6 +207,7 @@ export function CatalogExplorer({ season: urlSeason = null }) {
                     one announced link; the bottle link repeats it for pointer and touch users only, so it is
                     taken out of the tab order and the accessibility tree rather than read twice. */}
                 <div className="product-card__image">
+                  {price.isOnSale && price.saleLabel ? <span className="product-card__sale-badge">{price.saleLabel}</span> : null}
                   <Link aria-hidden="true" className="product-card__image-link" href={buildBuilderDetailsHref(item.id)} tabIndex={-1}>
                     <img alt={`Frasco de ${item.name}`} loading="lazy" src={resolveAsset(item.imageAssetKey)} />
                   </Link>
@@ -215,16 +218,23 @@ export function CatalogExplorer({ season: urlSeason = null }) {
                 </h2>
                 <div className="product-card__actions">
                   <p
-                    className="product-card__points"
+                    className={price.isOnSale ? "product-card__points product-card__points--sale" : "product-card__points"}
                     style={{
                       borderColor: tier.color,
                       backgroundColor: tier.background,
                       color: tier.color,
                     }}
-                    aria-label={formatFragrancePriceWithCurrency(item.points)}
+                    aria-label={price.isOnSale ? aurelianPricing.formatSaleForAssistiveTech(item) : formatFragrancePriceWithCurrency(item.points)}
                   >
                     <span aria-hidden="true">{tier.emoji}</span>
-                    <span>{formatFragrancePrice(item.points)}</span>
+                    {price.isOnSale ? (
+                      <span aria-hidden="true" className="product-card__price-pair">
+                        <s className="product-card__price-regular">{aurelianPricing.formatAmount(price.regularAmount)}</s>
+                        <span className="product-card__price-special">{aurelianPricing.formatAmount(price.effectiveAmount)}</span>
+                      </span>
+                    ) : (
+                      <span>{formatFragrancePrice(item.points)}</span>
+                    )}
                   </p>
                   <Link className="button product-card__action" href={`/build-your-box?fragrance=${encodeURIComponent(item.id)}`} aria-label={`Agregar ${item.name} a mi Discovery Box`}>Agregar a mi Discovery Box</Link>
                 </div>

@@ -80,6 +80,7 @@ import { getTierData } from "../utils/tierUtils";
 import { DEFAULT_CUSTOMER_PRICING, createCustomerPricing } from "../utils/customerPricing.js";
 import { useCustomerPricing } from "../utils/customerPricingContext.js";
 import CollectionCard from "./CollectionCard";
+import FragrancePrice from "./FragrancePrice.jsx";
 import BalanceHelp from "./BalanceHelp.jsx";
 import CollapsibleStrengths from "./CollapsibleStrengths.jsx";
 import { createTranslator } from "../i18n/createTranslator.js";
@@ -146,6 +147,8 @@ const BuilderPanel = forwardRef(function BuilderPanel({
   maxSlots,
   maxSelectableSlots,
   totalPoints,
+  // The box at what the customer pays; the minimum spend and the Curator Bonus read this. Defaults to the regular value.
+  spendPoints = totalPoints,
   estimatedValue,
   selectedPerfumes,
   catalogPerfumes,
@@ -468,7 +471,7 @@ const BuilderPanel = forwardRef(function BuilderPanel({
       [boxSummary]
     );
     const isCuratorBonusUnlocked = deriveCuratorBonusUnlocked({
-      totalPoints,
+      totalPoints: spendPoints,
       totalSlots,
       targetPoints: builderConfig.curatorBonus.targetPoints,
       minSlots,
@@ -1122,7 +1125,7 @@ const BuilderPanel = forwardRef(function BuilderPanel({
       <CuratorBonusModule
         ref={curatorBonusModuleRef}
         builderConfig={builderConfig}
-        totalPoints={totalPoints}
+        spendPoints={spendPoints}
         totalSlots={totalSlots}
         minSlots={minSlots}
         isUnlocked={isCuratorBonusUnlocked}
@@ -2372,7 +2375,7 @@ export function ComposerProposalDetailTrigger({ perfume, label, onOpen }) {
       onClick={onOpen}
     >
       <strong>{perfume.name}</strong>
-      <span>{perfume.brand} - {pricing.formatPoints(perfume.points)}</span>
+      <span>{perfume.brand} - <FragrancePrice perfume={perfume} pricing={pricing} /></span>
     </button>
   );
 }
@@ -2936,7 +2939,7 @@ function NoteExplorerResultRow({ perfume, translator, isAlreadyAdded, isBoxFull,
         <button type="button" className="note-explorer-result-detail-trigger" aria-haspopup="dialog">
           <strong>{perfume.name}</strong>
           <span>
-            {perfume.brand} - {pricing.formatPoints(perfume.points)}
+            {perfume.brand} - <FragrancePrice perfume={perfume} pricing={pricing} />
             {perfume.noteProminenceLevel ? (
               <>
                 {" - "}
@@ -3731,7 +3734,7 @@ function DnaPerfumeRow({
         )}
         <span>{perfume.brand}</span>
         <p>
-          {tierData.name} · {pricing.formatPoints(perfume.points)}
+          {tierData.name} · <FragrancePrice perfume={perfume} pricing={pricing} />
           {supportingAccords.length > 0
             ? ` · ${supportingAccords.map(formatIntelligenceLabel).join(", ")}`
             : ""}
@@ -4284,7 +4287,7 @@ function buildHiddenCuratorPicks(recommendations, selectedPerfumeIds) {
 const CuratorBonusModule = forwardRef(function CuratorBonusModule(
   {
     builderConfig,
-    totalPoints,
+    spendPoints,
     totalSlots,
     minSlots,
     isUnlocked,
@@ -4301,15 +4304,15 @@ const CuratorBonusModule = forwardRef(function CuratorBonusModule(
   const CURATOR_BONUS_PREFERENCES = builderConfig.curatorBonus.preferences;
   const preferenceData = CURATOR_BONUS_PREFERENCES[preference];
   const hiddenPickCount = hiddenCuratorPicks.length;
-  const progressValue = Math.min(totalPoints, DISCOVERY_BONUS_TARGET_POINTS);
+  const progressValue = Math.min(spendPoints, DISCOVERY_BONUS_TARGET_POINTS);
   const progressPercent =
     (progressValue / DISCOVERY_BONUS_TARGET_POINTS) * 100;
   const pointsAway = Math.max(
-    DISCOVERY_BONUS_TARGET_POINTS - totalPoints,
+    DISCOVERY_BONUS_TARGET_POINTS - spendPoints,
     0
   );
   const fragrancesAway = Math.max(minSlots - totalSlots, 0);
-  const hasRequiredPoints = totalPoints >= DISCOVERY_BONUS_TARGET_POINTS;
+  const hasRequiredPoints = spendPoints >= DISCOVERY_BONUS_TARGET_POINTS;
   const hasRequiredFragrances = totalSlots >= minSlots;
   const lockedMessage = !hasRequiredPoints
     ? pricing.isPriceDisplay
@@ -4825,6 +4828,9 @@ function DiscoveryBoxReviewModal({
                   : `$${finalizationModel.order.monetaryTotal.toFixed(0)}`
               }
             />
+            {pricing.isPriceDisplay && finalizationModel.order.savings > 0 && (
+              <SummaryStat label={t("pricing.savings")} value={pricing.formatAmount(finalizationModel.order.savings)} />
+            )}
             <SummaryStat
               label={builderConfig.curatorBonus.label}
               value={finalizationModel.order.curatorBonus.isUnlocked ? t("general.unlocked") : t("general.locked")}
@@ -5828,7 +5834,7 @@ export function RecommendationCard({
       <div>
         <strong>{perfume.name}</strong>
         <span>
-          {perfume.brand} · {pricing.formatPoints(perfume.points)}
+          {perfume.brand} · <FragrancePrice perfume={perfume} pricing={pricing} />
         </span>
       </div>
     </>

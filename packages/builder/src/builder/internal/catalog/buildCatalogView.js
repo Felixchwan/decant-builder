@@ -14,6 +14,9 @@ export function buildCatalogView({
   // at all; an array is the exact set of enabled segments, so an empty array shows nothing.
   enabledMarketSegments = null,
   sortOption = "bestMatch",
+  // The price a fragrance is sorted by, in points: what the customer pays (see utils/customerPricing.js getEffectivePoints). Omitted,
+  // it is the fragrance's own `points`, exactly as before.
+  getPrice = undefined,
 }) {
   if (!Array.isArray(catalog)) {
     throw new Error("buildCatalogView requires catalog to be an array.");
@@ -28,7 +31,8 @@ export function buildCatalogView({
       matchesSearch(perfume, notes || EMPTY_NOTES, normalizedSearchQuery)
     ),
     sortOption,
-    normalizedSearchQuery
+    normalizedSearchQuery,
+    getPrice
   );
 
   return {
@@ -114,14 +118,15 @@ function getSearchText(perfume, notes) {
     .replace(/\p{Diacritic}/gu, "");
 }
 
-function sortPerfumes(perfumesToSort, sortOption, searchQuery) {
+function sortPerfumes(perfumesToSort, sortOption, searchQuery, getPrice = (perfume) => perfume.points) {
   return [...perfumesToSort].sort((a, b) => {
+    // Price sorting follows what the customer pays (the effective price, in points): without a valid sale that is `points`.
     if (sortOption === "pointsAsc") {
-      return a.points - b.points || compareNames(a, b);
+      return getPrice(a) - getPrice(b) || compareNames(a, b);
     }
 
     if (sortOption === "pointsDesc") {
-      return b.points - a.points || compareNames(a, b);
+      return getPrice(b) - getPrice(a) || compareNames(a, b);
     }
 
     if (sortOption === "brandAsc") {

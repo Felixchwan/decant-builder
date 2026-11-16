@@ -30,6 +30,9 @@ function PerfumeCard({
   const addToBoxLabel = labels.addToBox || "Add to box";
   const addedLabel = labels.added || "Added";
   const viewDetailsLabel = labels.viewDetails || "View notes & details";
+  // A valid sale (see utils/customerPricing.js) adds a promotion badge on the bottle and puts the regular price, struck through, beside
+  // the special one. Without one nothing below differs from the card as it has always rendered.
+  const price = pricing.getFragrancePrice(perfume);
 
   return (
     <article
@@ -51,6 +54,7 @@ function PerfumeCard({
               event.currentTarget.src = imageFallback;
             }}
           />
+          {price.isOnSale && price.saleLabel && <span className="perfume-card-sale-badge">{price.saleLabel}</span>}
           {brandAsset && (
             <span className="perfume-card-brand-badge" aria-hidden="true">
               <img
@@ -99,16 +103,23 @@ function PerfumeCard({
 
       <div className="perfume-card-compact-actions">
         <div
-          className="perfume-card-points"
+          className={price.isOnSale ? "perfume-card-points perfume-card-points--sale" : "perfume-card-points"}
           style={{
             borderColor: tierData.color,
             backgroundColor: tierData.background,
             color: tierData.color,
           }}
-          aria-label={pricing.formatPointsForAssistiveTech(perfume.points)}
+          aria-label={price.isOnSale ? pricing.formatSaleForAssistiveTech(perfume) : pricing.formatPointsForAssistiveTech(perfume.points)}
         >
           <span aria-hidden="true">{tierData.emoji}</span>
-          <span>{pricing.formatPoints(perfume.points)}</span>
+          {price.isOnSale ? (
+            <span className="perfume-card-price-pair" aria-hidden="true">
+              <s className="perfume-card-price-regular">{pricing.formatAmount(price.regularAmount)}</s>
+              <span className="perfume-card-price-special">{pricing.formatAmount(price.effectiveAmount)}</span>
+            </span>
+          ) : (
+            <span>{pricing.formatPoints(perfume.points)}</span>
+          )}
         </div>
 
         <button

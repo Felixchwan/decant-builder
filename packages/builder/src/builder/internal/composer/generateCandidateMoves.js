@@ -1,6 +1,7 @@
 import { evaluateComposerConstraints } from "./evaluateComposerConstraints.js";
 import { evaluatePointsFloorReachability } from "./evaluatePointsFloorReachability.js";
 import { COMPOSER_MOVE_TYPES } from "./composerMoveTypes.js";
+import { getComposerCostPoints } from "./composerCost.js";
 
 export { COMPOSER_MOVE_TYPES };
 
@@ -79,7 +80,7 @@ function canStillReachPointsFloor({ request, move, catalogPerfumes, excludedIds 
   const resultingPerfumes = move.candidatePerfumes;
   const resultingIds = new Set(resultingPerfumes.map((perfume) => perfume.id));
   const currentPoints = resultingPerfumes.reduce(
-    (sum, perfume) => sum + normalizePoints(perfume.points),
+    (sum, perfume) => sum + normalizePoints(getComposerCostPoints(perfume)),
     0
   );
   const legalCandidates = catalogPerfumes.filter(
@@ -154,7 +155,7 @@ function canReachConstructionMinimum({
   const selectedIds = new Set(currentPerfumes.map((perfume) => perfume.id));
   const remainingPointBudget =
     request.maxPoints -
-    currentPerfumes.reduce((sum, perfume) => sum + normalizePoints(perfume.points), 0);
+    currentPerfumes.reduce((sum, perfume) => sum + normalizePoints(getComposerCostPoints(perfume)), 0);
 
   if (!Number.isFinite(remainingPointBudget)) {
     return true;
@@ -164,7 +165,7 @@ function canReachConstructionMinimum({
     .filter((perfume) => Number.isInteger(perfume?.id))
     .filter((perfume) => !selectedIds.has(perfume.id))
     .filter((perfume) => !excludedIds.has(perfume.id))
-    .map((perfume) => normalizePoints(perfume.points))
+    .map((perfume) => normalizePoints(getComposerCostPoints(perfume)))
     .filter((points) => points >= 0)
     .sort((first, second) => first - second)
     .slice(0, remainingSlotCount);

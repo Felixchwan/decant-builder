@@ -40,6 +40,11 @@ export const defaultBuilderConfig = {
     // selection, totals, Curator Bonus and Composer keep working in points either way.
     priceDisplay: "points",
     totalLabel: "Order Total",
+    // Wording for promotional (special) pricing, used only by a "price" host whose fragrances carry a valid `sale` overlay (see
+    // utils/customerPricing.js). A sale may bring its own label; these are the defaults and the spoken names of the two prices.
+    saleLabel: "Special offer",
+    regularPriceLabel: "Regular price",
+    salePriceLabel: "Sale price",
   },
   recovery: {
     title: "Something unexpected happened.",
@@ -161,6 +166,7 @@ export const defaultBuilderConfig = {
       totalSlots: "Total slots",
       totalPoints: "Total points",
       orderTotal: "Order total",
+      regularPrice: "regular price",
       curatorBonus: "Curator Bonus",
       curatorStyle: "Curator Style",
       unlocked: "Unlocked",

@@ -1,3 +1,4 @@
+import { getEffectivePoints } from "../merchant/pricing.js";
 import { filterCatalogBySeason, rankBySeasonalRelevance } from "./catalogSeason.js";
 
 // With no `season` this is exactly the full-catalog filter it has always been.
@@ -8,7 +9,8 @@ export function filterCatalog(catalog, query, points, season = null) {
   const matches = filterCatalogBySeason(catalog, season).filter((item) => {
     const matchesQuery = !normalized
       || `${item.brand} ${item.name}`.toLocaleLowerCase("es-MX").includes(normalized);
-    return matchesQuery && (points === "all" || item.points === Number(points));
+    // the price filter matches what the customer pays (a fragrance on a promotion is found at its special price)
+    return matchesQuery && (points === "all" || getEffectivePoints(item) === Number(points));
   });
   return season ? rankBySeasonalRelevance(matches, season) : matches;
 }

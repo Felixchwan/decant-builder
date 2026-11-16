@@ -139,6 +139,7 @@ describe("buildFinalizationModel", () => {
         totalSlots: 0,
         totalPoints: 0,
         monetaryTotal: 0,
+        savings: 0,
         currency: "MXN",
         curatorBonus: {
           isUnlocked: false,
@@ -554,6 +555,7 @@ describe("buildFinalizationModel", () => {
         totalSlots: 3,
         totalPoints: 6,
         monetaryTotal: 570,
+        savings: 0,
         currency: "MXN",
         curatorBonus: {
           isUnlocked: true,

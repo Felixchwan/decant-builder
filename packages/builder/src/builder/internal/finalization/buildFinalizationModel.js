@@ -89,13 +89,22 @@ function buildOrderModel({
   curatorBonus,
   config,
 }) {
+  const pricing = createCustomerPricing(config);
   const items = Array.isArray(selectedPerfumes)
-    ? selectedPerfumes.map((perfume) => ({
-        id: perfume.id,
-        name: perfume.name,
-        brand: perfume.brand,
-        points: perfume.points,
-      }))
+    ? selectedPerfumes.map((perfume) => {
+        const price = pricing.getFragrancePrice(perfume);
+
+        return {
+          id: perfume.id,
+          name: perfume.name,
+          brand: perfume.brand,
+          points: perfume.points,
+          // present only for a fragrance on a valid sale: what it is charged, what it normally costs, and why
+          ...(price.isOnSale
+            ? { sale: { effectiveAmount: price.effectiveAmount, regularAmount: price.regularAmount, label: price.saleLabel } }
+            : {}),
+        };
+      })
     : [];
 
   return {
@@ -103,6 +112,7 @@ function buildOrderModel({
     totalSlots: items.length,
     totalPoints,
     monetaryTotal: estimatedValue,
+    savings: items.reduce((sum, item) => sum + (item.sale ? item.sale.regularAmount - item.sale.effectiveAmount : 0), 0),
     currency: config.commerce?.currency,
     curatorBonus: {
       isUnlocked: Boolean(curatorBonus?.isUnlocked),
@@ -116,10 +126,17 @@ function buildFinalizationMessage({ customer, order, config }) {
   const labels = config.finalization.messageLabels || {};
   // A host that speaks money to customers (commerce.priceDisplay: "price") sends amounts, not points.
   const pricing = createCustomerPricing(config);
-  const perfumeLines = order.items.map(
-    (perfume, index) =>
-      `${index + 1}. ${perfume.name} - ${perfume.brand} (${pricing.formatPoints(perfume.points)})`
-  );
+  // A fragrance on a valid sale is sent at the price charged, with the regular price beside it and the promotion named, so the
+  // applied price is unambiguous: "1. Oud for Greatness - Initio ($400 MXN, oferta especial; precio regular $500 MXN)".
+  const perfumeLines = order.items.map((perfume, index) => {
+    const price = perfume.sale
+      ? `${pricing.formatAmountWithCurrency(perfume.sale.effectiveAmount)}${perfume.sale.label ? `, ${perfume.sale.label.toLocaleLowerCase(pricing.locale)}` : ""}; ${
+          labels.regularPrice || "regular price"
+        } ${pricing.formatAmountWithCurrency(perfume.sale.regularAmount)}`
+      : pricing.formatPoints(perfume.points);
+
+    return `${index + 1}. ${perfume.name} - ${perfume.brand} (${price})`;
+  });
   const curatorStatus = order.curatorBonus.isUnlocked
     ? [
         `${labels.curatorBonus || "Curator Bonus"}: ${labels.unlocked || "Unlocked"}`,

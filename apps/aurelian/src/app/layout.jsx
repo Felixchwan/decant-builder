@@ -28,6 +28,7 @@ import "./landing-video.css";
 import "./landing-seasons.css";
 import "./catalog-seasons.css";
 import "./catalog-controls.css";
+import "./promotional-pricing.css";
 import "./landing-how-it-works.css";
 import "./landing-closing.css";
 import "./contact-page.css";
