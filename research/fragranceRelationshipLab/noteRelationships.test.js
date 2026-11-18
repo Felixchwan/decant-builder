@@ -238,17 +238,17 @@ describe("sort helpers -- deterministic ordering", () => {
 // live catalog audit performed before this phase was implemented, mechanically
 // re-baselined (count and range only, same algorithm) after later catalog
 // additions grew the live fragrance count -- most recently the two Viktor&Rolf/
-// Montblanc Gold additions bringing real co-occurring pairs to 2,330.
+// Montblanc Gold additions, and later Sospiro Vibrato (a 12-note pyramid), bringing real co-occurring pairs to 2,460.
 describe("buildNoteRelationships -- live catalog regression (broad invariants only)", () => {
   const relationships = buildNoteRelationships(catalogFragrances);
 
-  it("has exactly 95 catalog fragrances to compute over", () => {
-    expect(catalogFragrances).toHaveLength(95);
+  it("has exactly 96 catalog fragrances to compute over", () => {
+    expect(catalogFragrances).toHaveLength(96);
   });
 
-  it("produces a total co-occurring-pair count in the range confirmed by the live audit (~2,330)", () => {
-    expect(relationships.length).toBeGreaterThan(2150);
-    expect(relationships.length).toBeLessThan(2450);
+  it("produces a total co-occurring-pair count in the range confirmed by the live audit (~2,460)", () => {
+    expect(relationships.length).toBeGreaterThan(2300);
+    expect(relationships.length).toBeLessThan(2600);
   });
 
   it("has a singleton-support majority in the range confirmed by the live audit (~1,517 of ~2,155, i.e. roughly 70%)", () => {

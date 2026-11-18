@@ -731,4 +731,9 @@ gardenia: { name: "Gardenia", family: "floral", noteImageAssetKey: "notes/garden
 // note, so it is added once under the botanical key with the source's own display name rather than twice. Added for Initio
 // Parfums Prives Oud for Greatness, whose approved pyramid names Agarwood (Oud) at the heart.
 agarwood: { name: "Agarwood (Oud)", family: "woody", noteImageAssetKey: "notes/agarwood.jpg" },
+
+// Generic "Herbal Notes" are named by the source as a heart note and are not any one herb in the dictionary (rosemary, sage, basil...),
+// so they get their own generic identity, following the existing "<Family> Notes" convention (powderyNotes, woody, spicy...). Aromatic
+// is the family the existing herbs share. Added for Sospiro Perfumes Vibrato.
+herbalNotes: { name: "Herbal Notes", family: "aromatic", noteImageAssetKey: "notes/herbalNotes.jpg" },
 };

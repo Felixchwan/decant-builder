@@ -257,6 +257,7 @@ const CEDAR_FAMILY = {
   213: undefined,
   214: undefined,
   216: undefined,
+  400: undefined,
   405: undefined,
   406: 4,
   409: 6,
@@ -377,8 +378,8 @@ describe("Composer Phase 3C canonical-data sanity audit", () => {
 describe("Composer Phase 3C horizontal calibration -- vanilla and cedar canonical-key families", () => {
   const perfumesById = new Map(perfumes.map((perfume) => [perfume.id, perfume]));
 
-  it("has exactly 95 catalog fragrances to search for exhaustive family membership", () => {
-    expect(perfumes).toHaveLength(95);
+  it("has exactly 96 catalog fragrances to search for exhaustive family membership", () => {
+    expect(perfumes).toHaveLength(96);
   });
 
   for (const [noteId, family] of Object.entries(ALL_FAMILIES)) {

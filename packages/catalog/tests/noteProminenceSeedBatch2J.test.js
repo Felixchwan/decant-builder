@@ -339,10 +339,13 @@ describe("Composer Phase 2J note-prominence seed batch (final vertical-pass batc
     // Rayhaan Aquatica (36) joins them on the same basis: added from its
     // approved note pyramid and main accords only, with no per-note
     // prominence evidence.
-    const postVerticalPassAdditionIds = new Set([36, 120, 121, 215, 216, 217, 218, 411, 502]);
+    // Sospiro Vibrato (400) joins them on the same basis: added from its
+    // approved note pyramid and main accords only, with no per-note
+    // prominence evidence.
+    const postVerticalPassAdditionIds = new Set([36, 120, 121, 215, 216, 217, 218, 400, 411, 502]);
     const originallyReviewedPerfumes = perfumes.filter((perfume) => !postVerticalPassAdditionIds.has(perfume.id));
 
-    expect(perfumes).toHaveLength(95);
+    expect(perfumes).toHaveLength(96);
     expect(originallyReviewedPerfumes).toHaveLength(86);
     // 86 originally-reviewed fragrances + Patchouli Ink (217), later scored.
     expect(Object.keys(NOTE_PROMINENCE_BY_ID)).toHaveLength(87);
@@ -368,7 +371,10 @@ describe("Composer Phase 2J note-prominence seed batch (final vertical-pass batc
     // Rayhaan Aquatica (36) joins them on the same basis: added from its
     // approved note pyramid and main accords only, with no per-note
     // prominence evidence.
-    const postVerticalPassAdditionIds = new Set([36, 120, 121, 215, 216, 217, 218, 411, 502]);
+    // Sospiro Vibrato (400) joins them on the same basis: added from its
+    // approved note pyramid and main accords only, with no per-note
+    // prominence evidence.
+    const postVerticalPassAdditionIds = new Set([36, 120, 121, 215, 216, 217, 218, 400, 411, 502]);
 
     for (const perfume of perfumes) {
       if (postVerticalPassAdditionIds.has(perfume.id)) {

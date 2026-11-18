@@ -95,6 +95,7 @@ const PINNED_IDENTITIES = [
   [304, "Essential Parfums", "Divine Vanille"],
   [305, "Essential Parfums", "Orange X Santal"],
   [306, "Giorgio Armani", "Acqua di Gio Elixir"],
+  [400, "Sospiro Perfumes", "Vibrato"],
   [401, "Creed", "Silver Mountain Water"],
   [402, "Dior", "Sauvage Elixir"],
   [403, "Parfums de Marly", "Carlisle"],

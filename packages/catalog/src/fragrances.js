@@ -2750,6 +2750,66 @@ baseNotes: ["caramel", "musk"],
 },
 
 {
+  id: 400,
+  name: "Vibrato",
+  shortName: "Vibrato",
+  brand: "Sospiro Perfumes",
+  points: 4,
+  imageAssetKey: "perfumes/diamond/vibrato.png",
+
+  accords: [
+    "citrus",
+    "fresh spicy",
+    "powdery",
+    "green",
+    "woody",
+    "musky",
+    "aromatic",
+    "fresh",
+  ],
+
+  topNotes: [
+    "grapefruit",
+    "bergamot",
+    "jasmine",
+    "magnolia",
+  ],
+
+  middleNotes: [
+    "ginger",
+    "herbalNotes",
+    "powderyNotes",
+  ],
+
+  baseNotes: [
+    "musk",
+    "cedar",
+    "amber",
+    "patchouli",
+    "orris",
+  ],
+
+  seasons: [
+    "spring",
+    "summer",
+  ],
+
+  occasions: [
+    "daily",
+    "office",
+    "casual",
+    "formal",
+  ],
+
+  vibes: [
+    "fresh",
+    "clean",
+    "elegant",
+    "sophisticated",
+  ],
+},
+
+{
   id: 401,
   name: "Silver Mountain Water",
   shortName: "SMW",
@@ -3553,6 +3613,7 @@ export const SEASON_WEIGHTS_BY_ID = {
   304: { spring: 2, summer: 0, fall: 9, winter: 9 },
   305: { spring: 8, summer: 8, fall: 5, winter: 2 },
   306: { spring: 8, summer: 8, fall: 7, winter: 4 },
+  400: { spring: 9, summer: 8, fall: 4, winter: 2 },
   401: { spring: 8, summer: 8, fall: 3, winter: 2 },
   402: { spring: 2, summer: 0, fall: 9, winter: 10 },
   403: { spring: 2, summer: 0, fall: 9, winter: 10 },

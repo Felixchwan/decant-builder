@@ -234,4 +234,5 @@ export const aurelianTaxonomyLabels = {
   "taxonomy.hibiscus": "Hibisco",
   "taxonomy.gardenia": "Gardenia",
   "taxonomy.agarwood": "Agar (Oud)",
+  "taxonomy.herbalNotes": "Notas Herbales",
 };

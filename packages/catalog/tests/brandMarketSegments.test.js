@@ -54,9 +54,9 @@ describe("brand market segments", () => {
     });
   });
 
-  it("sizes the segments as the catalog stands (3 Arabic, 21 niche, 71 designer fragrances)", () => {
+  it("sizes the segments as the catalog stands (3 Arabic, 22 niche, 71 designer fragrances)", () => {
     const count = (segment) => fragrances.filter(({ brand }) => getBrandMarketSegment(brand) === segment).length;
 
-    expect([count("arabic"), count("designer"), count("niche")]).toEqual([3, 71, 21]);
+    expect([count("arabic"), count("designer"), count("niche")]).toEqual([3, 71, 22]);
   });
 });

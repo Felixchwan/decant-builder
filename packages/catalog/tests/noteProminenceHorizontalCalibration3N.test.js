@@ -144,8 +144,8 @@ describe("Composer Phase 3N canonical-data sanity audit", () => {
 describe("Composer Phase 3N horizontal calibration -- sage family and geranium", () => {
   const perfumesById = new Map(perfumes.map((perfume) => [perfume.id, perfume]));
 
-  it("has exactly 95 catalog fragrances to search for exhaustive family membership", () => {
-    expect(perfumes).toHaveLength(95);
+  it("has exactly 96 catalog fragrances to search for exhaustive family membership", () => {
+    expect(perfumes).toHaveLength(96);
   });
 
   for (const [noteId, family] of Object.entries(ALL_FAMILIES)) {

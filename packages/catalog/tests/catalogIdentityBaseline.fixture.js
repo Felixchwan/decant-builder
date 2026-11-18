@@ -28,6 +28,7 @@ export const CATALOG_IDENTITY_BASELINE = Object.freeze([
   [218, "Gold", 2],
   [301, "Platinum", 2.5], [302, "Platinum", 2.5], [303, "Platinum", 2.5],
   [304, "Platinum", 2.5], [305, "Platinum", 2.5], [306, "Platinum", 2.5],
+  [400, "Diamond", 4],
   [401, "Diamond", 4], [402, "Diamond", 4], [403, "Diamond", 4.5],
   [404, "Diamond", 4], [405, "Diamond", 4], [406, "Diamond", 4],
   [408, "Diamond", 4], [409, "Diamond", 4],

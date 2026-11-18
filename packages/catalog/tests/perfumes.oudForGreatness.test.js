@@ -230,7 +230,7 @@ describe("Initio Parfums Prives Oud for Greatness catalog entry", () => {
     expect(notes.lavender).toMatchObject({ name: "Lavender", family: "aromatic" });
     expect(notes.patchouli).toMatchObject({ name: "Patchouli", family: "earthy" });
     expect(notes.musk).toMatchObject({ name: "Musk", family: "musk" });
-    expect(Object.keys(notes)).toHaveLength(192);
+    expect(Object.keys(notes)).toHaveLength(193);
     // Agarwood (Oud) is carried by Oud for Greatness alone
     expect(perfumes.filter((perfume) => allNoteIds(perfume).includes("agarwood")).map((perfume) => perfume.id)).toEqual([OUD_FOR_GREATNESS_ID]);
   });
@@ -280,7 +280,7 @@ describe("Initio Parfums Prives Oud for Greatness catalog entry", () => {
   });
 
   it("is visible to both merchants through the identical manifest, after the last Mythic ID, and the catalog grew by exactly one perfume", () => {
-    expect(perfumes).toHaveLength(95);
+    expect(perfumes).toHaveLength(96);
     expect(aurelianAvailableIds).toContain(OUD_FOR_GREATNESS_ID);
     expect(discoveryDecantsAvailableIds).toContain(OUD_FOR_GREATNESS_ID);
     expect(discoveryDecantsAvailableIds).toEqual(aurelianAvailableIds);

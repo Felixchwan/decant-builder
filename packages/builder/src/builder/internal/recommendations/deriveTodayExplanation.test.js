@@ -351,11 +351,14 @@ describe("variety within a set, without inventing it", () => {
 describe("the ranking is untouched: only the explanation lines are new", () => {
   // Pick ids, roles, scores, role scores and base reasons for all 8,064 season / weekday / hour / weather contexts, hashed. The first
   // hash was taken from the committed role engine BEFORE the explanation lines were added, over the catalog as it then stood (every
-  // fragrance except Initio Oud for Greatness, id 502, added afterwards). Run over that same catalog it must still be exactly that
-  // hash: the engine, the weights and the role selection did not move. The second hash is the full catalog today, where the new
-  // fragrance is simply one more candidate (it is picked only in cool or cold weather, as a date or night pick).
-  const RANKING_HASH_WITHOUT_502 = "21a73f9b1e84cdced85b9df28db4cebdd800539802a163f7e49b544ac7c10c56";
-  const RANKING_HASH = "ff5aec8437b1547d320be58581d4ac31b73029f78d0ba0eed633d1555994ee5b";
+  // fragrance except Initio Oud for Greatness, id 502, and Sospiro Vibrato, id 400, both added afterwards). Run over that same catalog
+  // it must still be exactly that hash: the engine, the weights and the role selection did not move. The second hash is the catalog
+  // with Oud for Greatness and without Vibrato, as it stood before Vibrato (it is picked only in cool or cold weather, as a date or
+  // night pick). The third is the full catalog today, where Vibrato is simply one more candidate (a fresh, citrus, powdery
+  // daily / office fragrance, picked in 1,157 of the 8,064 contexts, mostly in spring and summer and in warm or hot weather).
+  const RANKING_HASH_WITHOUT_502_AND_400 = "21a73f9b1e84cdced85b9df28db4cebdd800539802a163f7e49b544ac7c10c56";
+  const RANKING_HASH_WITHOUT_400 = "ff5aec8437b1547d320be58581d4ac31b73029f78d0ba0eed633d1555994ee5b";
+  const RANKING_HASH = "5e73c61e557e8514790afa13f83dfa19c431ca751c430f06c451c2d4b01c9af9";
 
   const sweepHash = (catalog) => {
     const out = [];
@@ -378,7 +381,11 @@ describe("the ranking is untouched: only the explanation lines are new", () => {
   };
 
   it("produces the same picks, roles, scores and base reasons as before, in every context, over the catalog it was pinned on", () => {
-    expect(sweepHash(fragrances.filter(({ id }) => id !== 502))).toBe(RANKING_HASH_WITHOUT_502);
+    expect(sweepHash(fragrances.filter(({ id }) => id !== 502 && id !== 400))).toBe(RANKING_HASH_WITHOUT_502_AND_400);
+  }, 60000);
+
+  it("is unchanged over the catalog as it stood before Vibrato: adding Vibrato is the only difference", () => {
+    expect(sweepHash(fragrances.filter(({ id }) => id !== 400))).toBe(RANKING_HASH_WITHOUT_400);
   }, 60000);
 
   it("pins the full catalog's picks, roles, scores and base reasons today", () => {

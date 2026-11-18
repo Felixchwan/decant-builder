@@ -37,22 +37,33 @@ const only = (item, context) => buildTodayRecommendations({ perfumes: [item], co
 describe("NO-WEATHER EQUIVALENCE: with no live input the engine is exactly the one already approved", () => {
   // Every pick, score, factor, reason and confidence for all 672 season / weekday / hour moments on the real catalog, hashed. The hash
   // was taken from the committed Phase 1 engine BEFORE the weather factors were added; any change to the no-weather path changes it.
+  // It was taken over the catalog as it stood then, so the check runs over that same catalog (every fragrance except Sospiro Vibrato,
+  // id 400, added afterwards): the engine is byte-identical. The full catalog has its own hash, where Vibrato is one more candidate.
   const PHASE_1_HASH = "e0e40a50f1a6dd96d9b4e173ee3b78376c5ef7b3c8b24e2eae4345240915a40a";
+  const FULL_CATALOG_HASH = "5d816f189c982deba45e3c157888fea02496c6c36bf3483d761e1a86b3daad47";
 
-  it("produces byte-identical results to Phase 1 for every moment", () => {
+  const noWeatherHash = (catalog) => {
     const out = [];
 
     for (const season of ["spring", "summer", "fall", "winter"]) {
       for (let weekday = 0; weekday < 7; weekday++) {
         for (let hour = 0; hour < 24; hour++) {
-          const result = buildTodayRecommendations({ perfumes: fragrances, context: { season, hour, weekday } });
+          const result = buildTodayRecommendations({ perfumes: catalog, context: { season, hour, weekday } });
 
           out.push([season, weekday, hour, result.confidence, result.recommendations.map((x) => [x.perfume.id, x.score, x.maxScore, x.normalizedScore, x.coverage, x.confidence, x.factors, x.reasons])]);
         }
       }
     }
 
-    expect(createHash("sha256").update(JSON.stringify(out)).digest("hex")).toBe(PHASE_1_HASH);
+    return createHash("sha256").update(JSON.stringify(out)).digest("hex");
+  };
+
+  it("produces byte-identical results to Phase 1 for every moment, over the catalog it was pinned on", () => {
+    expect(noWeatherHash(fragrances.filter(({ id }) => id !== 400))).toBe(PHASE_1_HASH);
+  });
+
+  it("pins the full catalog's no-weather results today", () => {
+    expect(noWeatherHash(fragrances)).toBe(FULL_CATALOG_HASH);
   });
 
   it("scores exactly the three base factors, with the base maximum", () => {
