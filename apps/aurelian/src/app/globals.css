@@ -390,6 +390,11 @@ h1 { max-width:15ch; margin-bottom:1.4rem; font-size:clamp(2.8rem,7vw,6.4rem); }
 .bonus-note h2 { font-family:Georgia,serif; font-size:clamp(1.7rem,3vw,2.6rem); font-weight:400; }
 .bonus-note > p:last-child { margin-bottom:0; color:var(--secondary); }
 .builder-page { padding-bottom:5rem; }
+/* Desktop (981px and up, the shared Builder's own switch): nothing is fixed to the bottom of the page there (the box card docks into the
+   header and the review action lives in the panel), so the 5rem has nothing to clear, and it stacked on the Builder's own 36px bottom
+   inset (.app) into a 116px dead band between the catalog and the footer. Below 981px the tab bar and the floating edge tabs are in
+   play, so the page keeps its 5rem. */
+@media (min-width:981px) { .builder-page { padding-bottom:0; } }
 .builder-loading { min-height:30rem; display:grid; place-items:center; color:var(--muted); }
 /* The Builder's desktop shell: how wide the catalog + panel area can get, expanded or collapsed.
    2200px is the shared package's own top-level content-width ceiling (.app's width:min(2200px,100%) in
